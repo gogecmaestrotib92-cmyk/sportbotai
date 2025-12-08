@@ -97,7 +97,7 @@ export default function ResultCard({ result }: ResultCardProps) {
             {riskLabels[riskLevel]}
           </span>
           <span className="text-xs text-gray-400">
-            Data: {result.matchInfo.sourceType} ({result.matchInfo.dataQuality} quality)
+            Data: {result.matchInfo.sourceType === 'API' ? 'Live Data' : 'Manual Entry'}
           </span>
         </div>
       </div>

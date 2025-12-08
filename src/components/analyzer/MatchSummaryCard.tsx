@@ -2,23 +2,18 @@
  * Match Summary Card Component
  * 
  * Displays match info from analysis.matchInfo and meta.
- * Shows sport, league, date, teams, source type, and data quality badges.
+ * Shows sport, league, date, teams, and source type badge.
+ * Note: dataQuality is kept in backend for internal logic but not displayed in UI.
  */
 
 'use client';
 
-import { MatchInfo, AnalysisMeta, DataQuality, SourceType } from '@/types';
+import { MatchInfo, AnalysisMeta, SourceType } from '@/types';
 
 interface MatchSummaryCardProps {
   matchInfo: MatchInfo;
   meta: AnalysisMeta;
 }
-
-const dataQualityConfig: Record<DataQuality, { label: string; bgColor: string; textColor: string }> = {
-  LOW: { label: 'Low Quality', bgColor: 'bg-red-100', textColor: 'text-red-700' },
-  MEDIUM: { label: 'Medium Quality', bgColor: 'bg-amber-100', textColor: 'text-amber-700' },
-  HIGH: { label: 'High Quality', bgColor: 'bg-green-100', textColor: 'text-green-700' },
-};
 
 const sourceTypeConfig: Record<SourceType, { label: string; bgColor: string; textColor: string; icon: string }> = {
   API: { label: 'Live Data', bgColor: 'bg-emerald-100', textColor: 'text-emerald-700', icon: '📡' },
@@ -26,7 +21,6 @@ const sourceTypeConfig: Record<SourceType, { label: string; bgColor: string; tex
 };
 
 export default function MatchSummaryCard({ matchInfo, meta }: MatchSummaryCardProps) {
-  const qualityConfig = dataQualityConfig[matchInfo.dataQuality];
   const sourceConfig = sourceTypeConfig[matchInfo.sourceType];
 
   const formatDate = (dateString: string) => {
@@ -51,9 +45,6 @@ export default function MatchSummaryCard({ matchInfo, meta }: MatchSummaryCardPr
         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${sourceConfig.bgColor} ${sourceConfig.textColor}`}>
           <span>{sourceConfig.icon}</span>
           {sourceConfig.label}
-        </span>
-        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${qualityConfig.bgColor} ${qualityConfig.textColor}`}>
-          {qualityConfig.label}
         </span>
         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30">
           {matchInfo.sport}
@@ -85,20 +76,6 @@ export default function MatchSummaryCard({ matchInfo, meta }: MatchSummaryCardPr
         </svg>
         {formatDate(matchInfo.matchDate)}
       </div>
-
-      {/* Low quality warning */}
-      {matchInfo.dataQuality === 'LOW' && (
-        <div className="mt-4 p-3 bg-accent-red/10 border border-accent-red/30 rounded-lg">
-          <div className="flex items-start gap-2">
-            <svg className="w-4 h-4 text-accent-red flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            <p className="text-sm text-gray-300">
-              <strong className="text-accent-red">Low data quality:</strong> Analysis accuracy may be limited.
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
