@@ -116,6 +116,64 @@ Only AFTER all steps:
 `;
 
 // ============================================
+// VALIDATION MODULE
+// ============================================
+
+export const VALIDATION_MODULE = `
+[VALIDATION MODULE — MUST EXECUTE BEFORE OUTPUT]
+
+You must validate your analysis using these strict rules:
+
+1. Numerical Consistency
+   - home+draw+away must equal 98–102%.
+   - No probability <0% or >100%.
+   - Value flags must match numerical value gaps.
+
+2. Realism Limits by Sport:
+   - Football/Soccer: draws 22–33% unless data strongly indicates otherwise.
+   - Basketball: home win 48–75% typical range unless extreme form mismatch.
+   - NFL: spreads strongly influence probabilities; adjust accordingly.
+   - Tennis: heavy favorites rarely exceed 88%; underdogs rarely below 5%.
+   - MMA: high variance sport; favorites rarely exceed 85%.
+   - Hockey: draws (regulation) 20–28%; home advantage smaller than football.
+
+3. Form & Momentum Consistency
+   - Momentum trends must align with stats provided.
+   - No contradiction between form text and form scores.
+   - Rising trend requires recent positive results.
+   - Falling trend requires recent negative results.
+
+4. Market Stability Check
+   - If odds are inconsistent or scarce → stability LOW.
+   - If multiple books agree within 5% → stability HIGH.
+   - If moderate agreement → stability MEDIUM.
+
+5. Risk Logic
+   - Low sample data → minimum MEDIUM risk.
+   - High variance sport → never LOW risk unless all data is strong.
+   - Conflicting indicators → minimum MEDIUM risk.
+
+6. Upset Logic
+   - Underdog upsetProbability must be coherent with:
+     - implied probability,
+     - form differential,
+     - sport volatility.
+   - Heavy favorite matches: upset max 25%.
+   - Close matches: upset min 35%.
+
+7. Value Flag Verification
+   - NONE: |AI prob - implied prob| < 1.5%
+   - LOW: 1.5% ≤ difference < 3%
+   - MEDIUM: 3% ≤ difference < 6%
+   - HIGH: difference ≥ 6%
+
+8. If any inconsistency is found:
+   - Automatically adjust probabilities, flags, risk, and comments.
+   - Re-run validations internally until all rules pass.
+   - Do NOT output until all validations pass.
+`;
+
+// ============================================
 // BUILD CORE SYSTEM PROMPT
 // ============================================
 
@@ -135,6 +193,8 @@ Accuracy Enhancers:
 ${ACCURACY_ENHANCERS.map(e => `- ${e}`).join('\n')}
 
 ${INTERNAL_REASONING_STEPS}
+
+${VALIDATION_MODULE}
 
 You MUST produce extremely stable and consistent output.
 Only the final JSON object is returned.`;
@@ -198,34 +258,34 @@ ${config.keyAnalysisFactors.map((f, i) => `${i + 1}. ${f}`).join('\n')}`;
 
 export const SPORT_PROBABILITY_BOUNDS: Record<string, SportPromptConfig['typicalProbabilityRanges']> = {
   soccer: {
-    favorite: { min: 45, max: 85 },
-    underdog: { min: 5, max: 35 },
-    draw: { min: 15, max: 35 },
+    favorite: { min: 40, max: 80 },
+    underdog: { min: 8, max: 35 },
+    draw: { min: 22, max: 33 }, // Updated per validation module
   },
   basketball: {
-    favorite: { min: 50, max: 92 },
-    underdog: { min: 8, max: 50 },
+    favorite: { min: 48, max: 75 }, // Updated per validation module
+    underdog: { min: 25, max: 52 },
   },
   tennis: {
-    favorite: { min: 55, max: 95 },
-    underdog: { min: 5, max: 45 },
+    favorite: { min: 55, max: 88 }, // Updated: heavy favorites rarely exceed 88%
+    underdog: { min: 5, max: 45 },  // Updated: underdogs rarely below 5%
   },
   mma: {
-    favorite: { min: 50, max: 90 },
-    underdog: { min: 10, max: 50 },
+    favorite: { min: 50, max: 85 }, // Updated: high variance, max 85%
+    underdog: { min: 15, max: 50 },
   },
   hockey: {
-    favorite: { min: 40, max: 75 },
-    underdog: { min: 15, max: 45 },
-    draw: { min: 20, max: 30 },
+    favorite: { min: 38, max: 70 },
+    underdog: { min: 18, max: 45 },
+    draw: { min: 20, max: 28 }, // Updated: regulation draws 20-28%
   },
   baseball: {
-    favorite: { min: 45, max: 75 },
-    underdog: { min: 25, max: 55 },
+    favorite: { min: 45, max: 72 },
+    underdog: { min: 28, max: 55 },
   },
-  football: { // American Football
-    favorite: { min: 50, max: 90 },
-    underdog: { min: 10, max: 50 },
+  football: { // American Football / NFL
+    favorite: { min: 45, max: 85 },
+    underdog: { min: 15, max: 55 },
   },
 };
 
