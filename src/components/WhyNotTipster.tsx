@@ -15,7 +15,7 @@ export default function WhyNotTipster() {
       ),
       title: 'AI-Powered Analysis',
       description: 'Advanced algorithms process odds, form, and statistics to generate probability estimates.',
-      color: 'accent-cyan',
+      color: 'primary',
     },
     {
       icon: (
@@ -25,7 +25,7 @@ export default function WhyNotTipster() {
       ),
       title: 'Value & Risk Transparency',
       description: 'Clear visualization of value opportunities and risk levels—no hidden information.',
-      color: 'accent-lime',
+      color: 'accent',
     },
     {
       icon: (
@@ -35,16 +35,16 @@ export default function WhyNotTipster() {
       ),
       title: 'Responsible Approach',
       description: 'Every analysis includes risk warnings and promotes responsible decision-making.',
-      color: 'accent-gold',
+      color: 'warning',
     },
   ];
 
   return (
-    <section className="bg-primary-900 text-white section-container">
+    <section className="bg-bg-primary text-white section-container">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-14">
-          <p className="text-accent-lime font-semibold text-sm uppercase tracking-wider mb-3">Why BetSense AI</p>
+          <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Why BetSense AI</p>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Analysis, not tips
           </h2>
@@ -59,7 +59,7 @@ export default function WhyNotTipster() {
           {features.map((feature) => (
             <div 
               key={feature.title}
-              className="bg-surface-card border border-surface-border rounded-xl p-6 hover:border-accent-cyan/30 transition-all duration-300"
+              className="bg-bg-card border border-divider rounded-card p-6 hover:border-primary/30 transition-all duration-300"
             >
               <div className={`w-12 h-12 bg-${feature.color}/10 rounded-xl flex items-center justify-center mb-4 text-${feature.color}`}>
                 {feature.icon}
@@ -72,8 +72,8 @@ export default function WhyNotTipster() {
 
         {/* What We Are / Are Not - Compact Version */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-accent-green/5 border border-accent-green/20 rounded-xl p-5">
-            <h4 className="text-accent-green font-semibold mb-3 flex items-center gap-2">
+          <div className="bg-success/5 border border-success/20 rounded-card p-5">
+            <h4 className="text-success font-semibold mb-3 flex items-center gap-2">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
@@ -81,22 +81,22 @@ export default function WhyNotTipster() {
             </h4>
             <ul className="space-y-2 text-gray-300 text-sm">
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-accent-green rounded-full" />
+                <span className="w-1.5 h-1.5 bg-success rounded-full" />
                 AI-based analytical tool
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-accent-green rounded-full" />
+                <span className="w-1.5 h-1.5 bg-success rounded-full" />
                 Educational resource for understanding odds
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-accent-green rounded-full" />
+                <span className="w-1.5 h-1.5 bg-success rounded-full" />
                 Transparent about limitations
               </li>
             </ul>
           </div>
 
-          <div className="bg-accent-red/5 border border-accent-red/20 rounded-xl p-5">
-            <h4 className="text-accent-red font-semibold mb-3 flex items-center gap-2">
+          <div className="bg-danger/5 border border-danger/20 rounded-card p-5">
+            <h4 className="text-danger font-semibold mb-3 flex items-center gap-2">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
@@ -104,15 +104,15 @@ export default function WhyNotTipster() {
             </h4>
             <ul className="space-y-2 text-gray-300 text-sm">
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-accent-red rounded-full" />
+                <span className="w-1.5 h-1.5 bg-danger rounded-full" />
                 Tipster service with &quot;sure tips&quot;
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-accent-red rounded-full" />
+                <span className="w-1.5 h-1.5 bg-danger rounded-full" />
                 Source of insider information
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-accent-red rounded-full" />
+                <span className="w-1.5 h-1.5 bg-danger rounded-full" />
                 Guarantee of winnings
               </li>
             </ul>

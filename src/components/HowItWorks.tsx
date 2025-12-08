@@ -49,13 +49,13 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section className="bg-white section-container">
+    <section className="bg-bg-primary section-container">
       <div className="text-center mb-14">
-        <p className="text-accent-cyan font-semibold text-sm uppercase tracking-wider mb-3">How It Works</p>
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+        <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-3">How It Works</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
           Four simple steps to smarter analysis
         </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
           From match selection to AI-powered insights in seconds.
         </p>
       </div>
@@ -65,25 +65,25 @@ export default function HowItWorks() {
           <div key={step.number} className="relative group">
             {/* Connector Line (desktop) */}
             {index < steps.length - 1 && (
-              <div className="hidden lg:block absolute top-10 left-[calc(50%+2rem)] w-[calc(100%-2rem)] h-[2px] bg-gradient-to-r from-accent-cyan/50 to-accent-lime/50" />
+              <div className="hidden lg:block absolute top-10 left-[calc(50%+2rem)] w-[calc(100%-2rem)] h-[2px] bg-gradient-to-r from-primary/50 to-accent/50" />
             )}
             
-            <div className="relative bg-gray-50 rounded-xl p-6 border border-gray-100 hover:border-accent-cyan/30 hover:shadow-lg transition-all duration-300 h-full">
+            <div className="relative bg-bg-card rounded-card p-6 border border-divider hover:border-primary/30 hover:shadow-glow-primary transition-all duration-300 h-full">
               {/* Step Number */}
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-primary-900 text-white rounded-xl flex items-center justify-center group-hover:bg-accent-cyan transition-colors">
+                <div className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center group-hover:bg-accent group-hover:text-bg-primary transition-colors">
                   {step.icon}
                 </div>
-                <span className="text-4xl font-bold text-gray-100 group-hover:text-accent-cyan/20 transition-colors">
+                <span className="text-4xl font-bold text-bg-elevated group-hover:text-primary/20 transition-colors">
                   {step.number}
                 </span>
               </div>
               
               {/* Content */}
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
+              <h3 className="text-lg font-bold text-white mb-2">
                 {step.title}
               </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-gray-400 text-sm leading-relaxed">
                 {step.description}
               </p>
             </div>

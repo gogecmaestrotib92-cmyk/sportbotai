@@ -8,12 +8,12 @@ import Link from 'next/link';
 
 export default function Hero() {
   return (
-    <section className="relative bg-primary-900 overflow-hidden">
+    <section className="relative bg-bg-primary overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20" />
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent-cyan/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent-lime/10 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#2A3036_1px,transparent_1px),linear-gradient(to_bottom,#2A3036_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/10 rounded-full blur-[100px]" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
@@ -22,7 +22,7 @@ export default function Hero() {
           <div>
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full text-sm font-medium text-gray-300 mb-6 backdrop-blur-sm border border-white/10">
-              <span className="w-2 h-2 bg-accent-lime rounded-full animate-pulse" />
+              <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
               AI-Powered Sports Analytics
             </div>
 
@@ -30,7 +30,7 @@ export default function Hero() {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
               Smarter sports analysis
               <br />
-              <span className="text-accent-lime">with AI</span>
+              <span className="text-accent">with AI</span>
               <span className="text-gray-400"> — not betting tips</span>
             </h1>
 
@@ -60,19 +60,19 @@ export default function Hero() {
             <div className="mt-10 pt-8 border-t border-white/10">
               <div className="flex flex-wrap gap-6 text-sm text-gray-400">
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-accent-lime" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                   <span>Multi-Sport Coverage</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-accent-lime" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                   <span>Transparent Risk Analysis</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-accent-lime" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                   <span>Responsible Approach</span>
@@ -85,14 +85,14 @@ export default function Hero() {
           <div className="relative lg:pl-8">
             <div className="relative">
               {/* Glow Effect */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-accent-cyan/20 to-accent-lime/20 rounded-2xl blur-xl opacity-50" />
+              <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-xl opacity-50" />
               
               {/* Card */}
-              <div className="relative bg-surface-card border border-surface-border rounded-2xl p-6 shadow-2xl">
+              <div className="relative bg-bg-card border border-divider rounded-card p-6 shadow-2xl">
                 {/* Card Header */}
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-accent-lime/10 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
                       <span className="text-xl">⚽</span>
                     </div>
                     <div>
@@ -104,7 +104,7 @@ export default function Hero() {
                 </div>
 
                 {/* Teams */}
-                <div className="flex items-center justify-between py-4 border-y border-surface-border">
+                <div className="flex items-center justify-between py-4 border-y border-divider">
                   <div className="text-center flex-1">
                     <p className="text-white font-bold text-lg">Arsenal</p>
                     <p className="text-gray-500 text-sm">Home</p>
@@ -122,8 +122,8 @@ export default function Hero() {
                 <div className="mt-6">
                   <p className="text-gray-400 text-sm mb-3">AI Probability Estimates</p>
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-accent-lime/10 rounded-lg p-3 text-center border border-accent-lime/20">
-                      <p className="text-accent-lime font-bold text-xl">52%</p>
+                    <div className="bg-accent/10 rounded-lg p-3 text-center border border-accent/20">
+                      <p className="text-accent font-bold text-xl">52%</p>
                       <p className="text-gray-400 text-xs">Home Win</p>
                     </div>
                     <div className="bg-white/5 rounded-lg p-3 text-center border border-white/10">
@@ -154,16 +154,16 @@ export default function Hero() {
                 {/* Mock Analysis Preview */}
                 <div className="mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
                   <p className="text-gray-400 text-sm leading-relaxed">
-                    <span className="text-accent-cyan font-medium">AI Insight:</span> Arsenal&apos;s strong home form and recent momentum suggest favorable conditions. However, Chelsea&apos;s defensive resilience warrants caution...
+                    <span className="text-primary font-medium">AI Insight:</span> Arsenal&apos;s strong home form and recent momentum suggest favorable conditions. However, Chelsea&apos;s defensive resilience warrants caution...
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Floating Elements */}
-            <div className="absolute -right-4 top-1/4 bg-surface-card border border-surface-border rounded-lg px-3 py-2 shadow-lg animate-float hidden lg:block">
+            <div className="absolute -right-4 top-1/4 bg-bg-card border border-divider rounded-lg px-3 py-2 shadow-lg animate-float hidden lg:block">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-accent-lime rounded-full" />
+                <span className="w-2 h-2 bg-accent rounded-full" />
                 <span className="text-white text-sm font-medium">Live Data</span>
               </div>
             </div>

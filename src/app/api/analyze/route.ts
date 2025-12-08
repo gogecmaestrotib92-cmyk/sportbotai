@@ -129,12 +129,24 @@ You must return ONLY valid JSON, no commentary, no markdown, no prose.
       "draw": <number 0-100 | null>,
       "awayWin": <number 0-100 | null>
     },
+    "aiProbabilities": {
+      "homeWin": <number 0-100 | null>,
+      "draw": <number 0-100 | null>,
+      "awayWin": <number 0-100 | null>
+    },
     "valueFlags": {
       "homeWin": "NONE" | "LOW" | "MEDIUM" | "HIGH",
       "draw": "NONE" | "LOW" | "MEDIUM" | "HIGH",
       "awayWin": "NONE" | "LOW" | "MEDIUM" | "HIGH"
     },
     "bestValueSide": "HOME" | "DRAW" | "AWAY" | "NONE",
+    "kellyStake": {
+      "fullKelly": <number percentage>,
+      "halfKelly": <number percentage>,
+      "quarterKelly": <number percentage>,
+      "edge": <number percentage>,
+      "confidence": "LOW" | "MEDIUM" | "HIGH"
+    } | null,
     "valueCommentShort": "<string>",
     "valueCommentDetailed": "<string>"
   },
@@ -437,12 +449,18 @@ function validateAndSanitizeResponse(
         draw: clampNullable(raw.valueAnalysis?.impliedProbabilities?.draw, 0, 100),
         awayWin: clampNullable(raw.valueAnalysis?.impliedProbabilities?.awayWin, 0, 100),
       },
+      aiProbabilities: {
+        homeWin: clampNullable(raw.valueAnalysis?.aiProbabilities?.homeWin ?? raw.probabilities?.homeWin, 0, 100),
+        draw: clampNullable(raw.valueAnalysis?.aiProbabilities?.draw ?? raw.probabilities?.draw, 0, 100),
+        awayWin: clampNullable(raw.valueAnalysis?.aiProbabilities?.awayWin ?? raw.probabilities?.awayWin, 0, 100),
+      },
       valueFlags: {
         homeWin: validateValueFlag(raw.valueAnalysis?.valueFlags?.homeWin),
         draw: validateValueFlag(raw.valueAnalysis?.valueFlags?.draw),
         awayWin: validateValueFlag(raw.valueAnalysis?.valueFlags?.awayWin),
       },
       bestValueSide: validateBestValueSide(raw.valueAnalysis?.bestValueSide),
+      kellyStake: raw.valueAnalysis?.kellyStake ?? null,
       valueCommentShort: raw.valueAnalysis?.valueCommentShort ?? 'No value assessment available.',
       valueCommentDetailed: raw.valueAnalysis?.valueCommentDetailed ?? 'Detailed analysis not available.',
     },
@@ -604,8 +622,10 @@ function createErrorResponse(error: string): AnalyzeResponse {
     },
     valueAnalysis: {
       impliedProbabilities: { homeWin: null, draw: null, awayWin: null },
+      aiProbabilities: { homeWin: null, draw: null, awayWin: null },
       valueFlags: { homeWin: 'NONE', draw: 'NONE', awayWin: 'NONE' },
       bestValueSide: 'NONE',
+      kellyStake: null,
       valueCommentShort: 'Analysis unavailable.',
       valueCommentDetailed: 'Analysis unavailable.',
     },
@@ -721,12 +741,18 @@ function generateFallbackAnalysis(request: AnalyzeRequest): AnalyzeResponse {
         draw: impliedDraw ? Math.round(impliedDraw * 100) / 100 : null,
         awayWin: Math.round(impliedAway * 100) / 100,
       },
+      aiProbabilities: {
+        homeWin,
+        draw,
+        awayWin,
+      },
       valueFlags: {
         homeWin: 'NONE',
         draw: 'NONE',
         awayWin: 'NONE',
       },
       bestValueSide: 'NONE',
+      kellyStake: null,
       valueCommentShort: `Analysis based on odds only. Bookmaker margin: ${margin.toFixed(1)}%.`,
       valueCommentDetailed: 'This is a fallback analysis based solely on provided odds. For detailed AI analysis, ensure the OpenAI API key is configured.',
     },

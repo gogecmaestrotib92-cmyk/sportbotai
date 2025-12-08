@@ -1,8 +1,8 @@
 /**
  * League Accordion Component
  * 
- * Expandable sections for each league.
- * Shows league name as header, matches inside when expanded.
+ * Premium expandable sections for each league.
+ * Clean design with smooth animations and clear visual hierarchy.
  */
 
 'use client';
@@ -70,7 +70,7 @@ export default function LeagueAccordion({
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
           <div key={i} className="animate-pulse">
-            <div className="h-14 bg-gray-100 rounded-xl" />
+            <div className="h-16 bg-bg-elevated rounded-card" />
           </div>
         ))}
       </div>
@@ -79,22 +79,25 @@ export default function LeagueAccordion({
 
   if (leagues.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <div className="text-center py-12 bg-bg-card rounded-card border border-divider">
+        <div className="w-14 h-14 bg-bg-elevated rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
         </div>
-        <p className="text-gray-500 text-sm">
-          {searchQuery ? 'No matches found for your search' : 'No leagues available'}
+        <h3 className="font-semibold text-white mb-1">
+          {searchQuery ? 'No matches found' : 'No leagues available'}
+        </h3>
+        <p className="text-gray-400 text-sm">
+          {searchQuery ? `Try a different search term` : 'Select a league to view matches'}
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {leagues.map((league) => {
+    <div className="space-y-2">
+      {leagues.map((league, index) => {
         const isExpanded = expandedLeagues.has(league.leagueKey);
         const matchCount = league.matches.length;
         const hasSelectedMatch = league.matches.some(m => m.matchId === selectedMatchId);
@@ -103,8 +106,12 @@ export default function LeagueAccordion({
           <div
             key={league.leagueKey}
             className={`
-              border rounded-xl overflow-hidden transition-all duration-200
-              ${hasSelectedMatch ? 'border-accent-cyan shadow-sm' : 'border-gray-200'}
+              rounded-card overflow-hidden transition-all duration-200 border
+              ${hasSelectedMatch 
+                ? 'border-primary/30 bg-primary/5' 
+                : 'border-divider bg-bg-card'
+              }
+              ${isExpanded ? 'shadow-card' : ''}
             `}
           >
             {/* League Header */}
@@ -112,41 +119,55 @@ export default function LeagueAccordion({
               onClick={() => toggleLeague(league.leagueKey)}
               className={`
                 w-full flex items-center justify-between p-4 text-left
-                transition-colors duration-200
-                ${isExpanded ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'}
+                transition-colors duration-200 group
+                ${isExpanded ? 'bg-bg-elevated/50' : 'hover:bg-bg-elevated/50'}
               `}
             >
               <div className="flex items-center gap-3">
-                <span className="text-xl">{getSportIcon(league.sportKey)}</span>
+                <div className={`
+                  w-10 h-10 rounded-lg flex items-center justify-center transition-colors
+                  ${isExpanded ? 'bg-primary text-white' : 'bg-bg-elevated text-gray-400 group-hover:bg-divider'}
+                `}>
+                  <span className="text-lg">{getSportIcon(league.sportKey)}</span>
+                </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">{league.leagueName}</h3>
-                  <p className="text-xs text-gray-500">
-                    {matchCount} {matchCount === 1 ? 'match' : 'matches'}
+                  <h3 className="font-semibold text-white text-sm sm:text-base">{league.leagueName}</h3>
+                  <p className="text-xs text-gray-400">
+                    {matchCount} {matchCount === 1 ? 'match' : 'matches'} available
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 {hasSelectedMatch && (
-                  <span className="text-xs px-2 py-1 bg-accent-cyan/10 text-accent-cyan rounded-full font-medium">
+                  <span className="hidden sm:inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-primary/10 text-primary rounded-full font-medium">
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full" />
                     Selected
                   </span>
                 )}
-                <svg
-                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
+                <div className={`
+                  w-8 h-8 rounded-lg flex items-center justify-center transition-all
+                  ${isExpanded ? 'bg-primary rotate-180' : 'bg-bg-elevated group-hover:bg-divider'}
+                `}>
+                  <svg
+                    className={`w-4 h-4 transition-colors ${isExpanded ? 'text-white' : 'text-gray-400'}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </div>
             </button>
 
-            {/* Matches */}
-            {isExpanded && (
-              <div className="px-4 pb-4 bg-gray-50">
+            {/* Matches - Expandable */}
+            <div className={`
+              overflow-hidden transition-all duration-300
+              ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}
+            `}>
+              <div className="px-4 pb-4 pt-2 border-t border-divider bg-bg-elevated/30">
                 <MatchList
                   matches={league.matches}
                   selectedMatchId={selectedMatchId}
@@ -154,7 +175,7 @@ export default function LeagueAccordion({
                   compact
                 />
               </div>
-            )}
+            </div>
           </div>
         );
       })}

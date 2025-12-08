@@ -13,19 +13,19 @@ interface ResultCardProps {
 // Colors for different risk levels
 const riskColors: Record<RiskLevel, { bg: string; text: string; border: string }> = {
   LOW: {
-    bg: 'bg-green-50',
-    text: 'text-green-800',
-    border: 'border-green-200',
+    bg: 'bg-success/10',
+    text: 'text-success',
+    border: 'border-success/30',
   },
   MEDIUM: {
-    bg: 'bg-amber-50',
-    text: 'text-amber-800',
-    border: 'border-amber-200',
+    bg: 'bg-warning/10',
+    text: 'text-warning',
+    border: 'border-warning/30',
   },
   HIGH: {
-    bg: 'bg-red-50',
-    text: 'text-red-800',
-    border: 'border-red-200',
+    bg: 'bg-danger/10',
+    text: 'text-danger',
+    border: 'border-danger/30',
   },
 };
 
@@ -38,18 +38,18 @@ const riskLabels: Record<RiskLevel, string> = {
 
 // Colors for value flags
 const valueFlagColors: Record<ValueFlag, string> = {
-  NONE: 'text-gray-500',
-  LOW: 'text-blue-600',
-  MEDIUM: 'text-green-600',
-  HIGH: 'text-emerald-700 font-bold',
+  NONE: 'text-gray-400',
+  LOW: 'text-primary',
+  MEDIUM: 'text-accent',
+  HIGH: 'text-success font-bold',
 };
 
 // Trend arrows
 const trendIcons: Record<Trend, { icon: string; color: string }> = {
-  RISING: { icon: '↗', color: 'text-green-600' },
-  FALLING: { icon: '↘', color: 'text-red-600' },
-  STABLE: { icon: '→', color: 'text-gray-600' },
-  UNKNOWN: { icon: '?', color: 'text-gray-400' },
+  RISING: { icon: '↗', color: 'text-success' },
+  FALLING: { icon: '↘', color: 'text-danger' },
+  STABLE: { icon: '→', color: 'text-gray-400' },
+  UNKNOWN: { icon: '?', color: 'text-gray-500' },
 };
 
 export default function ResultCard({ result }: ResultCardProps) {
@@ -59,26 +59,26 @@ export default function ResultCard({ result }: ResultCardProps) {
   // Error state
   if (!result.success && result.error) {
     return (
-      <div className="card bg-red-50 border-red-200">
-        <h3 className="text-xl font-bold text-red-800 mb-2">Analysis Error</h3>
-        <p className="text-red-700">{result.error}</p>
+      <div className="bg-bg-card rounded-card p-6 border border-danger/30">
+        <h3 className="text-xl font-bold text-danger mb-2">Analysis Error</h3>
+        <p className="text-danger/80">{result.error}</p>
       </div>
     );
   }
 
   return (
-    <div className="card space-y-6">
+    <div className="bg-bg-card rounded-card p-6 border border-divider space-y-6">
       {/* Header with match info and risk */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h3 className="text-xl font-bold text-gray-900">
+          <h3 className="text-xl font-bold text-white">
             {result.matchInfo.homeTeam} vs {result.matchInfo.awayTeam}
           </h3>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-400">
             {result.matchInfo.leagueName} • {result.matchInfo.sport}
           </p>
           {result.matchInfo.matchDate && (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-500">
               {new Date(result.matchInfo.matchDate).toLocaleDateString('en-US', {
                 weekday: 'short',
                 year: 'numeric',
@@ -96,7 +96,7 @@ export default function ResultCard({ result }: ResultCardProps) {
           >
             {riskLabels[riskLevel]}
           </span>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-500">
             Data: {result.matchInfo.sourceType === 'API' ? 'Live Data' : 'Manual Entry'}
           </span>
         </div>

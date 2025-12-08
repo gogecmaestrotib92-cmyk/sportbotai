@@ -71,10 +71,26 @@ export interface Probabilities {
 }
 
 /**
+ * Kelly Criterion calculation result
+ */
+export interface KellyResult {
+  fullKelly: number;       // Full Kelly stake as % of bankroll
+  halfKelly: number;       // Half Kelly (conservative)
+  quarterKelly: number;    // Quarter Kelly (very conservative)
+  edge: number;            // Expected edge in percentage
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';  // Confidence in the edge estimate
+}
+
+/**
  * Value analysis section
  */
 export interface ValueAnalysis {
   impliedProbabilities: {
+    homeWin: number | null;
+    draw: number | null;
+    awayWin: number | null;
+  };
+  aiProbabilities: {
     homeWin: number | null;
     draw: number | null;
     awayWin: number | null;
@@ -85,6 +101,7 @@ export interface ValueAnalysis {
     awayWin: ValueFlag;
   };
   bestValueSide: BestValueSide;
+  kellyStake: KellyResult | null;  // Kelly calculation for best value side
   valueCommentShort: string;
   valueCommentDetailed: string;
 }

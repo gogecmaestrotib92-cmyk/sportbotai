@@ -45,13 +45,13 @@ export default function Features() {
   ];
 
   return (
-    <section className="bg-gray-50 section-container">
+    <section className="bg-bg-card section-container">
       <div className="text-center mb-14">
-        <p className="text-accent-cyan font-semibold text-sm uppercase tracking-wider mb-3">Features</p>
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+        <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-3">Features</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
           Everything you need for smarter analysis
         </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
           Professional-grade analytics tools designed for informed decision-making.
         </p>
       </div>
@@ -60,18 +60,18 @@ export default function Features() {
         {features.map((feature) => (
           <div 
             key={feature.title} 
-            className="bg-white rounded-xl p-6 border border-gray-100 hover:border-accent-cyan/30 hover:shadow-lg transition-all duration-300 group"
+            className="bg-bg-elevated rounded-card p-6 border border-divider hover:border-primary/30 hover:shadow-glow-primary transition-all duration-300 group"
           >
             <div className="flex items-start justify-between mb-4">
               <span className="text-3xl">{feature.icon}</span>
-              <span className="text-xs font-medium px-2 py-1 bg-primary-900/5 text-primary-900 rounded-full">
+              <span className="text-xs font-medium px-2 py-1 bg-primary/10 text-primary rounded-full">
                 {feature.badge}
               </span>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-accent-cyan transition-colors">
+            <h3 className="text-lg font-bold text-white mb-2 group-hover:text-accent transition-colors">
               {feature.title}
             </h3>
-            <p className="text-gray-600 text-sm leading-relaxed">
+            <p className="text-gray-400 text-sm leading-relaxed">
               {feature.description}
             </p>
           </div>

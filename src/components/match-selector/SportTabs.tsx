@@ -1,8 +1,9 @@
 /**
  * Sport Tabs Component
  * 
- * Horizontal scrollable sport category selector.
- * Shows sport icons and names as tabs/pills.
+ * Premium horizontal scrollable sport category selector.
+ * Shows sport icons and names with elegant pill design.
+ * Mobile-optimized with snap scrolling.
  */
 
 'use client';
@@ -24,8 +25,8 @@ export default function SportTabs({
 }: SportTabsProps) {
   return (
     <div className="relative">
-      {/* Scrollable container */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
+      {/* Scrollable container with snap */}
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1 snap-x snap-mandatory">
         {categories.map((category) => {
           const display = getCategoryDisplayInfo(category);
           const isSelected = category === selectedCategory;
@@ -36,24 +37,29 @@ export default function SportTabs({
               onClick={() => onCategoryChange(category)}
               disabled={loading}
               className={`
-                flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm
-                transition-all duration-200 whitespace-nowrap
+                snap-start flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-btn font-medium text-sm
+                transition-all duration-200 whitespace-nowrap border
                 ${isSelected
-                  ? 'bg-primary-900 text-white shadow-lg shadow-primary-900/20'
-                  : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                  : 'bg-bg-card text-text-secondary border-divider hover:border-primary/30 hover:bg-bg-hover'
                 }
-                ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
               `}
             >
-              <span className="text-lg">{display.icon}</span>
-              <span>{display.shortName}</span>
+              <span className={`text-lg transition-transform duration-200 ${isSelected ? 'scale-110' : ''}`}>
+                {display.icon}
+              </span>
+              <span className="font-semibold">{display.shortName}</span>
+              {isSelected && (
+                <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* Fade indicators for scroll (optional visual cue) */}
-      <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none" />
+      {/* Fade indicator on right */}
+      <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-bg to-transparent pointer-events-none" />
     </div>
   );
 }

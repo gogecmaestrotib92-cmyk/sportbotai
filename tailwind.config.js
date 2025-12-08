@@ -8,46 +8,144 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Primary: Deep Navy (Sports/Tech feel)
+        // ========================================
+        // BET SENSE DESIGN SYSTEM v2.0
+        // Premium Sports + AI Branding
+        // ========================================
+        
+        // Primary (Sport Tech Blue / Electric Blue)
         primary: {
-          50: '#eef4ff',
-          100: '#d9e5ff',
-          200: '#bcd0ff',
-          300: '#8eb3ff',
-          400: '#5988ff',
-          500: '#3361ff',
-          600: '#1a3ff5',
-          700: '#142de1',
-          800: '#1726b6',
-          900: '#0f172a', // Main dark navy
-          950: '#080c1a',
+          DEFAULT: '#1A73E8',
+          hover: '#1666CC',
+          light: '#E3F0FF',
+          dark: '#0F3A6D',
         },
-        // Accent: Lime/Cyan for CTAs and highlights
+        
+        // Accent (AI Cyber Mint)
         accent: {
-          lime: '#84cc16',
-          cyan: '#06b6d4',
-          green: '#22c55e',
-          gold: '#eab308',
-          red: '#ef4444',
+          DEFAULT: '#2AF6A0',
+          dark: '#1EC77E',
+          light: '#D6FFEC',
         },
-        // Surface colors for dark sections
-        surface: {
-          dark: '#0f172a',
-          darker: '#080c1a',
-          card: '#1e293b',
-          border: '#334155',
+        
+        // Background / Surface
+        bg: {
+          DEFAULT: '#0B0E11',
+          card: '#14181D',
+          hover: '#1C2229',
+          light: '#F8FAFC',
         },
+        
+        // Dividers & Borders
+        divider: '#2A3036',
+        
+        // Text Colors
+        text: {
+          primary: '#FFFFFF',
+          secondary: '#B5BDC7',
+          muted: '#7A838D',
+          accent: '#2AF6A0',
+          danger: '#FF5C5C',
+        },
+        
+        // Semantic Colors
+        success: '#2AF6A0',
+        warning: '#FACC15',
+        danger: '#F87171',
+        info: '#38BDF8',
+        
+        // Legacy aliases for backwards compatibility
+        'accent-lime': '#2AF6A0',
+        'accent-cyan': '#38BDF8',
+        'accent-green': '#1EC77E',
+        'accent-gold': '#FACC15',
+        'accent-red': '#F87171',
+        'primary-900': '#0B0E11',
+        'surface-card': '#14181D',
+        'surface-border': '#2A3036',
       },
+      
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'SF Pro Display', 'Helvetica', 'Arial', 'sans-serif'],
       },
+      
+      fontSize: {
+        // Typography Scale
+        'h1': ['2.5rem', { lineHeight: '1.2', fontWeight: '700' }],      // 40px
+        'h1-mobile': ['1.75rem', { lineHeight: '1.2', fontWeight: '700' }], // 28px
+        'h2': ['2rem', { lineHeight: '1.25', fontWeight: '600' }],       // 32px
+        'h2-mobile': ['1.375rem', { lineHeight: '1.25', fontWeight: '600' }], // 22px
+        'h3': ['1.5rem', { lineHeight: '1.3', fontWeight: '600' }],      // 24px
+        'h3-mobile': ['1.125rem', { lineHeight: '1.3', fontWeight: '600' }], // 18px
+        'body-lg': ['1.125rem', { lineHeight: '1.5', fontWeight: '400' }], // 18px
+        'body': ['1rem', { lineHeight: '1.5', fontWeight: '400' }],      // 16px
+        'body-sm': ['0.875rem', { lineHeight: '1.5', fontWeight: '400' }], // 14px
+        'label': ['0.75rem', { lineHeight: '1.4', fontWeight: '500' }],  // 12px
+      },
+      
+      spacing: {
+        // Custom spacing scale
+        'xs': '4px',
+        'sm': '8px',
+        'md': '12px',
+        'lg': '16px',
+        'xl': '24px',
+        '2xl': '32px',
+        '3xl': '48px',
+      },
+      
+      borderRadius: {
+        'card': '16px',
+        'chip': '999px',
+        'btn': '12px',
+      },
+      
+      boxShadow: {
+        'card': '0 4px 12px rgba(0, 0, 0, 0.2)',
+        'card-hover': '0 8px 24px rgba(0, 0, 0, 0.3)',
+        'glow-accent': '0 0 20px rgba(42, 246, 160, 0.3)',
+        'glow-primary': '0 0 20px rgba(26, 115, 232, 0.3)',
+        'glow-danger': '0 0 15px rgba(248, 113, 113, 0.25)',
+        'inner-glow': 'inset 0 1px 2px rgba(42, 246, 160, 0.1)',
+      },
+      
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'hero-pattern': 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
+        'hero-pattern': 'linear-gradient(135deg, #0B0E11 0%, #14181D 50%, #0B0E11 100%)',
+        'card-gradient': 'linear-gradient(145deg, #14181D 0%, #1C2229 100%)',
+        'accent-gradient': 'linear-gradient(135deg, #1A73E8 0%, #2AF6A0 100%)',
+        'glow-border': 'linear-gradient(135deg, #1A73E8, #2AF6A0)',
       },
-      boxShadow: {
-        'glow-lime': '0 0 20px rgba(132, 204, 22, 0.3)',
-        'glow-cyan': '0 0 20px rgba(6, 182, 212, 0.3)',
+      
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-out',
+        'fade-in-up': 'fadeInUp 0.4s ease-out',
+        'scale-in': 'scaleIn 0.3s ease-out',
+        'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+        'shimmer': 'shimmer 1.5s ease-in-out infinite',
+      },
+      
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        scaleIn: {
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        pulseGlow: {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(42, 246, 160, 0.4)' },
+          '50%': { boxShadow: '0 0 0 8px rgba(42, 246, 160, 0)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
       },
     },
   },

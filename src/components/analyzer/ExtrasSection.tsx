@@ -1,10 +1,14 @@
 /**
  * Extras Section Component (Layer 3)
  * 
- * Contains:
- * - Audio analysis button (if TTS is available)
- * - Responsible gambling note (subtle, not banner-style)
- * - Warnings from meta.warnings (as small info items, not red banners)
+ * Clean, compact section containing:
+ * - User selection (if provided)
+ * - Audio analysis button (compact inline design)
+ * - Analysis notes/warnings (subtle, not alarming)
+ * - Responsible gambling note (minimal, non-intrusive)
+ * - Meta footer (version, timestamp)
+ * 
+ * Mobile-first, non-cluttered design.
  */
 
 'use client';
@@ -23,93 +27,108 @@ export default function ExtrasSection({ result }: ExtrasSectionProps) {
 
   return (
     <div className="space-y-4">
-      {/* User Selection (if provided) */}
+      {/* User Selection Card (if provided) */}
       {hasUserPick && (
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="text-lg">👤</span>
-            <h3 className="font-semibold text-gray-900">Your Selection</h3>
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-8 h-8 bg-primary-900 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm">👤</span>
+            </div>
+            <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Your Selection</h3>
           </div>
-          <div className="flex flex-wrap gap-4 mb-3">
+          
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-3">
             {userContext.userPick && (
-              <div>
-                <p className="text-xs text-gray-500">Pick</p>
-                <p className="font-semibold text-accent-cyan">{userContext.userPick}</p>
+              <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                <span className="text-xs text-gray-500">Pick:</span>
+                <span className="font-semibold text-primary-900">{userContext.userPick}</span>
               </div>
             )}
             {userContext.userStake > 0 && (
-              <div>
-                <p className="text-xs text-gray-500">Stake</p>
-                <p className="font-semibold text-accent-cyan">{userContext.userStake} units</p>
+              <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                <span className="text-xs text-gray-500">Stake:</span>
+                <span className="font-semibold text-primary-900">{userContext.userStake} units</span>
               </div>
             )}
           </div>
+          
           {userContext.pickComment && (
-            <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{userContext.pickComment}</p>
+            <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100 leading-relaxed">
+              {userContext.pickComment}
+            </p>
           )}
         </div>
       )}
 
-      {/* Audio Analysis Card */}
+      {/* Audio Analysis - Compact Inline Card */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-accent-cyan/10 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-accent-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               </svg>
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Audio Analysis</h3>
-              <p className="text-sm text-gray-500">Listen to the AI-generated summary</p>
+              <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Audio Analysis</h3>
+              <p className="text-xs text-gray-500">Listen to AI-generated summary</p>
             </div>
           </div>
           <ListenToAnalysisButton result={result} />
         </div>
       </div>
 
-      {/* Analysis Notes (warnings) - subtle style */}
+      {/* Analysis Notes - Subtle Inline Style */}
       {warnings.length > 0 && (
-        <div className="bg-gray-50 rounded-xl border border-gray-100 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-gray-500">ℹ️</span>
-            <h3 className="text-sm font-medium text-gray-700">Analysis Notes</h3>
+        <div className="bg-gray-50 rounded-xl border border-gray-100 px-4 py-3">
+          <div className="flex items-start gap-2">
+            <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-500 mb-1.5">Analysis Notes</p>
+              <ul className="space-y-1">
+                {warnings.map((warning, index) => (
+                  <li key={index} className="text-xs sm:text-sm text-gray-600 flex items-start gap-1.5">
+                    <span className="text-gray-400">•</span>
+                    <span>{warning}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <ul className="space-y-1">
-            {warnings.map((warning, index) => (
-              <li key={index} className="text-sm text-gray-600 flex items-start gap-2">
-                <span className="text-gray-400">•</span>
-                {warning}
-              </li>
-            ))}
-          </ul>
         </div>
       )}
 
-      {/* Responsible Gambling Note */}
-      <div className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-100 rounded-xl">
+      {/* Responsible Gambling Note - Minimal Footer Style */}
+      <div className="flex items-start gap-2.5 px-4 py-3 bg-gray-50/50 border border-gray-100 rounded-xl">
         <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
         </svg>
-        <p className="text-xs text-gray-500 leading-relaxed">
-          This analysis is for informational and educational purposes only. It is not betting advice and no outcome is guaranteed. 
-          Gamble responsibly. 18+. Need help?{' '}
+        <p className="text-[11px] sm:text-xs text-gray-500 leading-relaxed">
+          For educational purposes only. No outcome is guaranteed. 
+          Gamble responsibly. 18+.{' '}
           <a 
             href="https://www.begambleaware.org/" 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="underline hover:text-gray-700"
+            className="text-cyan-600 hover:text-cyan-700 underline underline-offset-2"
           >
             BeGambleAware.org
           </a>
         </p>
       </div>
 
-      {/* Meta Footer */}
-      <div className="text-center text-xs text-gray-400 pt-2">
-        <p>
-          Analysis by BetSense AI v{result.meta.modelVersion} • {new Date(result.meta.analysisGeneratedAt).toLocaleString()}
-        </p>
+      {/* Meta Footer - Subtle */}
+      <div className="flex items-center justify-center gap-2 text-[10px] sm:text-xs text-gray-400 pt-1">
+        <span className="flex items-center gap-1">
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          BetSense AI v{result.meta.modelVersion}
+        </span>
+        <span className="text-gray-300">•</span>
+        <span>{new Date(result.meta.analysisGeneratedAt).toLocaleString()}</span>
       </div>
     </div>
   );

@@ -125,29 +125,29 @@ export default function PricingCards() {
       {plans.map((plan) => (
         <div
           key={plan.id}
-          className={`card relative ${
+          className={`bg-bg-card rounded-card p-6 relative ${
             plan.highlighted
-              ? 'border-2 border-primary-600 shadow-xl scale-105'
-              : 'border border-gray-200'
+              ? 'border-2 border-primary shadow-glow-primary scale-105'
+              : 'border border-divider'
           }`}
         >
           {/* Popular badge */}
           {plan.highlighted && (
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary-600 text-white text-sm font-bold px-4 py-1 rounded-full">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white text-sm font-bold px-4 py-1 rounded-full">
               MOST POPULAR
             </div>
           )}
 
           {/* Plan header */}
           <div className="text-center mb-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+            <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
             <div className="mb-2">
-              <span className={`text-4xl font-bold ${plan.highlighted ? 'text-primary-600' : 'text-gray-900'}`}>
+              <span className={`text-4xl font-bold ${plan.highlighted ? 'text-primary' : 'text-white'}`}>
                 {plan.price}
               </span>
-              <span className="text-gray-500">/monthly</span>
+              <span className="text-gray-400">/monthly</span>
             </div>
-            <p className="text-gray-600 text-sm">{plan.description}</p>
+            <p className="text-gray-400 text-sm">{plan.description}</p>
           </div>
 
           {/* Features list */}
@@ -155,7 +155,7 @@ export default function PricingCards() {
             {plan.features.map((feature, index) => (
               <li key={index} className="flex items-start gap-3">
                 <svg
-                  className={`w-5 h-5 flex-shrink-0 ${plan.highlighted ? 'text-primary-600' : 'text-accent-green'}`}
+                  className={`w-5 h-5 flex-shrink-0 ${plan.highlighted ? 'text-primary' : 'text-accent'}`}
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -165,7 +165,7 @@ export default function PricingCards() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span className="text-gray-700 text-sm">{feature}</span>
+                <span className="text-gray-300 text-sm">{feature}</span>
               </li>
             ))}
           </ul>
@@ -176,8 +176,8 @@ export default function PricingCards() {
             disabled={loading === plan.id}
             className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-200 ${
               plan.highlighted
-                ? 'bg-primary-600 text-white hover:bg-primary-700'
-                : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                ? 'bg-primary text-white hover:bg-primary/80'
+                : 'bg-bg-elevated text-white hover:bg-bg-elevated/80 border border-divider'
             } ${loading === plan.id ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {loading === plan.id ? (
@@ -209,7 +209,7 @@ export default function PricingCards() {
 
       {/* Error message */}
       {error && (
-        <div className="col-span-full bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-center">
+        <div className="col-span-full bg-danger/10 border border-danger/30 text-danger px-4 py-3 rounded-lg text-center">
           {error}
         </div>
       )}

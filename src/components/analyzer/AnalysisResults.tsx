@@ -1,12 +1,12 @@
 /**
  * Analysis Results Component
  * 
- * Clean, layered layout for analysis results:
- * - Layer 1: Quick Glance Card (always visible)
- * - Layer 2: Analysis Accordion (collapsed by default)
- * - Layer 3: Extras Section (audio, warnings, disclaimer)
+ * Premium 3-layer layout for analysis results:
+ * - Layer 1: Quick Glance Card (summary with key metrics)
+ * - Layer 2: Analysis Accordion (detailed sections, collapsed by default)
+ * - Layer 3: Extras Section (audio, notes, disclaimer)
  * 
- * Mobile-first, scannable design.
+ * Mobile-first, clean, scannable design with clear visual hierarchy.
  */
 
 'use client';
@@ -24,16 +24,16 @@ export default function AnalysisResults({ result }: AnalysisResultsProps) {
   // Error state
   if (!result.success && result.error) {
     return (
-      <div className="bg-white rounded-xl border border-red-200 p-6">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-            <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="bg-white rounded-2xl border border-red-200 shadow-sm p-6 sm:p-8 max-w-2xl mx-auto">
+        <div className="flex flex-col sm:flex-row items-start gap-4">
+          <div className="flex-shrink-0 w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center">
+            <svg className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-1">Analysis Error</h3>
-            <p className="text-gray-600">{result.error}</p>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Analysis Error</h3>
+            <p className="text-gray-600 leading-relaxed">{result.error}</p>
           </div>
         </div>
       </div>
@@ -41,20 +41,34 @@ export default function AnalysisResults({ result }: AnalysisResultsProps) {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Layer 1: Quick Glance */}
-      <QuickGlanceCard result={result} />
+    <div className="space-y-6 sm:space-y-8 max-w-4xl mx-auto">
+      {/* Layer 1: Quick Glance - Key Metrics Summary */}
+      <section>
+        <QuickGlanceCard result={result} />
+      </section>
 
-      {/* Layer 2: Detailed Analysis (Accordion) */}
-      <div>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1">
-          Detailed Analysis
-        </h2>
+      {/* Layer 2: Detailed Analysis Accordion */}
+      <section>
+        <div className="flex items-center justify-between mb-3 sm:mb-4 px-1">
+          <h2 className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">
+            Detailed Analysis
+          </h2>
+          <span className="text-[10px] sm:text-xs text-gray-400">
+            Tap to expand
+          </span>
+        </div>
         <AnalysisAccordion result={result} />
-      </div>
+      </section>
 
-      {/* Layer 3: Extras */}
-      <ExtrasSection result={result} />
+      {/* Layer 3: Extras - Audio, Notes, Disclaimer */}
+      <section>
+        <div className="mb-3 sm:mb-4 px-1">
+          <h2 className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">
+            More Options
+          </h2>
+        </div>
+        <ExtrasSection result={result} />
+      </section>
     </div>
   );
 }
