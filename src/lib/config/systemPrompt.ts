@@ -174,6 +174,28 @@ You must validate your analysis using these strict rules:
 `;
 
 // ============================================
+// FINAL OUTPUT RULE
+// ============================================
+
+export const FINAL_OUTPUT_RULE = `
+[FINAL OUTPUT RULE]
+
+After all internal reasoning and validation:
+- Output ONLY the final JSON object that matches the exact BetSense schema.
+- NO chain-of-thought.
+- NO explanations.
+- NO markdown.
+- NO extra text.
+
+If data is incomplete or unusable:
+- Set success = false
+- Set error = descriptive message
+- Still output valid JSON structure.
+
+Your response must be parseable by JSON.parse() with zero modifications.
+`;
+
+// ============================================
 // BUILD CORE SYSTEM PROMPT
 // ============================================
 
@@ -198,8 +220,9 @@ ${SPORT_SPECIFIC_LOGIC}
 
 ${VALIDATION_MODULE}
 
-You MUST produce extremely stable and consistent output.
-Only the final JSON object is returned.`;
+${FINAL_OUTPUT_RULE}
+
+You MUST produce extremely stable and consistent output.`;
 }
 
 // ============================================
