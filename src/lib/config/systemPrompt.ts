@@ -194,6 +194,8 @@ ${ACCURACY_ENHANCERS.map(e => `- ${e}`).join('\n')}
 
 ${INTERNAL_REASONING_STEPS}
 
+${SPORT_SPECIFIC_LOGIC}
+
 ${VALIDATION_MODULE}
 
 You MUST produce extremely stable and consistent output.
@@ -251,6 +253,93 @@ ${config.keyAnalysisFactors.map((f, i) => `${i + 1}. ${f}`).join('\n')}`;
 
   return context;
 }
+
+// ============================================
+// SPORT-SPECIFIC LOGIC MODULES
+// ============================================
+
+export const SPORT_SPECIFIC_LOGIC = `
+[SPORT-SPECIFIC LOGIC MODULES]
+
+Apply the following adjustments depending on matchData.sport:
+
+=== FOOTBALL (SOCCER) ===
+Scoring Profile: Low scoring sport
+- Draw probability baseline: 25% (adjust ±8% based on team styles)
+- Home advantage baseline: +3–5% to home win probability
+- Momentum/form strongly influences value detection
+- Injuries to key attackers: reduce over 2.5 probability by 5-10%
+- Injuries to key defenders: increase over 2.5 probability by 3-7%
+- Derby/rivalry matches: increase draw probability by 3-5%
+- End of season: check motivation (relegation battle vs nothing to play for)
+
+=== BASKETBALL (NBA) ===
+Scoring Profile: High scoring, pace-dependent
+- Pace factor influences total points model significantly
+- Star player availability: affects win probability more than recent form
+- Back-to-back games: reduce win expectancy by 3–8%
+- Home court advantage: +3-4% baseline
+- Playoff seeding races: increase motivation factor
+- Rest days advantage: +2-3% for well-rested team
+- Three-point variance: high 3PT teams = higher volatility
+
+=== NFL (AMERICAN FOOTBALL) ===
+Scoring Profile: Moderate scoring, high variance
+- Quarterback rating/performance: primary probability driver
+- Home advantage baseline: 2–3% (lower than other sports)
+- Injuries to offensive line: -5% win probability
+- Injuries to starting QB: -10-20% win probability
+- Weather conditions: affects passing teams more (-3-5% in bad weather)
+- Divisional games: historically closer, reduce favorite margin
+- Primetime games: home advantage slightly reduced
+
+=== TENNIS ===
+Scoring Profile: Individual sport, surface-dependent
+- Surface preference: adjusts probabilities ±5%
+  - Clay: favors baseliners, longer rallies
+  - Grass: favors big servers, shorter points
+  - Hard: neutral, favors all-court players
+- Ranking difference: non-linear impact
+  - Top 10 vs Top 50: bigger gap than Top 50 vs Top 100
+- Recent head-to-head: small adjustment only (±2-3%)
+- Tournament stage fatigue: later rounds, check previous match length
+- First serve percentage: key indicator for match outcome
+- Five-set vs three-set: favors higher-ranked players in slams
+
+=== MMA ===
+Scoring Profile: High variance, finish potential
+- Style matchup: wrestler vs striker dynamics critical
+- Reach advantage: +2-3% for significant reach difference
+- Cardio/pace: affects later round probabilities
+- Weight cut issues: -5-10% if reported
+- Octagon rust: returning fighters after layoff -3-5%
+- Championship rounds: favors experienced fighters
+
+=== HOCKEY (NHL) ===
+Scoring Profile: Low-moderate scoring
+- Goaltender form: single most important factor
+- Home ice advantage: +2-3% (smaller than soccer)
+- Back-to-back games: -4-6% for tired team
+- Power play efficiency: affects goal expectancy
+- Playoff vs regular season: tighter checking, lower scoring
+- Travel schedule: West-to-East disadvantage
+
+=== BASEBALL (MLB) ===
+Scoring Profile: Moderate scoring, pitcher-dependent
+- Starting pitcher: primary probability driver
+- Bullpen rest/availability: affects late-game expectations
+- Home advantage: +3-4%
+- Day game after night game: -2-3% for tired team
+- Ballpark factors: adjust over/under based on venue
+
+=== UNKNOWN/OTHER SPORTS ===
+If sport is not recognized:
+- Apply generic probability logic
+- Reduce all confidence levels by 1 star
+- Add warning: "Limited sport-specific modeling available"
+- Use conservative probability estimates
+- Default home advantage: +3%
+`;
 
 // ============================================
 // PROBABILITY BOUNDS BY SPORT
