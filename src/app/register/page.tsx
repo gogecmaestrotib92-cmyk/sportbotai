@@ -69,7 +69,10 @@ export default function RegisterPage() {
   };
 
   const handleOAuthSignIn = (provider: string) => {
-    signIn(provider, { callbackUrl: '/analyzer' });
+    signIn(provider, { 
+      callbackUrl: '/analyzer',
+      redirect: true 
+    });
   };
 
   return (

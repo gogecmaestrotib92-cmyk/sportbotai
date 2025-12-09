@@ -98,12 +98,19 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async redirect({ url, baseUrl }) {
-      // Debug logging
-      console.log('Redirect callback - url:', url, 'baseUrl:', baseUrl);
+      // Get the proper base URL
+      const siteUrl = process.env.NEXTAUTH_URL || baseUrl;
       
-      // ALWAYS redirect to /analyzer after authentication
-      // This is the simplest, most reliable approach
-      return `${baseUrl}/analyzer`;
+      // If the URL contains /analyzer, use it
+      if (url.includes('/analyzer')) {
+        if (url.startsWith('/')) {
+          return `${siteUrl}${url}`;
+        }
+        return url;
+      }
+      
+      // For all other cases (including home page, empty, etc.), go to analyzer
+      return `${siteUrl}/analyzer`;
     },
     async session({ session, user }) {
       if (session.user && user) {

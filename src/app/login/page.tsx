@@ -41,7 +41,11 @@ function LoginForm() {
   };
 
   const handleOAuthSignIn = (provider: string) => {
-    signIn(provider, { callbackUrl });
+    // Use redirect: true and let NextAuth handle it via redirect callback
+    signIn(provider, { 
+      callbackUrl: '/analyzer',
+      redirect: true 
+    });
   };
 
   return (
