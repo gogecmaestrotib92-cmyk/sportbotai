@@ -38,6 +38,12 @@ export default function Header() {
               Home
             </Link>
             <Link 
+              href="/history" 
+              className="text-text-secondary hover:text-text-primary font-medium transition-colors text-sm"
+            >
+              History
+            </Link>
+            <Link 
               href="/pricing" 
               className="text-text-secondary hover:text-text-primary font-medium transition-colors text-sm"
             >
@@ -79,6 +85,13 @@ export default function Header() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Home
+              </Link>
+              <Link
+                href="/history"
+                className="text-text-secondary hover:text-text-primary hover:bg-bg-hover font-medium px-3 py-2 rounded-btn transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                History
               </Link>
               <Link
                 href="/pricing"

@@ -17,6 +17,9 @@
  * CACHING:
  * - Uses Upstash Redis to cache identical analyses for 1 hour
  * - Reduces OpenAI API costs and improves response time
+ * 
+ * HISTORY:
+ * - Saves each analysis to database for user history
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -58,6 +61,8 @@ import {
   CACHE_KEYS,
   hashOdds,
 } from '@/lib/cache';
+import { prisma } from '@/lib/prisma';
+import { getMatchContext, MatchContext } from '@/lib/match-context';
 
 // ============================================
 // OPENAI CLIENT (LAZY INIT)
@@ -411,6 +416,38 @@ export async function POST(request: NextRequest) {
     }
 
     // ========================================
+    // FETCH MATCH CONTEXT (Injuries, Weather)
+    // ========================================
+    let matchContext: MatchContext | null = null;
+    
+    // Only fetch for soccer matches where we have team IDs
+    if (sportInput.toLowerCase().includes('soccer') || 
+        sportInput.toLowerCase().includes('football') ||
+        sportInput.toLowerCase().includes('premier') ||
+        sportInput.toLowerCase().includes('la_liga') ||
+        sportInput.toLowerCase().includes('serie_a') ||
+        sportInput.toLowerCase().includes('bundesliga') ||
+        sportInput.toLowerCase().includes('ligue_1')) {
+      try {
+        console.log('[MatchContext] Fetching injuries and weather data...');
+        matchContext = await getMatchContext(
+          normalizedRequest.matchData.homeTeam,
+          normalizedRequest.matchData.awayTeam,
+          sportInput
+        );
+        console.log('[MatchContext] Context data received:', {
+          homeInjuries: matchContext.homeInjuries?.length || 0,
+          awayInjuries: matchContext.awayInjuries?.length || 0,
+          hasWeather: !!matchContext.weather,
+          hasVenue: !!matchContext.venue,
+        });
+      } catch (contextError) {
+        console.error('[MatchContext] Error fetching context:', contextError);
+        // Continue without context data - not critical
+      }
+    }
+
+    // ========================================
     // CHECK CACHE FOR EXISTING ANALYSIS
     // ========================================
     const oddsHash = hashOdds(normalizedRequest.matchData.odds || {});
@@ -444,9 +481,9 @@ export async function POST(request: NextRequest) {
         };
       }
     } else {
-      // Call OpenAI API with sport-aware prompt and enriched data
+      // Call OpenAI API with sport-aware prompt, enriched data, and match context
       console.log('[OpenAI] Generating fresh analysis...');
-      analysis = await callOpenAI(openai, normalizedRequest, enrichedData);
+      analysis = await callOpenAI(openai, normalizedRequest, enrichedData, matchContext);
       
       // Cache the analysis for future requests
       await cacheSet(cacheKey, analysis, CACHE_TTL.ANALYSIS);
@@ -457,6 +494,36 @@ export async function POST(request: NextRequest) {
     // INCREMENT USAGE COUNT (only on success)
     // ========================================
     await incrementAnalysisCount(userId);
+
+    // ========================================
+    // SAVE TO ANALYSIS HISTORY
+    // ========================================
+    try {
+      await prisma.analysis.create({
+        data: {
+          userId,
+          sport: sportInput,
+          league: normalizedRequest.matchData.league,
+          homeTeam: normalizedRequest.matchData.homeTeam,
+          awayTeam: normalizedRequest.matchData.awayTeam,
+          matchDate: normalizedRequest.matchData.matchDate 
+            ? new Date(normalizedRequest.matchData.matchDate) 
+            : null,
+          userPick: normalizedRequest.userPick || null,
+          userStake: normalizedRequest.userStake || null,
+          homeWinProb: analysis.probabilities.homeWin,
+          drawProb: analysis.probabilities.draw,
+          awayWinProb: analysis.probabilities.awayWin,
+          riskLevel: analysis.riskAnalysis.overallRiskLevel,
+          bestValueSide: analysis.valueAnalysis.bestValueSide,
+          fullResponse: analysis as any,
+        },
+      });
+      console.log('[History] Analysis saved to user history');
+    } catch (historyError) {
+      // Don't fail the request if history save fails
+      console.error('[History] Failed to save analysis:', historyError);
+    }
 
     // Add usage info to response
     return NextResponse.json({
@@ -590,10 +657,75 @@ function formatFormDataForPrompt(enrichedData: MultiSportEnrichedData): string {
   return formSection;
 }
 
+/**
+ * Format match context (injuries, weather) for the AI prompt
+ */
+function formatMatchContextForPrompt(context: MatchContext | null): string {
+  if (!context) return '';
+  
+  let contextSection = '';
+  
+  // Add injury information
+  if ((context.homeInjuries && context.homeInjuries.length > 0) || 
+      (context.awayInjuries && context.awayInjuries.length > 0)) {
+    contextSection += '\n=== INJURIES & SUSPENSIONS (from API-Football) ===\n';
+    
+    if (context.homeInjuries && context.homeInjuries.length > 0) {
+      contextSection += '\nHome Team Absences:\n';
+      context.homeInjuries.forEach((injury, idx) => {
+        contextSection += `  ${idx + 1}. ${injury.name} - ${injury.type} (${injury.reason})\n`;
+      });
+    }
+    
+    if (context.awayInjuries && context.awayInjuries.length > 0) {
+      contextSection += '\nAway Team Absences:\n';
+      context.awayInjuries.forEach((injury, idx) => {
+        contextSection += `  ${idx + 1}. ${injury.name} - ${injury.type} (${injury.reason})\n`;
+      });
+    }
+    
+    contextSection += '\nFactor these absences into your probability analysis - key player injuries can significantly impact match outcomes.\n';
+  }
+  
+  // Add weather information
+  if (context.weather) {
+    contextSection += '\n=== MATCH DAY WEATHER ===\n';
+    contextSection += `  Conditions: ${context.weather.description}\n`;
+    contextSection += `  Temperature: ${context.weather.temperature}°C\n`;
+    contextSection += `  Wind: ${context.weather.windSpeed} m/s\n`;
+    contextSection += `  Humidity: ${context.weather.humidity}%\n`;
+    
+    // Add weather impact note for extreme conditions
+    if (context.weather.windSpeed > 10) {
+      contextSection += '  ⚠️ High winds may affect long balls and aerial play.\n';
+    }
+    if (context.weather.temperature < 5 || context.weather.temperature > 30) {
+      contextSection += '  ⚠️ Extreme temperature may affect player stamina and performance.\n';
+    }
+    if (context.weather.description.toLowerCase().includes('rain') || 
+        context.weather.description.toLowerCase().includes('snow')) {
+      contextSection += '  ⚠️ Wet/slippery conditions may increase unpredictability.\n';
+    }
+  }
+  
+  // Add venue information
+  if (context.venue) {
+    contextSection += '\n=== VENUE INFO ===\n';
+    contextSection += `  Stadium: ${context.venue.name}\n`;
+    contextSection += `  City: ${context.venue.city}\n`;
+    if (context.venue.capacity) {
+      contextSection += `  Capacity: ${context.venue.capacity.toLocaleString()}\n`;
+    }
+  }
+  
+  return contextSection;
+}
+
 async function callOpenAI(
   openai: OpenAI,
   request: AnalyzeRequest,
-  enrichedData?: MultiSportEnrichedData | null
+  enrichedData?: MultiSportEnrichedData | null,
+  matchContext?: MatchContext | null
 ): Promise<AnalyzeResponse> {
   // Build base user prompt
   let userPrompt = buildUserPrompt(
@@ -607,6 +739,14 @@ async function callOpenAI(
     const formDataSection = formatFormDataForPrompt(enrichedData);
     if (formDataSection) {
       userPrompt += formDataSection;
+    }
+  }
+  
+  // Append match context (injuries, weather) if available
+  if (matchContext) {
+    const contextSection = formatMatchContextForPrompt(matchContext);
+    if (contextSection) {
+      userPrompt += contextSection;
     }
   }
 
