@@ -14,12 +14,14 @@
     "@auth/prisma-adapter": "^2.11.1",
     "@prisma/client": "^5.22.0",
     "@upstash/redis": "^1.35.7",
+    "@vercel/blob": "^2.0.0",
     "bcryptjs": "^3.0.3",
     "next": "14.2.15",
     "next-auth": "^4.24.13",
     "openai": "^6.10.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "replicate": "^1.4.0",
     "stripe": "^14.25.0"
   },
   "devDependencies": {

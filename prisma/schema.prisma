@@ -128,3 +128,85 @@ model Analysis {
   @@index([userId])
   @@index([createdAt])
 }
+
+// ============================================
+// BLOG SYSTEM - Automated SEO Content
+// ============================================
+
+model BlogKeyword {
+  id              String   @id @default(cuid())
+  keyword         String   @unique // The keyword/topic to write about
+  status          KeywordStatus @default(PENDING)
+  lastGeneratedAt DateTime?
+  generationCount Int      @default(0)
+  
+  // SEO metrics (optional, can be added later)
+  searchVolume    Int?
+  difficulty      Int?
+  
+  posts           BlogPost[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([status])
+  @@index([lastGeneratedAt])
+}
+
+model BlogPost {
+  id              String   @id @default(cuid())
+  
+  // Content
+  title           String
+  slug            String   @unique
+  excerpt         String   @db.Text
+  content         String   @db.Text // Full HTML/markdown content
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  focusKeyword    String?
+  
+  // Media
+  featuredImage   String?  // Vercel Blob URL
+  imageAlt        String?
+  
+  // Categorization
+  category        String?
+  tags            String[] // Array of tags
+  
+  // Publishing
+  status          PostStatus @default(DRAFT)
+  publishedAt     DateTime?
+  
+  // AI Generation metadata
+  keywordId       String?
+  keyword         BlogKeyword? @relation(fields: [keywordId], references: [id])
+  aiModel         String?      // e.g., "gpt-4o-mini", "perplexity"
+  generationCost  Float?       // Cost in USD
+  
+  // Engagement (for future analytics)
+  views           Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([slug])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([keywordId])
+}
+
+enum KeywordStatus {
+  PENDING     // Not yet used
+  ACTIVE      // In rotation
+  EXHAUSTED   // Too many posts generated
+  DISABLED    // Manually disabled
+}
+
+enum PostStatus {
+  DRAFT       // Not published
+  PUBLISHED   // Live on site
+  SCHEDULED   // Will publish at scheduledAt
+  ARCHIVED    // Hidden from public
+}

@@ -54,6 +54,12 @@ export default function Header() {
               Pricing
             </Link>
             <Link 
+              href="/blog" 
+              className="text-text-secondary hover:text-text-primary font-medium transition-colors text-sm"
+            >
+              Blog
+            </Link>
+            <Link 
               href="/responsible-gambling" 
               className="text-text-secondary hover:text-text-primary font-medium transition-colors text-sm"
             >
@@ -103,6 +109,13 @@ export default function Header() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Pricing
+              </Link>
+              <Link
+                href="/blog"
+                className="text-text-secondary hover:text-text-primary hover:bg-bg-hover font-medium px-3 py-2 rounded-btn transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Blog
               </Link>
               <Link
                 href="/responsible-gambling"
