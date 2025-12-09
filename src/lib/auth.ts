@@ -93,6 +93,18 @@ export const authOptions: NextAuthOptions = {
   },
   
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // If the url is relative, prefix it with the base url
+      if (url.startsWith('/')) {
+        return `${baseUrl}${url}`;
+      }
+      // If the url is on the same origin, allow it
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      // Default redirect to analyzer after login
+      return `${baseUrl}/analyzer`;
+    },
     async session({ session, user }) {
       if (session.user && user) {
         session.user.id = user.id;
