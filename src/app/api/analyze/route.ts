@@ -9,6 +9,9 @@
  * AUTHENTICATION & LIMITS:
  * - Requires authenticated user session
  * - Enforces plan-based usage limits (FREE: 3/day, PRO: 30/day, PREMIUM: unlimited)
+ * 
+ * REAL DATA INTEGRATION:
+ * - Fetches real team form from API-Football when available (soccer)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -24,6 +27,7 @@ import {
   BestValueSide,
   MarketType,
   MarketConfidence,
+  FormMatch,
 } from '@/types';
 import { getSportConfig, getSportTerminology } from '@/lib/config/sportsConfig';
 import {
@@ -36,6 +40,7 @@ import {
   SportPromptConfig,
 } from '@/lib/config/systemPrompt';
 import { canUserAnalyze, incrementAnalysisCount } from '@/lib/auth';
+import { getEnrichedMatchData, EnrichedMatchData } from '@/lib/football-api';
 
 // ============================================
 // OPENAI CLIENT (LAZY INIT)
@@ -347,8 +352,33 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Call OpenAI API with sport-aware prompt
-    const analysis = await callOpenAI(openai, normalizedRequest);
+    // ========================================
+    // FETCH REAL FORM DATA (for soccer only)
+    // ========================================
+    let enrichedData: EnrichedMatchData | null = null;
+    
+    if (isSoccerSport(normalizedRequest.matchData.sport)) {
+      try {
+        console.log('[API-Football] Fetching real form data for soccer match...');
+        enrichedData = await getEnrichedMatchData(
+          normalizedRequest.matchData.homeTeam,
+          normalizedRequest.matchData.awayTeam,
+          normalizedRequest.matchData.league
+        );
+        
+        if (enrichedData.homeForm || enrichedData.awayForm) {
+          console.log('[API-Football] Real form data retrieved successfully');
+        } else {
+          console.log('[API-Football] No form data found for these teams');
+        }
+      } catch (formError) {
+        console.error('[API-Football] Error fetching form data:', formError);
+        // Continue without form data - not critical
+      }
+    }
+
+    // Call OpenAI API with sport-aware prompt and enriched data
+    const analysis = await callOpenAI(openai, normalizedRequest, enrichedData);
     
     // ========================================
     // INCREMENT USAGE COUNT (only on success)
@@ -449,15 +479,72 @@ function validateRequest(req: AnalyzeRequest): { valid: boolean; error?: string 
 // OPENAI API CALL (MULTI-SPORT AWARE)
 // ============================================
 
+/**
+ * Check if the sport is soccer (API-Football supports soccer/football only)
+ */
+function isSoccerSport(sport: string): boolean {
+  const soccerTerms = ['soccer', 'football', 'soccer_', 'futbol'];
+  const sportLower = sport.toLowerCase();
+  return soccerTerms.some(term => sportLower.includes(term));
+}
+
+/**
+ * Format form data for the AI prompt
+ */
+function formatFormDataForPrompt(enrichedData: EnrichedMatchData): string {
+  if (!enrichedData.homeForm && !enrichedData.awayForm) {
+    return '';
+  }
+
+  let formSection = '\n=== REAL FORM DATA (from API-Football) ===\n';
+  
+  if (enrichedData.homeForm && enrichedData.homeForm.length > 0) {
+    formSection += `\nHome Team Recent Form:\n`;
+    enrichedData.homeForm.forEach((match, idx) => {
+      const venue = match.home ? 'H' : 'A';
+      formSection += `  ${idx + 1}. vs ${match.opponent || 'Unknown'} (${venue}): ${match.result} (${match.score || 'N/A'}) - ${match.date || 'N/A'}\n`;
+    });
+  }
+
+  if (enrichedData.awayForm && enrichedData.awayForm.length > 0) {
+    formSection += `\nAway Team Recent Form:\n`;
+    enrichedData.awayForm.forEach((match, idx) => {
+      const venue = match.home ? 'H' : 'A';
+      formSection += `  ${idx + 1}. vs ${match.opponent || 'Unknown'} (${venue}): ${match.result} (${match.score || 'N/A'}) - ${match.date || 'N/A'}\n`;
+    });
+  }
+
+  if (enrichedData.headToHead && enrichedData.headToHead.length > 0) {
+    formSection += `\nHead-to-Head Recent Matches:\n`;
+    enrichedData.headToHead.forEach((match, idx) => {
+      formSection += `  ${idx + 1}. ${match.homeTeam} ${match.homeScore}-${match.awayScore} ${match.awayTeam} (${match.date})\n`;
+    });
+  }
+
+  formSection += '\nUse this real data to inform your momentum/form analysis.\n';
+  
+  return formSection;
+}
+
 async function callOpenAI(
   openai: OpenAI,
-  request: AnalyzeRequest
+  request: AnalyzeRequest,
+  enrichedData?: EnrichedMatchData | null
 ): Promise<AnalyzeResponse> {
-  const userPrompt = buildUserPrompt(
+  // Build base user prompt
+  let userPrompt = buildUserPrompt(
     request.matchData,
     request.userPick,
     request.userStake
   );
+
+  // Append real form data if available
+  if (enrichedData) {
+    const formDataSection = formatFormDataForPrompt(enrichedData);
+    if (formDataSection) {
+      userPrompt += formDataSection;
+    }
+  }
 
   // Build sport-aware system prompt
   const sportAwareSystemPrompt = buildSystemPrompt(
@@ -480,10 +567,10 @@ async function callOpenAI(
   
   try {
     const parsed = JSON.parse(content);
-    return validateAndSanitizeResponse(parsed, request);
+    return validateAndSanitizeResponse(parsed, request, enrichedData);
   } catch (parseError) {
     console.error('Failed to parse OpenAI response:', content);
-    return generateFallbackAnalysis(request);
+    return generateFallbackAnalysis(request, enrichedData);
   }
 }
 
@@ -493,9 +580,15 @@ async function callOpenAI(
 
 function validateAndSanitizeResponse(
   raw: any,
-  request: AnalyzeRequest
+  request: AnalyzeRequest,
+  enrichedData?: EnrichedMatchData | null
 ): AnalyzeResponse {
   const now = new Date().toISOString();
+  
+  // Determine form data source
+  const formDataSource = enrichedData?.homeForm || enrichedData?.awayForm 
+    ? 'API_FOOTBALL' 
+    : 'AI_ESTIMATE';
   
   return {
     success: raw.success ?? true,
@@ -558,6 +651,10 @@ function validateAndSanitizeResponse(
       keyFormFactors: Array.isArray(raw.momentumAndForm?.keyFormFactors) 
         ? raw.momentumAndForm.keyFormFactors 
         : ['Form data not available'],
+      // Real form data from API-Football (if available)
+      homeForm: enrichedData?.homeForm ?? undefined,
+      awayForm: enrichedData?.awayForm ?? undefined,
+      formDataSource: formDataSource as 'API_FOOTBALL' | 'AI_ESTIMATE' | 'UNAVAILABLE',
     },
     
     marketStability: {
@@ -758,7 +855,10 @@ function createErrorResponse(error: string): AnalyzeResponse {
 // FALLBACK ANALYSIS (NO OPENAI)
 // ============================================
 
-function generateFallbackAnalysis(request: AnalyzeRequest): AnalyzeResponse {
+function generateFallbackAnalysis(
+  request: AnalyzeRequest,
+  enrichedData?: EnrichedMatchData | null
+): AnalyzeResponse {
   const now = new Date().toISOString();
   const { matchData, userPick, userStake } = request;
 
@@ -788,6 +888,10 @@ function generateFallbackAnalysis(request: AnalyzeRequest): AnalyzeResponse {
   // Determine favorite and underdog
   const homeFavorite = homeOdds < awayOdds;
   const upsetProb = homeFavorite ? awayWin : homeWin;
+  
+  // Determine form data source
+  const hasRealFormData = enrichedData?.homeForm || enrichedData?.awayForm;
+  const formDataSource = hasRealFormData ? 'API_FOOTBALL' : 'UNAVAILABLE';
 
   return {
     success: true,
@@ -848,6 +952,10 @@ function generateFallbackAnalysis(request: AnalyzeRequest): AnalyzeResponse {
       homeTrend: 'UNKNOWN',
       awayTrend: 'UNKNOWN',
       keyFormFactors: ['Form data not available in fallback mode'],
+      // Real form data from API-Football (if available)
+      homeForm: enrichedData?.homeForm ?? undefined,
+      awayForm: enrichedData?.awayForm ?? undefined,
+      formDataSource: formDataSource as 'API_FOOTBALL' | 'AI_ESTIMATE' | 'UNAVAILABLE',
     },
     
     marketStability: {

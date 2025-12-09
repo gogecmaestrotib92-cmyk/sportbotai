@@ -120,6 +120,17 @@ export interface RiskAnalysis {
 }
 
 /**
+ * Individual match result for form display
+ */
+export interface FormMatch {
+  result: 'W' | 'D' | 'L';
+  score?: string;
+  opponent?: string;
+  date?: string;
+  home?: boolean;
+}
+
+/**
  * Momentum and form section
  */
 export interface MomentumAndForm {
@@ -128,6 +139,10 @@ export interface MomentumAndForm {
   homeTrend: Trend;
   awayTrend: Trend;
   keyFormFactors: string[];
+  // Real form data (when available from API-Football)
+  homeForm?: FormMatch[];
+  awayForm?: FormMatch[];
+  formDataSource?: 'API_FOOTBALL' | 'AI_ESTIMATE' | 'UNAVAILABLE';
 }
 
 /**

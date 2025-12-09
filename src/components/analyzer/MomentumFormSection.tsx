@@ -4,13 +4,14 @@
  * Features:
  * - Circular momentum gauge with gradient
  * - Trend indicators with animated arrows
- * - Form timeline with visual representation
+ * - Form timeline with visual representation (REAL or AI-estimated)
  * - Side-by-side team comparison
+ * - Real match data from API-Football when available
  */
 
 'use client';
 
-import { MomentumAndForm, Trend } from '@/types';
+import { MomentumAndForm, Trend, FormMatch } from '@/types';
 
 interface MomentumFormSectionProps {
   momentumAndForm: MomentumAndForm;
@@ -114,8 +115,8 @@ function CircularGauge({ score, maxScore = 10, size = 100 }: { score: number | n
   );
 }
 
-// Form result indicator (W/D/L)
-function FormResult({ result, index }: { result: 'W' | 'D' | 'L'; index: number }) {
+// Form result indicator (W/D/L) - with optional tooltip for real matches
+function FormResult({ result, index, matchData }: { result: 'W' | 'D' | 'L'; index: number; matchData?: FormMatch }) {
   const config = {
     W: { bg: 'bg-green-500', text: 'W' },
     D: { bg: 'bg-gray-400', text: 'D' },
@@ -124,10 +125,16 @@ function FormResult({ result, index }: { result: 'W' | 'D' | 'L'; index: number 
   
   const c = config[result];
   
+  // Build tooltip text if real match data is available
+  const tooltipText = matchData 
+    ? `${matchData.home ? 'H' : 'A'} vs ${matchData.opponent}\n${matchData.score} • ${matchData.date}`
+    : undefined;
+  
   return (
     <div 
-      className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full ${c.bg} flex items-center justify-center text-white text-xs font-bold shadow-sm`}
+      className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full ${c.bg} flex items-center justify-center text-white text-xs font-bold shadow-sm cursor-default`}
       style={{ animationDelay: `${index * 100}ms` }}
+      title={tooltipText}
     >
       {c.text}
     </div>
@@ -173,11 +180,18 @@ interface TeamMomentumCardProps {
   trend: Trend;
   teamName: string;
   isHome: boolean;
+  realForm?: FormMatch[];
+  formDataSource?: 'API_FOOTBALL' | 'AI_ESTIMATE' | 'UNAVAILABLE';
 }
 
-function TeamMomentumCard({ score, trend, teamName, isHome }: TeamMomentumCardProps) {
+function TeamMomentumCard({ score, trend, teamName, isHome, realForm, formDataSource }: TeamMomentumCardProps) {
   const trendInfo = trendConfig[trend];
-  const mockForm = generateMockForm(score, trend);
+  
+  // Use real form data if available, otherwise generate mock
+  const hasRealForm = realForm && realForm.length > 0;
+  const formResults: { result: 'W' | 'D' | 'L'; matchData?: FormMatch }[] = hasRealForm
+    ? realForm.slice(0, 5).map(match => ({ result: match.result, matchData: match }))
+    : generateMockForm(score, trend).map(r => ({ result: r }));
   
   return (
     <div className={`
@@ -215,10 +229,22 @@ function TeamMomentumCard({ score, trend, teamName, isHome }: TeamMomentumCardPr
       
       {/* Form timeline */}
       <div>
-        <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1.5 text-center">Recent Form</p>
+        <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1.5 text-center flex items-center justify-center gap-1">
+          Recent Form
+          {hasRealForm && formDataSource === 'API_FOOTBALL' && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] bg-green-100 text-green-700 font-medium" title="Real match data from API-Football">
+              ✓ REAL
+            </span>
+          )}
+          {!hasRealForm && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] bg-yellow-100 text-yellow-700 font-medium" title="Estimated based on AI momentum score">
+              EST
+            </span>
+          )}
+        </p>
         <div className="flex justify-center gap-1">
-          {mockForm.map((result, i) => (
-            <FormResult key={i} result={result} index={i} />
+          {formResults.map((item, i) => (
+            <FormResult key={i} result={item.result} index={i} matchData={item.matchData} />
           ))}
         </div>
       </div>
@@ -258,8 +284,18 @@ function MomentumComparisonBar({ homeScore, awayScore }: { homeScore: number | n
 }
 
 export default function MomentumFormSection({ momentumAndForm, homeTeam, awayTeam }: MomentumFormSectionProps) {
+  const formDataSource = momentumAndForm.formDataSource;
+  
   return (
     <div className="space-y-4">
+      {/* Data source indicator */}
+      {formDataSource === 'API_FOOTBALL' && (
+        <div className="flex items-center justify-center gap-2 text-xs text-green-600 bg-green-50 rounded-lg py-1.5 px-3">
+          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          Real match data from API-Football
+        </div>
+      )}
+      
       {/* Comparison bar */}
       <MomentumComparisonBar 
         homeScore={momentumAndForm.homeMomentumScore}
@@ -273,12 +309,16 @@ export default function MomentumFormSection({ momentumAndForm, homeTeam, awayTea
           trend={momentumAndForm.homeTrend}
           teamName={homeTeam}
           isHome={true}
+          realForm={momentumAndForm.homeForm}
+          formDataSource={formDataSource}
         />
         <TeamMomentumCard
           score={momentumAndForm.awayMomentumScore}
           trend={momentumAndForm.awayTrend}
           teamName={awayTeam}
           isHome={false}
+          realForm={momentumAndForm.awayForm}
+          formDataSource={formDataSource}
         />
       </div>
 
