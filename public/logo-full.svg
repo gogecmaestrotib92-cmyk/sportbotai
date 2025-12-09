@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 80">
+  <defs>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#10B981"/>
+      <stop offset="100%" style="stop-color:#059669"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Icon -->
+  <g transform="translate(0, 8)">
+    <rect width="64" height="64" rx="14" fill="#0f172a"/>
+    <path d="M40 14 
+             C40 14 36 14 32 14 
+             C24 14 18 19 18 25 
+             C18 31 24 34 32 34 
+             C37 34 40 34 43 34
+             C47 34 50 38 50 43
+             C50 48 45 53 37 53
+             C32 53 24 53 24 53"
+          fill="none" 
+          stroke="url(#textGrad)" 
+          stroke-width="7" 
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+    <line x1="14" y1="24" x2="10" y2="24" stroke="#10B981" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+    <line x1="14" y1="32" x2="8" y2="32" stroke="#10B981" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+    <circle cx="52" cy="18" r="4" fill="#10B981"/>
+  </g>
+  
+  <!-- Text: SportBot -->
+  <text x="80" y="52" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="38" font-weight="700" fill="#f8fafc">
+    Sport<tspan fill="url(#textGrad)">Bot</tspan>
+  </text>
+  
+  <!-- Text: AI badge -->
+  <g transform="translate(290, 25)">
+    <rect width="50" height="28" rx="6" fill="url(#textGrad)"/>
+    <text x="25" y="20" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="middle">AI</text>
+  </g>
+</svg>

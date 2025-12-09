@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="ogGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981"/>
+      <stop offset="100%" style="stop-color:#059669"/>
+    </linearGradient>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#020617"/>
+    </linearGradient>
+    <filter id="ogGlow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+  
+  <!-- Grid pattern -->
+  <g opacity="0.05">
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#10B981" stroke-width="1"/>
+    </pattern>
+    <rect width="1200" height="630" fill="url(#grid)"/>
+  </g>
+  
+  <!-- Decorative circles -->
+  <circle cx="100" cy="530" r="200" fill="none" stroke="#10B981" stroke-width="1" opacity="0.1"/>
+  <circle cx="1100" cy="100" r="150" fill="none" stroke="#10B981" stroke-width="1" opacity="0.1"/>
+  
+  <!-- Logo icon -->
+  <g transform="translate(450, 140)">
+    <rect width="120" height="120" rx="28" fill="#1e293b"/>
+    <path d="M75 26 
+             C75 26 67 26 60 26 
+             C44 26 32 37 32 48 
+             C32 59 44 66 60 66 
+             C70 66 76 66 83 66
+             C91 66 98 75 98 85
+             C98 95 88 105 72 105
+             C60 105 44 105 44 105"
+          fill="none" 
+          stroke="url(#ogGrad)" 
+          stroke-width="14" 
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+    <line x1="24" y1="46" x2="14" y2="46" stroke="#10B981" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+    <line x1="24" y1="58" x2="10" y2="58" stroke="#10B981" stroke-width="5" stroke-linecap="round" opacity="0.4"/>
+    <circle cx="100" cy="34" r="8" fill="#10B981" filter="url(#ogGlow)"/>
+  </g>
+  
+  <!-- Main text -->
+  <text x="600" y="360" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="90" font-weight="800" fill="#f8fafc" text-anchor="middle">
+    Sport<tspan fill="url(#ogGrad)">Bot</tspan> <tspan fill="url(#ogGrad)">AI</tspan>
+  </text>
+  
+  <!-- Tagline -->
+  <text x="600" y="420" font-family="system-ui, sans-serif" font-size="28" font-weight="400" fill="#94a3b8" text-anchor="middle">
+    AI-Powered Sports Analytics
+  </text>
+  
+  <!-- Bottom accent line -->
+  <rect x="400" y="470" width="400" height="4" rx="2" fill="url(#ogGrad)" opacity="0.8"/>
+  
+  <!-- Features -->
+  <g font-family="system-ui, sans-serif" font-size="18" fill="#64748b">
+    <text x="330" y="540" text-anchor="middle">⚽ Multi-Sport</text>
+    <text x="520" y="540" text-anchor="middle">📊 AI Analysis</text>
+    <text x="700" y="540" text-anchor="middle">📈 Probabilities</text>
+    <text x="890" y="540" text-anchor="middle">⚡ Real-Time</text>
+  </g>
+</svg>

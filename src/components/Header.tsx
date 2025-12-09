@@ -7,6 +7,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { UserMenu } from './auth';
 
@@ -18,14 +19,17 @@ export default function Header() {
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-accent rounded-btn flex items-center justify-center">
-              <svg className="w-5 h-5 text-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <Image 
+              src="/favicon.svg" 
+              alt="SportBot AI" 
+              width={36} 
+              height={36}
+              className="rounded-lg"
+            />
             <span className="text-xl font-bold text-text-primary group-hover:text-accent transition-colors">
-              SportBot<span className="text-accent">AI</span>
+              Sport<span className="text-accent">Bot</span>
+              <span className="ml-1.5 text-xs font-semibold bg-accent text-bg px-1.5 py-0.5 rounded">AI</span>
             </span>
           </Link>
 

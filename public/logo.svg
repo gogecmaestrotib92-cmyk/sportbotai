@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Premium gradient -->
+    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981"/>
+      <stop offset="100%" style="stop-color:#059669"/>
+    </linearGradient>
+    <!-- Glow effect -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Shadow -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#0f172a"/>
+  <circle cx="256" cy="256" r="240" fill="none" stroke="url(#primaryGradient)" stroke-width="8"/>
+  
+  <!-- Stylized "S" as a dynamic sports motion line -->
+  <g filter="url(#shadow)">
+    <!-- Main S shape - sporty/dynamic -->
+    <path d="M320 140 
+             C320 140 280 140 256 140 
+             C200 140 160 175 160 220 
+             C160 265 200 290 256 290 
+             C290 290 310 290 330 290
+             C360 290 380 315 380 350
+             C380 385 345 420 290 420
+             C250 420 200 420 200 420"
+          fill="none" 
+          stroke="url(#primaryGradient)" 
+          stroke-width="40" 
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+    
+    <!-- Speed lines -->
+    <line x1="130" y1="200" x2="100" y2="200" stroke="#10B981" stroke-width="8" stroke-linecap="round" opacity="0.6"/>
+    <line x1="130" y1="230" x2="85" y2="230" stroke="#10B981" stroke-width="8" stroke-linecap="round" opacity="0.4"/>
+    <line x1="130" y1="260" x2="100" y2="260" stroke="#10B981" stroke-width="8" stroke-linecap="round" opacity="0.6"/>
+    
+    <!-- AI indicator dots -->
+    <circle cx="400" cy="180" r="12" fill="#10B981" filter="url(#glow)"/>
+    <circle cx="420" cy="220" r="8" fill="#10B981" opacity="0.7"/>
+    <circle cx="430" cy="260" r="6" fill="#10B981" opacity="0.5"/>
+  </g>
+  
+  <!-- Bot/AI element - circuit pattern -->
+  <g opacity="0.3">
+    <circle cx="256" cy="256" r="180" fill="none" stroke="#10B981" stroke-width="1" stroke-dasharray="10 20"/>
+    <circle cx="256" cy="256" r="140" fill="none" stroke="#10B981" stroke-width="1" stroke-dasharray="5 15"/>
+  </g>
+</svg>
