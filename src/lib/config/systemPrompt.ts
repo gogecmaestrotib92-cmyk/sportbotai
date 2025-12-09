@@ -1,5 +1,5 @@
 /**
- * BetSense AI System Prompt Configuration
+ * SportBot AI System Prompt Configuration
  * 
  * Contains the core AI system prompt and related configuration
  * for the sports analysis engine.
@@ -10,7 +10,7 @@
 // ============================================
 
 export const AI_IDENTITY = {
-  name: 'BetSense AI',
+  name: 'SportBot AI',
   version: '1.0.0',
   purpose: 'Ultra-accurate sports probability analysis engine',
 };

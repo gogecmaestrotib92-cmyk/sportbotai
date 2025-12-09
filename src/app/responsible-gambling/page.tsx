@@ -43,7 +43,7 @@ export default function ResponsibleGamblingPage() {
           <div className="card mb-8">
             <h2 className="text-xl font-bold text-white mb-4">Our Commitment</h2>
             <p className="text-text-secondary leading-relaxed mb-4">
-              BetSense AI is committed to promoting responsible gambling. Our tool is designed 
+              SportBot AI is committed to promoting responsible gambling. Our tool is designed 
               to help you make informed decisions, but <strong className="text-white">you should never bet more than 
               you can afford to lose</strong>.
             </p>

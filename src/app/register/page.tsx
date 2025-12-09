@@ -84,7 +84,7 @@ export default function RegisterPage() {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <span className="text-lg font-bold text-bg-primary">B</span>
             </div>
-            <span className="text-xl font-bold text-text-primary">BetSense AI</span>
+            <span className="text-xl font-bold text-text-primary">SportBot AI</span>
           </Link>
           <h1 className="text-2xl font-bold text-text-primary">Create your account</h1>
           <p className="text-text-secondary mt-2">Start analyzing matches with AI</p>

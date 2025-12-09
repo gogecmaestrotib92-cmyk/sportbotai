@@ -25,12 +25,12 @@ const pricingFAQs = [
     answer: 'Yes, you can cancel your subscription at any time. There are no fixed-term contracts. Access remains active until the end of the paid period.',
   },
   {
-    question: 'Is BetSense AI a tipster service?',
-    answer: 'No. BetSense AI is an analytics tool that provides probability models and statistical insights. We do not provide betting tips, picks, or guaranteed outcomes.',
+    question: 'Is SportBot AI a tipster service?',
+    answer: 'No. SportBot AI is an analytics tool that provides probability models and statistical insights. We do not provide betting tips, picks, or guaranteed outcomes.',
   },
   {
     question: 'What sports are covered?',
-    answer: 'BetSense AI covers Soccer (Premier League, La Liga, UCL), NBA, NFL, NHL, Tennis, UFC/MMA, and more. Each sport uses AI models optimized for its specific dynamics.',
+    answer: 'SportBot AI covers Soccer (Premier League, La Liga, UCL), NBA, NFL, NHL, Tennis, UFC/MMA, and more. Each sport uses AI models optimized for its specific dynamics.',
   },
   {
     question: 'How accurate are the probability models?',
@@ -90,7 +90,7 @@ export default function PricingPage() {
           <div className="card">
             <h3 className="font-bold text-white mb-2">Are analyses a guarantee of winnings?</h3>
             <p className="text-text-secondary">
-              <strong>No.</strong> BetSense AI is an analytical tool that provides estimates based on available data. 
+              <strong>No.</strong> SportBot AI is an analytical tool that provides estimates based on available data. 
               Sports betting always carries risk and we cannot guarantee any outcome.
             </p>
           </div>
@@ -109,7 +109,7 @@ export default function PricingPage() {
       <section className="bg-warning/10 border-t border-warning/30 py-8">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <p className="text-warning text-sm leading-relaxed">
-            <strong>⚠️ Note:</strong> Payment for BetSense AI does not guarantee winnings. 
+            <strong>⚠️ Note:</strong> Payment for SportBot AI does not guarantee winnings. 
             Our tool is purely analytical and educational. Bet responsibly and only with money you can afford to lose.
           </p>
         </div>

@@ -33,12 +33,12 @@ export default function PrivacyPage() {
           <div className="card mb-8">
             <h2 className="text-xl font-bold text-white mb-4">1. Introduction</h2>
             <p className="text-text-secondary leading-relaxed mb-4">
-              BetSense AI ("we", "us", "our") respects the privacy of its users. 
+              SportBot AI ("we", "us", "our") respects the privacy of its users. 
               This Privacy Policy explains how we collect, use, store 
               and protect your data when you use our platform.
             </p>
             <p className="text-text-secondary leading-relaxed">
-              By using BetSense AI, you consent to the collection and use of information 
+              By using SportBot AI, you consent to the collection and use of information 
               in accordance with this policy.
             </p>
           </div>
@@ -134,7 +134,7 @@ export default function PrivacyPage() {
               <li>Transfer your data to another service</li>
             </ul>
             <p className="text-text-secondary leading-relaxed mt-4">
-              To exercise these rights, contact us at privacy@betsenseai.com
+              To exercise these rights, contact us at contact@sportbotai.com
             </p>
           </div>
 
@@ -150,7 +150,7 @@ export default function PrivacyPage() {
           <div className="card mb-8">
             <h2 className="text-xl font-bold text-white mb-4">9. Minors</h2>
             <p className="text-text-secondary leading-relaxed">
-              BetSense AI is not intended for persons under 18 years of age. We do not knowingly 
+              SportBot AI is not intended for persons under 18 years of age. We do not knowingly 
               collect data from minors. If you learn that a minor has used 
               our service, please contact us.
             </p>
@@ -170,7 +170,7 @@ export default function PrivacyPage() {
             <p className="text-text-secondary leading-relaxed">
               For any questions regarding privacy, contact us at:
               <br />
-              <strong className="text-white">Email:</strong> privacy@betsenseai.com
+              <strong className="text-white">Email:</strong> contact@sportbotai.com
             </p>
           </div>
         </div>

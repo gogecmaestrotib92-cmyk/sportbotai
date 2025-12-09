@@ -33,7 +33,7 @@ export default function TermsPage() {
           <div className="card mb-8">
             <h2 className="text-xl font-bold text-white mb-4">1. Acceptance of Terms</h2>
             <p className="text-text-secondary leading-relaxed mb-4">
-              By using the BetSense AI platform ("Service"), you accept these Terms of Use in full. 
+              By using the SportBot AI platform ("Service"), you accept these Terms of Use in full. 
               If you do not agree with any part of these terms, you may not use our Service.
             </p>
             <p className="text-text-secondary leading-relaxed">
@@ -45,7 +45,7 @@ export default function TermsPage() {
           <div className="card mb-8">
             <h2 className="text-xl font-bold text-white mb-4">2. Service Description</h2>
             <p className="text-text-secondary leading-relaxed mb-4">
-              BetSense AI is an <strong className="text-white">analytical and educational tool</strong> that uses artificial 
+              SportBot AI is an <strong className="text-white">analytical and educational tool</strong> that uses artificial 
               intelligence algorithms to analyze sports events. The Service provides:
             </p>
             <ul className="list-disc list-inside text-text-secondary space-y-2 mb-4">
@@ -55,7 +55,7 @@ export default function TermsPage() {
             </ul>
             <div className="bg-warning/10 border-l-4 border-warning p-4 rounded-r-lg">
               <p className="text-warning font-semibold">
-                IMPORTANT: BetSense AI is NOT a tipster service, does NOT provide guaranteed tips, 
+                IMPORTANT: SportBot AI is NOT a tipster service, does NOT provide guaranteed tips, 
                 insider information or financial advice. All analyses are for informational purposes only.
               </p>
             </div>
@@ -71,7 +71,7 @@ export default function TermsPage() {
               <li>No analysis can guarantee winnings</li>
               <li>Estimates are based on available data and have a margin of error</li>
               <li>The user is solely responsible for their betting decisions</li>
-              <li>BetSense AI is not liable for any financial losses</li>
+              <li>SportBot AI is not liable for any financial losses</li>
             </ul>
           </div>
 
@@ -105,8 +105,8 @@ export default function TermsPage() {
           <div className="card mb-8">
             <h2 className="text-xl font-bold text-white mb-4">6. Intellectual Property</h2>
             <p className="text-text-secondary leading-relaxed">
-              All content on the BetSense AI platform, including texts, graphics, logos, 
-              algorithms and software, is the property of BetSense AI or our licensors. 
+              All content on the SportBot AI platform, including texts, graphics, logos, 
+              algorithms and software, is the property of SportBot AI or our licensors. 
               Copying, distribution or modification without written permission is not allowed.
             </p>
           </div>
@@ -114,7 +114,7 @@ export default function TermsPage() {
           <div className="card mb-8">
             <h2 className="text-xl font-bold text-white mb-4">7. Limitation of Liability</h2>
             <p className="text-text-secondary leading-relaxed">
-              To the maximum extent permitted by law, BetSense AI and its owners, employees 
+              To the maximum extent permitted by law, SportBot AI and its owners, employees 
               and partners shall not be liable for any direct, indirect, incidental, 
               special or consequential damages arising from the use or inability to use 
               the Service.
@@ -125,7 +125,7 @@ export default function TermsPage() {
             <h2 className="text-xl font-bold text-white mb-4">8. Governing Law</h2>
             <p className="text-text-secondary leading-relaxed">
               These Terms of Use are governed by and construed in accordance with the laws of the jurisdiction 
-              in which BetSense AI is registered. Any disputes will be resolved before 
+              in which SportBot AI is registered. Any disputes will be resolved before 
               the competent courts of that jurisdiction.
             </p>
           </div>
@@ -135,7 +135,7 @@ export default function TermsPage() {
             <p className="text-text-secondary leading-relaxed">
               For any questions regarding these Terms of Use, contact us at:
               <br />
-              <strong className="text-white">Email:</strong> legal@betsenseai.com
+              <strong className="text-white">Email:</strong> contact@sportbotai.com
             </p>
           </div>
         </div>

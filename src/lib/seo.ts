@@ -10,16 +10,17 @@
 // ==============================================
 
 export const SITE_CONFIG = {
-  name: 'BetSense AI',
+  name: 'SportBot AI',
   tagline: 'AI-Powered Sports Analytics',
-  domain: 'betsense-ai.vercel.app', // Update to real domain later
-  url: 'https://betsense-ai.vercel.app', // Update to real domain later
+  domain: 'sportbotai.com',
+  url: 'https://sportbotai.com',
+  email: 'contact@sportbotai.com',
   
   // Brand colors for social sharing
   themeColor: '#10B981', // accent green
   
   // Social handles (add when created)
-  twitter: '', // @betsenseai
+  twitter: '', // @sportbotai
   
   // Legal
   foundingYear: 2024,
@@ -31,7 +32,7 @@ export const SITE_CONFIG = {
 
 export const META = {
   home: {
-    title: 'BetSense AI – AI-Powered Sports Analytics & Match Intelligence',
+    title: 'SportBot AI – AI-Powered Sports Analytics & Match Intelligence',
     description: 'Transform sports data into actionable insights. AI probability models, value detection, risk analysis for Soccer, NBA, NFL, Tennis & more. Not betting tips—pure sports intelligence.',
     keywords: [
       'sports analytics',
@@ -72,17 +73,22 @@ export const META = {
   
   terms: {
     title: 'Terms of Service',
-    description: 'Terms of Service for BetSense AI sports analytics platform. Read our usage policies and guidelines.',
+    description: 'Terms of Service for SportBot AI sports analytics platform. Read our usage policies and guidelines.',
   },
   
   privacy: {
     title: 'Privacy Policy',
-    description: 'Privacy Policy for BetSense AI. Learn how we collect, use, and protect your data.',
+    description: 'Privacy Policy for SportBot AI. Learn how we collect, use, and protect your data.',
   },
   
   responsibleGambling: {
     title: 'Responsible Gambling Resources',
-    description: 'BetSense AI promotes responsible gambling. Find resources, helplines, and information about safe gambling practices.',
+    description: 'SportBot AI promotes responsible gambling. Find resources, helplines, and information about safe gambling practices.',
+  },
+  
+  contact: {
+    title: 'Contact Us',
+    description: 'Get in touch with SportBot AI. Questions, feedback, or partnership inquiries - we respond within 24-48 hours.',
   },
 };
 
@@ -99,7 +105,7 @@ export const OG_DEFAULTS = {
       url: `${SITE_CONFIG.url}/og-image.png`,
       width: 1200,
       height: 630,
-      alt: 'BetSense AI - AI-Powered Sports Analytics',
+      alt: 'SportBot AI - AI-Powered Sports Analytics',
     },
   ],
 };

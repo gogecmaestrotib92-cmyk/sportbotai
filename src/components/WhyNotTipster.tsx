@@ -44,7 +44,7 @@ export default function WhyNotTipster() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-14">
-          <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Why BetSense AI</p>
+          <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Why SportBot AI</p>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Analysis, not tips
           </h2>

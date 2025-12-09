@@ -1,5 +1,5 @@
 /**
- * Header component for BetSense AI
+ * Header component for SportBot AI
  * 
  * Modern navigation with sports analytics branding.
  */
@@ -25,7 +25,7 @@ export default function Header() {
               </svg>
             </div>
             <span className="text-xl font-bold text-text-primary group-hover:text-accent transition-colors">
-              BetSense<span className="text-accent">AI</span>
+              SportBot<span className="text-accent">AI</span>
             </span>
           </Link>
 
