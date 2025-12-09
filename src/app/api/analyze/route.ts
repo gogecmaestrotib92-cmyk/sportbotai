@@ -11,7 +11,8 @@
  * - Enforces plan-based usage limits (FREE: 3/day, PRO: 30/day, PREMIUM: unlimited)
  * 
  * REAL DATA INTEGRATION:
- * - Fetches real team form from API-Football when available (soccer)
+ * - Fetches real team form, H2H, and stats from API-Sports
+ * - Supports: Soccer, Basketball (NBA), Hockey (NHL), and more
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -40,14 +41,18 @@ import {
   SportPromptConfig,
 } from '@/lib/config/systemPrompt';
 import { canUserAnalyze, incrementAnalysisCount } from '@/lib/auth';
-import { getEnrichedMatchData, EnrichedMatchData } from '@/lib/football-api';
+import { 
+  getMultiSportEnrichedData, 
+  MultiSportEnrichedData, 
+  isSportSupported,
+  getDataSourceLabel 
+} from '@/lib/sports-api';
 
 // ============================================
 // OPENAI CLIENT (LAZY INIT)
 // ============================================
 
 let openaiClient: OpenAI | null = null;
-
 function getOpenAIClient(): OpenAI | null {
   if (!process.env.OPENAI_API_KEY) {
     return null;
@@ -353,28 +358,34 @@ export async function POST(request: NextRequest) {
     }
 
     // ========================================
-    // FETCH REAL FORM DATA (for soccer only)
+    // FETCH REAL DATA (multi-sport support)
     // ========================================
-    let enrichedData: EnrichedMatchData | null = null;
+    let enrichedData: MultiSportEnrichedData | null = null;
+    const sportInput = normalizedRequest.matchData.sport;
     
-    if (isSoccerSport(normalizedRequest.matchData.sport)) {
+    if (isSportSupported(sportInput)) {
       try {
-        console.log('[API-Football] Fetching real form data for soccer match...');
-        enrichedData = await getEnrichedMatchData(
+        const dataSource = getDataSourceLabel(sportInput);
+        console.log(`[${dataSource}] Fetching real data for ${sportInput} match...`);
+        
+        enrichedData = await getMultiSportEnrichedData(
           normalizedRequest.matchData.homeTeam,
           normalizedRequest.matchData.awayTeam,
+          sportInput,
           normalizedRequest.matchData.league
         );
         
         if (enrichedData.homeForm || enrichedData.awayForm) {
-          console.log('[API-Football] Real form data retrieved successfully');
+          console.log(`[${dataSource}] Real data retrieved successfully`);
         } else {
-          console.log('[API-Football] No form data found for these teams');
+          console.log(`[${dataSource}] No data found for these teams`);
         }
       } catch (formError) {
-        console.error('[API-Football] Error fetching form data:', formError);
-        // Continue without form data - not critical
+        console.error('[API-Sports] Error fetching data:', formError);
+        // Continue without enriched data - not critical
       }
+    } else {
+      console.log(`[API-Sports] Sport not supported for real data: ${sportInput}`);
     }
 
     // Call OpenAI API with sport-aware prompt and enriched data
@@ -412,7 +423,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 // ============================================
 // REQUEST NORMALIZATION
 // ============================================
@@ -480,23 +490,15 @@ function validateRequest(req: AnalyzeRequest): { valid: boolean; error?: string 
 // ============================================
 
 /**
- * Check if the sport is soccer (API-Football supports soccer/football only)
- */
-function isSoccerSport(sport: string): boolean {
-  const soccerTerms = ['soccer', 'football', 'soccer_', 'futbol'];
-  const sportLower = sport.toLowerCase();
-  return soccerTerms.some(term => sportLower.includes(term));
-}
-
-/**
  * Format form data for the AI prompt
  */
-function formatFormDataForPrompt(enrichedData: EnrichedMatchData): string {
+function formatFormDataForPrompt(enrichedData: MultiSportEnrichedData): string {
   if (!enrichedData.homeForm && !enrichedData.awayForm) {
     return '';
   }
 
-  let formSection = '\n=== REAL FORM DATA (from API-Football) ===\n';
+  const dataSource = enrichedData.dataSource || 'API-Sports';
+  let formSection = `\n=== REAL FORM DATA (from ${dataSource}) ===\n`;
   
   if (enrichedData.homeForm && enrichedData.homeForm.length > 0) {
     formSection += `\nHome Team Recent Form:\n`;
@@ -529,7 +531,7 @@ function formatFormDataForPrompt(enrichedData: EnrichedMatchData): string {
 async function callOpenAI(
   openai: OpenAI,
   request: AnalyzeRequest,
-  enrichedData?: EnrichedMatchData | null
+  enrichedData?: MultiSportEnrichedData | null
 ): Promise<AnalyzeResponse> {
   // Build base user prompt
   let userPrompt = buildUserPrompt(
@@ -581,7 +583,7 @@ async function callOpenAI(
 function validateAndSanitizeResponse(
   raw: any,
   request: AnalyzeRequest,
-  enrichedData?: EnrichedMatchData | null
+  enrichedData?: MultiSportEnrichedData | null
 ): AnalyzeResponse {
   const now = new Date().toISOString();
   
@@ -863,7 +865,7 @@ function createErrorResponse(error: string): AnalyzeResponse {
 
 function generateFallbackAnalysis(
   request: AnalyzeRequest,
-  enrichedData?: EnrichedMatchData | null
+  enrichedData?: MultiSportEnrichedData | null
 ): AnalyzeResponse {
   const now = new Date().toISOString();
   const { matchData, userPick, userStake } = request;
