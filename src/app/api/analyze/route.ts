@@ -395,12 +395,20 @@ export async function POST(request: NextRequest) {
         // Log what data we got back
         console.log(`[${dataSource}] Data received:`, {
           hasHomeForm: !!enrichedData.homeForm,
+          homeFormLength: enrichedData.homeForm?.length || 0,
           hasAwayForm: !!enrichedData.awayForm,
+          awayFormLength: enrichedData.awayForm?.length || 0,
           hasH2H: !!enrichedData.headToHead,
+          h2hLength: enrichedData.headToHead?.length || 0,
           hasHomeStats: !!enrichedData.homeStats,
           hasAwayStats: !!enrichedData.awayStats,
           dataSource: enrichedData.dataSource,
         });
+        
+        // Log first form match for verification
+        if (enrichedData.homeForm && enrichedData.homeForm.length > 0) {
+          console.log(`[${dataSource}] Home form sample:`, enrichedData.homeForm[0]);
+        }
         
         if (enrichedData.homeForm || enrichedData.awayForm) {
           console.log(`[${dataSource}] Real data retrieved successfully`);
