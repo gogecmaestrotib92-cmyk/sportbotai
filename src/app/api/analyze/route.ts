@@ -64,6 +64,7 @@ import {
 import { prisma } from '@/lib/prisma';
 import { getMatchContext, MatchContext } from '@/lib/match-context';
 import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rateLimit';
+import * as Sentry from '@sentry/nextjs';
 
 // ============================================
 // OPENAI CLIENT (LAZY INIT)
@@ -590,6 +591,12 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
+    // Capture error in Sentry
+    Sentry.captureException(error, {
+      tags: { api: 'analyze' },
+      extra: { endpoint: '/api/analyze' },
+    });
+    
     console.error('Error in /api/analyze:', error);
     
     if (error instanceof OpenAI.APIError) {
