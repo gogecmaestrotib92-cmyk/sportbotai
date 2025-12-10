@@ -112,13 +112,44 @@ export const authOptions: NextAuthOptions = {
       // For all other cases (including home page, empty, etc.), go to analyzer
       return `${siteUrl}/analyzer`;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, trigger }) {
       // First time jwt callback is run, user object is available
       if (user) {
         token.id = user.id;
         token.plan = (user as any).plan || 'FREE';
         token.analysisCount = (user as any).analysisCount || 0;
       }
+      
+      // When session is updated (e.g., from update() call), refresh from DB
+      if (trigger === 'update' && token.id) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { plan: true, analysisCount: true, lastAnalysisDate: true },
+          });
+          if (dbUser) {
+            token.plan = dbUser.plan || 'FREE';
+            
+            // Check if we need to reset count (new day)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const lastAnalysisDay = dbUser.lastAnalysisDate ? new Date(dbUser.lastAnalysisDate) : null;
+            if (lastAnalysisDay) {
+              lastAnalysisDay.setHours(0, 0, 0, 0);
+            }
+            
+            // If it's a new day, count should be 0
+            if (!lastAnalysisDay || lastAnalysisDay.getTime() !== today.getTime()) {
+              token.analysisCount = 0;
+            } else {
+              token.analysisCount = dbUser.analysisCount || 0;
+            }
+          }
+        } catch (e) {
+          console.error('Error refreshing user data:', e);
+        }
+      }
+      
       return token;
     },
     async session({ session, token }) {

@@ -4,10 +4,23 @@ import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 
+const PLAN_LIMITS: Record<string, number> = {
+  FREE: 3,
+  PRO: 30,
+  PREMIUM: -1, // Unlimited
+};
+
 export function UserMenu() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Refresh session data when dropdown opens
+  useEffect(() => {
+    if (isOpen && session) {
+      update(); // Refresh session to get latest usage count
+    }
+  }, [isOpen, session, update]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -85,7 +98,7 @@ export function UserMenu() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 rounded-xl border border-border-primary bg-bg-secondary shadow-lg overflow-hidden z-50">
+        <div className="absolute right-0 mt-2 w-72 rounded-xl border border-border-primary bg-bg-secondary shadow-lg overflow-hidden z-50">
           {/* User Info */}
           <div className="px-4 py-3 border-b border-border-primary">
             <p className="text-sm font-medium text-text-primary truncate">
@@ -94,13 +107,39 @@ export function UserMenu() {
             <p className="text-xs text-text-secondary truncate">{session.user?.email}</p>
           </div>
 
-          {/* Subscription Badge */}
-          <div className="px-4 py-2 border-b border-border-primary bg-bg-tertiary/50">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-text-muted">Plan</span>
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/20 text-primary">
-                {session.user?.subscriptionTier || 'FREE'}
+          {/* Usage Stats */}
+          <div className="px-4 py-3 border-b border-border-primary bg-bg-tertiary/50">
+            {/* Usage Counter Row */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                {(() => {
+                  const plan = session.user?.plan || 'FREE';
+                  const limit = PLAN_LIMITS[plan] ?? 3;
+                  const used = session.user?.analysisCount || 0;
+                  const remaining = limit === -1 ? Infinity : Math.max(0, limit - used);
+                  const isUnlimited = limit === -1;
+                  
+                  return isUnlimited ? (
+                    <span className="text-sm text-accent font-medium">Unlimited analyses</span>
+                  ) : (
+                    <span className={`text-sm font-medium ${remaining === 0 ? 'text-danger' : remaining <= 1 ? 'text-warning' : 'text-accent'}`}>
+                      {remaining}/{limit} left today
+                    </span>
+                  );
+                })()}
+              </div>
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-text-muted/20 text-text-muted">
+                {session.user?.plan || 'FREE'}
               </span>
+            </div>
+            
+            {/* Data Status Row */}
+            <div className="flex items-center gap-2 text-xs text-text-muted">
+              <span className="w-1.5 h-1.5 bg-accent rounded-full"></span>
+              <span>Live data enabled</span>
             </div>
           </div>
 

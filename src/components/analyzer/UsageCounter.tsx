@@ -8,6 +8,7 @@
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 const PLAN_LIMITS: Record<string, number> = {
   FREE: 3,
@@ -20,7 +21,14 @@ interface UsageCounterProps {
 }
 
 export default function UsageCounter({ usedToday = 0 }: UsageCounterProps) {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
+
+  // Refresh session data on mount to get latest usage count
+  useEffect(() => {
+    if (session) {
+      update();
+    }
+  }, []); // Only on mount
 
   if (status === 'loading') {
     return (
