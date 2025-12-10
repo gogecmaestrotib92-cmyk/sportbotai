@@ -29,7 +29,8 @@ export default function CookieConsent() {
     
     // Initialize analytics after consent
     if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('consent', 'update', {
+      // Use type assertion to allow 'consent' command
+      (window.gtag as (...args: unknown[]) => void)('consent', 'update', {
         analytics_storage: 'granted'
       });
     }
