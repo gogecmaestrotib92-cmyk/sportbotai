@@ -10,6 +10,10 @@ export { default as AnalysisResults } from './AnalysisResults';
 // Layer 1: Quick Glance
 export { default as QuickGlanceCard } from './QuickGlanceCard';
 
+// Layer 1.5: Stats & Factors
+export { default as QuickStatsCard } from './QuickStatsCard';
+export { default as KeyFactorsCard } from './KeyFactorsCard';
+
 // Layer 2: Accordion
 export { default as AnalysisAccordion } from './AnalysisAccordion';
 

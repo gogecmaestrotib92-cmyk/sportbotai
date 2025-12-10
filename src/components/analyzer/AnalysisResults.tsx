@@ -3,6 +3,7 @@
  * 
  * Premium 3-layer layout for analysis results:
  * - Layer 1: Quick Glance Card (summary with key metrics)
+ * - Layer 1.5: Quick Stats + Key Factors (side by side on desktop)
  * - Layer 2: Analysis Accordion (detailed sections, collapsed by default)
  * - Layer 3: Extras Section (audio, notes, disclaimer)
  * 
@@ -13,6 +14,8 @@
 
 import { AnalyzeResponse } from '@/types';
 import QuickGlanceCard from './QuickGlanceCard';
+import QuickStatsCard from './QuickStatsCard';
+import KeyFactorsCard from './KeyFactorsCard';
 import AnalysisAccordion from './AnalysisAccordion';
 import ExtrasSection from './ExtrasSection';
 
@@ -45,6 +48,14 @@ export default function AnalysisResults({ result }: AnalysisResultsProps) {
       {/* Layer 1: Quick Glance - Key Metrics Summary */}
       <section>
         <QuickGlanceCard result={result} />
+      </section>
+
+      {/* Layer 1.5: Quick Stats + Key Factors */}
+      <section>
+        <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+          <QuickStatsCard result={result} />
+          <KeyFactorsCard result={result} />
+        </div>
       </section>
 
       {/* Layer 2: Detailed Analysis Accordion */}
