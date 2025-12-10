@@ -42,7 +42,7 @@ const plans: PricingPlan[] = [
   {
     id: 'pro',
     name: 'Pro',
-    price: '€9.99',
+    price: '€18.99',
     priceId: 'pro', // Will be resolved to actual Price ID server-side
     description: 'For serious analysts',
     features: [
@@ -59,7 +59,7 @@ const plans: PricingPlan[] = [
   {
     id: 'premium',
     name: 'Premium',
-    price: '€19.99',
+    price: '€40',
     priceId: 'premium', // Will be resolved to actual Price ID server-side
     description: 'Maximum capabilities',
     features: [
