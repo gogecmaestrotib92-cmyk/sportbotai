@@ -63,6 +63,7 @@ import {
 } from '@/lib/cache';
 import { prisma } from '@/lib/prisma';
 import { getMatchContext, MatchContext } from '@/lib/match-context';
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rateLimit';
 
 // ============================================
 // OPENAI CLIENT (LAZY INIT)
@@ -297,6 +298,16 @@ Return ONLY the JSON object defined in the schema. No other text.`;
 
 export async function POST(request: NextRequest) {
   try {
+    // ========================================
+    // RATE LIMITING CHECK
+    // ========================================
+    const clientIp = getClientIp(request);
+    const rateLimit = await checkRateLimit('analyze', clientIp);
+    
+    if (!rateLimit.success) {
+      return rateLimitResponse(rateLimit.reset);
+    }
+
     // ========================================
     // AUTHENTICATION CHECK
     // ========================================

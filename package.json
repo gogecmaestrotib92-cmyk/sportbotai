@@ -13,6 +13,7 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
     "@prisma/client": "^5.22.0",
+    "@upstash/ratelimit": "^2.0.7",
     "@upstash/redis": "^1.35.7",
     "@vercel/blob": "^2.0.0",
     "bcryptjs": "^3.0.3",
