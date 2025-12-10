@@ -15,12 +15,16 @@ export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Refresh session data when dropdown opens
+  // Refresh session data when dropdown opens (debounced to prevent issues)
   useEffect(() => {
     if (isOpen && session) {
-      update(); // Refresh session to get latest usage count
+      // Small delay to ensure dropdown is fully open before updating
+      const timer = setTimeout(() => {
+        update();
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [isOpen, session, update]);
+  }, [isOpen]); // Only depend on isOpen, not session or update
 
   // Close menu when clicking outside
   useEffect(() => {
