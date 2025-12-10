@@ -68,8 +68,8 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${getBaseUrl()}/pricing?success=true&plan=${planName}`,
-      cancel_url: `${getBaseUrl()}/pricing?canceled=true`,
+      success_url: `${getBaseUrl()}/pricing/success?plan=${planName}`,
+      cancel_url: `${getBaseUrl()}/pricing/cancelled`,
       metadata: {
         userId: session.user.id,
         userEmail: session.user.email,
