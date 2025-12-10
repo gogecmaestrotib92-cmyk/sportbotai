@@ -2,6 +2,7 @@
 // This fixes posts that have expired Replicate URLs
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { generateFeaturedImage, getPlaceholderImage } from '@/lib/blog/image-generator';
 
@@ -87,10 +88,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Revalidate the blog pages to clear cache
+    revalidatePath('/blog');
+    results.forEach(r => {
+      revalidatePath(`/blog/${r.slug}`);
+    });
+
     return NextResponse.json({
       success: true,
       processed: results.length,
       results,
+      cacheCleared: true,
     });
 
   } catch (error) {
