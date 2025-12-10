@@ -8,6 +8,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 // Types for pricing plans
 interface PricingPlan {
@@ -21,8 +23,7 @@ interface PricingPlan {
   buttonText: string;
 }
 
-// Plans definition
-// TODO: Replace priceId with real Stripe Price IDs from your Stripe dashboard
+// Plans definition - priceId will be resolved server-side
 const plans: PricingPlan[] = [
   {
     id: 'free',
@@ -42,7 +43,7 @@ const plans: PricingPlan[] = [
     id: 'pro',
     name: 'Pro',
     price: '€9.99',
-    priceId: 'price_PRO_PLACEHOLDER', // TODO: Replace with real Stripe Price ID
+    priceId: 'pro', // Will be resolved to actual Price ID server-side
     description: 'For serious analysts',
     features: [
       '30 analyses per day',
@@ -53,13 +54,13 @@ const plans: PricingPlan[] = [
       'Analysis history (30 days)',
     ],
     highlighted: true,
-    buttonText: 'Activate Pro',
+    buttonText: 'Upgrade to Pro',
   },
   {
     id: 'premium',
     name: 'Premium',
     price: '€19.99',
-    priceId: 'price_PREMIUM_PLACEHOLDER', // TODO: Replace with real Stripe Price ID
+    priceId: 'premium', // Will be resolved to actual Price ID server-side
     description: 'Maximum capabilities',
     features: [
       'Unlimited analyses',
@@ -71,20 +72,31 @@ const plans: PricingPlan[] = [
       'Analysis history (unlimited)',
       'Custom alerts',
     ],
-    buttonText: 'Activate Premium',
+    buttonText: 'Upgrade to Premium',
   },
 ];
 
 export default function PricingCards() {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const router = useRouter();
 
   // Function for Stripe checkout
   const handleCheckout = async (plan: PricingPlan) => {
-    // Free plan does not go through Stripe
+    // Free plan - go to register or analyzer
     if (plan.id === 'free') {
-      // TODO: Implement registration for free plan
-      alert('Free plan registration - implement this functionality');
+      if (session) {
+        router.push('/analyzer');
+      } else {
+        router.push('/register');
+      }
+      return;
+    }
+
+    // Must be logged in for paid plans
+    if (!session) {
+      router.push('/login?callbackUrl=/pricing');
       return;
     }
 
