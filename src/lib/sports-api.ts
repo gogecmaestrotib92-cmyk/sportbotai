@@ -28,6 +28,67 @@ const API_BASES: Record<string, string> = {
   baseball: 'https://v1.baseball.api-sports.io',
 };
 
+// ============================================
+// DYNAMIC SEASON HELPERS
+// ============================================
+
+/**
+ * Get current basketball season (NBA runs Oct-June)
+ * Format: "2024-2025"
+ */
+function getCurrentBasketballSeason(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  // If Oct or later, it's the new season
+  if (month >= 10) {
+    return `${year}-${year + 1}`;
+  }
+  return `${year - 1}-${year}`;
+}
+
+/**
+ * Get current hockey season (NHL runs Oct-June)
+ * Format: 2024 (represents 2024-2025 season)
+ */
+function getCurrentHockeySeason(): number {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  if (month >= 10) {
+    return year;
+  }
+  return year - 1;
+}
+
+/**
+ * Get current NFL season (runs Sept-Feb)
+ * Format: 2024
+ */
+function getCurrentNFLSeason(): number {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  if (month >= 9) {
+    return year;
+  }
+  return year - 1;
+}
+
+/**
+ * Get current soccer season
+ * Format: 2024 (represents 2024-2025 season for most leagues)
+ */
+function getCurrentSoccerSeason(): number {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  if (month >= 8) {
+    return year;
+  }
+  return year - 1;
+}
+
 // Map common sport names to API-Sports sport keys
 const SPORT_MAPPING: Record<string, string> = {
   // Soccer variants
@@ -454,12 +515,60 @@ async function getSoccerH2H(homeTeamId: number, awayTeamId: number, baseUrl: str
 // BASKETBALL FUNCTIONS
 // ============================================
 
+// NBA team name mappings
+const NBA_TEAM_MAPPINGS: Record<string, string> = {
+  // Full names to short
+  'los angeles lakers': 'Lakers',
+  'los angeles clippers': 'Clippers',
+  'la lakers': 'Lakers',
+  'la clippers': 'Clippers',
+  'golden state warriors': 'Warriors',
+  'san antonio spurs': 'Spurs',
+  'oklahoma city thunder': 'Thunder',
+  'portland trail blazers': 'Trail Blazers',
+  'minnesota timberwolves': 'Timberwolves',
+  'new orleans pelicans': 'Pelicans',
+  'new york knicks': 'Knicks',
+  'brooklyn nets': 'Nets',
+  'boston celtics': 'Celtics',
+  'philadelphia 76ers': '76ers',
+  'miami heat': 'Heat',
+  'orlando magic': 'Magic',
+  'atlanta hawks': 'Hawks',
+  'chicago bulls': 'Bulls',
+  'cleveland cavaliers': 'Cavaliers',
+  'detroit pistons': 'Pistons',
+  'indiana pacers': 'Pacers',
+  'milwaukee bucks': 'Bucks',
+  'toronto raptors': 'Raptors',
+  'washington wizards': 'Wizards',
+  'charlotte hornets': 'Hornets',
+  'denver nuggets': 'Nuggets',
+  'utah jazz': 'Jazz',
+  'phoenix suns': 'Suns',
+  'sacramento kings': 'Kings',
+  'dallas mavericks': 'Mavericks',
+  'houston rockets': 'Rockets',
+  'memphis grizzlies': 'Grizzlies',
+};
+
+function normalizeBasketballTeamName(name: string): string {
+  const lower = name.toLowerCase().trim();
+  return NBA_TEAM_MAPPINGS[lower] || name;
+}
+
 async function findBasketballTeam(teamName: string, baseUrl: string): Promise<number | null> {
-  const cacheKey = `basketball:team:${teamName}`;
+  const normalizedName = normalizeBasketballTeamName(teamName);
+  const cacheKey = `basketball:team:${normalizedName}`;
   const cached = getCached<number>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiRequest<any>(baseUrl, `/teams?search=${encodeURIComponent(teamName)}`);
+  // Try normalized name first, then original
+  let response = await apiRequest<any>(baseUrl, `/teams?search=${encodeURIComponent(normalizedName)}`);
+  
+  if (!response?.response?.length && normalizedName !== teamName) {
+    response = await apiRequest<any>(baseUrl, `/teams?search=${encodeURIComponent(teamName)}`);
+  }
   
   if (response?.response?.length > 0) {
     const teamId = response.response[0].id;
@@ -476,7 +585,8 @@ async function getBasketballTeamGames(teamId: number, baseUrl: string): Promise<
   if (cached) return cached;
 
   // Get games from current season
-  const response = await apiRequest<any>(baseUrl, `/games?team=${teamId}&season=2024-2025&last=5`);
+  const season = getCurrentBasketballSeason();
+  const response = await apiRequest<any>(baseUrl, `/games?team=${teamId}&season=${season}&last=5`);
   
   if (!response?.response) return [];
 
@@ -506,7 +616,8 @@ async function getBasketballTeamStats(teamId: number, baseUrl: string): Promise<
   const cached = getCached<TeamSeasonStats>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiRequest<any>(baseUrl, `/statistics?team=${teamId}&season=2024-2025`);
+  const season = getCurrentBasketballSeason();
+  const response = await apiRequest<any>(baseUrl, `/statistics?team=${teamId}&season=${season}`);
   
   if (!response?.response) return null;
 
@@ -581,12 +692,64 @@ async function getBasketballH2H(homeTeamId: number, awayTeamId: number, baseUrl:
 // HOCKEY FUNCTIONS (NHL)
 // ============================================
 
+// NHL team name mappings
+const NHL_TEAM_MAPPINGS: Record<string, string> = {
+  'los angeles kings': 'Kings',
+  'la kings': 'Kings',
+  'new york rangers': 'Rangers',
+  'new york islanders': 'Islanders',
+  'ny rangers': 'Rangers',
+  'ny islanders': 'Islanders',
+  'tampa bay lightning': 'Lightning',
+  'vegas golden knights': 'Golden Knights',
+  'colorado avalanche': 'Avalanche',
+  'carolina hurricanes': 'Hurricanes',
+  'florida panthers': 'Panthers',
+  'toronto maple leafs': 'Maple Leafs',
+  'boston bruins': 'Bruins',
+  'edmonton oilers': 'Oilers',
+  'dallas stars': 'Stars',
+  'winnipeg jets': 'Jets',
+  'vancouver canucks': 'Canucks',
+  'minnesota wild': 'Wild',
+  'seattle kraken': 'Kraken',
+  'detroit red wings': 'Red Wings',
+  'pittsburgh penguins': 'Penguins',
+  'washington capitals': 'Capitals',
+  'new jersey devils': 'Devils',
+  'philadelphia flyers': 'Flyers',
+  'ottawa senators': 'Senators',
+  'montreal canadiens': 'Canadiens',
+  'calgary flames': 'Flames',
+  'nashville predators': 'Predators',
+  'st. louis blues': 'Blues',
+  'st louis blues': 'Blues',
+  'chicago blackhawks': 'Blackhawks',
+  'arizona coyotes': 'Coyotes',
+  'san jose sharks': 'Sharks',
+  'columbus blue jackets': 'Blue Jackets',
+  'buffalo sabres': 'Sabres',
+  'anaheim ducks': 'Ducks',
+  'utah hockey club': 'Utah HC',
+};
+
+function normalizeHockeyTeamName(name: string): string {
+  const lower = name.toLowerCase().trim();
+  return NHL_TEAM_MAPPINGS[lower] || name;
+}
+
 async function findHockeyTeam(teamName: string, baseUrl: string): Promise<number | null> {
-  const cacheKey = `hockey:team:${teamName}`;
+  const normalizedName = normalizeHockeyTeamName(teamName);
+  const cacheKey = `hockey:team:${normalizedName}`;
   const cached = getCached<number>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiRequest<any>(baseUrl, `/teams?search=${encodeURIComponent(teamName)}`);
+  // Try normalized name first, then original
+  let response = await apiRequest<any>(baseUrl, `/teams?search=${encodeURIComponent(normalizedName)}`);
+  
+  if (!response?.response?.length && normalizedName !== teamName) {
+    response = await apiRequest<any>(baseUrl, `/teams?search=${encodeURIComponent(teamName)}`);
+  }
   
   if (response?.response?.length > 0) {
     const teamId = response.response[0].id;
@@ -602,7 +765,8 @@ async function getHockeyTeamGames(teamId: number, baseUrl: string): Promise<Game
   const cached = getCached<GameResult[]>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiRequest<any>(baseUrl, `/games?team=${teamId}&season=2024&last=5`);
+  const season = getCurrentHockeySeason();
+  const response = await apiRequest<any>(baseUrl, `/games?team=${teamId}&season=${season}&last=5`);
   
   if (!response?.response) return [];
 
@@ -627,16 +791,144 @@ async function getHockeyTeamGames(teamId: number, baseUrl: string): Promise<Game
   return games;
 }
 
+async function getHockeyTeamStats(teamId: number, baseUrl: string): Promise<TeamSeasonStats | null> {
+  const cacheKey = `hockey:stats:${teamId}`;
+  const cached = getCached<TeamSeasonStats>(cacheKey);
+  if (cached) return cached;
+
+  const season = getCurrentHockeySeason();
+  const response = await apiRequest<any>(baseUrl, `/teams/statistics?team=${teamId}&season=${season}`);
+  
+  if (!response?.response) return null;
+
+  const stats = response.response;
+  const gamesPlayed = stats.games?.played?.all || 0;
+  const wins = stats.wins?.all?.total || 0;
+  const losses = stats.loses?.all?.total || 0;
+  
+  const result: TeamSeasonStats = {
+    gamesPlayed,
+    wins,
+    losses,
+    pointsFor: stats.goals?.for?.total?.all || 0,
+    pointsAgainst: stats.goals?.against?.total?.all || 0,
+    winPercentage: gamesPlayed > 0 ? Math.round((wins / gamesPlayed) * 100) : 0,
+  };
+
+  setCache(cacheKey, result);
+  return result;
+}
+
+async function getHockeyH2H(homeTeamId: number, awayTeamId: number, baseUrl: string): Promise<{ matches: H2HMatch[], summary: any } | null> {
+  const cacheKey = `hockey:h2h:${homeTeamId}:${awayTeamId}`;
+  const cached = getCached<{ matches: H2HMatch[], summary: any }>(cacheKey);
+  if (cached) return cached;
+
+  const response = await apiRequest<any>(baseUrl, `/games?h2h=${homeTeamId}-${awayTeamId}&last=10`);
+  
+  if (!response?.response || response.response.length === 0) return null;
+
+  const games = response.response;
+  let homeWins = 0, awayWins = 0;
+
+  const matches: H2HMatch[] = games.slice(0, 5).map((g: any) => {
+    const homeScore = g.scores.home;
+    const awayScore = g.scores.away;
+    
+    // Check if our "home team" won
+    const isHomeTeamHome = g.teams.home.id === homeTeamId;
+    if (isHomeTeamHome) {
+      if (homeScore > awayScore) homeWins++;
+      else awayWins++;
+    } else {
+      if (awayScore > homeScore) homeWins++;
+      else awayWins++;
+    }
+
+    return {
+      date: g.date,
+      homeTeam: g.teams.home.name,
+      awayTeam: g.teams.away.name,
+      homeScore,
+      awayScore,
+    };
+  });
+
+  const result = {
+    matches,
+    summary: {
+      totalMatches: games.length,
+      homeWins,
+      awayWins,
+      draws: 0, // No draws in hockey (shootouts decide)
+    }
+  };
+
+  setCache(cacheKey, result);
+  return result;
+}
+
 // ============================================
 // NFL (AMERICAN FOOTBALL) FUNCTIONS
 // ============================================
 
+// NFL team name mappings
+const NFL_TEAM_MAPPINGS: Record<string, string> = {
+  'kansas city chiefs': 'Chiefs',
+  'san francisco 49ers': '49ers',
+  'philadelphia eagles': 'Eagles',
+  'buffalo bills': 'Bills',
+  'dallas cowboys': 'Cowboys',
+  'miami dolphins': 'Dolphins',
+  'detroit lions': 'Lions',
+  'baltimore ravens': 'Ravens',
+  'jacksonville jaguars': 'Jaguars',
+  'los angeles rams': 'Rams',
+  'la rams': 'Rams',
+  'los angeles chargers': 'Chargers',
+  'la chargers': 'Chargers',
+  'seattle seahawks': 'Seahawks',
+  'cleveland browns': 'Browns',
+  'green bay packers': 'Packers',
+  'cincinnati bengals': 'Bengals',
+  'new york jets': 'Jets',
+  'new york giants': 'Giants',
+  'ny jets': 'Jets',
+  'ny giants': 'Giants',
+  'minnesota vikings': 'Vikings',
+  'houston texans': 'Texans',
+  'pittsburgh steelers': 'Steelers',
+  'indianapolis colts': 'Colts',
+  'denver broncos': 'Broncos',
+  'las vegas raiders': 'Raiders',
+  'new england patriots': 'Patriots',
+  'tennessee titans': 'Titans',
+  'atlanta falcons': 'Falcons',
+  'new orleans saints': 'Saints',
+  'tampa bay buccaneers': 'Buccaneers',
+  'carolina panthers': 'Panthers',
+  'arizona cardinals': 'Cardinals',
+  'chicago bears': 'Bears',
+  'washington commanders': 'Commanders',
+};
+
+function normalizeNFLTeamName(name: string): string {
+  const lower = name.toLowerCase().trim();
+  return NFL_TEAM_MAPPINGS[lower] || name;
+}
+
 async function findNFLTeam(teamName: string, baseUrl: string): Promise<number | null> {
-  const cacheKey = `nfl:team:${teamName}`;
+  const normalizedName = normalizeNFLTeamName(teamName);
+  const cacheKey = `nfl:team:${normalizedName}`;
   const cached = getCached<number>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiRequest<any>(baseUrl, `/teams?search=${encodeURIComponent(teamName)}`);
+  // Try normalized name first, then original
+  let response = await apiRequest<any>(baseUrl, `/teams?search=${encodeURIComponent(normalizedName)}`);
+  
+  if (!response?.response?.length && normalizedName !== teamName) {
+    response = await apiRequest<any>(baseUrl, `/teams?search=${encodeURIComponent(teamName)}`);
+  }
   
   if (response?.response?.length > 0) {
     const teamId = response.response[0].id;
@@ -652,8 +944,9 @@ async function getNFLTeamGames(teamId: number, baseUrl: string): Promise<GameRes
   const cached = getCached<GameResult[]>(cacheKey);
   if (cached) return cached;
 
-  // NFL season 2024
-  const response = await apiRequest<any>(baseUrl, `/games?team=${teamId}&season=2024&last=5`);
+  // NFL season
+  const season = getCurrentNFLSeason();
+  const response = await apiRequest<any>(baseUrl, `/games?team=${teamId}&season=${season}&last=5`);
   
   if (!response?.response) return [];
 
@@ -683,7 +976,8 @@ async function getNFLTeamStats(teamId: number, baseUrl: string): Promise<TeamSea
   const cached = getCached<TeamSeasonStats>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiRequest<any>(baseUrl, `/teams/statistics?id=${teamId}&season=2024`);
+  const season = getCurrentNFLSeason();
+  const response = await apiRequest<any>(baseUrl, `/teams/statistics?id=${teamId}&season=${season}`);
   
   if (!response?.response) return null;
 
@@ -1135,9 +1429,12 @@ async function fetchHockeyData(homeTeam: string, awayTeam: string, baseUrl: stri
     };
   }
 
-  const [homeGames, awayGames] = await Promise.all([
+  const [homeGames, awayGames, homeSeasonStats, awaySeasonStats, h2hData] = await Promise.all([
     getHockeyTeamGames(homeTeamId, baseUrl),
     getHockeyTeamGames(awayTeamId, baseUrl),
+    getHockeyTeamStats(homeTeamId, baseUrl),
+    getHockeyTeamStats(awayTeamId, baseUrl),
+    getHockeyH2H(homeTeamId, awayTeamId, baseUrl),
   ]);
 
   const homeForm = homeGames.length > 0 ? homeGames.map(g => ({
@@ -1156,14 +1453,39 @@ async function fetchHockeyData(homeTeam: string, awayTeam: string, baseUrl: stri
     home: g.home,
   })) : null;
 
+  // For hockey, use goals instead of points
+  const homeStats: TeamStats | null = homeSeasonStats ? {
+    goalsScored: homeSeasonStats.pointsFor,
+    goalsConceded: homeSeasonStats.pointsAgainst,
+    cleanSheets: 0, // Shutouts - would need separate tracking
+    avgGoalsScored: homeSeasonStats.gamesPlayed > 0 
+      ? Math.round((homeSeasonStats.pointsFor / homeSeasonStats.gamesPlayed) * 10) / 10 
+      : 0,
+    avgGoalsConceded: homeSeasonStats.gamesPlayed > 0 
+      ? Math.round((homeSeasonStats.pointsAgainst / homeSeasonStats.gamesPlayed) * 10) / 10 
+      : 0,
+  } : null;
+
+  const awayStats: TeamStats | null = awaySeasonStats ? {
+    goalsScored: awaySeasonStats.pointsFor,
+    goalsConceded: awaySeasonStats.pointsAgainst,
+    cleanSheets: 0,
+    avgGoalsScored: awaySeasonStats.gamesPlayed > 0 
+      ? Math.round((awaySeasonStats.pointsFor / awaySeasonStats.gamesPlayed) * 10) / 10 
+      : 0,
+    avgGoalsConceded: awaySeasonStats.gamesPlayed > 0 
+      ? Math.round((awaySeasonStats.pointsAgainst / awaySeasonStats.gamesPlayed) * 10) / 10 
+      : 0,
+  } : null;
+
   return {
     sport: 'hockey',
     homeForm,
     awayForm,
-    headToHead: null, // Would need H2H endpoint for hockey
-    h2hSummary: null,
-    homeStats: null, // Would need stats endpoint
-    awayStats: null,
+    headToHead: h2hData?.matches || null,
+    h2hSummary: h2hData?.summary || null,
+    homeStats,
+    awayStats,
     dataSource: (homeForm || awayForm) ? 'API_SPORTS' : 'UNAVAILABLE',
   };
 }

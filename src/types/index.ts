@@ -161,10 +161,10 @@ export interface MomentumAndForm {
   homeTrend: Trend;
   awayTrend: Trend;
   keyFormFactors: string[];
-  // Real form data (when available from API-Football)
+  // Real form data (when available from API-Sports)
   homeForm?: FormMatch[];
   awayForm?: FormMatch[];
-  formDataSource?: 'API_FOOTBALL' | 'AI_ESTIMATE' | 'UNAVAILABLE';
+  formDataSource?: 'API_FOOTBALL' | 'API_SPORTS' | 'AI_ESTIMATE' | 'UNAVAILABLE';
   // Head-to-head data
   headToHead?: HeadToHeadMatch[];
   h2hSummary?: {

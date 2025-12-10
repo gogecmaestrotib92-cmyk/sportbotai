@@ -181,7 +181,7 @@ interface TeamMomentumCardProps {
   teamName: string;
   isHome: boolean;
   realForm?: FormMatch[];
-  formDataSource?: 'API_FOOTBALL' | 'AI_ESTIMATE' | 'UNAVAILABLE';
+  formDataSource?: 'API_FOOTBALL' | 'API_SPORTS' | 'AI_ESTIMATE' | 'UNAVAILABLE';
 }
 
 function TeamMomentumCard({ score, trend, teamName, isHome, realForm, formDataSource }: TeamMomentumCardProps) {
@@ -231,7 +231,7 @@ function TeamMomentumCard({ score, trend, teamName, isHome, realForm, formDataSo
       <div>
         <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1.5 text-center flex items-center justify-center gap-1">
           Recent Form
-          {hasRealForm && formDataSource === 'API_FOOTBALL' && (
+          {hasRealForm && (formDataSource === 'API_FOOTBALL' || formDataSource === 'API_SPORTS') && (
             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] bg-green-100 text-green-700 font-medium" title="Real match data from API-Football">
               ✓ REAL
             </span>
