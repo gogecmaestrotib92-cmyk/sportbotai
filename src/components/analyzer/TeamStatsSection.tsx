@@ -12,6 +12,7 @@
 'use client';
 
 import { TeamStats } from '@/types';
+import TeamLogo from '../ui/TeamLogo';
 
 interface TeamStatsSectionProps {
   homeStats?: TeamStats;
@@ -181,9 +182,7 @@ export default function TeamStatsSection({
       {/* Team Headers */}
       <div className="flex items-center justify-between px-2">
         <div className="text-center">
-          <span className="inline-flex items-center justify-center w-8 h-8 bg-green-100 rounded-full text-green-600 text-sm font-bold mb-1">
-            H
-          </span>
+          <TeamLogo teamName={homeTeam} sport={sport || 'soccer'} size="md" className="mx-auto mb-1" />
           <p className="text-[10px] text-text-muted font-medium truncate max-w-[80px]" title={homeTeam}>
             {homeTeam.split(' ').slice(0, 2).join(' ')}
           </p>
@@ -192,9 +191,7 @@ export default function TeamStatsSection({
           Season Stats
         </div>
         <div className="text-center">
-          <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full text-blue-600 text-sm font-bold mb-1">
-            A
-          </span>
+          <TeamLogo teamName={awayTeam} sport={sport || 'soccer'} size="md" className="mx-auto mb-1" />
           <p className="text-[10px] text-text-muted font-medium truncate max-w-[80px]" title={awayTeam}>
             {awayTeam.split(' ').slice(0, 2).join(' ')}
           </p>

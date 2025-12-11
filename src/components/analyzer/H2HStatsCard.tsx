@@ -12,10 +12,12 @@
 'use client';
 
 import { HeadToHeadMatch } from '@/types';
+import TeamLogo from '../ui/TeamLogo';
 
 interface H2HStatsCardProps {
   homeTeam: string;
   awayTeam: string;
+  sport?: string;
   h2hMatches?: HeadToHeadMatch[];
   h2hSummary?: {
     totalMatches: number;
@@ -29,6 +31,7 @@ interface H2HStatsCardProps {
 export default function H2HStatsCard({
   homeTeam,
   awayTeam,
+  sport = 'soccer',
   h2hMatches = [],
   h2hSummary,
   maxRecentMatches = 5,
@@ -99,9 +102,15 @@ export default function H2HStatsCard({
         {/* Win/Draw/Loss Visual Bar */}
         <div>
           <div className="flex items-center justify-between text-xs text-text-muted mb-2">
-            <span className="font-medium text-success">{homeTeam.split(' ').pop()}</span>
+            <span className="font-medium text-success flex items-center gap-1">
+              <TeamLogo teamName={homeTeam} sport={sport} size="sm" />
+              {homeTeam.split(' ').pop()}
+            </span>
             <span>Draws</span>
-            <span className="font-medium text-info">{awayTeam.split(' ').pop()}</span>
+            <span className="font-medium text-info flex items-center gap-1">
+              {awayTeam.split(' ').pop()}
+              <TeamLogo teamName={awayTeam} sport={sport} size="sm" />
+            </span>
           </div>
           
           {/* Stacked Bar */}

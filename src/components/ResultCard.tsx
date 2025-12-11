@@ -5,6 +5,8 @@
  */
 
 import { AnalyzeResponse, RiskLevel, ValueFlag, Trend } from '@/types';
+import TeamLogo from './ui/TeamLogo';
+import LeagueLogo from './ui/LeagueLogo';
 
 interface ResultCardProps {
   result: AnalyzeResponse;
@@ -71,12 +73,19 @@ export default function ResultCard({ result }: ResultCardProps) {
       {/* Header with match info and risk */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h3 className="text-xl font-bold text-white">
-            {result.matchInfo.homeTeam} vs {result.matchInfo.awayTeam}
-          </h3>
-          <p className="text-sm text-gray-400">
-            {result.matchInfo.leagueName} • {result.matchInfo.sport}
-          </p>
+          <div className="flex items-center gap-3 mb-1">
+            <TeamLogo teamName={result.matchInfo.homeTeam} sport={result.matchInfo.sport} league={result.matchInfo.leagueName} size="md" />
+            <h3 className="text-xl font-bold text-white">
+              {result.matchInfo.homeTeam} vs {result.matchInfo.awayTeam}
+            </h3>
+            <TeamLogo teamName={result.matchInfo.awayTeam} sport={result.matchInfo.sport} league={result.matchInfo.leagueName} size="md" />
+          </div>
+          <div className="flex items-center gap-2">
+            <LeagueLogo leagueName={result.matchInfo.leagueName} sport={result.matchInfo.sport} size="sm" />
+            <p className="text-sm text-gray-400">
+              {result.matchInfo.leagueName} • {result.matchInfo.sport}
+            </p>
+          </div>
           {result.matchInfo.matchDate && (
             <p className="text-xs text-gray-500">
               {new Date(result.matchInfo.matchDate).toLocaleDateString('en-US', {

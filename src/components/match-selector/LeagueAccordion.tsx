@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import { MatchData } from '@/types';
 import { LeagueGroup, getSportIcon } from './utils';
 import MatchList from './MatchList';
+import LeagueLogo from '@/components/ui/LeagueLogo';
 
 interface LeagueAccordionProps {
   leagues: LeagueGroup[];
@@ -126,10 +127,10 @@ export default function LeagueAccordion({
             >
               <div className="flex items-center gap-3">
                 <div className={`
-                  w-10 h-10 rounded-lg flex items-center justify-center transition-colors
-                  ${isExpanded ? 'bg-primary text-white' : 'bg-bg-elevated text-gray-400 group-hover:bg-divider'}
+                  w-10 h-10 rounded-lg flex items-center justify-center transition-colors overflow-hidden
+                  ${isExpanded ? 'bg-primary/10' : 'bg-bg-elevated group-hover:bg-divider'}
                 `}>
-                  <span className="text-lg">{getSportIcon(league.sportKey)}</span>
+                  <LeagueLogo leagueName={league.leagueName} sport={league.sportKey} size="md" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-white text-sm sm:text-base">{league.leagueName}</h3>

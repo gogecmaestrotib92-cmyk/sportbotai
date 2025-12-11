@@ -9,6 +9,7 @@
 'use client';
 
 import { HeadToHeadMatch } from '@/types';
+import TeamLogo from '../ui/TeamLogo';
 
 interface HeadToHeadSectionProps {
   headToHead?: HeadToHeadMatch[];
@@ -20,13 +21,15 @@ interface HeadToHeadSectionProps {
   };
   homeTeam: string;
   awayTeam: string;
+  sport?: string;
 }
 
 export default function HeadToHeadSection({ 
   headToHead, 
   h2hSummary, 
   homeTeam, 
-  awayTeam 
+  awayTeam,
+  sport = 'soccer'
 }: HeadToHeadSectionProps) {
   // If no H2H data available
   if (!headToHead || headToHead.length === 0 || !h2hSummary) {
@@ -57,6 +60,9 @@ export default function HeadToHeadSection({
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="bg-green-50 rounded-xl p-3 border border-green-100">
+          <div className="flex justify-center mb-1">
+            <TeamLogo teamName={homeTeam} sport={sport} size="sm" />
+          </div>
           <p className="text-2xl font-bold text-green-600">{homeWins}</p>
           <p className="text-[10px] text-green-700 font-medium uppercase tracking-wide mt-1">
             {homeTeam.split(' ').slice(0, 2).join(' ')}
@@ -67,6 +73,9 @@ export default function HeadToHeadSection({
           <p className="text-[10px] text-gray-600 font-medium uppercase tracking-wide mt-1">Draws</p>
         </div>
         <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+          <div className="flex justify-center mb-1">
+            <TeamLogo teamName={awayTeam} sport={sport} size="sm" />
+          </div>
           <p className="text-2xl font-bold text-blue-600">{awayWins}</p>
           <p className="text-[10px] text-blue-700 font-medium uppercase tracking-wide mt-1">
             {awayTeam.split(' ').slice(0, 2).join(' ')}

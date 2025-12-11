@@ -122,6 +122,7 @@ export default function AnalysisResults({ result }: AnalysisResultsProps) {
               injuryContext={result.injuryContext!}
               homeTeam={result.matchInfo.homeTeam}
               awayTeam={result.matchInfo.awayTeam}
+              sport={result.matchInfo.sport}
             />
           </div>
         )}
@@ -164,6 +165,7 @@ export default function AnalysisResults({ result }: AnalysisResultsProps) {
               <H2HStatsCard
                 homeTeam={result.matchInfo.homeTeam}
                 awayTeam={result.matchInfo.awayTeam}
+                sport={result.matchInfo.sport}
                 h2hMatches={result.momentumAndForm.headToHead}
                 h2hSummary={result.momentumAndForm.h2hSummary}
               />

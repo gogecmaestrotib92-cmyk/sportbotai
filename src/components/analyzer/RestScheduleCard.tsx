@@ -14,6 +14,7 @@
 
 import { AnalyzeResponse, FormMatch } from '@/types';
 import { useMemo } from 'react';
+import TeamLogo from '../ui/TeamLogo';
 
 interface RestScheduleCardProps {
   result: AnalyzeResponse;
@@ -221,7 +222,10 @@ export default function RestScheduleCard({ result }: RestScheduleCardProps) {
       <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
         {/* Home Team */}
         <div className={`rounded-xl p-3 ${homeFatigue.bgColor} border border-divider/50`}>
-          <p className="text-[10px] text-text-muted mb-1 truncate">{matchInfo.homeTeam}</p>
+          <div className="flex items-center gap-2 mb-1">
+            <TeamLogo teamName={matchInfo.homeTeam} sport={matchInfo.sport} size="sm" />
+            <p className="text-[10px] text-text-muted truncate">{matchInfo.homeTeam}</p>
+          </div>
           
           {homeSchedule.restDays !== null ? (
             <>
@@ -242,7 +246,10 @@ export default function RestScheduleCard({ result }: RestScheduleCardProps) {
 
         {/* Away Team */}
         <div className={`rounded-xl p-3 ${awayFatigue.bgColor} border border-divider/50`}>
-          <p className="text-[10px] text-text-muted mb-1 truncate">{matchInfo.awayTeam}</p>
+          <div className="flex items-center gap-2 mb-1">
+            <TeamLogo teamName={matchInfo.awayTeam} sport={matchInfo.sport} size="sm" />
+            <p className="text-[10px] text-text-muted truncate">{matchInfo.awayTeam}</p>
+          </div>
           
           {awaySchedule.restDays !== null ? (
             <>

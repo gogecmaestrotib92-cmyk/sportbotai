@@ -14,6 +14,8 @@ import { SportConfig } from '@/lib/config/sportsConfig';
 import { formatMatchDate } from './utils';
 import MatchCountdown from '@/components/analyzer/MatchCountdown';
 import QuickAnalyzeButton from '@/components/analyzer/QuickAnalyzeButton';
+import TeamLogo from '@/components/ui/TeamLogo';
+import LeagueLogo from '@/components/ui/LeagueLogo';
 
 interface MatchPreviewProps {
   match: MatchData;
@@ -40,9 +42,7 @@ export default function MatchPreview({
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 opacity-50"></div>
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-btn bg-bg-hover flex items-center justify-center">
-              <span className="text-lg">{sportConfig?.icon || '🏆'}</span>
-            </div>
+            <LeagueLogo leagueName={match.league || match.sport} sport={match.sport} size="md" />
             <span className="text-text-secondary text-sm font-medium truncate max-w-[150px] sm:max-w-none">
               {match.league}
             </span>
@@ -57,6 +57,9 @@ export default function MatchPreview({
         <div className="flex items-center justify-between gap-3 sm:gap-4">
           {/* Home Team */}
           <div className="text-center flex-1 min-w-0">
+            <div className="flex justify-center mb-2">
+              <TeamLogo teamName={match.homeTeam} sport={match.sport} size="lg" />
+            </div>
             <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary truncate leading-tight">
               {match.homeTeam}
             </p>
@@ -74,6 +77,9 @@ export default function MatchPreview({
           
           {/* Away Team */}
           <div className="text-center flex-1 min-w-0">
+            <div className="flex justify-center mb-2">
+              <TeamLogo teamName={match.awayTeam} sport={match.sport} size="lg" />
+            </div>
             <p className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary truncate leading-tight">
               {match.awayTeam}
             </p>

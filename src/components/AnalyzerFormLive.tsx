@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { AnalyzeRequest, AnalyzeResponse } from '@/types';
+import TeamLogo from './ui/TeamLogo';
 
 // Types for API response
 interface Sport {
@@ -357,9 +358,13 @@ export default function AnalyzerFormLive({ onResult, onLoading }: AnalyzerFormPr
             <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-4">
               <h4 className="font-semibold text-emerald-400 mb-2">Selected Match</h4>
               <div className="text-center mb-4">
-                <span className="text-lg">
-                  {selectedEvent.home_team} <span className="text-gray-500">vs</span> {selectedEvent.away_team}
-                </span>
+                <div className="flex items-center justify-center gap-3">
+                  <TeamLogo teamName={selectedEvent.home_team} sport={selectedSport} size="md" />
+                  <span className="text-lg">
+                    {selectedEvent.home_team} <span className="text-gray-500">vs</span> {selectedEvent.away_team}
+                  </span>
+                  <TeamLogo teamName={selectedEvent.away_team} sport={selectedSport} size="md" />
+                </div>
                 <div className="text-xs text-gray-500">{formatDate(selectedEvent.commence_time)}</div>
               </div>
 

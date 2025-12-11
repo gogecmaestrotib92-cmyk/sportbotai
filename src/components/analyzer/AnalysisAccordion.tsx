@@ -327,6 +327,7 @@ export default function AnalysisAccordion({ result }: AnalysisAccordionProps) {
             momentumAndForm={momentumAndForm}
             homeTeam={matchInfo.homeTeam}
             awayTeam={matchInfo.awayTeam}
+            sport={matchInfo.sport}
           />
         </div>
       </AccordionSection>
@@ -347,6 +348,7 @@ export default function AnalysisAccordion({ result }: AnalysisAccordionProps) {
               h2hSummary={momentumAndForm.h2hSummary}
               homeTeam={matchInfo.homeTeam}
               awayTeam={matchInfo.awayTeam}
+              sport={matchInfo.sport}
             />
           </div>
         </AccordionSection>

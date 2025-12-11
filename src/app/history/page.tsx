@@ -10,6 +10,8 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import TeamLogo from '@/components/ui/TeamLogo';
+import LeagueLogo from '@/components/ui/LeagueLogo';
 
 interface AnalysisSummary {
   id: string;
@@ -190,7 +192,7 @@ export default function HistoryPage() {
                 {/* Match Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xl">{getSportIcon(analysis.sport)}</span>
+                    <LeagueLogo leagueName={analysis.league} sport={analysis.sport} size="sm" />
                     <span className="text-xs text-text-muted uppercase tracking-wider">
                       {analysis.league}
                     </span>
@@ -201,9 +203,17 @@ export default function HistoryPage() {
                     )}
                   </div>
                   
-                  <h3 className="font-semibold text-text-primary mb-1 truncate">
-                    {analysis.homeTeam} vs {analysis.awayTeam}
-                  </h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <TeamLogo teamName={analysis.homeTeam} sport={analysis.sport} size="sm" />
+                    <h3 className="font-semibold text-text-primary truncate">
+                      {analysis.homeTeam}
+                    </h3>
+                    <span className="text-text-muted">vs</span>
+                    <TeamLogo teamName={analysis.awayTeam} sport={analysis.sport} size="sm" />
+                    <span className="font-medium text-text-secondary truncate">
+                      {analysis.awayTeam}
+                    </span>
+                  </div>
                   
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-secondary">
                     {/* Probabilities */}

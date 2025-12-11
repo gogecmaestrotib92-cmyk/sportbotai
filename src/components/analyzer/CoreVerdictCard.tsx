@@ -16,6 +16,8 @@
 
 import { AnalyzeResponse, RiskLevel, ValueFlag } from '@/types';
 import ProbabilityDonut from './ProbabilityDonut';
+import TeamLogo from '../ui/TeamLogo';
+import LeagueLogo from '../ui/LeagueLogo';
 
 interface CoreVerdictCardProps {
   result: AnalyzeResponse;
@@ -90,6 +92,7 @@ export default function CoreVerdictCard({ result }: CoreVerdictCardProps) {
               <span className="px-2.5 py-1 bg-primary/20 text-primary text-xs font-bold rounded-full">
                 {matchInfo.sport}
               </span>
+              <LeagueLogo leagueName={matchInfo.leagueName} sport={matchInfo.sport} size="sm" />
               <span className="text-text-secondary text-sm">{matchInfo.leagueName}</span>
             </div>
             <span className="text-text-muted text-xs sm:text-sm">{formatDate(matchInfo.matchDate)}</span>
@@ -98,6 +101,9 @@ export default function CoreVerdictCard({ result }: CoreVerdictCardProps) {
           {/* Teams */}
           <div className="flex items-center justify-between gap-3 sm:gap-6">
             <div className="flex-1 text-center">
+              <div className="flex justify-center mb-2">
+                <TeamLogo teamName={matchInfo.homeTeam} sport={matchInfo.sport} league={matchInfo.leagueName} size="lg" />
+              </div>
               <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate">{matchInfo.homeTeam}</p>
               <p className="text-[10px] text-text-muted uppercase tracking-wider mt-1">Home</p>
             </div>
@@ -105,6 +111,9 @@ export default function CoreVerdictCard({ result }: CoreVerdictCardProps) {
               <span className="text-text-muted text-xs font-bold">VS</span>
             </div>
             <div className="flex-1 text-center">
+              <div className="flex justify-center mb-2">
+                <TeamLogo teamName={matchInfo.awayTeam} sport={matchInfo.sport} league={matchInfo.leagueName} size="lg" />
+              </div>
               <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate">{matchInfo.awayTeam}</p>
               <p className="text-[10px] text-text-muted uppercase tracking-wider mt-1">Away</p>
             </div>

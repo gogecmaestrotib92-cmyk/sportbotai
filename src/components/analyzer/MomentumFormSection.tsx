@@ -12,11 +12,13 @@
 'use client';
 
 import { MomentumAndForm, Trend, FormMatch } from '@/types';
+import TeamLogo from '../ui/TeamLogo';
 
 interface MomentumFormSectionProps {
   momentumAndForm: MomentumAndForm;
   homeTeam: string;
   awayTeam: string;
+  sport?: string;
 }
 
 const trendConfig: Record<Trend, { 
@@ -182,9 +184,10 @@ interface TeamMomentumCardProps {
   isHome: boolean;
   realForm?: FormMatch[];
   formDataSource?: 'API_FOOTBALL' | 'API_SPORTS' | 'AI_ESTIMATE' | 'UNAVAILABLE';
+  sport?: string;
 }
 
-function TeamMomentumCard({ score, trend, teamName, isHome, realForm, formDataSource }: TeamMomentumCardProps) {
+function TeamMomentumCard({ score, trend, teamName, isHome, realForm, formDataSource, sport = 'soccer' }: TeamMomentumCardProps) {
   const trendInfo = trendConfig[trend];
   
   // Use real form data if available, otherwise generate mock
@@ -203,13 +206,16 @@ function TeamMomentumCard({ score, trend, teamName, isHome, realForm, formDataSo
     `}>
       {/* Team label */}
       <div className="flex items-center justify-between mb-3">
-        <div>
-          <span className={`text-[10px] uppercase tracking-wider font-semibold ${isHome ? 'text-green-600' : 'text-blue-600'}`}>
-            {isHome ? '🏠 Home' : '✈️ Away'}
-          </span>
-          <p className="text-sm font-bold text-white truncate max-w-[120px]" title={teamName}>
-            {teamName}
-          </p>
+        <div className="flex items-center gap-2">
+          <TeamLogo teamName={teamName} sport={sport} size="md" />
+          <div>
+            <span className={`text-[10px] uppercase tracking-wider font-semibold ${isHome ? 'text-green-600' : 'text-blue-600'}`}>
+              {isHome ? 'Home' : 'Away'}
+            </span>
+            <p className="text-sm font-bold text-white truncate max-w-[100px]" title={teamName}>
+              {teamName}
+            </p>
+          </div>
         </div>
         
         {/* Trend badge */}
@@ -283,7 +289,7 @@ function MomentumComparisonBar({ homeScore, awayScore }: { homeScore: number | n
   );
 }
 
-export default function MomentumFormSection({ momentumAndForm, homeTeam, awayTeam }: MomentumFormSectionProps) {
+export default function MomentumFormSection({ momentumAndForm, homeTeam, awayTeam, sport = 'soccer' }: MomentumFormSectionProps) {
   const formDataSource = momentumAndForm.formDataSource;
   
   return (
@@ -311,6 +317,7 @@ export default function MomentumFormSection({ momentumAndForm, homeTeam, awayTea
           isHome={true}
           realForm={momentumAndForm.homeForm}
           formDataSource={formDataSource}
+          sport={sport}
         />
         <TeamMomentumCard
           score={momentumAndForm.awayMomentumScore}
@@ -319,6 +326,7 @@ export default function MomentumFormSection({ momentumAndForm, homeTeam, awayTea
           isHome={false}
           realForm={momentumAndForm.awayForm}
           formDataSource={formDataSource}
+          sport={sport}
         />
       </div>
 

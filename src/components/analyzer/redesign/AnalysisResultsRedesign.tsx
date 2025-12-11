@@ -101,6 +101,7 @@ export default function AnalysisResultsRedesign({ result }: AnalysisResultsRedes
             injuryContext={result.injuryContext!}
             homeTeam={result.matchInfo.homeTeam}
             awayTeam={result.matchInfo.awayTeam}
+            sport={result.matchInfo.sport}
           />
         </div>
       )}

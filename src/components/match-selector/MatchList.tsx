@@ -9,6 +9,7 @@
 
 import { MatchData } from '@/types';
 import { formatMatchDate } from './utils';
+import TeamLogo from '@/components/ui/TeamLogo';
 
 interface MatchListProps {
   matches: MatchData[];
@@ -67,12 +68,14 @@ export default function MatchList({
               <div className="flex-1 min-w-0">
                 {/* Teams */}
                 <div className={`flex items-center gap-2 ${compact ? 'text-sm' : ''}`}>
+                  <TeamLogo teamName={match.homeTeam} sport={match.sport} size="sm" />
                   <span className={`font-semibold truncate ${isSelected ? 'text-white' : 'text-white'}`}>
                     {match.homeTeam}
                   </span>
                   <span className={`text-xs px-1.5 py-0.5 rounded ${isSelected ? 'bg-white/10 text-gray-300' : 'bg-bg-elevated text-gray-400'}`}>
                     vs
                   </span>
+                  <TeamLogo teamName={match.awayTeam} sport={match.sport} size="sm" />
                   <span className={`font-medium truncate ${isSelected ? 'text-gray-200' : 'text-gray-300'}`}>
                     {match.awayTeam}
                   </span>

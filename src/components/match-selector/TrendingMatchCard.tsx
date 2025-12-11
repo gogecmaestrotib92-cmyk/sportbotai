@@ -1,6 +1,8 @@
 'use client';
 
 import { TrendingMatch } from './trending';
+import TeamLogo from '@/components/ui/TeamLogo';
+import LeagueLogo from '@/components/ui/LeagueLogo';
 
 interface TrendingMatchCardProps {
   match: TrendingMatch;
@@ -67,6 +69,7 @@ export function TrendingMatchCard({
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-orange-500/10 text-orange-500 text-[10px] font-semibold">
                 🔥 HOT
               </span>
+              <LeagueLogo leagueName={match.league || match.sport} sport={match.sport} size="sm" />
               <span className={`text-[10px] truncate ${isSelected ? 'text-text-muted' : 'text-text-muted'}`}>
                 {match.league || match.sport}
               </span>
@@ -74,12 +77,18 @@ export function TrendingMatchCard({
 
             {/* Teams */}
             <div className="space-y-0.5">
-              <p className={`text-sm font-semibold truncate ${isSelected ? 'text-white' : 'text-text-primary'}`}>
-                {match.homeTeam}
-              </p>
-              <p className={`text-sm truncate ${isSelected ? 'text-text-secondary' : 'text-text-secondary'}`}>
-                {match.awayTeam}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <TeamLogo teamName={match.homeTeam} sport={match.sport} size="sm" />
+                <p className={`text-sm font-semibold truncate ${isSelected ? 'text-white' : 'text-text-primary'}`}>
+                  {match.homeTeam}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <TeamLogo teamName={match.awayTeam} sport={match.sport} size="sm" />
+                <p className={`text-sm truncate ${isSelected ? 'text-text-secondary' : 'text-text-secondary'}`}>
+                  {match.awayTeam}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -132,16 +141,22 @@ export function TrendingMatchCard({
       </div>
 
       {/* League */}
-      <p className={`text-[10px] truncate mb-2 ${isSelected ? 'text-text-muted' : 'text-text-muted'}`}>
-        {match.league || match.sport}
-      </p>
+      <div className="flex items-center gap-1.5 mb-2">
+        <LeagueLogo leagueName={match.league || match.sport} sport={match.sport} size="sm" />
+        <p className={`text-[10px] truncate ${isSelected ? 'text-text-muted' : 'text-text-muted'}`}>
+          {match.league || match.sport}
+        </p>
+      </div>
 
       {/* Teams with Odds */}
       <div className="space-y-2 mb-3">
         <div className="flex items-center justify-between">
-          <span className={`text-sm font-semibold truncate flex-1 mr-2 ${isSelected ? 'text-white' : 'text-text-primary'}`}>
-            {match.homeTeam}
-          </span>
+          <div className="flex items-center gap-1.5 flex-1 mr-2 min-w-0">
+            <TeamLogo teamName={match.homeTeam} sport={match.sport} size="sm" />
+            <span className={`text-sm font-semibold truncate ${isSelected ? 'text-white' : 'text-text-primary'}`}>
+              {match.homeTeam}
+            </span>
+          </div>
           {odds?.home && (
             <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${isSelected ? 'bg-white/10 text-accent' : 'bg-success/10 text-success'}`}>
               {odds.home.toFixed(2)}
@@ -149,9 +164,12 @@ export function TrendingMatchCard({
           )}
         </div>
         <div className="flex items-center justify-between">
-          <span className={`text-sm truncate flex-1 mr-2 ${isSelected ? 'text-text-secondary' : 'text-text-secondary'}`}>
-            {match.awayTeam}
-          </span>
+          <div className="flex items-center gap-1.5 flex-1 mr-2 min-w-0">
+            <TeamLogo teamName={match.awayTeam} sport={match.sport} size="sm" />
+            <span className={`text-sm truncate ${isSelected ? 'text-text-secondary' : 'text-text-secondary'}`}>
+              {match.awayTeam}
+            </span>
+          </div>
           {odds?.away && (
             <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${isSelected ? 'bg-white/10 text-text-secondary' : 'bg-bg-hover text-text-secondary'}`}>
               {odds.away.toFixed(2)}

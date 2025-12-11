@@ -10,6 +10,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnalyzeRequest, AnalyzeResponse, MatchData } from '@/types';
 import { SPORTS_CONFIG, SportConfig, getSportsGroupedByCategory } from '@/lib/config/sportsConfig';
+import TeamLogo from './ui/TeamLogo';
+import LeagueLogo from './ui/LeagueLogo';
 
 // ============================================
 // TYPES
@@ -428,15 +430,19 @@ export default function MultiSportAnalyzerForm({
           {selectedEvent && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-xl">{selectedSportConfig?.icon || '🏆'}</span>
+                <LeagueLogo leagueName={selectedEvent.league || ''} sport={selectedSportKey} size="md" />
                 <span className="font-semibold text-gray-800">{selectedEvent.league}</span>
               </div>
               
               <div className="text-center mb-4">
-                <div className="text-lg font-bold text-gray-900">
-                  {selectedEvent.homeTeam}
-                  <span className="mx-2 text-gray-400">vs</span>
-                  {selectedEvent.awayTeam}
+                <div className="flex items-center justify-center gap-3">
+                  <TeamLogo teamName={selectedEvent.homeTeam} sport={selectedSportKey} size="lg" />
+                  <div className="text-lg font-bold text-gray-900">
+                    {selectedEvent.homeTeam}
+                    <span className="mx-2 text-gray-400">vs</span>
+                    {selectedEvent.awayTeam}
+                  </div>
+                  <TeamLogo teamName={selectedEvent.awayTeam} sport={selectedSportKey} size="lg" />
                 </div>
                 <div className="text-sm text-gray-500 mt-1">
                   {formatDate(selectedEvent.commenceTime)}

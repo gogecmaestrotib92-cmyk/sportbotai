@@ -15,11 +15,13 @@
 'use client';
 
 import { InjuryContext, InjuredPlayer, TeamInjuryContext } from '@/types';
+import TeamLogo from '../ui/TeamLogo';
 
 interface InjuryImpactCardProps {
   injuryContext: InjuryContext;
   homeTeam: string;
   awayTeam: string;
+  sport?: string;
 }
 
 // Impact level colors and labels
@@ -95,18 +97,21 @@ function PlayerCard({ player }: { player: InjuredPlayer }) {
 function TeamInjurySection({ 
   context, 
   teamName, 
-  isHome 
+  isHome,
+  sport 
 }: { 
   context: TeamInjuryContext | null; 
   teamName: string;
   isHome: boolean;
+  sport: string;
 }) {
   if (!context || context.players.length === 0) {
     return (
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg">{isHome ? '🏠' : '✈️'}</span>
+          <TeamLogo teamName={teamName} sport={sport} size="md" />
           <h4 className="font-semibold text-white text-sm">{teamName}</h4>
+          <span className="text-xs text-text-muted">{isHome ? '(Home)' : '(Away)'}</span>
         </div>
         <div className="p-4 bg-success/5 border border-success/20 rounded-lg text-center">
           <span className="text-success text-sm">✓ No reported absences</span>
@@ -126,8 +131,9 @@ function TeamInjurySection({
       {/* Header with team name and summary */}
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-lg">{isHome ? '🏠' : '✈️'}</span>
+          <TeamLogo teamName={teamName} sport={sport} size="md" />
           <h4 className="font-semibold text-white text-sm">{teamName}</h4>
+          <span className="text-xs text-text-muted">{isHome ? '(Home)' : '(Away)'}</span>
         </div>
         <div className="text-right">
           <div className={`text-xs font-medium ${context.totalImpactScore >= 50 ? 'text-danger' : context.totalImpactScore >= 25 ? 'text-warning' : 'text-text-secondary'}`}>
@@ -161,7 +167,8 @@ function TeamInjurySection({
 export default function InjuryImpactCard({ 
   injuryContext, 
   homeTeam, 
-  awayTeam 
+  awayTeam,
+  sport = 'soccer'
 }: InjuryImpactCardProps) {
   const impactConfig = IMPACT_CONFIG[injuryContext.overallImpact];
   
@@ -217,6 +224,7 @@ export default function InjuryImpactCard({
             context={injuryContext.homeTeam} 
             teamName={homeTeam}
             isHome={true}
+            sport={sport}
           />
           
           {/* Divider - visible on mobile, hidden on desktop where grid gap handles it */}
@@ -226,6 +234,7 @@ export default function InjuryImpactCard({
             context={injuryContext.awayTeam} 
             teamName={awayTeam}
             isHome={false}
+            sport={sport}
           />
         </div>
       </div>
