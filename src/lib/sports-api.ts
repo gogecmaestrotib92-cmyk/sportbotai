@@ -170,6 +170,46 @@ interface TeamSeasonStats {
   winPercentage?: number;
 }
 
+// NBA API Types
+interface NBAGame {
+  status?: { short?: number; long?: string };
+  date: { start: string };
+  teams: {
+    home: { id: number; name: string };
+    visitors: { id: number; name: string };
+  };
+  scores: {
+    home: { points: number };
+    visitors: { points: number };
+  };
+}
+
+interface NBAStanding {
+  win?: { total?: number; percentage?: string };
+  loss?: { total?: number };
+}
+
+// MMA API Types
+interface MMAFighter {
+  id: number;
+  name: string;
+}
+
+interface MMAFighterRecord {
+  total?: { win: number; loss: number; draw: number };
+  ko?: { win: number; loss: number };
+  sub?: { win: number; loss: number };
+}
+
+interface MMAFight {
+  date: string;
+  status: { short: string; long: string };
+  fighters: {
+    first: { id: number; name: string; winner: boolean };
+    second: { id: number; name: string; winner: boolean };
+  };
+}
+
 export interface MultiSportEnrichedData {
   sport: string;
   homeForm: FormMatch[] | null;
@@ -1338,17 +1378,17 @@ async function getNBATeamGames(teamId: number, baseUrl: string): Promise<GameRes
   if (cached) return cached;
 
   const season = getCurrentNBASeason();
-  const response = await apiRequest<any>(baseUrl, `/games?team=${teamId}&season=${season}`);
+  const response = await apiRequest<{ response: NBAGame[] }>(baseUrl, `/games?team=${teamId}&season=${season}`);
   
   if (!response?.response) return [];
 
   // Filter for finished games and get last 5
   const finishedGames = response.response
-    .filter((game: any) => game.status?.short === 3 || game.status?.long === 'Finished')
-    .sort((a: any, b: any) => new Date(b.date.start).getTime() - new Date(a.date.start).getTime())
+    .filter((game: NBAGame) => game.status?.short === 3 || game.status?.long === 'Finished')
+    .sort((a: NBAGame, b: NBAGame) => new Date(b.date.start).getTime() - new Date(a.date.start).getTime())
     .slice(0, 5);
 
-  const games: GameResult[] = finishedGames.map((game: any) => {
+  const games: GameResult[] = finishedGames.map((game: NBAGame) => {
     const isHome = game.teams.home.id === teamId;
     const teamScore = isHome ? game.scores.home.points : game.scores.visitors.points;
     const oppScore = isHome ? game.scores.visitors.points : game.scores.home.points;
@@ -1374,7 +1414,7 @@ async function getNBATeamStats(teamId: number, baseUrl: string): Promise<TeamSea
   if (cached) return cached;
 
   const season = getCurrentNBASeason();
-  const response = await apiRequest<any>(baseUrl, `/standings?team=${teamId}&season=${season}&league=standard`);
+  const response = await apiRequest<{ response: NBAStanding[] }>(baseUrl, `/standings?team=${teamId}&season=${season}&league=standard`);
   
   if (!response?.response?.length) return null;
   
@@ -1394,12 +1434,12 @@ async function getNBATeamStats(teamId: number, baseUrl: string): Promise<TeamSea
 
 async function getNBAH2H(homeTeamId: number, awayTeamId: number, baseUrl: string): Promise<{ matches: H2HMatch[], summary: { totalMatches: number, homeWins: number, awayWins: number, draws: number } } | null> {
   const cacheKey = `nba:h2h:${homeTeamId}:${awayTeamId}`;
-  const cached = getCached<any>(cacheKey);
+  const cached = getCached<{ matches: H2HMatch[], summary: { totalMatches: number, homeWins: number, awayWins: number, draws: number } }>(cacheKey);
   if (cached) return cached;
 
   const season = getCurrentNBASeason();
   // Get games where both teams played each other
-  const response = await apiRequest<any>(baseUrl, `/games?h2h=${homeTeamId}-${awayTeamId}&season=${season}`);
+  const response = await apiRequest<{ response: NBAGame[] }>(baseUrl, `/games?h2h=${homeTeamId}-${awayTeamId}&season=${season}`);
   
   if (!response?.response?.length) return null;
 
@@ -1407,9 +1447,9 @@ async function getNBAH2H(homeTeamId: number, awayTeamId: number, baseUrl: string
   let awayWins = 0;
 
   const matches: H2HMatch[] = response.response
-    .filter((game: any) => game.status?.short === 3 || game.status?.long === 'Finished')
+    .filter((game: NBAGame) => game.status?.short === 3 || game.status?.long === 'Finished')
     .slice(0, 5)
-    .map((game: any) => {
+    .map((game: NBAGame) => {
       const homeScore = game.scores.home.points;
       const awayScore = game.scores.visitors.points;
       
@@ -1770,24 +1810,6 @@ async function fetchNFLData(homeTeam: string, awayTeam: string, baseUrl: string)
 // MMA-SPECIFIC FUNCTIONS (v1.mma.api-sports.io)
 // ============================================
 
-interface MMAFighterRecord {
-  total: { win: number; loss: number; draw: number };
-  ko: { win: number; loss: number };
-  sub: { win: number; loss: number };
-}
-
-interface MMAFight {
-  id: number;
-  date: string;
-  slug: string;
-  category: string;
-  status: { long: string; short: string };
-  fighters: {
-    first: { id: number; name: string; winner: boolean };
-    second: { id: number; name: string; winner: boolean };
-  };
-}
-
 async function findMMAFighter(fighterName: string, baseUrl: string): Promise<number | null> {
   // Normalize fighter name - remove common prefixes/suffixes
   const normalizedName = fighterName
@@ -1800,17 +1822,17 @@ async function findMMAFighter(fighterName: string, baseUrl: string): Promise<num
   if (cached) return cached;
 
   // Try exact name search first
-  let response = await apiRequest<any>(baseUrl, `/fighters?search=${encodeURIComponent(normalizedName)}`);
+  let response = await apiRequest<{ response: MMAFighter[] }>(baseUrl, `/fighters?search=${encodeURIComponent(normalizedName)}`);
   
   // If not found, try with just the last name
   if (!response?.response?.length) {
     const lastName = normalizedName.split(' ').pop() || normalizedName;
-    response = await apiRequest<any>(baseUrl, `/fighters?search=${encodeURIComponent(lastName)}`);
+    response = await apiRequest<{ response: MMAFighter[] }>(baseUrl, `/fighters?search=${encodeURIComponent(lastName)}`);
   }
   
   if (response?.response?.length > 0) {
     // Try to find exact match first
-    const exactMatch = response.response.find((f: any) => 
+    const exactMatch = response.response.find((f: MMAFighter) => 
       f.name.toLowerCase() === normalizedName.toLowerCase()
     );
     const fighter = exactMatch || response.response[0];
@@ -1829,7 +1851,7 @@ async function getMMAFighterRecord(fighterId: number, baseUrl: string): Promise<
   const cached = getCached<MMAFighterRecord>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiRequest<any>(baseUrl, `/fighters/records?id=${fighterId}`);
+  const response = await apiRequest<{ response: MMAFighterRecord[] }>(baseUrl, `/fighters/records?id=${fighterId}`);
   
   if (!response?.response?.length) return null;
   
@@ -1856,7 +1878,7 @@ async function getMMAFighterFights(fighterId: number, baseUrl: string): Promise<
   const allFights: MMAFight[] = [];
   
   for (const season of seasons) {
-    const response = await apiRequest<any>(baseUrl, `/fights?fighter=${fighterId}&season=${season}`);
+    const response = await apiRequest<{ response: MMAFight[] }>(baseUrl, `/fights?fighter=${fighterId}&season=${season}`);
     if (response?.response?.length) {
       allFights.push(...response.response);
     }
@@ -1873,7 +1895,7 @@ async function getMMAFighterFights(fighterId: number, baseUrl: string): Promise<
   return finishedFights;
 }
 
-async function getMMAH2H(fighter1Id: number, fighter2Id: number, baseUrl: string): Promise<{ matches: H2HMatch[], summary: { totalMatches: number, homeWins: number, awayWins: number, draws: number } } | null> {
+async function getMMAH2H(_fighter1Id: number, _fighter2Id: number, _baseUrl: string): Promise<{ matches: H2HMatch[], summary: { totalMatches: number, homeWins: number, awayWins: number, draws: number } } | null> {
   // For MMA, we need to search through both fighters' fight histories to find common opponents
   // The API doesn't have a direct H2H endpoint, so this is limited
   // For now, return null as direct H2H in MMA is rare
