@@ -1830,7 +1830,7 @@ async function findMMAFighter(fighterName: string, baseUrl: string): Promise<num
     response = await apiRequest<{ response: MMAFighter[] }>(baseUrl, `/fighters?search=${encodeURIComponent(lastName)}`);
   }
   
-  if (response?.response?.length > 0) {
+  if (response?.response && response.response.length > 0) {
     // Try to find exact match first
     const exactMatch = response.response.find((f: MMAFighter) => 
       f.name.toLowerCase() === normalizedName.toLowerCase()
@@ -1978,10 +1978,10 @@ async function fetchMMAData(fighter1: string, fighter2: string, baseUrl: string)
     : null;
 
   // For MMA, use wins/losses as stats
-  const homeStats: TeamStats | null = fighter1Record ? {
+  const homeStats: TeamStats | null = fighter1Record?.total ? {
     goalsScored: fighter1Record.total.win,
     goalsConceded: fighter1Record.total.loss,
-    cleanSheets: fighter1Record.ko.win + fighter1Record.sub.win, // Finishes
+    cleanSheets: (fighter1Record.ko?.win || 0) + (fighter1Record.sub?.win || 0), // Finishes
     avgGoalsScored: fighter1Record.total.win + fighter1Record.total.loss > 0
       ? Math.round((fighter1Record.total.win / (fighter1Record.total.win + fighter1Record.total.loss)) * 100) / 100
       : 0,
@@ -1990,10 +1990,10 @@ async function fetchMMAData(fighter1: string, fighter2: string, baseUrl: string)
       : 0,
   } : null;
 
-  const awayStats: TeamStats | null = fighter2Record ? {
+  const awayStats: TeamStats | null = fighter2Record?.total ? {
     goalsScored: fighter2Record.total.win,
     goalsConceded: fighter2Record.total.loss,
-    cleanSheets: fighter2Record.ko.win + fighter2Record.sub.win, // Finishes
+    cleanSheets: (fighter2Record.ko?.win || 0) + (fighter2Record.sub?.win || 0), // Finishes
     avgGoalsScored: fighter2Record.total.win + fighter2Record.total.loss > 0
       ? Math.round((fighter2Record.total.win / (fighter2Record.total.win + fighter2Record.total.loss)) * 100) / 100
       : 0,
