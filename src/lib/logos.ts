@@ -1004,11 +1004,23 @@ const LEAGUE_LOGOS: Record<string, string> = {
 function normalizeSport(sport: string): string {
   const sportLower = sport.toLowerCase();
   
-  // Soccer/Football
+  // Soccer/Football - comprehensive matching for all leagues
+  if (sportLower.includes('soccer')) return 'soccer';
   if (sportLower.includes('football') && !sportLower.includes('american')) return 'soccer';
-  if (sportLower.includes('soccer') || sportLower.includes('epl') || sportLower.includes('premier')) return 'soccer';
-  if (sportLower.includes('la_liga') || sportLower.includes('serie_a') || sportLower.includes('bundesliga')) return 'soccer';
-  if (sportLower.includes('ligue') || sportLower.includes('champs_league') || sportLower.includes('europa')) return 'soccer';
+  if (sportLower.includes('epl') || sportLower.includes('premier')) return 'soccer';
+  if (sportLower.includes('la_liga') || sportLower.includes('laliga') || sportLower.includes('spain')) return 'soccer';
+  if (sportLower.includes('serie_a') || sportLower.includes('italy')) return 'soccer';
+  if (sportLower.includes('bundesliga') || sportLower.includes('germany')) return 'soccer';
+  if (sportLower.includes('ligue') || sportLower.includes('france')) return 'soccer';
+  if (sportLower.includes('champs_league') || sportLower.includes('europa') || sportLower.includes('uefa')) return 'soccer';
+  if (sportLower.includes('eredivisie') || sportLower.includes('netherlands')) return 'soccer';
+  if (sportLower.includes('primeira') || sportLower.includes('portugal')) return 'soccer';
+  if (sportLower.includes('mls') || sportLower.includes('liga_mx') || sportLower.includes('mexico')) return 'soccer';
+  if (sportLower.includes('a_league') || sportLower.includes('australia')) return 'soccer';
+  if (sportLower.includes('j_league') || sportLower.includes('japan')) return 'soccer';
+  if (sportLower.includes('brazil') || sportLower.includes('argentina')) return 'soccer';
+  if (sportLower.includes('scottish') || sportLower.includes('championship') || sportLower.includes('fa_cup')) return 'soccer';
+  if (sportLower.includes('turkey') || sportLower.includes('belgium') || sportLower.includes('swiss')) return 'soccer';
   
   // Basketball
   if (sportLower.includes('basketball') || sportLower === 'nba' || sportLower.includes('euroleague')) return 'nba';

@@ -116,9 +116,9 @@ export default function LeagueAccordion({
               ${isExpanded ? 'shadow-card' : ''}
             `}
           >
-            {/* Country Flag Background */}
+            {/* Country Flag Background - needs z-index above container but below button */}
             {countryFlag && (
-              <div className="absolute right-14 top-1/2 -translate-y-1/2 text-5xl sm:text-6xl opacity-20 pointer-events-none select-none">
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-6xl sm:text-7xl opacity-30 pointer-events-none select-none z-0">
                 {countryFlag}
               </div>
             )}
@@ -129,7 +129,7 @@ export default function LeagueAccordion({
               className={`
                 w-full flex items-center justify-between p-4 sm:p-4 text-left
                 transition-colors duration-200 group touch-manipulation min-h-[64px]
-                active:bg-bg-elevated/70 relative z-10
+                active:bg-bg-elevated/70 relative z-[1]
                 ${isExpanded ? 'bg-bg-elevated/50' : 'hover:bg-bg-elevated/50'}
               `}
             >
