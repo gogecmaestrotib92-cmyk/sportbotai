@@ -85,7 +85,7 @@ const ESPN_TEAM_IDS: Record<string, Record<string, string>> = {
     'Sacramento Kings': 'sac', 'Kings': 'sac', 'SAC': 'sac',
     'San Antonio Spurs': 'sa', 'Spurs': 'sa', 'SAS': 'sa', 'SA': 'sa', 'San Antonio': 'sa',
     'Toronto Raptors': 'tor', 'Raptors': 'tor', 'TOR': 'tor',
-    'Utah Jazz': 'uta', 'Jazz': 'uta', 'UTA': 'uta',
+    'Utah Jazz': 'utah', 'Jazz': 'utah', 'UTA': 'utah',
     'Washington Wizards': 'wsh', 'Wizards': 'wsh', 'WSH': 'wsh', 'WAS': 'wsh',
   },
   // NHL Teams (all variations)
@@ -308,6 +308,38 @@ const SOCCER_TEAM_LOGOS: Record<string, string> = {
   'Real Valladolid': 'https://crests.football-data.org/250.png',
   'Real Valladolid CF': 'https://crests.football-data.org/250.png',
   'R. Valladolid': 'https://crests.football-data.org/250.png',
+  // Additional La Liga / Segunda Division teams
+  'Elche': 'https://crests.football-data.org/285.png',
+  'Elche CF': 'https://crests.football-data.org/285.png',
+  'Elche Club de Futbol': 'https://crests.football-data.org/285.png',
+  'Levante': 'https://crests.football-data.org/88.png',
+  'Levante UD': 'https://crests.football-data.org/88.png',
+  'Levante Union Deportiva': 'https://crests.football-data.org/88.png',
+  'Oviedo': 'https://a.espncdn.com/i/teamlogos/soccer/500/3842.png',
+  'Real Oviedo': 'https://a.espncdn.com/i/teamlogos/soccer/500/3842.png',
+  'Real Oviedo SAD': 'https://a.espncdn.com/i/teamlogos/soccer/500/3842.png',
+  'Cadiz': 'https://crests.football-data.org/264.png',
+  'Cadiz CF': 'https://crests.football-data.org/264.png',
+  'Cádiz': 'https://crests.football-data.org/264.png',
+  'Cádiz CF': 'https://crests.football-data.org/264.png',
+  'Granada': 'https://crests.football-data.org/83.png',
+  'Granada CF': 'https://crests.football-data.org/83.png',
+  'Almeria': 'https://crests.football-data.org/267.png',
+  'UD Almeria': 'https://crests.football-data.org/267.png',
+  'Almería': 'https://crests.football-data.org/267.png',
+  'Tenerife': 'https://crests.football-data.org/261.png',
+  'CD Tenerife': 'https://crests.football-data.org/261.png',
+  'Sporting Gijon': 'https://crests.football-data.org/91.png',
+  'Sporting de Gijon': 'https://crests.football-data.org/91.png',
+  'Sporting Gijón': 'https://crests.football-data.org/91.png',
+  'Racing Santander': 'https://crests.football-data.org/260.png',
+  'Racing': 'https://crests.football-data.org/260.png',
+  'Eibar': 'https://crests.football-data.org/278.png',
+  'SD Eibar': 'https://crests.football-data.org/278.png',
+  'Huesca': 'https://crests.football-data.org/299.png',
+  'SD Huesca': 'https://crests.football-data.org/299.png',
+  'Zaragoza': 'https://crests.football-data.org/93.png',
+  'Real Zaragoza': 'https://crests.football-data.org/93.png',
   
   // ============================================
   // SERIE A (Italy) - All name variations
@@ -406,6 +438,31 @@ const SOCCER_TEAM_LOGOS: Record<string, string> = {
   'Frosinone Calcio': 'https://crests.football-data.org/470.png',
   'Cremonese': 'https://crests.football-data.org/472.png',
   'US Cremonese': 'https://crests.football-data.org/472.png',
+  // Additional Serie B / Italian teams
+  'Pisa': 'https://crests.football-data.org/458.png',
+  'AC Pisa': 'https://crests.football-data.org/458.png',
+  'Pisa SC': 'https://crests.football-data.org/458.png',
+  'Pisa Sporting Club': 'https://crests.football-data.org/458.png',
+  'Brescia': 'https://crests.football-data.org/450.png',
+  'Brescia Calcio': 'https://crests.football-data.org/450.png',
+  'Bari': 'https://crests.football-data.org/456.png',
+  'SSC Bari': 'https://crests.football-data.org/456.png',
+  'Palermo': 'https://crests.football-data.org/484.png',
+  'US Palermo': 'https://crests.football-data.org/484.png',
+  'Reggina': 'https://crests.football-data.org/462.png',
+  'Reggina Calcio': 'https://crests.football-data.org/462.png',
+  'Catanzaro': 'https://crests.football-data.org/7628.png',
+  'US Catanzaro': 'https://crests.football-data.org/7628.png',
+  'Modena': 'https://crests.football-data.org/461.png',
+  'Modena FC': 'https://crests.football-data.org/461.png',
+  'Cosenza': 'https://crests.football-data.org/459.png',
+  'Cosenza Calcio': 'https://crests.football-data.org/459.png',
+  'SPAL': 'https://crests.football-data.org/490.png',
+  'SPAL 2013': 'https://crests.football-data.org/490.png',
+  'Sudtirol': 'https://crests.football-data.org/10031.png',
+  'FC Sudtirol': 'https://crests.football-data.org/10031.png',
+  'Cittadella': 'https://crests.football-data.org/477.png',
+  'AS Cittadella': 'https://crests.football-data.org/477.png',
   
   // ============================================
   // BUNDESLIGA (Germany)
@@ -453,6 +510,59 @@ const SOCCER_TEAM_LOGOS: Record<string, string> = {
   'St. Pauli': 'https://crests.football-data.org/20.png',
   'Holstein Kiel': 'https://crests.football-data.org/720.png',
   'Kiel': 'https://crests.football-data.org/720.png',
+  // Additional Bundesliga 2 / German teams
+  'Hamburger SV': 'https://crests.football-data.org/7.png',
+  'Hamburg': 'https://crests.football-data.org/7.png',
+  'HSV': 'https://crests.football-data.org/7.png',
+  '1. FC Köln': 'https://crests.football-data.org/1.png',
+  'FC Köln': 'https://crests.football-data.org/1.png',
+  'Köln': 'https://crests.football-data.org/1.png',
+  'Koln': 'https://crests.football-data.org/1.png',
+  'Cologne': 'https://crests.football-data.org/1.png',
+  'FC Cologne': 'https://crests.football-data.org/1.png',
+  'Greuther Fürth': 'https://crests.football-data.org/21.png',
+  'SpVgg Greuther Fürth': 'https://crests.football-data.org/21.png',
+  'Greuther Furth': 'https://crests.football-data.org/21.png',
+  'Fürth': 'https://crests.football-data.org/21.png',
+  'Furth': 'https://crests.football-data.org/21.png',
+  'Hertha Berlin': 'https://crests.football-data.org/9.png',
+  'Hertha BSC': 'https://crests.football-data.org/9.png',
+  'Hertha': 'https://crests.football-data.org/9.png',
+  'Hertha BSC Berlin': 'https://crests.football-data.org/9.png',
+  'SSV Ulm 1846': 'https://crests.football-data.org/10044.png',
+  'SSV Ulm': 'https://crests.football-data.org/10044.png',
+  'Ulm': 'https://crests.football-data.org/10044.png',
+  'VfL Osnabrück': 'https://crests.football-data.org/37.png',
+  'Osnabrück': 'https://crests.football-data.org/37.png',
+  'Osnabrueck': 'https://crests.football-data.org/37.png',
+  'Schalke': 'https://crests.football-data.org/6.png',
+  'FC Schalke 04': 'https://crests.football-data.org/6.png',
+  'Schalke 04': 'https://crests.football-data.org/6.png',
+  'S04': 'https://crests.football-data.org/6.png',
+  'Fortuna Düsseldorf': 'https://crests.football-data.org/38.png',
+  'Düsseldorf': 'https://crests.football-data.org/38.png',
+  'Dusseldorf': 'https://crests.football-data.org/38.png',
+  'Fortuna Dusseldorf': 'https://crests.football-data.org/38.png',
+  'Hannover 96': 'https://crests.football-data.org/8.png',
+  'Hannover': 'https://crests.football-data.org/8.png',
+  '1. FC Nürnberg': 'https://crests.football-data.org/14.png',
+  'Nürnberg': 'https://crests.football-data.org/14.png',
+  'Nurnberg': 'https://crests.football-data.org/14.png',
+  'Nuremberg': 'https://crests.football-data.org/14.png',
+  '1. FC Kaiserslautern': 'https://crests.football-data.org/30.png',
+  'Kaiserslautern': 'https://crests.football-data.org/30.png',
+  'FCK': 'https://crests.football-data.org/30.png',
+  'Karlsruher SC': 'https://crests.football-data.org/24.png',
+  'Karlsruhe': 'https://crests.football-data.org/24.png',
+  'KSC': 'https://crests.football-data.org/24.png',
+  'SV Darmstadt 98': 'https://crests.football-data.org/55.png',
+  'Darmstadt': 'https://crests.football-data.org/55.png',
+  'SC Paderborn 07': 'https://crests.football-data.org/31.png',
+  'Paderborn': 'https://crests.football-data.org/31.png',
+  'Eintracht Braunschweig': 'https://crests.football-data.org/35.png',
+  'Braunschweig': 'https://crests.football-data.org/35.png',
+  'Magdeburg': 'https://crests.football-data.org/39.png',
+  '1. FC Magdeburg': 'https://crests.football-data.org/39.png',
   
   // ============================================
   // LIGUE 1 (France)
@@ -504,6 +614,36 @@ const SOCCER_TEAM_LOGOS: Record<string, string> = {
   'Saint-Etienne': 'https://crests.football-data.org/527.png',
   'AS Saint-Etienne': 'https://crests.football-data.org/527.png',
   'St Etienne': 'https://crests.football-data.org/527.png',
+  // Additional Ligue 1 / Ligue 2 teams
+  'Metz': 'https://crests.football-data.org/545.png',
+  'FC Metz': 'https://crests.football-data.org/545.png',
+  'Lorient': 'https://crests.football-data.org/525.png',
+  'FC Lorient': 'https://crests.football-data.org/525.png',
+  'Pau FC': 'https://crests.football-data.org/10054.png',
+  'Pau': 'https://crests.football-data.org/10054.png',
+  'Amiens': 'https://crests.football-data.org/533.png',
+  'Amiens SC': 'https://crests.football-data.org/533.png',
+  'Annecy FC': 'https://crests.football-data.org/10055.png',
+  'Annecy': 'https://crests.football-data.org/10055.png',
+  'FC Annecy': 'https://crests.football-data.org/10055.png',
+  'Le Mans FC': 'https://crests.football-data.org/1091.png',
+  'Le Mans': 'https://crests.football-data.org/1091.png',
+  'Caen': 'https://crests.football-data.org/514.png',
+  'SM Caen': 'https://crests.football-data.org/514.png',
+  'Stade Malherbe Caen': 'https://crests.football-data.org/514.png',
+  'Bordeaux': 'https://crests.football-data.org/526.png',
+  'Girondins de Bordeaux': 'https://crests.football-data.org/526.png',
+  'FC Girondins de Bordeaux': 'https://crests.football-data.org/526.png',
+  'Guingamp': 'https://crests.football-data.org/538.png',
+  'EA Guingamp': 'https://crests.football-data.org/538.png',
+  'Dijon': 'https://crests.football-data.org/540.png',
+  'Dijon FCO': 'https://crests.football-data.org/540.png',
+  'Troyes': 'https://crests.football-data.org/531.png',
+  'ES Troyes AC': 'https://crests.football-data.org/531.png',
+  'Troyes AC': 'https://crests.football-data.org/531.png',
+  'Clermont': 'https://crests.football-data.org/541.png',
+  'Clermont Foot': 'https://crests.football-data.org/541.png',
+  'Clermont Foot 63': 'https://crests.football-data.org/541.png',
   
   // ============================================
   // EREDIVISIE (Netherlands)
@@ -547,6 +687,82 @@ const SOCCER_TEAM_LOGOS: Record<string, string> = {
   'Aberdeen FC': 'https://crests.football-data.org/727.png',
   'Hibernian': 'https://crests.football-data.org/733.png',
   'Hibernian FC': 'https://crests.football-data.org/733.png',
+  
+  // ============================================
+  // UEFA CHAMPIONS LEAGUE / EUROPA LEAGUE TEAMS
+  // ============================================
+  'FC Copenhagen': 'https://crests.football-data.org/1878.png',
+  'Copenhagen': 'https://crests.football-data.org/1878.png',
+  'København': 'https://crests.football-data.org/1878.png',
+  'FC Kairat': 'https://crests.football-data.org/1878.png',
+  'Kairat': 'https://crests.football-data.org/1878.png',
+  'Kairat Almaty': 'https://crests.football-data.org/1878.png',
+  'Bodø/Glimt': 'https://crests.football-data.org/7462.png',
+  'Bodo/Glimt': 'https://crests.football-data.org/7462.png',
+  'FK Bodø/Glimt': 'https://crests.football-data.org/7462.png',
+  'Bodo Glimt': 'https://crests.football-data.org/7462.png',
+  'Galatasaray': 'https://crests.football-data.org/610.png',
+  'Galatasaray SK': 'https://crests.football-data.org/610.png',
+  'Galatasaray Istanbul': 'https://crests.football-data.org/610.png',
+  'Qarabağ FK': 'https://crests.football-data.org/1878.png',
+  'Qarabag FK': 'https://crests.football-data.org/1878.png',
+  'Qarabag': 'https://crests.football-data.org/1878.png',
+  'Qarabağ': 'https://crests.football-data.org/1878.png',
+  'Slavia Praha': 'https://crests.football-data.org/1884.png',
+  'Slavia Prague': 'https://crests.football-data.org/1884.png',
+  'SK Slavia Praha': 'https://crests.football-data.org/1884.png',
+  'Slavia': 'https://crests.football-data.org/1884.png',
+  'Pafos FC': 'https://crests.football-data.org/1878.png',
+  'Pafos': 'https://crests.football-data.org/1878.png',
+  'Olympiakos': 'https://crests.football-data.org/1878.png',
+  'Olympiacos': 'https://crests.football-data.org/1878.png',
+  'Olympiacos Piraeus': 'https://crests.football-data.org/1878.png',
+  'Olympiakos Piraeus': 'https://crests.football-data.org/1878.png',
+  'Olympiacos FC': 'https://crests.football-data.org/1878.png',
+  
+  // ============================================
+  // TURKISH SUPER LIG
+  // ============================================
+  'Fenerbahce': 'https://crests.football-data.org/612.png',
+  'Fenerbahçe': 'https://crests.football-data.org/612.png',
+  'Fenerbahce SK': 'https://crests.football-data.org/612.png',
+  'Besiktas': 'https://crests.football-data.org/611.png',
+  'Beşiktaş': 'https://crests.football-data.org/611.png',
+  'Besiktas JK': 'https://crests.football-data.org/611.png',
+  'Trabzonspor': 'https://crests.football-data.org/616.png',
+  'Istanbul Basaksehir': 'https://crests.football-data.org/15005.png',
+  'Basaksehir': 'https://crests.football-data.org/15005.png',
+  'Kasimpasa SK': 'https://crests.football-data.org/618.png',
+  'Kasimpasa': 'https://crests.football-data.org/618.png',
+  'Kasımpaşa': 'https://crests.football-data.org/618.png',
+  'Genclerbirligi SK': 'https://crests.football-data.org/621.png',
+  'Genclerbirligi': 'https://crests.football-data.org/621.png',
+  'Gençlerbirliği': 'https://crests.football-data.org/621.png',
+  'Antalyaspor': 'https://crests.football-data.org/620.png',
+  'Konyaspor': 'https://crests.football-data.org/619.png',
+  'Sivasspor': 'https://crests.football-data.org/617.png',
+  'Alanyaspor': 'https://crests.football-data.org/6804.png',
+  
+  // ============================================
+  // A-LEAGUE (Australia & New Zealand) - football-data.org
+  // ============================================
+  'Central Coast Mariners': 'https://crests.football-data.org/7176.png',
+  'Central Coast': 'https://crests.football-data.org/7176.png',
+  'CCM': 'https://crests.football-data.org/7176.png',
+  'Auckland FC': 'https://crests.football-data.org/7176.png',
+  'Auckland': 'https://crests.football-data.org/7176.png',
+  'Sydney FC': 'https://crests.football-data.org/7173.png',
+  'Sydney': 'https://crests.football-data.org/7173.png',
+  'Melbourne Victory': 'https://crests.football-data.org/7174.png',
+  'Melbourne City': 'https://crests.football-data.org/7869.png',
+  'Western Sydney Wanderers': 'https://crests.football-data.org/7175.png',
+  'Brisbane Roar': 'https://crests.football-data.org/7171.png',
+  'Adelaide United': 'https://crests.football-data.org/7170.png',
+  'Perth Glory': 'https://crests.football-data.org/7172.png',
+  'Wellington Phoenix': 'https://crests.football-data.org/7177.png',
+  'Newcastle Jets': 'https://crests.football-data.org/7179.png',
+  'Macarthur FC': 'https://crests.football-data.org/7176.png',
+  'Western United': 'https://crests.football-data.org/7176.png',
   
   // ============================================
   // CHAMPIONSHIP & OTHER ENGLISH
@@ -669,47 +885,251 @@ const SOCCER_TEAM_LOGOS: Record<string, string> = {
   'Montreal Impact': 'https://a.espncdn.com/i/teamlogos/soccer/500/9833.png',
   
   // ============================================
-  // LIGA MX (Mexico)
+  // LIGA MX (Mexico) - using football-data.org IDs
   // ============================================
-  'Club America': 'https://a.espncdn.com/i/teamlogos/soccer/500/9907.png',
-  'America': 'https://a.espncdn.com/i/teamlogos/soccer/500/9907.png',
-  'América': 'https://a.espncdn.com/i/teamlogos/soccer/500/9907.png',
-  'Chivas': 'https://a.espncdn.com/i/teamlogos/soccer/500/9911.png',
-  'Guadalajara': 'https://a.espncdn.com/i/teamlogos/soccer/500/9911.png',
-  'CD Guadalajara': 'https://a.espncdn.com/i/teamlogos/soccer/500/9911.png',
-  'Cruz Azul': 'https://a.espncdn.com/i/teamlogos/soccer/500/9912.png',
-  'Monterrey': 'https://a.espncdn.com/i/teamlogos/soccer/500/9920.png',
-  'CF Monterrey': 'https://a.espncdn.com/i/teamlogos/soccer/500/9920.png',
-  'Rayados': 'https://a.espncdn.com/i/teamlogos/soccer/500/9920.png',
-  'Tigres UANL': 'https://a.espncdn.com/i/teamlogos/soccer/500/9926.png',
-  'Tigres': 'https://a.espncdn.com/i/teamlogos/soccer/500/9926.png',
-  'Pumas UNAM': 'https://a.espncdn.com/i/teamlogos/soccer/500/9924.png',
-  'Pumas': 'https://a.espncdn.com/i/teamlogos/soccer/500/9924.png',
-  'Santos Laguna': 'https://a.espncdn.com/i/teamlogos/soccer/500/9925.png',
-  'Santos': 'https://a.espncdn.com/i/teamlogos/soccer/500/9925.png',
-  'Leon': 'https://a.espncdn.com/i/teamlogos/soccer/500/9917.png',
-  'Club Leon': 'https://a.espncdn.com/i/teamlogos/soccer/500/9917.png',
-  'León': 'https://a.espncdn.com/i/teamlogos/soccer/500/9917.png',
-  'Toluca': 'https://a.espncdn.com/i/teamlogos/soccer/500/9927.png',
-  'Deportivo Toluca': 'https://a.espncdn.com/i/teamlogos/soccer/500/9927.png',
-  'Pachuca': 'https://a.espncdn.com/i/teamlogos/soccer/500/9921.png',
-  'CF Pachuca': 'https://a.espncdn.com/i/teamlogos/soccer/500/9921.png',
-  'Tijuana': 'https://a.espncdn.com/i/teamlogos/soccer/500/9806.png',
-  'Club Tijuana': 'https://a.espncdn.com/i/teamlogos/soccer/500/9806.png',
-  'Xolos': 'https://a.espncdn.com/i/teamlogos/soccer/500/9806.png',
-  'Atlas': 'https://a.espncdn.com/i/teamlogos/soccer/500/9908.png',
-  'Atlas FC': 'https://a.espncdn.com/i/teamlogos/soccer/500/9908.png',
-  'Necaxa': 'https://a.espncdn.com/i/teamlogos/soccer/500/9905.png',
-  'Club Necaxa': 'https://a.espncdn.com/i/teamlogos/soccer/500/9905.png',
-  'Puebla': 'https://a.espncdn.com/i/teamlogos/soccer/500/9923.png',
-  'Club Puebla': 'https://a.espncdn.com/i/teamlogos/soccer/500/9923.png',
-  'Queretaro': 'https://a.espncdn.com/i/teamlogos/soccer/500/9902.png',
-  'Querétaro': 'https://a.espncdn.com/i/teamlogos/soccer/500/9902.png',
-  'FC Juarez': 'https://a.espncdn.com/i/teamlogos/soccer/500/9900.png',
-  'Juarez': 'https://a.espncdn.com/i/teamlogos/soccer/500/9900.png',
-  'Juárez': 'https://a.espncdn.com/i/teamlogos/soccer/500/9900.png',
-  'Mazatlan': 'https://a.espncdn.com/i/teamlogos/soccer/500/18035.png',
-  'Mazatlán FC': 'https://a.espncdn.com/i/teamlogos/soccer/500/18035.png',
+  'Club America': 'https://crests.football-data.org/6129.png',
+  'America': 'https://crests.football-data.org/6129.png',
+  'América': 'https://crests.football-data.org/6129.png',
+  'Chivas': 'https://crests.football-data.org/6130.png',
+  'Guadalajara': 'https://crests.football-data.org/6130.png',
+  'CD Guadalajara': 'https://crests.football-data.org/6130.png',
+  'Cruz Azul': 'https://crests.football-data.org/6134.png',
+  'Monterrey': 'https://crests.football-data.org/6126.png',
+  'CF Monterrey': 'https://crests.football-data.org/6126.png',
+  'Rayados': 'https://crests.football-data.org/6126.png',
+  'Tigres UANL': 'https://crests.football-data.org/6125.png',
+  'Tigres': 'https://crests.football-data.org/6125.png',
+  'Pumas UNAM': 'https://crests.football-data.org/6132.png',
+  'Pumas': 'https://crests.football-data.org/6132.png',
+  'Santos Laguna': 'https://crests.football-data.org/6128.png',
+  'Santos': 'https://crests.football-data.org/6128.png',
+  'Leon': 'https://crests.football-data.org/6133.png',
+  'Club Leon': 'https://crests.football-data.org/6133.png',
+  'León': 'https://crests.football-data.org/6133.png',
+  'Toluca': 'https://crests.football-data.org/6135.png',
+  'Deportivo Toluca': 'https://crests.football-data.org/6135.png',
+  'Pachuca': 'https://crests.football-data.org/6127.png',
+  'CF Pachuca': 'https://crests.football-data.org/6127.png',
+  'Tijuana': 'https://crests.football-data.org/6131.png',
+  'Club Tijuana': 'https://crests.football-data.org/6131.png',
+  'Xolos': 'https://crests.football-data.org/6131.png',
+  'Atlas': 'https://crests.football-data.org/6136.png',
+  'Atlas FC': 'https://crests.football-data.org/6136.png',
+  'Necaxa': 'https://crests.football-data.org/6137.png',
+  'Club Necaxa': 'https://crests.football-data.org/6137.png',
+  'Puebla': 'https://crests.football-data.org/6138.png',
+  'Club Puebla': 'https://crests.football-data.org/6138.png',
+  'Queretaro': 'https://crests.football-data.org/6139.png',
+  'Querétaro': 'https://crests.football-data.org/6139.png',
+  'FC Juarez': 'https://crests.football-data.org/6140.png',
+  'Juarez': 'https://crests.football-data.org/6140.png',
+  'Juárez': 'https://crests.football-data.org/6140.png',
+  'Mazatlan': 'https://crests.football-data.org/6141.png',
+  'Mazatlán FC': 'https://crests.football-data.org/6141.png',
+};
+
+/**
+ * European Basketball team logo mappings (Euroleague, EuroCup, etc.)
+ * Using ESPN CDN for reliable logos
+ */
+const BASKETBALL_TEAM_LOGOS: Record<string, string> = {
+  // ============================================
+  // EUROLEAGUE TEAMS (using ESPN basketball logos)
+  // ============================================
+  'Real Madrid Baloncesto': 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png',
+  'Real Madrid Basketball': 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png',
+  'Real Madrid': 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png',
+  'FC Barcelona Basket': 'https://a.espncdn.com/i/teamlogos/soccer/500/83.png',
+  'FC Barcelona Basketball': 'https://a.espncdn.com/i/teamlogos/soccer/500/83.png',
+  'FC Barcelona': 'https://a.espncdn.com/i/teamlogos/soccer/500/83.png',
+  'Barcelona Basket': 'https://a.espncdn.com/i/teamlogos/soccer/500/83.png',
+  'Barcelona': 'https://a.espncdn.com/i/teamlogos/soccer/500/83.png',
+  'Olympiacos': 'https://a.espncdn.com/i/teamlogos/soccer/500/3371.png',
+  'Olympiacos BC': 'https://a.espncdn.com/i/teamlogos/soccer/500/3371.png',
+  'Olympiacos Piraeus': 'https://a.espncdn.com/i/teamlogos/soccer/500/3371.png',
+  'Olympiakos': 'https://a.espncdn.com/i/teamlogos/soccer/500/3371.png',
+  'Olympiakos BC': 'https://a.espncdn.com/i/teamlogos/soccer/500/3371.png',
+  'Panathinaikos': 'https://a.espncdn.com/i/teamlogos/soccer/500/3372.png',
+  'Panathinaikos BC': 'https://a.espncdn.com/i/teamlogos/soccer/500/3372.png',
+  'Panathinaikos Athens': 'https://a.espncdn.com/i/teamlogos/soccer/500/3372.png',
+  'Panathinaikos AKTOR Athens': 'https://a.espncdn.com/i/teamlogos/soccer/500/3372.png',
+  'Fenerbahce Basketball': 'https://a.espncdn.com/i/teamlogos/soccer/500/3560.png',
+  'Fenerbahce Beko': 'https://a.espncdn.com/i/teamlogos/soccer/500/3560.png',
+  'Fenerbahce Beko Istanbul': 'https://a.espncdn.com/i/teamlogos/soccer/500/3560.png',
+  'Fenerbahçe': 'https://a.espncdn.com/i/teamlogos/soccer/500/3560.png',
+  'Anadolu Efes': 'https://a.espncdn.com/i/teamlogos/soccer/500/3569.png',
+  'Anadolu Efes Istanbul': 'https://a.espncdn.com/i/teamlogos/soccer/500/3569.png',
+  'Efes Istanbul': 'https://a.espncdn.com/i/teamlogos/soccer/500/3569.png',
+  'Efes': 'https://a.espncdn.com/i/teamlogos/soccer/500/3569.png',
+  'CSKA Moscow': 'https://a.espncdn.com/i/teamlogos/soccer/500/5970.png',
+  'CSKA': 'https://a.espncdn.com/i/teamlogos/soccer/500/5970.png',
+  'Maccabi Tel Aviv': 'https://a.espncdn.com/i/teamlogos/soccer/500/10448.png',
+  'Maccabi': 'https://a.espncdn.com/i/teamlogos/soccer/500/10448.png',
+  'Maccabi Playtika Tel Aviv': 'https://a.espncdn.com/i/teamlogos/soccer/500/10448.png',
+  'Bayern Munich Basketball': 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png',
+  'Bayern München Basketball': 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png',
+  'FC Bayern Munich': 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png',
+  'FC Bayern Basketball': 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png',
+  'Bayern Munich': 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png',
+  'Alba Berlin': 'https://a.espncdn.com/i/teamlogos/soccer/500/169.png',
+  'ALBA Berlin': 'https://a.espncdn.com/i/teamlogos/soccer/500/169.png',
+  'Zalgiris Kaunas': 'https://a.espncdn.com/i/teamlogos/soccer/500/6079.png',
+  'Zalgiris': 'https://a.espncdn.com/i/teamlogos/soccer/500/6079.png',
+  'Žalgiris Kaunas': 'https://a.espncdn.com/i/teamlogos/soccer/500/6079.png',
+  'Virtus Bologna': 'https://a.espncdn.com/i/teamlogos/soccer/500/3465.png',
+  'Virtus Segafredo Bologna': 'https://a.espncdn.com/i/teamlogos/soccer/500/3465.png',
+  'Segafredo Virtus Bologna': 'https://a.espncdn.com/i/teamlogos/soccer/500/3465.png',
+  'AS Monaco Basketball': 'https://a.espncdn.com/i/teamlogos/soccer/500/174.png',
+  'Monaco Basketball': 'https://a.espncdn.com/i/teamlogos/soccer/500/174.png',
+  'AS Monaco Basket': 'https://a.espncdn.com/i/teamlogos/soccer/500/174.png',
+  'Monaco': 'https://a.espncdn.com/i/teamlogos/soccer/500/174.png',
+  'Partizan Belgrade': 'https://a.espncdn.com/i/teamlogos/soccer/500/3632.png',
+  'Partizan': 'https://a.espncdn.com/i/teamlogos/soccer/500/3632.png',
+  'Partizan Mozzart Bet Belgrade': 'https://a.espncdn.com/i/teamlogos/soccer/500/3632.png',
+  'KK Partizan': 'https://a.espncdn.com/i/teamlogos/soccer/500/3632.png',
+  'Crvena Zvezda': 'https://a.espncdn.com/i/teamlogos/soccer/500/3633.png',
+  'Crvena Zvezda Meridianbet Belgrade': 'https://a.espncdn.com/i/teamlogos/soccer/500/3633.png',
+  'Red Star Belgrade': 'https://a.espncdn.com/i/teamlogos/soccer/500/3633.png',
+  'KK Crvena Zvezda': 'https://a.espncdn.com/i/teamlogos/soccer/500/3633.png',
+  'Baskonia': 'https://a.espncdn.com/i/teamlogos/soccer/500/3744.png',
+  'Saski Baskonia': 'https://a.espncdn.com/i/teamlogos/soccer/500/3744.png',
+  'Baskonia Vitoria-Gasteiz': 'https://a.espncdn.com/i/teamlogos/soccer/500/3744.png',
+  'Cazoo Baskonia Vitoria-Gasteiz': 'https://a.espncdn.com/i/teamlogos/soccer/500/3744.png',
+  'Olimpia Milano': 'https://a.espncdn.com/i/teamlogos/soccer/500/103.png',
+  'EA7 Emporio Armani Milano': 'https://a.espncdn.com/i/teamlogos/soccer/500/103.png',
+  'EA7 Olimpia Milano': 'https://a.espncdn.com/i/teamlogos/soccer/500/103.png',
+  'AX Armani Exchange Milano': 'https://a.espncdn.com/i/teamlogos/soccer/500/103.png',
+  'Armani Milano': 'https://a.espncdn.com/i/teamlogos/soccer/500/103.png',
+  'Valencia Basket': 'https://a.espncdn.com/i/teamlogos/soccer/500/94.png',
+  'Valencia BC': 'https://a.espncdn.com/i/teamlogos/soccer/500/94.png',
+  'LDLC ASVEL': 'https://a.espncdn.com/i/teamlogos/soccer/500/180.png',
+  'LDLC ASVEL Villeurbanne': 'https://a.espncdn.com/i/teamlogos/soccer/500/180.png',
+  'ASVEL': 'https://a.espncdn.com/i/teamlogos/soccer/500/180.png',
+  'ASVEL Lyon-Villeurbanne': 'https://a.espncdn.com/i/teamlogos/soccer/500/180.png',
+  'Paris Basketball': 'https://a.espncdn.com/i/teamlogos/soccer/500/160.png',
+  'Joventut Badalona': 'https://a.espncdn.com/i/teamlogos/soccer/500/3756.png',
+  'Joventut': 'https://a.espncdn.com/i/teamlogos/soccer/500/3756.png',
+  'CB Gran Canaria': 'https://a.espncdn.com/i/teamlogos/soccer/500/3749.png',
+  'Gran Canaria': 'https://a.espncdn.com/i/teamlogos/soccer/500/3749.png',
+  'Dreamland Gran Canaria': 'https://a.espncdn.com/i/teamlogos/soccer/500/3749.png',
+  'Unicaja': 'https://a.espncdn.com/i/teamlogos/soccer/500/3758.png',
+  'Unicaja Malaga': 'https://a.espncdn.com/i/teamlogos/soccer/500/3758.png',
+  
+  // ============================================
+  // NCAA BASKETBALL TEAMS (Major Programs)
+  // ============================================
+  'Duke Blue Devils': 'https://a.espncdn.com/i/teamlogos/ncaa/500/150.png',
+  'Duke': 'https://a.espncdn.com/i/teamlogos/ncaa/500/150.png',
+  'North Carolina Tar Heels': 'https://a.espncdn.com/i/teamlogos/ncaa/500/153.png',
+  'UNC': 'https://a.espncdn.com/i/teamlogos/ncaa/500/153.png',
+  'North Carolina': 'https://a.espncdn.com/i/teamlogos/ncaa/500/153.png',
+  'Tar Heels': 'https://a.espncdn.com/i/teamlogos/ncaa/500/153.png',
+  'Kentucky Wildcats': 'https://a.espncdn.com/i/teamlogos/ncaa/500/96.png',
+  'Kentucky': 'https://a.espncdn.com/i/teamlogos/ncaa/500/96.png',
+  'Kansas Jayhawks': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2305.png',
+  'Kansas': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2305.png',
+  'Gonzaga Bulldogs': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2250.png',
+  'Gonzaga': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2250.png',
+  'UCLA Bruins': 'https://a.espncdn.com/i/teamlogos/ncaa/500/26.png',
+  'UCLA': 'https://a.espncdn.com/i/teamlogos/ncaa/500/26.png',
+  'Villanova Wildcats': 'https://a.espncdn.com/i/teamlogos/ncaa/500/222.png',
+  'Villanova': 'https://a.espncdn.com/i/teamlogos/ncaa/500/222.png',
+  'Michigan State Spartans': 'https://a.espncdn.com/i/teamlogos/ncaa/500/127.png',
+  'Michigan State': 'https://a.espncdn.com/i/teamlogos/ncaa/500/127.png',
+  'Michigan Wolverines': 'https://a.espncdn.com/i/teamlogos/ncaa/500/130.png',
+  'Michigan': 'https://a.espncdn.com/i/teamlogos/ncaa/500/130.png',
+  'UConn Huskies': 'https://a.espncdn.com/i/teamlogos/ncaa/500/41.png',
+  'Connecticut': 'https://a.espncdn.com/i/teamlogos/ncaa/500/41.png',
+  'UConn': 'https://a.espncdn.com/i/teamlogos/ncaa/500/41.png',
+  'Arizona Wildcats': 'https://a.espncdn.com/i/teamlogos/ncaa/500/12.png',
+  'Arizona': 'https://a.espncdn.com/i/teamlogos/ncaa/500/12.png',
+  'Purdue Boilermakers': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2509.png',
+  'Purdue': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2509.png',
+  'Houston Cougars': 'https://a.espncdn.com/i/teamlogos/ncaa/500/248.png',
+  'Houston': 'https://a.espncdn.com/i/teamlogos/ncaa/500/248.png',
+  'Tennessee Volunteers': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2633.png',
+  'Tennessee': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2633.png',
+  'Auburn Tigers': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2.png',
+  'Auburn': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2.png',
+  'Alabama Crimson Tide': 'https://a.espncdn.com/i/teamlogos/ncaa/500/333.png',
+  'Alabama': 'https://a.espncdn.com/i/teamlogos/ncaa/500/333.png',
+  'Baylor Bears': 'https://a.espncdn.com/i/teamlogos/ncaa/500/239.png',
+  'Baylor': 'https://a.espncdn.com/i/teamlogos/ncaa/500/239.png',
+  'Texas Longhorns': 'https://a.espncdn.com/i/teamlogos/ncaa/500/251.png',
+  'Texas': 'https://a.espncdn.com/i/teamlogos/ncaa/500/251.png',
+  'Creighton Bluejays': 'https://a.espncdn.com/i/teamlogos/ncaa/500/156.png',
+  'Creighton': 'https://a.espncdn.com/i/teamlogos/ncaa/500/156.png',
+  'Marquette Golden Eagles': 'https://a.espncdn.com/i/teamlogos/ncaa/500/269.png',
+  'Marquette': 'https://a.espncdn.com/i/teamlogos/ncaa/500/269.png',
+  'Iowa State Cyclones': 'https://a.espncdn.com/i/teamlogos/ncaa/500/66.png',
+  'Iowa State': 'https://a.espncdn.com/i/teamlogos/ncaa/500/66.png',
+  'San Diego State Aztecs': 'https://a.espncdn.com/i/teamlogos/ncaa/500/21.png',
+  'San Diego State': 'https://a.espncdn.com/i/teamlogos/ncaa/500/21.png',
+  'SDSU': 'https://a.espncdn.com/i/teamlogos/ncaa/500/21.png',
+  'Florida Atlantic Owls': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2226.png',
+  'FAU': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2226.png',
+  'Florida Atlantic': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2226.png',
+  'Syracuse Orange': 'https://a.espncdn.com/i/teamlogos/ncaa/500/183.png',
+  'Syracuse': 'https://a.espncdn.com/i/teamlogos/ncaa/500/183.png',
+  'Louisville Cardinals': 'https://a.espncdn.com/i/teamlogos/ncaa/500/97.png',
+  'Louisville': 'https://a.espncdn.com/i/teamlogos/ncaa/500/97.png',
+  'Indiana Hoosiers': 'https://a.espncdn.com/i/teamlogos/ncaa/500/84.png',
+  'Indiana': 'https://a.espncdn.com/i/teamlogos/ncaa/500/84.png',
+  'Ohio State Buckeyes': 'https://a.espncdn.com/i/teamlogos/ncaa/500/194.png',
+  'Ohio State': 'https://a.espncdn.com/i/teamlogos/ncaa/500/194.png',
+  'Wisconsin Badgers': 'https://a.espncdn.com/i/teamlogos/ncaa/500/275.png',
+  'Wisconsin': 'https://a.espncdn.com/i/teamlogos/ncaa/500/275.png',
+  'Illinois Fighting Illini': 'https://a.espncdn.com/i/teamlogos/ncaa/500/356.png',
+  'Illinois': 'https://a.espncdn.com/i/teamlogos/ncaa/500/356.png',
+  // Additional NCAA teams from API
+  'Iowa Hawkeyes': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2294.png',
+  'Iowa': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2294.png',
+  'IUPUI Jaguars': 'https://a.espncdn.com/i/teamlogos/ncaa/500/85.png',
+  'IUPUI': 'https://a.espncdn.com/i/teamlogos/ncaa/500/85.png',
+  'East Carolina Pirates': 'https://a.espncdn.com/i/teamlogos/ncaa/500/151.png',
+  'East Carolina': 'https://a.espncdn.com/i/teamlogos/ncaa/500/151.png',
+  'ECU': 'https://a.espncdn.com/i/teamlogos/ncaa/500/151.png',
+  'UT Rio Grande Valley Vaqueros': 'https://a.espncdn.com/i/teamlogos/ncaa/500/292.png',
+  'UTRGV': 'https://a.espncdn.com/i/teamlogos/ncaa/500/292.png',
+  'Rio Grande Valley': 'https://a.espncdn.com/i/teamlogos/ncaa/500/292.png',
+  'CSU Bakersfield Roadrunners': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2934.png',
+  'CSU Bakersfield': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2934.png',
+  'CSUB': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2934.png',
+  'Virginia Tech Hokies': 'https://a.espncdn.com/i/teamlogos/ncaa/500/259.png',
+  'Virginia Tech': 'https://a.espncdn.com/i/teamlogos/ncaa/500/259.png',
+  'VT': 'https://a.espncdn.com/i/teamlogos/ncaa/500/259.png',
+  'Western Carolina Catamounts': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2717.png',
+  'Western Carolina': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2717.png',
+  'Missouri Tigers': 'https://a.espncdn.com/i/teamlogos/ncaa/500/142.png',
+  'Missouri': 'https://a.espncdn.com/i/teamlogos/ncaa/500/142.png',
+  'Mizzou': 'https://a.espncdn.com/i/teamlogos/ncaa/500/142.png',
+  'UMBC Retrievers': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2378.png',
+  'UMBC': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2378.png',
+  'Army Knights': 'https://a.espncdn.com/i/teamlogos/ncaa/500/349.png',
+  'Army': 'https://a.espncdn.com/i/teamlogos/ncaa/500/349.png',
+  'Army Black Knights': 'https://a.espncdn.com/i/teamlogos/ncaa/500/349.png',
+  'Queens University Royals': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2802.png',
+  'Queens University': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2802.png',
+  'Xavier Musketeers': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2752.png',
+  'Xavier': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2752.png',
+  'Missouri St Bears': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2623.png',
+  'Missouri State': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2623.png',
+  'Missouri State Bears': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2623.png',
+  'McNeese Cowboys': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2377.png',
+  'McNeese State': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2377.png',
+  'McNeese': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2377.png',
+  'Cal Baptist Lancers': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2856.png',
+  'Cal Baptist': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2856.png',
+  'CBU': 'https://a.espncdn.com/i/teamlogos/ncaa/500/2856.png',
+  
+  // ============================================
+  // ADDITIONAL EUROLEAGUE TEAMS (exact API names)
+  // ============================================
+  'Dubai Basketball': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png',
+  'FC Bayern München': 'https://crests.football-data.org/5.png',
+  'Fenerbahce SK': 'https://crests.football-data.org/612.png',
+  'FC Barcelona Bàsquet': 'https://crests.football-data.org/81.png',
+  'Hapoel Tel Aviv': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png',
 };
 
 /**
@@ -730,11 +1150,11 @@ const LEAGUE_LOGOS: Record<string, string> = {
   'Super Bowl': 'https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png',
   
   // NCAA Football - All variations
-  'NCAA Football': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
-  'NCAAF': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
-  'americanfootball_ncaaf': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
-  'College Football': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
-  'CFB': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
+  'NCAA Football': 'https://a.espncdn.com/i/teamlogos/leagues/500/ncaa.png',
+  'NCAAF': 'https://a.espncdn.com/i/teamlogos/leagues/500/ncaa.png',
+  'americanfootball_ncaaf': 'https://a.espncdn.com/i/teamlogos/leagues/500/ncaa.png',
+  'College Football': 'https://a.espncdn.com/i/teamlogos/leagues/500/ncaa.png',
+  'CFB': 'https://a.espncdn.com/i/teamlogos/leagues/500/ncaa.png',
   
   // CFL - Canadian Football
   'CFL': 'https://upload.wikimedia.org/wikipedia/en/thumb/3/37/Canadian_Football_League_logo.svg/200px-Canadian_Football_League_logo.svg.png',
@@ -753,11 +1173,11 @@ const LEAGUE_LOGOS: Record<string, string> = {
   'basketball_wnba': 'https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png',
   
   // NCAA Basketball - All variations
-  'NCAA Basketball': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
-  'NCAAB': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
-  'basketball_ncaab': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
-  'College Basketball': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
-  'March Madness': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
+  'NCAA Basketball': 'https://a.espncdn.com/i/teamlogos/leagues/500/ncaa.png',
+  'NCAAB': 'https://a.espncdn.com/i/teamlogos/leagues/500/ncaa.png',
+  'basketball_ncaab': 'https://a.espncdn.com/i/teamlogos/leagues/500/ncaa.png',
+  'College Basketball': 'https://a.espncdn.com/i/teamlogos/leagues/500/ncaa.png',
+  'March Madness': 'https://a.espncdn.com/i/teamlogos/leagues/500/ncaa.png',
   
   // NHL - All variations
   'NHL': 'https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png',
@@ -1005,22 +1425,25 @@ function normalizeSport(sport: string): string {
   const sportLower = sport.toLowerCase();
   
   // Soccer/Football - comprehensive matching for all leagues
+  // Handle both API keys (with underscores) and display names (with spaces)
   if (sportLower.includes('soccer')) return 'soccer';
   if (sportLower.includes('football') && !sportLower.includes('american')) return 'soccer';
   if (sportLower.includes('epl') || sportLower.includes('premier')) return 'soccer';
-  if (sportLower.includes('la_liga') || sportLower.includes('laliga') || sportLower.includes('spain')) return 'soccer';
-  if (sportLower.includes('serie_a') || sportLower.includes('italy')) return 'soccer';
-  if (sportLower.includes('bundesliga') || sportLower.includes('germany')) return 'soccer';
-  if (sportLower.includes('ligue') || sportLower.includes('france')) return 'soccer';
-  if (sportLower.includes('champs_league') || sportLower.includes('europa') || sportLower.includes('uefa')) return 'soccer';
-  if (sportLower.includes('eredivisie') || sportLower.includes('netherlands')) return 'soccer';
-  if (sportLower.includes('primeira') || sportLower.includes('portugal')) return 'soccer';
-  if (sportLower.includes('mls') || sportLower.includes('liga_mx') || sportLower.includes('mexico')) return 'soccer';
-  if (sportLower.includes('a_league') || sportLower.includes('australia')) return 'soccer';
-  if (sportLower.includes('j_league') || sportLower.includes('japan')) return 'soccer';
-  if (sportLower.includes('brazil') || sportLower.includes('argentina')) return 'soccer';
-  if (sportLower.includes('scottish') || sportLower.includes('championship') || sportLower.includes('fa_cup')) return 'soccer';
-  if (sportLower.includes('turkey') || sportLower.includes('belgium') || sportLower.includes('swiss')) return 'soccer';
+  if (sportLower.includes('la liga') || sportLower.includes('la_liga') || sportLower.includes('laliga')) return 'soccer';
+  if (sportLower.includes('spain') || sportLower.includes('spanish')) return 'soccer';
+  if (sportLower.includes('serie a') || sportLower.includes('serie_a') || sportLower.includes('italy') || sportLower.includes('italian')) return 'soccer';
+  if (sportLower.includes('bundesliga') || sportLower.includes('germany') || sportLower.includes('german')) return 'soccer';
+  if (sportLower.includes('ligue 1') || sportLower.includes('ligue_1') || sportLower.includes('ligue') || sportLower.includes('france') || sportLower.includes('french')) return 'soccer';
+  if (sportLower.includes('champs') || sportLower.includes('champions') || sportLower.includes('europa') || sportLower.includes('uefa')) return 'soccer';
+  if (sportLower.includes('eredivisie') || sportLower.includes('netherlands') || sportLower.includes('dutch')) return 'soccer';
+  if (sportLower.includes('primeira') || sportLower.includes('portugal') || sportLower.includes('portuguese')) return 'soccer';
+  if (sportLower.includes('mls') || sportLower.includes('liga mx') || sportLower.includes('liga_mx') || sportLower.includes('mexico') || sportLower.includes('mexican')) return 'soccer';
+  if (sportLower.includes('a-league') || sportLower.includes('a_league') || sportLower.includes('australia')) return 'soccer';
+  if (sportLower.includes('j league') || sportLower.includes('j_league') || sportLower.includes('j-league') || sportLower.includes('japan')) return 'soccer';
+  if (sportLower.includes('brazil') || sportLower.includes('brasileiro') || sportLower.includes('argentina')) return 'soccer';
+  if (sportLower.includes('scottish') || sportLower.includes('championship') || sportLower.includes('fa cup') || sportLower.includes('fa_cup')) return 'soccer';
+  if (sportLower.includes('turkey') || sportLower.includes('turkish') || sportLower.includes('belgium') || sportLower.includes('belgian') || sportLower.includes('swiss')) return 'soccer';
+  if (sportLower.includes('copa') || sportLower.includes('cup') || sportLower.includes('league cup')) return 'soccer';
   
   // Basketball
   if (sportLower.includes('basketball') || sportLower === 'nba' || sportLower.includes('euroleague')) return 'nba';
@@ -1140,6 +1563,30 @@ export function getTeamLogo(teamName: string, sport: string, league?: string): s
           }
         }
       }
+    }
+  }
+  
+  // Try basketball team logos for Euroleague and NCAA Basketball
+  if (normalizedSport === 'nba' || sport.toLowerCase().includes('euroleague') || 
+      sport.toLowerCase().includes('basketball') || sport.toLowerCase().includes('ncaa')) {
+    // Try exact match
+    if (BASKETBALL_TEAM_LOGOS[cleanName]) {
+      return BASKETBALL_TEAM_LOGOS[cleanName];
+    }
+    // Try case-insensitive exact match
+    const exactKey = Object.keys(BASKETBALL_TEAM_LOGOS).find(key => 
+      key.toLowerCase() === cleanName.toLowerCase()
+    );
+    if (exactKey) {
+      return BASKETBALL_TEAM_LOGOS[exactKey];
+    }
+    // Try partial match
+    const partialKey = Object.keys(BASKETBALL_TEAM_LOGOS).find(key => 
+      key.toLowerCase().includes(cleanName.toLowerCase()) ||
+      cleanName.toLowerCase().includes(key.toLowerCase())
+    );
+    if (partialKey) {
+      return BASKETBALL_TEAM_LOGOS[partialKey];
     }
   }
   
