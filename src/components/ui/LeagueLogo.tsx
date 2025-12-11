@@ -32,6 +32,11 @@ export default function LeagueLogo({
   const logoUrl = getLeagueLogo(leagueName, sport);
   const isFallback = logoUrl.startsWith('data:');
 
+  // Debug logging
+  if (typeof window !== 'undefined' && isFallback) {
+    console.log(`[LeagueLogo] Missing: "${leagueName}" | sport="${sport}" | url="${logoUrl.substring(0, 50)}..."`);
+  }
+
   // Generate initials for fallback
   const getInitials = (name: string) => {
     const words = name.split(/\s+/).filter(w => w.length > 0);
