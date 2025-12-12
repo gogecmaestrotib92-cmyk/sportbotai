@@ -1,7 +1,7 @@
 /**
- * Why BetSense AI section
- * 
- * Cleaner, more subtle positioning of BetSense AI
+ * Why SportBot AI section
+ *
+ * Cleaner, more subtle positioning of SportBot AI
  * as an educational tool, not a tipster service.
  */
 

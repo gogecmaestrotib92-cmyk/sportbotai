@@ -1,7 +1,7 @@
 /**
  * NextAuth Configuration
  * 
- * Centralized auth configuration for BetSense AI.
+ * Centralized auth configuration for SportBot AI.
  * Supports Google and GitHub OAuth providers.
  */
 

@@ -1,7 +1,7 @@
 {
-  "name": "betsense-ai",
+  "name": "sportbot-ai",
   "version": "1.0.0",
-  "description": "AI-powered sports betting analysis platform",
+  "description": "AI-powered sports analytics platform - Understand any match in 60 seconds",
   "private": true,
   "scripts": {
     "dev": "next dev",

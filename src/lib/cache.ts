@@ -1,5 +1,5 @@
 /**
- * Caching Layer for BetSense AI
+ * Caching Layer for SportBot AI
  * 
  * Uses Upstash Redis for serverless caching.
  * Falls back to in-memory cache if Redis is not configured.

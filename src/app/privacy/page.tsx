@@ -1,7 +1,7 @@
 /**
  * Privacy Policy Page (/privacy)
  * 
- * Privacy policy for the BetSense AI platform.
+ * Privacy policy for the SportBot AI platform.
  */
 
 import { Metadata } from 'next';

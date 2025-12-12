@@ -93,7 +93,7 @@ function getOpenAIClient(): OpenAI | null {
 
 /**
  * Build enhanced system prompt tailored to the specific sport
- * Uses the centralized BetSense AI identity and sport-specific configuration
+ * Uses the centralized SportBot AI identity and sport-specific configuration
  */
 function buildSystemPrompt(sport: string, sportKey?: string): string {
   const config = getSportConfig(sportKey || sport);
@@ -117,7 +117,7 @@ function buildSystemPrompt(sport: string, sportKey?: string): string {
     keyAnalysisFactors: keyFactors,
   };
 
-  // Combine core BetSense AI identity with sport-specific context
+  // Combine core SportBot AI identity with sport-specific context
   const corePrompt = buildCoreSystemPrompt();
   const sportContext = buildSportContext(sportPromptConfig);
 

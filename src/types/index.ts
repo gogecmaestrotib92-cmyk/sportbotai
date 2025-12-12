@@ -1,5 +1,5 @@
 /**
- * Types for BetSense AI application
+ * Types for SportBot AI application
  * 
  * Centralized TypeScript types used throughout the application.
  */

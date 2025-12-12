@@ -1,8 +1,8 @@
-# BetSense AI
+# SportBot AI
 
-AI-powered sports betting analytics platform. An educational tool for informed decision-making.
+AI-powered sports analytics platform. Understand any match in 60 seconds.
 
-> ⚠️ **Disclaimer**: BetSense AI is NOT a tipster service. We do not provide guaranteed tips or financial advice. Sports betting carries the risk of losing money. Bet responsibly. 18+ only.
+> ⚠️ **Disclaimer**: SportBot AI is NOT a tipster service. We do not provide guaranteed tips or financial advice. Sports betting carries the risk of losing money. Bet responsibly. 18+ only.
 
 ## 🚀 Quick Start
 
@@ -16,8 +16,8 @@ AI-powered sports betting analytics platform. An educational tool for informed d
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/betsense-ai.git
-   cd betsense-ai
+   git clone https://github.com/your-username/sportbot-ai.git
+   cd sportbot-ai
    ```
 
 2. **Install dependencies**
@@ -82,8 +82,8 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 2. Go to Dashboard → Developers → API keys
 3. Copy your **Secret key** (starts with `sk_test_` for testing)
 4. Create products in Dashboard → Products:
-   - **BetSense AI Pro**: €9.99/month (recurring)
-   - **BetSense AI Premium**: €19.99/month (recurring)
+   - **SportBot AI Pro**: $9.99/month (recurring)
+   - **SportBot AI Annual**: $79/year (recurring)
 5. Copy the **Price IDs** (start with `price_`)
 6. Update `src/components/PricingCards.tsx` with your Price IDs:
    ```typescript
@@ -116,7 +116,7 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
 ## 📁 Project Structure
 
 ```
-betsense-ai/
+sportbot-ai/
 ├── src/
 │   ├── app/                      # Next.js App Router
 │   │   ├── layout.tsx           # Root layout (header + footer)
@@ -273,4 +273,4 @@ This project is for educational purposes. See LICENSE for details.
 
 ---
 
-**Remember:** BetSense AI is an analytical tool. Gambling involves risk. Never bet more than you can afford to lose.
+**Remember:** SportBot AI is an analytical tool. Gambling involves risk. Never bet more than you can afford to lose.

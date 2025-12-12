@@ -1,7 +1,7 @@
 /**
  * Terms & Conditions Page (/terms)
  * 
- * Legal terms of use for the BetSense AI platform.
+ * Legal terms of use for the SportBot AI platform.
  */
 
 import { Metadata } from 'next';

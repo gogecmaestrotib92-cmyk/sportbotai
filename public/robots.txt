@@ -15,7 +15,7 @@ Allow: /privacy
 Allow: /responsible-gambling
 
 # Sitemap location
-Sitemap: https://betsense-ai.vercel.app/sitemap.xml
+Sitemap: https://sportbotai.com/sitemap.xml
 
 # Crawl delay (be nice to bots)
 Crawl-delay: 1

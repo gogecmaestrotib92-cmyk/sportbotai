@@ -181,7 +181,7 @@ export const FINAL_OUTPUT_RULE = `
 [FINAL OUTPUT RULE]
 
 After all internal reasoning and validation:
-- Output ONLY the final JSON object that matches the exact BetSense schema.
+- Output ONLY the final JSON object that matches the exact SportBot AI schema.
 - NO chain-of-thought.
 - NO explanations.
 - NO markdown.
@@ -200,7 +200,7 @@ Your response must be parseable by JSON.parse() with zero modifications.
 // ============================================
 
 /**
- * Builds the core BetSense AI system prompt identity section
+ * Builds the core SportBot AI system prompt identity section
  */
 export function buildCoreSystemPrompt(): string {
   return `You are ${AI_IDENTITY.name}, an ultra-accurate sports probability analysis engine.

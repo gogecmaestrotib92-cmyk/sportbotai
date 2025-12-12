@@ -1,7 +1,7 @@
 /**
  * Landing Page - Home (/)
  * 
- * Main page of the BetSense AI application.
+ * Main page of the SportBot AI application.
  * Contains all sections for presenting the platform.
  */
 

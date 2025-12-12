@@ -1,5 +1,5 @@
 /**
- * Root Layout za BetSense AI aplikaciju
+ * Root Layout for SportBot AI application
  * 
  * Main layout with comprehensive SEO metadata
  */
@@ -85,7 +85,7 @@ export const metadata: Metadata = {
     title: META.home.title,
     description: META.home.description,
     images: OG_DEFAULTS.images,
-    // creator: '@betsenseai', // Uncomment when Twitter exists
+    // creator: '@sportbotai', // Uncomment when Twitter exists
   },
   
   // App specific

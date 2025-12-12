@@ -1,7 +1,7 @@
 /**
  * SEO Configuration & Utilities
  * 
- * Centralized SEO settings for BetSense AI
+ * Centralized SEO settings for SportBot AI
  * Easy to update when domain/branding changes
  */
 

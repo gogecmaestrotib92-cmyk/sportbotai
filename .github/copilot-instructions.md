@@ -1,8 +1,12 @@
-# BetSense AI - Copilot Instructions
+# SportBot AI - Copilot Instructions
 
 ## Project Overview
 
-BetSense AI is an AI-powered sports betting analytics platform built with **Next.js 14 (App Router)**, **TypeScript**, and **Tailwind CSS**. It provides match analysis with probability estimates, value detection, and risk assessment. **Important**: This is an educational/analytical tool, NOT a tipster service.
+SportBot AI is an AI-powered sports analytics platform built with **Next.js 14 (App Router)**, **TypeScript**, and **Tailwind CSS**. It provides match analysis with probability estimates, value detection, and risk assessment. **Important**: This is an educational/analytical tool, NOT a tipster service.
+
+## Mission
+
+"Understand any match in 60 seconds" - We sell understanding, not winning.
 
 ## Architecture
 

@@ -30,7 +30,7 @@ const pricingFAQs = [
   },
   {
     question: 'What sports are covered?',
-    answer: 'BetSense AI covers Soccer (Premier League, La Liga, UCL, Serie A, Bundesliga, Ligue 1), NBA, NFL, NHL, and UFC/MMA with real-time data integration.',
+    answer: 'SportBot AI covers Soccer (Premier League, La Liga, UCL, Serie A, Bundesliga, Ligue 1), NBA, NFL, NHL, and UFC/MMA with real-time data integration.',
   },
   {
     question: 'How accurate are the probability models?',
