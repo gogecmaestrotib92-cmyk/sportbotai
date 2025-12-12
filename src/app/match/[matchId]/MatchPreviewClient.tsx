@@ -21,6 +21,8 @@ import {
   KeyPlayerBattle,
   RefereeProfile,
 } from '@/components/analysis';
+import TeamLogo from '@/components/ui/TeamLogo';
+import LeagueLogo from '@/components/ui/LeagueLogo';
 
 interface MatchPreviewClientProps {
   matchId: string;
@@ -249,6 +251,7 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
           homeTeam={data.matchInfo.homeTeam}
           awayTeam={data.matchInfo.awayTeam}
           league={data.matchInfo.league}
+          sport={data.matchInfo.sport}
           kickoff={data.matchInfo.kickoff}
           venue={data.matchInfo.venue}
         />
@@ -407,13 +410,15 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
 function MatchHeader({ 
   homeTeam, 
   awayTeam, 
-  league, 
+  league,
+  sport,
   kickoff, 
   venue 
 }: { 
   homeTeam: string; 
   awayTeam: string; 
-  league: string; 
+  league: string;
+  sport: string;
   kickoff: string; 
   venue?: string;
 }) {
@@ -431,30 +436,55 @@ function MatchHeader({
   return (
     <div className="text-center">
       {/* League badge */}
-      <div className="inline-flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full mb-4">
-        <span className="text-sm text-text-secondary">{league}</span>
+      <div className="inline-flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full mb-6">
+        <LeagueLogo leagueName={league} sport={sport} size="sm" />
+        <span className="text-sm font-medium text-text-secondary">{league}</span>
       </div>
 
-      {/* Teams */}
-      <div className="flex items-center justify-center gap-4 sm:gap-8 mb-4">
-        <div className="flex-1 text-right">
-          <h1 className="text-xl sm:text-3xl font-bold text-white">{homeTeam}</h1>
-          <span className="text-xs text-text-muted">HOME</span>
+      {/* Teams with Logos */}
+      <div className="flex items-center justify-center gap-4 sm:gap-6 mb-6">
+        {/* Home Team */}
+        <div className="flex-1 flex flex-col items-center sm:items-end gap-3">
+          <TeamLogo teamName={homeTeam} sport={sport} league={league} size="xl" />
+          <div className="text-center sm:text-right">
+            <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight">{homeTeam}</h1>
+            <span className="text-[10px] uppercase tracking-wider text-accent font-semibold">Home</span>
+          </div>
         </div>
-        <div className="flex-shrink-0">
-          <span className="text-2xl sm:text-4xl font-bold text-primary">VS</span>
+
+        {/* VS Divider */}
+        <div className="flex-shrink-0 px-3 sm:px-6">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center border border-white/10">
+            <span className="text-lg sm:text-xl font-bold text-white/80">VS</span>
+          </div>
         </div>
-        <div className="flex-1 text-left">
-          <h1 className="text-xl sm:text-3xl font-bold text-white">{awayTeam}</h1>
-          <span className="text-xs text-text-muted">AWAY</span>
+
+        {/* Away Team */}
+        <div className="flex-1 flex flex-col items-center sm:items-start gap-3">
+          <TeamLogo teamName={awayTeam} sport={sport} league={league} size="xl" />
+          <div className="text-center sm:text-left">
+            <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight">{awayTeam}</h1>
+            <span className="text-[10px] uppercase tracking-wider text-text-muted font-semibold">Away</span>
+          </div>
         </div>
       </div>
 
       {/* Match info */}
-      <div className="flex items-center justify-center gap-4 text-sm text-text-secondary">
-        <span>📅 {formattedDate}</span>
-        <span>⏰ {formattedTime}</span>
-        {venue && <span>📍 {venue}</span>}
+      <div className="flex items-center justify-center gap-3 sm:gap-6 flex-wrap">
+        <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
+          <span className="text-base">📅</span>
+          <span className="text-sm text-white font-medium">{formattedDate}</span>
+        </div>
+        <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
+          <span className="text-base">⏰</span>
+          <span className="text-sm text-white font-medium">{formattedTime}</span>
+        </div>
+        {venue && (
+          <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
+            <span className="text-base">📍</span>
+            <span className="text-sm text-white font-medium">{venue}</span>
+          </div>
+        )}
       </div>
     </div>
   );

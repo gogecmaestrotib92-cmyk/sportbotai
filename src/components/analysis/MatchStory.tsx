@@ -127,9 +127,11 @@ export default function MatchStory({
       {/* The Narrative */}
       <div className="p-5">
         <div className="prose prose-invert prose-sm max-w-none">
-          <p className="text-text-secondary leading-relaxed whitespace-pre-line">
-            {narrative}
-          </p>
+          {narrative.split('\n\n').map((paragraph, index) => (
+            <p key={index} className="text-text-secondary leading-relaxed mb-4 last:mb-0 text-[15px]">
+              {paragraph}
+            </p>
+          ))}
         </div>
 
         {/* Supporting Stats */}

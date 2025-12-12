@@ -47,6 +47,13 @@ export default function GoalsTiming({
   awayTiming,
 }: GoalsTimingProps) {
   
+  // Calculate total goals for percentages
+  const totalHomeScoring = Object.values(homeTiming.scoring).reduce((a, b) => a + b, 0);
+  const totalAwayScoring = Object.values(awayTiming.scoring).reduce((a, b) => a + b, 0);
+  
+  // Check if we have any meaningful data
+  const hasData = totalHomeScoring > 0 || totalAwayScoring > 0;
+
   // Find peak scoring times
   const findPeak = (data: GoalsTimingData['scoring']) => {
     let maxPeriod = '0-15';
@@ -63,9 +70,32 @@ export default function GoalsTiming({
   const homePeak = findPeak(homeTiming.scoring);
   const awayPeak = findPeak(awayTiming.scoring);
 
-  // Calculate total goals for percentages
-  const totalHomeScoring = Object.values(homeTiming.scoring).reduce((a, b) => a + b, 0);
-  const totalAwayScoring = Object.values(awayTiming.scoring).reduce((a, b) => a + b, 0);
+  // If no data, show simplified card
+  if (!hasData) {
+    return (
+      <div className="bg-[#0F1114] rounded-2xl border border-white/10 overflow-hidden">
+        <div className="px-5 py-4 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl flex items-center justify-center">
+              <span className="text-xl">⏱️</span>
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white">Goals Timing</h3>
+              <p className="text-xs text-text-muted">When teams score their goals</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-8 text-center">
+          <p className="text-sm text-text-muted">
+            Goals timing data will be available once the season progresses.
+          </p>
+          <p className="text-xs text-text-muted mt-2 opacity-60">
+            Watch for patterns as more matches are played.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#0F1114] rounded-2xl border border-white/10 overflow-hidden">
