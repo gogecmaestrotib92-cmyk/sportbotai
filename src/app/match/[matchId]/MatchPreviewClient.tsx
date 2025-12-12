@@ -18,6 +18,8 @@ import {
   GoalsTiming,
   ContextFactors,
   ShareCard,
+  KeyPlayerBattle,
+  RefereeProfile,
 } from '@/components/analysis';
 
 interface MatchPreviewClientProps {
@@ -132,6 +134,40 @@ interface MatchPreviewData {
     favors: string;
     note?: string;
   }>;
+  keyPlayerBattle: {
+    homePlayer: {
+      name: string;
+      position: string;
+      photo?: string;
+      seasonGoals: number;
+      seasonAssists: number;
+      form: string;
+      minutesPlayed: number;
+      rating?: number;
+    };
+    awayPlayer: {
+      name: string;
+      position: string;
+      photo?: string;
+      seasonGoals: number;
+      seasonAssists: number;
+      form: string;
+      minutesPlayed: number;
+      rating?: number;
+    };
+    battleType: 'attack-vs-defense' | 'midfield-duel' | 'top-scorers';
+  } | null;
+  referee: {
+    name: string;
+    photo?: string;
+    matchesThisSeason: number;
+    avgYellowCards: number;
+    avgRedCards: number;
+    avgFouls: number;
+    penaltiesAwarded: number;
+    homeWinRate: number;
+    avgAddedTime: number;
+  } | null;
 }
 
 export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps) {
@@ -321,6 +357,30 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
             }))} 
           />
         </div>
+
+        {/* Key Player Battle */}
+        {data.keyPlayerBattle && (
+          <div className="mt-8">
+            <KeyPlayerBattle
+              homeTeam={data.matchInfo.homeTeam}
+              awayTeam={data.matchInfo.awayTeam}
+              homePlayer={data.keyPlayerBattle.homePlayer}
+              awayPlayer={data.keyPlayerBattle.awayPlayer}
+              battleType={data.keyPlayerBattle.battleType}
+            />
+          </div>
+        )}
+
+        {/* Referee Profile */}
+        {data.referee && data.referee.name !== 'TBA' && (
+          <div className="mt-8">
+            <RefereeProfile
+              referee={data.referee}
+              homeTeam={data.matchInfo.homeTeam}
+              awayTeam={data.matchInfo.awayTeam}
+            />
+          </div>
+        )}
 
         {/* Share Card */}
         <div className="mt-8">

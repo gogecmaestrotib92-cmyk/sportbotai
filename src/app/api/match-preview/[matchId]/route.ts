@@ -11,7 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming } from '@/lib/football-api';
+import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee } from '@/lib/football-api';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Fetch enriched data from API-Football
-    const [enrichedData, injuries, goalTimingData] = await Promise.all([
+    const [enrichedData, injuries, goalTimingData, keyPlayers, referee] = await Promise.all([
       getEnrichedMatchData(
         matchInfo.homeTeam,
         matchInfo.awayTeam,
@@ -49,6 +49,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         matchInfo.league
       ),
       getMatchGoalTiming(
+        matchInfo.homeTeam,
+        matchInfo.awayTeam,
+        matchInfo.league
+      ),
+      getMatchKeyPlayers(
+        matchInfo.homeTeam,
+        matchInfo.awayTeam,
+        matchInfo.league
+      ),
+      getFixtureReferee(
         matchInfo.homeTeam,
         matchInfo.awayTeam,
         matchInfo.league
@@ -237,6 +247,31 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       homeAwaySplits,
       goalsTiming,
       contextFactors,
+      // New viral features
+      keyPlayerBattle: keyPlayers.home && keyPlayers.away ? {
+        homePlayer: {
+          name: keyPlayers.home.name,
+          position: keyPlayers.home.position,
+          photo: keyPlayers.home.photo,
+          seasonGoals: keyPlayers.home.goals,
+          seasonAssists: keyPlayers.home.assists,
+          form: homeFormStr.slice(-5),
+          minutesPlayed: keyPlayers.home.minutesPlayed,
+          rating: keyPlayers.home.rating,
+        },
+        awayPlayer: {
+          name: keyPlayers.away.name,
+          position: keyPlayers.away.position,
+          photo: keyPlayers.away.photo,
+          seasonGoals: keyPlayers.away.goals,
+          seasonAssists: keyPlayers.away.assists,
+          form: awayFormStr.slice(-5),
+          minutesPlayed: keyPlayers.away.minutesPlayed,
+          rating: keyPlayers.away.rating,
+        },
+        battleType: 'top-scorers' as const,
+      } : null,
+      referee: referee,
     };
 
     return NextResponse.json(response);

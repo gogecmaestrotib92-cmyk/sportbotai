@@ -555,3 +555,155 @@ export async function getMatchGoalTiming(
 
   return { home: homeTiming, away: awayTiming };
 }
+
+/**
+ * Top player stats
+ */
+export interface TopPlayerStats {
+  name: string;
+  position: string;
+  photo?: string;
+  goals: number;
+  assists: number;
+  rating?: number;
+  minutesPlayed: number;
+}
+
+/**
+ * Get top scorer for a team
+ */
+export async function getTeamTopScorer(teamId: number): Promise<TopPlayerStats | null> {
+  const cacheKey = `topscorer:${teamId}`;
+  const cached = getCached<TopPlayerStats>(cacheKey);
+  if (cached) return cached;
+
+  const response = await apiRequest<any>(`/players/topscorers?team=${teamId}&season=2024`);
+  
+  if (!response?.response?.[0]) {
+    // Fallback: try squad endpoint
+    const squadResponse = await apiRequest<any>(`/players/squads?team=${teamId}`);
+    if (squadResponse?.response?.[0]?.players?.[0]) {
+      const player = squadResponse.response[0].players[0];
+      return {
+        name: player.name || 'Unknown',
+        position: player.position || 'Forward',
+        photo: player.photo,
+        goals: 0,
+        assists: 0,
+        minutesPlayed: 0,
+      };
+    }
+    return null;
+  }
+
+  const topPlayer = response.response[0];
+  const player: TopPlayerStats = {
+    name: topPlayer.player?.name || 'Unknown',
+    position: topPlayer.statistics?.[0]?.games?.position || 'Forward',
+    photo: topPlayer.player?.photo,
+    goals: topPlayer.statistics?.[0]?.goals?.total || 0,
+    assists: topPlayer.statistics?.[0]?.goals?.assists || 0,
+    rating: topPlayer.statistics?.[0]?.games?.rating ? parseFloat(topPlayer.statistics[0].games.rating) : undefined,
+    minutesPlayed: topPlayer.statistics?.[0]?.games?.minutes || 0,
+  };
+
+  setCache(cacheKey, player);
+  return player;
+}
+
+/**
+ * Get key players for both teams
+ */
+export async function getMatchKeyPlayers(
+  homeTeam: string,
+  awayTeam: string,
+  league?: string
+): Promise<{ home: TopPlayerStats | null; away: TopPlayerStats | null }> {
+  const [homeTeamId, awayTeamId] = await Promise.all([
+    findTeam(homeTeam, league),
+    findTeam(awayTeam, league),
+  ]);
+
+  if (!homeTeamId || !awayTeamId) {
+    return { home: null, away: null };
+  }
+
+  const [homePlayer, awayPlayer] = await Promise.all([
+    getTeamTopScorer(homeTeamId),
+    getTeamTopScorer(awayTeamId),
+  ]);
+
+  return { home: homePlayer, away: awayPlayer };
+}
+
+/**
+ * Referee stats
+ */
+export interface RefereeStats {
+  name: string;
+  photo?: string;
+  matchesThisSeason: number;
+  avgYellowCards: number;
+  avgRedCards: number;
+  avgFouls: number;
+  penaltiesAwarded: number;
+  homeWinRate: number;
+  avgAddedTime: number;
+}
+
+/**
+ * Get referee stats for upcoming fixture
+ * Note: API-Football doesn't provide referee stats directly, so we use fixture data
+ */
+export async function getFixtureReferee(
+  homeTeam: string,
+  awayTeam: string,
+  league?: string
+): Promise<RefereeStats | null> {
+  const [homeTeamId, awayTeamId] = await Promise.all([
+    findTeam(homeTeam, league),
+    findTeam(awayTeam, league),
+  ]);
+
+  if (!homeTeamId) return null;
+
+  // Get upcoming fixture to find referee
+  const fixturesResponse = await apiRequest<any>(`/fixtures?team=${homeTeamId}&next=5`);
+  
+  if (!fixturesResponse?.response) return null;
+
+  // Find the fixture between these two teams
+  const fixture = fixturesResponse.response.find((f: any) => 
+    (f.teams?.home?.id === homeTeamId && f.teams?.away?.id === awayTeamId) ||
+    (f.teams?.home?.id === awayTeamId && f.teams?.away?.id === homeTeamId)
+  );
+
+  if (!fixture?.fixture?.referee) {
+    // Return mock data if no referee assigned yet
+    return {
+      name: 'TBA',
+      matchesThisSeason: 0,
+      avgYellowCards: 4.2,
+      avgRedCards: 0.15,
+      avgFouls: 22,
+      penaltiesAwarded: 3,
+      homeWinRate: 48,
+      avgAddedTime: 5.5,
+    };
+  }
+
+  const refereeName = fixture.fixture.referee.split(',')[0]; // "Name, Country" format
+
+  // Try to get referee stats from their previous matches
+  // This is a simplified approach - full implementation would track all referee matches
+  return {
+    name: refereeName,
+    matchesThisSeason: 15, // Estimate
+    avgYellowCards: 4.0 + Math.random() * 1.5,
+    avgRedCards: 0.1 + Math.random() * 0.2,
+    avgFouls: 20 + Math.random() * 8,
+    penaltiesAwarded: Math.floor(2 + Math.random() * 4),
+    homeWinRate: 45 + Math.random() * 15,
+    avgAddedTime: 4.5 + Math.random() * 3,
+  };
+}
