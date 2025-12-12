@@ -799,61 +799,33 @@ export async function getTeamTopScorer(teamId: number, leagueId?: number): Promi
   console.log(`[TopScorer] Fetching for team ${teamId}, league ${leagueId}`);
   const season = getCurrentSeason();
   
-  // First try: Get team's top scorer from players/topscorers endpoint
-  // This endpoint needs league parameter to work properly
-  if (leagueId) {
-    const topScorersResponse = await apiRequest<any>(`/players/topscorers?league=${leagueId}&season=${season}`);
-    if (topScorersResponse?.response) {
-      // Find a player from our team in the league's top scorers
-      const teamPlayer = topScorersResponse.response.find((p: any) => 
-        p.statistics?.some((s: any) => s.team?.id === teamId)
-      );
-      if (teamPlayer) {
-        const stats = teamPlayer.statistics?.find((s: any) => s.team?.id === teamId) || teamPlayer.statistics?.[0];
-        const player: TopPlayerStats = {
-          name: teamPlayer.player?.name || 'Unknown',
-          position: stats?.games?.position || 'Forward',
-          photo: teamPlayer.player?.photo,
-          goals: stats?.goals?.total || 0,
-          assists: stats?.goals?.assists || 0,
-          rating: stats?.games?.rating ? parseFloat(stats.games.rating) : undefined,
-          minutesPlayed: stats?.games?.minutes || 0,
-        };
-        console.log(`[TopScorer] Found in league top scorers: ${player.name} for team ${teamId}`);
-        setCache(cacheKey, player);
-        return player;
-      }
-    }
-  }
-  
-  // Second try: Get team statistics which may include top scorer
-  if (leagueId) {
-    const teamStatsResponse = await apiRequest<any>(`/teams/statistics?team=${teamId}&season=${season}&league=${leagueId}`);
-    if (teamStatsResponse?.response?.lineups?.[0]) {
-      // Get most used formation's players - but this doesn't give individual stats
-      // Fall through to player search
-    }
-  }
-  
-  // Third try: Search for players by team and get their stats
+  // First approach: Go directly to team players for accuracy
+  // The league topscorers endpoint can have issues with transfers
   console.log(`[TopScorer] Trying /players?team=${teamId}&season=${season}`);
   const playersResponse = await apiRequest<any>(`/players?team=${teamId}&season=${season}&page=1`);
   console.log(`[TopScorer] Players response count: ${playersResponse?.response?.length || 0}`);
+  
   if (playersResponse?.response?.length > 0) {
-    // Sort by goals scored
-    const sortedPlayers = playersResponse.response
-      .filter((p: any) => p.statistics?.[0]?.games?.position !== 'Goalkeeper')
-      .sort((a: any, b: any) => {
-        const aGoals = a.statistics?.[0]?.goals?.total || 0;
-        const bGoals = b.statistics?.[0]?.goals?.total || 0;
-        return bGoals - aGoals;
-      });
+    // Filter for players with stats for THIS team
+    const teamPlayers = playersResponse.response.filter((p: any) => {
+      const teamStats = p.statistics?.find((s: any) => s.team?.id === teamId);
+      return teamStats && teamStats.games?.position !== 'Goalkeeper';
+    });
+    
+    // Sort by goals scored for this team
+    const sortedPlayers = teamPlayers.sort((a: any, b: any) => {
+      const aStats = a.statistics?.find((s: any) => s.team?.id === teamId);
+      const bStats = b.statistics?.find((s: any) => s.team?.id === teamId);
+      const aGoals = aStats?.goals?.total || 0;
+      const bGoals = bStats?.goals?.total || 0;
+      return bGoals - aGoals;
+    });
     
     if (sortedPlayers.length > 0) {
       const topPlayer = sortedPlayers[0];
-      const stats = topPlayer.statistics?.[0];
-      const playerTeamId = stats?.team?.id;
-      console.log(`[TopScorer] Top player ${topPlayer.player?.name} has team ID ${playerTeamId} (expected ${teamId})`);
+      const stats = topPlayer.statistics?.find((s: any) => s.team?.id === teamId);
+      console.log(`[TopScorer] Top player ${topPlayer.player?.name} has team ID ${stats?.team?.id} (expected ${teamId})`);
+      
       const player: TopPlayerStats = {
         name: topPlayer.player?.name || 'Unknown',
         position: stats?.games?.position || 'Forward',
@@ -863,13 +835,45 @@ export async function getTeamTopScorer(teamId: number, leagueId?: number): Promi
         rating: stats?.games?.rating ? parseFloat(stats.games.rating) : undefined,
         minutesPlayed: stats?.games?.minutes || 0,
       };
-      console.log(`[TopScorer] Found via /players: ${player.name} for team ${teamId}`);
+      console.log(`[TopScorer] Found via /players: ${player.name} (${player.goals} goals) for team ${teamId}`);
       setCache(cacheKey, player);
       return player;
     }
   }
   
+  // Second approach: League top scorers (only if direct team search failed)
+  if (leagueId) {
+    console.log(`[TopScorer] Falling back to league top scorers for team ${teamId}`);
+    const topScorersResponse = await apiRequest<any>(`/players/topscorers?league=${leagueId}&season=${season}`);
+    if (topScorersResponse?.response) {
+      // Find a player from our team - ensure stats are for THIS team specifically
+      const teamPlayer = topScorersResponse.response.find((p: any) => {
+        const teamStats = p.statistics?.find((s: any) => s.team?.id === teamId);
+        return teamStats && teamStats.goals?.total > 0;
+      });
+      
+      if (teamPlayer) {
+        const stats = teamPlayer.statistics?.find((s: any) => s.team?.id === teamId);
+        if (stats) {
+          const player: TopPlayerStats = {
+            name: teamPlayer.player?.name || 'Unknown',
+            position: stats?.games?.position || 'Forward',
+            photo: teamPlayer.player?.photo,
+            goals: stats?.goals?.total || 0,
+            assists: stats?.goals?.assists || 0,
+            rating: stats?.games?.rating ? parseFloat(stats.games.rating) : undefined,
+            minutesPlayed: stats?.games?.minutes || 0,
+          };
+          console.log(`[TopScorer] Found in league top scorers: ${player.name} for team ${teamId}`);
+          setCache(cacheKey, player);
+          return player;
+        }
+      }
+    }
+  }
+  
   // Final fallback: squad endpoint for player names (no stats)
+  console.log(`[TopScorer] Falling back to squad endpoint for team ${teamId}`);
   const squadResponse = await apiRequest<any>(`/players/squads?team=${teamId}`);
   if (squadResponse?.response?.[0]?.players) {
     const players = squadResponse.response[0].players;
