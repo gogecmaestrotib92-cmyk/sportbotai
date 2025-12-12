@@ -89,6 +89,18 @@ function setCache(key: string, data: any): void {
 }
 
 /**
+ * Get current football season year
+ * European seasons run Aug-May, so before August use previous year
+ */
+function getCurrentSeason(): number {
+  const now = new Date();
+  const month = now.getMonth(); // 0-11
+  const year = now.getFullYear();
+  // If before August, use previous year (e.g., Jan 2026 = 2025 season)
+  return month < 7 ? year - 1 : year;
+}
+
+/**
  * Make authenticated request to API-Football
  */
 async function apiRequest<T>(endpoint: string): Promise<T | null> {
@@ -146,7 +158,8 @@ async function getTeamForm(teamId: number): Promise<TeamForm | null> {
   const cached = getCached<TeamForm>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiRequest<any>(`/teams/statistics?team=${teamId}&season=2024`);
+  const season = getCurrentSeason();
+  const response = await apiRequest<any>(`/teams/statistics?team=${teamId}&season=${season}`);
   
   if (!response?.response) return null;
 
@@ -413,7 +426,8 @@ export async function getTeamInjuries(teamId: number): Promise<PlayerInjury[]> {
   const cached = getCached<PlayerInjury[]>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiRequest<any>(`/injuries?team=${teamId}&season=2024`);
+  const season = getCurrentSeason();
+  const response = await apiRequest<any>(`/injuries?team=${teamId}&season=${season}`);
   
   if (!response?.response) return [];
 
@@ -468,7 +482,8 @@ export async function getTeamGoalTiming(teamId: number): Promise<GoalTimingData>
   if (cached) return cached;
 
   // Get team statistics which includes goals by minute
-  const response = await apiRequest<any>(`/teams/statistics?team=${teamId}&season=2024`);
+  const season = getCurrentSeason();
+  const response = await apiRequest<any>(`/teams/statistics?team=${teamId}&season=${season}`);
   
   const defaultTiming: GoalTimingData = {
     scoring: { '0-15': 0, '16-30': 0, '31-45': 0, '46-60': 0, '61-75': 0, '76-90': 0 },
@@ -577,7 +592,8 @@ export async function getTeamTopScorer(teamId: number): Promise<TopPlayerStats |
   const cached = getCached<TopPlayerStats>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiRequest<any>(`/players/topscorers?team=${teamId}&season=2024`);
+  const season = getCurrentSeason();
+  const response = await apiRequest<any>(`/players/topscorers?team=${teamId}&season=${season}`);
   
   if (!response?.response?.[0]) {
     // Fallback: try squad endpoint
