@@ -596,18 +596,34 @@ export async function getTeamTopScorer(teamId: number): Promise<TopPlayerStats |
   const response = await apiRequest<any>(`/players/topscorers?team=${teamId}&season=${season}`);
   
   if (!response?.response?.[0]) {
-    // Fallback: try squad endpoint
+    // Fallback: try squad endpoint and find an attacker or midfielder
     const squadResponse = await apiRequest<any>(`/players/squads?team=${teamId}`);
-    if (squadResponse?.response?.[0]?.players?.[0]) {
-      const player = squadResponse.response[0].players[0];
-      return {
-        name: player.name || 'Unknown',
-        position: player.position || 'Forward',
-        photo: player.photo,
-        goals: 0,
-        assists: 0,
-        minutesPlayed: 0,
-      };
+    if (squadResponse?.response?.[0]?.players) {
+      const players = squadResponse.response[0].players;
+      // Prioritize attackers and midfielders
+      const priorityPositions = ['Attacker', 'Forward', 'Midfielder'];
+      let bestPlayer = null;
+      
+      for (const pos of priorityPositions) {
+        bestPlayer = players.find((p: any) => p.position === pos);
+        if (bestPlayer) break;
+      }
+      
+      // Fallback to first non-goalkeeper
+      if (!bestPlayer) {
+        bestPlayer = players.find((p: any) => p.position !== 'Goalkeeper') || players[0];
+      }
+      
+      if (bestPlayer) {
+        return {
+          name: bestPlayer.name || 'Unknown',
+          position: bestPlayer.position || 'Forward',
+          photo: bestPlayer.photo,
+          goals: 0,
+          assists: 0,
+          minutesPlayed: 0,
+        };
+      }
     }
     return null;
   }
