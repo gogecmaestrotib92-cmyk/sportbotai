@@ -11,7 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getEnrichedMatchData } from '@/lib/football-api';
+import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming } from '@/lib/football-api';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -37,11 +37,23 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Fetch enriched data from API-Football
-    const enrichedData = await getEnrichedMatchData(
-      matchInfo.homeTeam,
-      matchInfo.awayTeam,
-      matchInfo.league
-    );
+    const [enrichedData, injuries, goalTimingData] = await Promise.all([
+      getEnrichedMatchData(
+        matchInfo.homeTeam,
+        matchInfo.awayTeam,
+        matchInfo.league
+      ),
+      getMatchInjuries(
+        matchInfo.homeTeam,
+        matchInfo.awayTeam,
+        matchInfo.league
+      ),
+      getMatchGoalTiming(
+        matchInfo.homeTeam,
+        matchInfo.awayTeam,
+        matchInfo.league
+      ),
+    ]);
 
     // Build form strings
     const homeFormStr = enrichedData.homeForm?.map(m => m.result).join('') || 'DDDDD';
@@ -98,6 +110,52 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       h2h,
     });
 
+    // Build key absence from injuries data
+    const findKeyAbsence = () => {
+      // Check home team injuries first
+      const homeKeyPlayer = injuries.home.find(i => 
+        i.position?.toLowerCase().includes('forward') || 
+        i.position?.toLowerCase().includes('striker') ||
+        i.position?.toLowerCase().includes('midfielder')
+      );
+      if (homeKeyPlayer) {
+        return {
+          player: homeKeyPlayer.player,
+          team: 'home' as const,
+          impact: `${homeKeyPlayer.reason}: ${homeKeyPlayer.details}`,
+        };
+      }
+      // Check away team
+      const awayKeyPlayer = injuries.away.find(i => 
+        i.position?.toLowerCase().includes('forward') || 
+        i.position?.toLowerCase().includes('striker') ||
+        i.position?.toLowerCase().includes('midfielder')
+      );
+      if (awayKeyPlayer) {
+        return {
+          player: awayKeyPlayer.player,
+          team: 'away' as const,
+          impact: `${awayKeyPlayer.reason}: ${awayKeyPlayer.details}`,
+        };
+      }
+      // Return first injury if any
+      if (injuries.home.length > 0) {
+        return {
+          player: injuries.home[0].player,
+          team: 'home' as const,
+          impact: `${injuries.home[0].reason}: ${injuries.home[0].details}`,
+        };
+      }
+      if (injuries.away.length > 0) {
+        return {
+          player: injuries.away[0].player,
+          team: 'away' as const,
+          impact: `${injuries.away[0].reason}: ${injuries.away[0].details}`,
+        };
+      }
+      return null;
+    };
+
     // Build viral stats
     const viralStats = {
       h2h: {
@@ -108,7 +166,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         home: homeFormStr.slice(-5),
         away: awayFormStr.slice(-5),
       },
-      keyAbsence: null, // Would come from injuries API
+      keyAbsence: findKeyAbsence(),
       streak: detectStreak(homeFormStr, awayFormStr, matchInfo.homeTeam, matchInfo.awayTeam),
     };
 
@@ -136,11 +194,29 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     };
 
-    // Build goals timing
-    const goalsTiming = buildGoalsTiming(homeStats.goalsScored, awayStats.goalsScored);
+    // Build goals timing from real API data
+    const goalsTiming = buildGoalsTimingFromData(goalTimingData, matchInfo.homeTeam, matchInfo.awayTeam);
 
     // Build context factors
     const contextFactors = buildContextFactors(matchInfo, homeStats, awayStats, h2h);
+
+    // Generate TTS audio for the narrative (async, don't block)
+    let audioUrl: string | undefined;
+    if (process.env.ELEVENLABS_API_KEY && aiAnalysis.story?.narrative) {
+      try {
+        const ttsText = buildTTSScript(
+          matchInfo.homeTeam,
+          matchInfo.awayTeam,
+          aiAnalysis.story.favored,
+          aiAnalysis.story.confidence,
+          aiAnalysis.story.narrative
+        );
+        audioUrl = await generateTTSAudio(ttsText, matchId);
+      } catch (error) {
+        console.error('TTS generation failed:', error);
+        // Continue without audio
+      }
+    }
 
     const response = {
       matchInfo: {
@@ -152,7 +228,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         kickoff: matchInfo.kickoff,
         venue: matchInfo.venue,
       },
-      story: aiAnalysis.story,
+      story: {
+        ...aiAnalysis.story,
+        audioUrl,
+      },
       viralStats,
       headlines: aiAnalysis.headlines,
       homeAwaySplits,
@@ -381,5 +460,113 @@ IMPORTANT:
         { icon: '📈', text: `${data.awayTeam} form: ${data.awayForm.slice(-5)}`, favors: 'neutral', viral: false },
       ],
     };
+  }
+}
+
+/**
+ * Build goals timing from real API data
+ */
+function buildGoalsTimingFromData(
+  goalTimingData: { home: { scoring: Record<string, number>; conceding: Record<string, number>; totalGoals: number }; away: { scoring: Record<string, number>; conceding: Record<string, number>; totalGoals: number } },
+  homeTeam: string,
+  awayTeam: string
+) {
+  // Generate insights based on peak scoring times
+  const findPeakPeriod = (scoring: Record<string, number>) => {
+    let max = 0;
+    let peak = '76-90';
+    for (const [period, goals] of Object.entries(scoring)) {
+      if (goals > max) {
+        max = goals;
+        peak = period;
+      }
+    }
+    return peak;
+  };
+
+  const homePeak = findPeakPeriod(goalTimingData.home.scoring);
+  const awayPeak = findPeakPeriod(goalTimingData.away.scoring);
+
+  const periodLabels: Record<string, string> = {
+    '0-15': 'early',
+    '16-30': 'mid first half',
+    '31-45': 'before halftime',
+    '46-60': 'after the break',
+    '61-75': 'in the final third',
+    '76-90': 'late',
+  };
+
+  return {
+    home: {
+      scoring: goalTimingData.home.scoring,
+      conceding: goalTimingData.home.conceding,
+      insight: goalTimingData.home.totalGoals > 5 
+        ? `${homeTeam} tend to score ${periodLabels[homePeak] || 'late'} in matches`
+        : null,
+    },
+    away: {
+      scoring: goalTimingData.away.scoring,
+      conceding: goalTimingData.away.conceding,
+      insight: goalTimingData.away.totalGoals > 5
+        ? `${awayTeam} are dangerous ${periodLabels[awayPeak] || 'late'}`
+        : null,
+    },
+  };
+}
+
+/**
+ * Build TTS script from analysis
+ */
+function buildTTSScript(
+  homeTeam: string,
+  awayTeam: string,
+  favored: 'home' | 'away' | 'draw',
+  confidence: 'strong' | 'moderate' | 'slight',
+  narrative: string
+): string {
+  const favoredTeam = favored === 'home' ? homeTeam : favored === 'away' ? awayTeam : 'a draw';
+  const confidenceText = confidence === 'strong' ? 'strongly' : confidence === 'moderate' ? '' : 'slightly';
+  
+  // Clean narrative for TTS (remove markdown, excessive punctuation)
+  const cleanNarrative = narrative
+    .replace(/\n+/g, '. ')
+    .replace(/[*_#]/g, '')
+    .slice(0, 800); // Limit for TTS
+
+  return `Match preview: ${homeTeam} versus ${awayTeam}. Our analysis ${confidenceText} favors ${favoredTeam}. ${cleanNarrative}`;
+}
+
+/**
+ * Generate TTS audio using ElevenLabs via internal API
+ */
+async function generateTTSAudio(text: string, matchId: string): Promise<string | undefined> {
+  try {
+    // Call our TTS API endpoint
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:3000';
+    
+    const response = await fetch(`${baseUrl}/api/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+
+    if (!response.ok) {
+      console.error('TTS API returned error:', response.status);
+      return undefined;
+    }
+
+    const result = await response.json();
+    
+    if (result.success && result.audioBase64) {
+      // Return as data URL for immediate playback
+      return `data:${result.contentType || 'audio/mpeg'};base64,${result.audioBase64}`;
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error('TTS generation error:', error);
+    return undefined;
   }
 }

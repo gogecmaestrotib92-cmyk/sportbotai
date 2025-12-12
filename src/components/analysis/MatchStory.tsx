@@ -39,6 +39,7 @@ export default function MatchStory({
 }: MatchStoryProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [expanded, setExpanded] = useState(true);
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
   const favoredTeam = favored === 'home' ? homeTeam : favored === 'away' ? awayTeam : 'Draw';
   
@@ -47,6 +48,23 @@ export default function MatchStory({
     moderate: { text: 'Moderate lean', color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
     slight: { text: 'Slight lean', color: 'text-orange-400', bg: 'bg-orange-500/20' },
   }[confidence];
+
+  const handlePlayAudio = () => {
+    if (!audioUrl) return;
+    
+    if (isPlaying && audio) {
+      audio.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    const newAudio = new Audio(audioUrl);
+    newAudio.onended = () => setIsPlaying(false);
+    newAudio.onerror = () => setIsPlaying(false);
+    newAudio.play();
+    setAudio(newAudio);
+    setIsPlaying(true);
+  };
 
   return (
     <div className="bg-gradient-to-br from-[#0F1114] via-[#12151A] to-[#0F1114] rounded-2xl border border-white/10 overflow-hidden">
@@ -66,7 +84,7 @@ export default function MatchStory({
           {/* Audio option */}
           {audioUrl && (
             <button
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={handlePlayAudio}
               className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
             >
               {isPlaying ? (

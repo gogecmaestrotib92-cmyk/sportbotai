@@ -393,3 +393,165 @@ export async function getQuickForm(teamName: string): Promise<('W' | 'D' | 'L')[
 
   return fixtures.map(m => m.result);
 }
+
+/**
+ * Player injury data
+ */
+interface PlayerInjury {
+  player: string;
+  position: string;
+  reason: 'injury' | 'suspension' | 'doubtful';
+  details: string;
+  expectedReturn?: string;
+}
+
+/**
+ * Get team injuries/unavailable players
+ */
+export async function getTeamInjuries(teamId: number): Promise<PlayerInjury[]> {
+  const cacheKey = `injuries:${teamId}`;
+  const cached = getCached<PlayerInjury[]>(cacheKey);
+  if (cached) return cached;
+
+  const response = await apiRequest<any>(`/injuries?team=${teamId}&season=2024`);
+  
+  if (!response?.response) return [];
+
+  const injuries: PlayerInjury[] = response.response
+    .filter((item: any) => item.player?.reason)
+    .slice(0, 5) // Top 5 most recent
+    .map((item: any) => ({
+      player: item.player?.name || 'Unknown',
+      position: item.player?.type || 'Unknown',
+      reason: item.player?.reason?.toLowerCase().includes('suspend') 
+        ? 'suspension' as const
+        : item.player?.reason?.toLowerCase().includes('doubt')
+        ? 'doubtful' as const
+        : 'injury' as const,
+      details: item.player?.reason || 'Unknown',
+      expectedReturn: item.fixture?.date,
+    }));
+
+  setCache(cacheKey, injuries);
+  return injuries;
+}
+
+/**
+ * Goal timing data by minute range
+ */
+interface GoalTimingData {
+  scoring: {
+    '0-15': number;
+    '16-30': number;
+    '31-45': number;
+    '46-60': number;
+    '61-75': number;
+    '76-90': number;
+  };
+  conceding: {
+    '0-15': number;
+    '16-30': number;
+    '31-45': number;
+    '46-60': number;
+    '61-75': number;
+    '76-90': number;
+  };
+  totalGoals: number;
+}
+
+/**
+ * Get team goal timing statistics from fixtures
+ */
+export async function getTeamGoalTiming(teamId: number): Promise<GoalTimingData> {
+  const cacheKey = `goaltiming:${teamId}`;
+  const cached = getCached<GoalTimingData>(cacheKey);
+  if (cached) return cached;
+
+  // Get team statistics which includes goals by minute
+  const response = await apiRequest<any>(`/teams/statistics?team=${teamId}&season=2024`);
+  
+  const defaultTiming: GoalTimingData = {
+    scoring: { '0-15': 0, '16-30': 0, '31-45': 0, '46-60': 0, '61-75': 0, '76-90': 0 },
+    conceding: { '0-15': 0, '16-30': 0, '31-45': 0, '46-60': 0, '61-75': 0, '76-90': 0 },
+    totalGoals: 0,
+  };
+
+  if (!response?.response?.goals) return defaultTiming;
+
+  const goalsFor = response.response.goals?.for?.minute || {};
+  const goalsAgainst = response.response.goals?.against?.minute || {};
+
+  const extractMinutes = (data: any): GoalTimingData['scoring'] => ({
+    '0-15': (data['0-15']?.total || 0),
+    '16-30': (data['16-30']?.total || 0),
+    '31-45': (data['31-45']?.total || 0) + (data['46-60']?.total || 0) * 0, // 31-45 only
+    '46-60': (data['46-60']?.total || 0),
+    '61-75': (data['61-75']?.total || 0),
+    '76-90': (data['76-90']?.total || 0) + (data['91-105']?.total || 0), // Include extra time
+  });
+
+  const timing: GoalTimingData = {
+    scoring: extractMinutes(goalsFor),
+    conceding: extractMinutes(goalsAgainst),
+    totalGoals: response.response.goals?.for?.total?.total || 0,
+  };
+
+  setCache(cacheKey, timing);
+  return timing;
+}
+
+/**
+ * Get injuries for both teams in a match
+ */
+export async function getMatchInjuries(
+  homeTeam: string,
+  awayTeam: string,
+  league?: string
+): Promise<{ home: PlayerInjury[]; away: PlayerInjury[] }> {
+  const [homeTeamId, awayTeamId] = await Promise.all([
+    findTeam(homeTeam, league),
+    findTeam(awayTeam, league),
+  ]);
+
+  if (!homeTeamId || !awayTeamId) {
+    return { home: [], away: [] };
+  }
+
+  const [homeInjuries, awayInjuries] = await Promise.all([
+    getTeamInjuries(homeTeamId),
+    getTeamInjuries(awayTeamId),
+  ]);
+
+  return { home: homeInjuries, away: awayInjuries };
+}
+
+/**
+ * Get goal timing for both teams in a match
+ */
+export async function getMatchGoalTiming(
+  homeTeam: string,
+  awayTeam: string,
+  league?: string
+): Promise<{ home: GoalTimingData; away: GoalTimingData }> {
+  const [homeTeamId, awayTeamId] = await Promise.all([
+    findTeam(homeTeam, league),
+    findTeam(awayTeam, league),
+  ]);
+
+  const defaultTiming: GoalTimingData = {
+    scoring: { '0-15': 0, '16-30': 0, '31-45': 0, '46-60': 0, '61-75': 0, '76-90': 0 },
+    conceding: { '0-15': 0, '16-30': 0, '31-45': 0, '46-60': 0, '61-75': 0, '76-90': 0 },
+    totalGoals: 0,
+  };
+
+  if (!homeTeamId || !awayTeamId) {
+    return { home: defaultTiming, away: defaultTiming };
+  }
+
+  const [homeTiming, awayTiming] = await Promise.all([
+    getTeamGoalTiming(homeTeamId),
+    getTeamGoalTiming(awayTeamId),
+  ]);
+
+  return { home: homeTiming, away: awayTiming };
+}
