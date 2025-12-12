@@ -33,6 +33,32 @@ export default function HomeAwaySplits({
   awayTeamAway,
 }: HomeAwaySplitsProps) {
   
+  // Check if we have meaningful data
+  const hasHomeData = homeTeamAtHome.played > 0 || homeTeamAtHome.goalsFor > 0;
+  const hasAwayData = awayTeamAway.played > 0 || awayTeamAway.goalsFor > 0;
+  
+  if (!hasHomeData && !hasAwayData) {
+    return (
+      <div className="bg-[#0F1114] rounded-2xl border border-white/10 overflow-hidden">
+        <div className="px-5 py-4 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl flex items-center justify-center">
+              <span className="text-xl">🏟️</span>
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white">Home & Away Form</h3>
+              <p className="text-xs text-text-muted">This season&apos;s venue-specific records</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-8 text-center">
+          <p className="text-text-muted text-sm">Home/away data not available yet</p>
+          <p className="text-text-muted/60 text-xs mt-1">Check back closer to kickoff</p>
+        </div>
+      </div>
+    );
+  }
+  
   const calcWinRate = (splits: TeamSplits) => 
     splits.played > 0 ? Math.round((splits.wins / splits.played) * 100) : 0;
   

@@ -374,8 +374,8 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
           </div>
         )}
 
-        {/* Referee Profile */}
-        {data.referee && data.referee.name !== 'TBA' && (
+        {/* Referee Profile - only show if we have valid referee data */}
+        {data.referee && data.referee.name && data.referee.name !== 'TBA' && (
           <div className="mt-8">
             <RefereeProfile
               referee={data.referee}
