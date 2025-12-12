@@ -164,7 +164,7 @@ export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 
           <div>
             <h3 className="text-lg font-semibold text-white">{currentLeague.name}</h3>
             <p className="text-sm text-text-muted">
-              {isLoading ? 'Loading matches...' : `${matches.length} upcoming matches`}
+              {isLoading ? 'Loading matches...' : `${matches?.length || 0} upcoming matches`}
             </p>
           </div>
         </div>
@@ -192,7 +192,7 @@ export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 
         )}
 
         {/* Matches Grid */}
-        {!isLoading && !error && matches.length > 0 && (
+        {!isLoading && !error && matches && matches.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {matches.slice(0, maxMatches).map((match) => (
               <MatchCard
@@ -209,7 +209,7 @@ export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 
         )}
 
         {/* Empty State */}
-        {!isLoading && !error && matches.length === 0 && (
+        {!isLoading && !error && (!matches || matches.length === 0) && (
           <div className="text-center py-12 bg-white/5 rounded-xl">
             <span className="text-4xl mb-4 block">📭</span>
             <p className="text-gray-400 mb-2">No upcoming matches in {currentLeague.name}</p>
@@ -218,10 +218,10 @@ export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 
         )}
 
         {/* Show More */}
-        {!isLoading && matches.length > maxMatches && (
+        {!isLoading && matches && matches.length > maxMatches && (
           <div className="text-center mt-6">
             <p className="text-sm text-text-muted">
-              Showing {maxMatches} of {matches.length} matches
+              Showing {maxMatches} of {matches?.length || 0} matches
             </p>
           </div>
         )}

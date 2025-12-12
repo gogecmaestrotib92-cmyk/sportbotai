@@ -10,85 +10,25 @@
   "scope": "/",
   "icons": [
     {
-      "src": "/icons/icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/icons/icon-96x96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/icons/icon-128x128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/icons/icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/icons/icon-152x152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/icons/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/icons/icon-384x384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/icons/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable any"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/home.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Home page"
-    },
-    {
-      "src": "/screenshots/analyzer.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Match Analyzer"
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ],
   "categories": ["sports", "entertainment", "utilities"],
   "shortcuts": [
     {
-      "name": "Analyze Match",
-      "short_name": "Analyze",
-      "description": "Start analyzing a match",
-      "url": "/analyzer",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+      "name": "Browse Matches",
+      "short_name": "Matches",
+      "description": "Browse upcoming matches",
+      "url": "/matches"
     },
     {
       "name": "View History",
       "short_name": "History",
       "description": "View your analysis history",
-      "url": "/history",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+      "url": "/history"
     }
   ],
   "related_applications": [],
