@@ -49,8 +49,8 @@ export default function TrendingSection({ maxMatches = 6 }: TrendingSectionProps
         );
         
         for (const response of responses) {
-          if (response.status === 'fulfilled' && response.value.matches) {
-            const trending = getTrendingMatches(response.value.matches as MatchData[], 10);
+          if (response.status === 'fulfilled' && response.value.events) {
+            const trending = getTrendingMatches(response.value.events as MatchData[], 10);
             allMatches.push(...trending);
           }
         }

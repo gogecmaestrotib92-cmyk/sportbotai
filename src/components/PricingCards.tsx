@@ -42,7 +42,7 @@ const plans: PricingPlan[] = [
   {
     id: 'pro',
     name: 'Pro',
-    price: '€18.99',
+    price: '€9.99',
     priceId: 'pro', // Will be resolved to actual Price ID server-side
     description: 'For serious analysts',
     features: [
@@ -52,6 +52,8 @@ const plans: PricingPlan[] = [
       'Value betting indicators',
       'Priority support',
       'Analysis history (30 days)',
+      'My Teams favorites',
+      'Share cards',
     ],
     highlighted: true,
     buttonText: 'Upgrade to Pro',
@@ -59,9 +61,9 @@ const plans: PricingPlan[] = [
   {
     id: 'premium',
     name: 'Premium',
-    price: '€40',
+    price: '€79/year',
     priceId: 'premium', // Will be resolved to actual Price ID server-side
-    description: 'Maximum capabilities',
+    description: 'Best value - 6 weeks free',
     features: [
       'Unlimited analyses',
       'All sports + eSports',
@@ -70,9 +72,9 @@ const plans: PricingPlan[] = [
       'API access',
       'Priority support 24/7',
       'Analysis history (unlimited)',
-      'Custom alerts',
+      'Team Intelligence Profiles',
     ],
-    buttonText: 'Upgrade to Premium',
+    buttonText: 'Get Annual Plan',
   },
 ];
 

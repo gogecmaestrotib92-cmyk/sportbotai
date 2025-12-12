@@ -63,9 +63,11 @@
 ### Phase 5: Retention (Week 9-12) 📊
 *Goal: Keep users subscribed*
 
-- [ ] **Weekly Digest Email** - Summary of favorite teams
-- [ ] **Team Intelligence Profiles** - Deep dive per team
-- [ ] **Trend Tracking** - Form over time graphs
+- [ ] ~~Weekly Digest Email~~ (Skipped - legal/spam risks)
+- [x] **Team Intelligence Profiles** - Deep dive per team ✅
+- [x] **Team Search API** - Find teams by name ✅
+- [x] **Form Trend Charts** - Visual form over time ✅
+- [ ] **Trend Tracking** - Form over time graphs (extended)
 
 ---
 
@@ -99,10 +101,14 @@
 - **ShareCard with social sharing** (Phase 3)
 - **OG Image API at /api/og** (Phase 3)
 - **CopyInsightsButton** (Phase 3)
-- **ProBadge component** (Phase 4 - NEW)
-- **UsageLimitBanner component** (Phase 4 - NEW)
-- **HistoryAccessBanner component** (Phase 4 - NEW)
-- **History 24h restriction for free users** (Phase 4 - NEW)
+- **ProBadge component** (Phase 4)
+- **UsageLimitBanner component** (Phase 4)
+- **HistoryAccessBanner component** (Phase 4)
+- **History 24h restriction for free users** (Phase 4)
+- **Team Profile API /api/team/[teamId]** (Phase 5 - NEW)
+- **Team Search API /api/team/search** (Phase 5 - NEW)
+- **Team Profile Page /team/[teamId]** (Phase 5 - NEW)
+- **FormTrendChart component** (Phase 5 - NEW)
 
 ### 🔧 Needs Work
 - Quick analysis queue for batch processing

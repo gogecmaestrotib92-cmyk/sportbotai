@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
+import Link from 'next/link'
 import { useFavorites } from '@/lib/FavoritesContext'
-import { Heart } from 'lucide-react'
+import { Heart, ExternalLink } from 'lucide-react'
 
 interface FavoriteButtonProps {
   teamName: string
@@ -12,8 +13,10 @@ interface FavoriteButtonProps {
   sportKey?: string
   teamLogo?: string
   country?: string
+  teamId?: string  // API Football team ID for linking to profile
   size?: 'sm' | 'md' | 'lg'
   showText?: boolean
+  showProfileLink?: boolean
   className?: string
 }
 
@@ -24,8 +27,10 @@ export default function FavoriteButton({
   sportKey,
   teamLogo,
   country,
+  teamId,
   size = 'md',
   showText = false,
+  showProfileLink = false,
   className = ''
 }: FavoriteButtonProps) {
   const { data: session } = useSession()
@@ -115,6 +120,18 @@ export default function FavoriteButton({
         <span className={`ml-1 text-sm ${favorited ? 'text-red-500' : 'text-gray-500'}`}>
           {favorited ? 'Saved' : 'Save'}
         </span>
+      )}
+
+      {/* Profile Link for Soccer teams with teamId */}
+      {showProfileLink && teamId && sport.toLowerCase() === 'soccer' && (
+        <Link
+          href={`/team/${teamId}`}
+          className="p-1 text-gray-400 hover:text-accent transition-colors"
+          title={`View ${teamName} profile`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ExternalLink className={sizeClasses[size]} />
+        </Link>
       )}
 
       {/* Tooltip */}

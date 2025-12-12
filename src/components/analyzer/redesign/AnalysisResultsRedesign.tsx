@@ -27,6 +27,8 @@ import InsightCards from './InsightCards';
 import DeepAnalysisSection from './DeepAnalysisSection';
 import DisclaimerFooter from './DisclaimerFooter';
 import InjuryImpactCard from '../InjuryImpactCard';
+import ShareCard from '../ShareCard';
+import CopyInsightsButton from '../CopyInsightsButton';
 
 interface AnalysisResultsRedesignProps {
   result: AnalyzeResponse;
@@ -68,6 +70,12 @@ export default function AnalysisResultsRedesign({ result }: AnalysisResultsRedes
       {/* ===== SECTION 2: MAIN VERDICT ===== */}
       <div className="px-4 sm:px-6 lg:px-0 mt-6 sm:mt-8">
         <VerdictModule result={result} />
+        
+        {/* Share & Copy Actions */}
+        <div className="flex items-center gap-3 mt-4">
+          <CopyInsightsButton result={result} variant="compact" />
+          <ShareCard result={result} />
+        </div>
       </div>
 
       {/* ===== SECTION 3: PROBABILITY + METRICS ===== */}
