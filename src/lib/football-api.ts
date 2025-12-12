@@ -888,8 +888,7 @@ export async function getTeamTopScorer(teamId: number, leagueId?: number): Promi
     }
   }
   
-  // Final fallback: squad endpoint for player names (no stats)
-  const squadResponse = await apiRequest<any>(`/players/squads?team=${teamId}`);
+  // Final fallback: use squad data we already fetched (no stats)
   if (squadResponse?.response?.[0]?.players) {
     const players = squadResponse.response[0].players;
     // Prioritize attackers and midfielders
