@@ -128,11 +128,12 @@ export default function MatchCard({
         </div>
       )}
 
-      {/* Match time */}
+      {/* Match time + Analyze CTA */}
       <div className="mt-3 pt-3 border-t border-divider flex items-center justify-between">
         <span className="text-xs text-text-muted">{formatMatchDate(commenceTime)}</span>
-        <span className="text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-          View Preview →
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-accent text-bg-primary rounded-full group-hover:shadow-glow-accent transition-all">
+          <span className="w-1.5 h-1.5 bg-bg-primary rounded-full animate-pulse"></span>
+          Analyze
         </span>
       </div>
     </Link>
