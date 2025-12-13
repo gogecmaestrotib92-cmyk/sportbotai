@@ -22,6 +22,13 @@ const navItems = [
     ),
   },
   {
+    href: '/ai-desk',
+    label: 'AI Desk',
+    icon: (
+      <span className="text-lg">🧠</span>
+    ),
+  },
+  {
     href: '/analyzer',
     label: 'Analyze',
     icon: (
