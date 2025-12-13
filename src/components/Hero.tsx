@@ -191,21 +191,6 @@ export default function Hero() {
                 </div>
               </div>
             </div>
-
-            {/* Floating Elements */}
-            <div className="absolute -right-2 top-16 bg-gradient-to-r from-green-500/90 to-emerald-500/90 rounded-lg px-3 py-2 shadow-lg shadow-green-500/30 animate-float hidden lg:block">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                <span className="text-white text-sm font-bold">LIVE</span>
-              </div>
-            </div>
-            
-            <div className="absolute -left-4 bottom-20 bg-bg-card border border-purple-500/30 rounded-lg px-3 py-2 shadow-lg animate-float-delayed hidden lg:block">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🧠</span>
-                <span className="text-purple-300 text-sm font-medium">AI Powered</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
