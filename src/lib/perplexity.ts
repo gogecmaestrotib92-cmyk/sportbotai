@@ -4,9 +4,17 @@
  * Real-time web search for live sports intelligence.
  * Powers the "breaking news" capability of SportBot Agent.
  * 
- * Models:
- * - sonar: Fast, good for quick searches
- * - sonar-pro: Higher quality, better for complex queries
+ * PERPLEXITY PRO Models (2024):
+ * - sonar: Fast, good for quick searches (8x128k context)
+ * - sonar-pro: Higher quality, better for complex analysis (supports search)
+ * - sonar-reasoning: Advanced reasoning with search (Pro feature)
+ * - sonar-reasoning-pro: Best reasoning + search quality (Pro feature)
+ * 
+ * Pro Benefits:
+ * - 5x more API calls
+ * - Access to reasoning models
+ * - Higher rate limits
+ * - Better source quality
  */
 
 // ============================================
@@ -19,7 +27,7 @@ export interface PerplexityMessage {
 }
 
 export interface PerplexityRequest {
-  model: 'sonar' | 'sonar-pro';
+  model: 'sonar' | 'sonar-pro' | 'sonar-reasoning' | 'sonar-reasoning-pro';
   messages: PerplexityMessage[];
   max_tokens?: number;
   temperature?: number;
@@ -151,7 +159,7 @@ class PerplexityClient {
 
   async search(query: string, options?: {
     recency?: 'hour' | 'day' | 'week' | 'month';
-    model?: 'sonar' | 'sonar-pro';
+    model?: 'sonar' | 'sonar-pro' | 'sonar-reasoning' | 'sonar-reasoning-pro';
     maxTokens?: number;
   }): Promise<ResearchResult> {
     if (!this.apiKey) {
@@ -166,7 +174,8 @@ class PerplexityClient {
       };
     }
 
-    const model = options?.model || 'sonar';
+    // Default to sonar-pro for better quality with Pro subscription
+    const model = options?.model || 'sonar-pro';
     const recency = options?.recency || 'day';
 
     try {
@@ -231,6 +240,7 @@ class PerplexityClient {
 
   /**
    * Research a specific match with targeted queries
+   * Uses sonar-pro by default for better quality (Perplexity Pro)
    */
   async researchMatch(
     homeTeam: string,
@@ -246,11 +256,11 @@ class PerplexityClient {
     const results: Record<string, ResearchResult> = {};
     const allCitations: string[] = [];
 
-    // Run searches in parallel for speed
+    // Run searches in parallel for speed - use sonar-pro for better quality
     const searches = targetCategories.map(async (category) => {
       const queryBuilder = SEARCH_TEMPLATES[category];
       const query = queryBuilder(homeTeam, awayTeam, league);
-      const result = await this.search(query, { recency: 'day', model: 'sonar' });
+      const result = await this.search(query, { recency: 'day', model: 'sonar-pro' });
       results[category] = result;
       if (result.citations) {
         allCitations.push(...result.citations);
@@ -274,6 +284,7 @@ class PerplexityClient {
 
   /**
    * Quick single-query research for a match
+   * Uses sonar-pro for better quality
    */
   async quickResearch(
     homeTeam: string,
@@ -281,7 +292,100 @@ class PerplexityClient {
     league?: string
   ): Promise<ResearchResult> {
     const query = `${homeTeam} vs ${awayTeam} ${league || ''} latest news injury updates lineup confirmed today`;
-    return this.search(query, { recency: 'day', model: 'sonar' });
+    return this.search(query, { recency: 'day', model: 'sonar-pro' });
+  }
+
+  /**
+   * PERPLEXITY PRO FEATURE: Deep analysis with reasoning
+   * Uses sonar-reasoning-pro for complex match analysis
+   * Best for generating comprehensive match insights
+   */
+  async deepMatchAnalysis(
+    homeTeam: string,
+    awayTeam: string,
+    league?: string,
+    additionalContext?: string
+  ): Promise<ResearchResult> {
+    const systemPrompt = `You are an elite sports analyst with access to real-time information.
+
+TASK: Provide a comprehensive analysis of ${homeTeam} vs ${awayTeam}${league ? ` (${league})` : ''}.
+
+ANALYZE:
+1. Current form and recent results for both teams
+2. Head-to-head history and patterns
+3. Key injuries, suspensions, or absences
+4. Tactical matchups and playing styles
+5. Home/away performance differences
+6. Any breaking news or developments
+7. Historical patterns in similar fixtures
+
+FORMAT:
+- Use bullet points for clarity
+- Cite your sources where possible
+- Be factual and avoid speculation
+- Note confidence level in each insight (high/medium/low)
+
+${additionalContext ? `ADDITIONAL CONTEXT:\n${additionalContext}` : ''}
+
+Provide analysis that a serious sports fan would find valuable.`;
+
+    const query = `Comprehensive analysis: ${homeTeam} vs ${awayTeam} ${league || ''} - form, injuries, tactics, history, recent news`;
+
+    if (!this.apiKey) {
+      return {
+        success: false,
+        content: '',
+        citations: [],
+        searchQuery: query,
+        timestamp: new Date().toISOString(),
+        model: 'none',
+        error: 'Perplexity API key not configured',
+      };
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'sonar-reasoning-pro', // Pro feature: best reasoning model
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: query },
+          ],
+          max_tokens: 1500, // More tokens for deep analysis
+          temperature: 0.3,
+          search_recency_filter: 'week', // Wider timeframe for context
+          return_citations: true,
+        } as PerplexityRequest),
+      });
+
+      if (!response.ok) {
+        // Fallback to sonar-pro if reasoning model not available
+        console.warn('sonar-reasoning-pro not available, falling back to sonar-pro');
+        return this.search(query, { recency: 'week', model: 'sonar-pro', maxTokens: 1000 });
+      }
+
+      const data: PerplexityResponse = await response.json();
+      const content = data.choices[0]?.message?.content || '';
+
+      return {
+        success: true,
+        content,
+        citations: data.citations || [],
+        searchQuery: query,
+        timestamp: new Date().toISOString(),
+        model: 'sonar-reasoning-pro',
+      };
+
+    } catch (error) {
+      console.error('Deep analysis error:', error);
+      // Fallback to regular search
+      return this.search(query, { recency: 'week', model: 'sonar-pro' });
+    }
   }
 }
 
@@ -329,10 +433,25 @@ export async function quickMatchResearch(
   return client.quickResearch(homeTeam, awayTeam, league);
 }
 
+/**
+ * PERPLEXITY PRO: Deep match analysis using sonar-reasoning-pro
+ * Best for comprehensive pre-match intelligence
+ */
+export async function deepMatchAnalysis(
+  homeTeam: string,
+  awayTeam: string,
+  league?: string,
+  additionalContext?: string
+): Promise<ResearchResult> {
+  const client = getPerplexityClient();
+  return client.deepMatchAnalysis(homeTeam, awayTeam, league, additionalContext);
+}
+
 export default {
   getPerplexityClient,
   searchSportsNews,
   researchMatch,
   quickMatchResearch,
+  deepMatchAnalysis,
   SEARCH_TEMPLATES,
 };
