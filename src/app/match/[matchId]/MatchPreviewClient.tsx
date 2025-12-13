@@ -433,58 +433,115 @@ function MatchHeader({
     minute: '2-digit',
   });
 
+  // Check if sport is soccer/football
+  const isSoccer = sport?.toLowerCase() === 'soccer' || 
+                   sport?.toLowerCase() === 'football' ||
+                   league?.toLowerCase().includes('premier') ||
+                   league?.toLowerCase().includes('la liga') ||
+                   league?.toLowerCase().includes('bundesliga') ||
+                   league?.toLowerCase().includes('serie a') ||
+                   league?.toLowerCase().includes('ligue 1') ||
+                   league?.toLowerCase().includes('champions');
+
   return (
-    <div className="text-center">
-      {/* League badge */}
-      <div className="inline-flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full mb-6">
-        <LeagueLogo leagueName={league} sport={sport} size="sm" />
-        <span className="text-sm font-medium text-text-secondary">{league}</span>
-      </div>
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/5 to-transparent border border-white/10 p-6 sm:p-8">
+      {/* Soccer field background - only for soccer matches */}
+      {isSoccer && (
+        <div className="absolute inset-0 pointer-events-none opacity-[0.07]">
+          <svg
+            viewBox="0 0 400 250"
+            className="w-full h-full"
+            preserveAspectRatio="xMidYMid slice"
+          >
+            {/* Field outline */}
+            <rect x="10" y="10" width="380" height="230" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" />
+            
+            {/* Center line */}
+            <line x1="200" y1="10" x2="200" y2="240" stroke="currentColor" strokeWidth="2" className="text-primary" />
+            
+            {/* Center circle */}
+            <circle cx="200" cy="125" r="40" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" />
+            <circle cx="200" cy="125" r="3" fill="currentColor" className="text-primary" />
+            
+            {/* Left penalty area */}
+            <rect x="10" y="60" width="60" height="130" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" />
+            {/* Left goal area */}
+            <rect x="10" y="90" width="25" height="70" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" />
+            {/* Left penalty spot */}
+            <circle cx="50" cy="125" r="2" fill="currentColor" className="text-primary" />
+            {/* Left penalty arc */}
+            <path d="M 70 100 A 30 30 0 0 1 70 150" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" />
+            
+            {/* Right penalty area */}
+            <rect x="330" y="60" width="60" height="130" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" />
+            {/* Right goal area */}
+            <rect x="365" y="90" width="25" height="70" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" />
+            {/* Right penalty spot */}
+            <circle cx="350" cy="125" r="2" fill="currentColor" className="text-primary" />
+            {/* Right penalty arc */}
+            <path d="M 330 100 A 30 30 0 0 0 330 150" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" />
+            
+            {/* Corner arcs */}
+            <path d="M 10 20 A 10 10 0 0 0 20 10" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" />
+            <path d="M 380 10 A 10 10 0 0 0 390 20" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" />
+            <path d="M 10 230 A 10 10 0 0 1 20 240" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" />
+            <path d="M 380 240 A 10 10 0 0 1 390 230" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" />
+          </svg>
+        </div>
+      )}
 
-      {/* Teams with Logos */}
-      <div className="flex items-center justify-center gap-4 sm:gap-6 mb-6">
-        {/* Home Team */}
-        <div className="flex-1 flex flex-col items-center sm:items-end gap-3">
-          <TeamLogo teamName={homeTeam} sport={sport} league={league} size="xl" />
-          <div className="text-center sm:text-right">
-            <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight">{homeTeam}</h1>
-            <span className="text-[10px] uppercase tracking-wider text-accent font-semibold">Home</span>
+      <div className="relative text-center">
+        {/* League badge */}
+        <div className="inline-flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full mb-6">
+          <LeagueLogo leagueName={league} sport={sport} size="sm" />
+          <span className="text-sm font-medium text-text-secondary">{league}</span>
+        </div>
+
+        {/* Teams with Logos */}
+        <div className="flex items-center justify-center gap-4 sm:gap-6 mb-6">
+          {/* Home Team */}
+          <div className="flex-1 flex flex-col items-center sm:items-end gap-3">
+            <TeamLogo teamName={homeTeam} sport={sport} league={league} size="xl" />
+            <div className="text-center sm:text-right">
+              <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight">{homeTeam}</h1>
+              <span className="text-[10px] uppercase tracking-wider text-accent font-semibold">Home</span>
+            </div>
+          </div>
+
+          {/* VS Divider */}
+          <div className="flex-shrink-0 px-3 sm:px-6">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center border border-white/10">
+              <span className="text-lg sm:text-xl font-bold text-white/80">VS</span>
+            </div>
+          </div>
+
+          {/* Away Team */}
+          <div className="flex-1 flex flex-col items-center sm:items-start gap-3">
+            <TeamLogo teamName={awayTeam} sport={sport} league={league} size="xl" />
+            <div className="text-center sm:text-left">
+              <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight">{awayTeam}</h1>
+              <span className="text-[10px] uppercase tracking-wider text-text-muted font-semibold">Away</span>
+            </div>
           </div>
         </div>
 
-        {/* VS Divider */}
-        <div className="flex-shrink-0 px-3 sm:px-6">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center border border-white/10">
-            <span className="text-lg sm:text-xl font-bold text-white/80">VS</span>
-          </div>
-        </div>
-
-        {/* Away Team */}
-        <div className="flex-1 flex flex-col items-center sm:items-start gap-3">
-          <TeamLogo teamName={awayTeam} sport={sport} league={league} size="xl" />
-          <div className="text-center sm:text-left">
-            <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight">{awayTeam}</h1>
-            <span className="text-[10px] uppercase tracking-wider text-text-muted font-semibold">Away</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Match info */}
-      <div className="flex items-center justify-center gap-3 sm:gap-6 flex-wrap">
-        <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
-          <span className="text-base">📅</span>
-          <span className="text-sm text-white font-medium">{formattedDate}</span>
-        </div>
-        <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
-          <span className="text-base">⏰</span>
-          <span className="text-sm text-white font-medium">{formattedTime}</span>
-        </div>
-        {venue && (
+        {/* Match info */}
+        <div className="flex items-center justify-center gap-3 sm:gap-6 flex-wrap">
           <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
-            <span className="text-base">📍</span>
-            <span className="text-sm text-white font-medium">{venue}</span>
+            <span className="text-base">📅</span>
+            <span className="text-sm text-white font-medium">{formattedDate}</span>
           </div>
-        )}
+          <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
+            <span className="text-base">⏰</span>
+            <span className="text-sm text-white font-medium">{formattedTime}</span>
+          </div>
+          {venue && (
+            <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
+              <span className="text-base">📍</span>
+              <span className="text-sm text-white font-medium">{venue}</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
