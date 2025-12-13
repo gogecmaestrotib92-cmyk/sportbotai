@@ -35,7 +35,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6">
             <Link 
               href="/" 
               className="text-text-secondary hover:text-text-primary font-medium transition-colors text-sm"
@@ -43,23 +43,18 @@ export default function Header() {
               Home
             </Link>
             <Link 
+              href="/matches" 
+              className="text-text-secondary hover:text-text-primary font-medium transition-colors text-sm flex items-center gap-1.5"
+            >
+              <span className="text-base">⚡</span>
+              Analyze
+            </Link>
+            <Link 
               href="/ai-desk" 
               className="text-text-secondary hover:text-text-primary font-medium transition-colors text-sm flex items-center gap-1.5"
             >
               <span className="text-base">🧠</span>
               AI Desk
-            </Link>
-            <Link 
-              href="/my-teams" 
-              className="text-text-secondary hover:text-text-primary font-medium transition-colors text-sm"
-            >
-              My Teams
-            </Link>
-            <Link 
-              href="/history" 
-              className="text-text-secondary hover:text-text-primary font-medium transition-colors text-sm"
-            >
-              History
             </Link>
             <Link 
               href="/pricing" 
@@ -72,12 +67,6 @@ export default function Header() {
               className="text-text-secondary hover:text-text-primary font-medium transition-colors text-sm"
             >
               Blog
-            </Link>
-            <Link 
-              href="/responsible-gambling" 
-              className="text-text-secondary hover:text-text-primary font-medium transition-colors text-sm"
-            >
-              Responsible Gaming
             </Link>
             <ShortcutHint />
             <UserMenu />
@@ -123,6 +112,19 @@ export default function Header() {
                 AI Desk
               </Link>
               <Link
+                href="/matches"
+                className="flex items-center gap-3 text-text-secondary hover:text-text-primary hover:bg-bg-hover font-medium px-4 py-3.5 rounded-btn transition-colors active:scale-[0.98]"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span className="text-lg">⚡</span>
+                Analyze Match
+              </Link>
+              
+              {/* Divider - User Section */}
+              <div className="my-2 border-t border-divider" />
+              <p className="px-4 py-2 text-xs text-text-muted uppercase tracking-wider">Your Account</p>
+              
+              <Link
                 href="/my-teams"
                 className="flex items-center gap-3 text-text-secondary hover:text-text-primary hover:bg-bg-hover font-medium px-4 py-3.5 rounded-btn transition-colors active:scale-[0.98]"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -142,6 +144,21 @@ export default function Header() {
                 </svg>
                 History
               </Link>
+              <Link
+                href="/account"
+                className="flex items-center gap-3 text-text-secondary hover:text-text-primary hover:bg-bg-hover font-medium px-4 py-3.5 rounded-btn transition-colors active:scale-[0.98]"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Account Settings
+              </Link>
+              
+              {/* Divider - More Section */}
+              <div className="my-2 border-t border-divider" />
+              <p className="px-4 py-2 text-xs text-text-muted uppercase tracking-wider">More</p>
+              
               <Link
                 href="/pricing"
                 className="flex items-center gap-3 text-text-secondary hover:text-text-primary hover:bg-bg-hover font-medium px-4 py-3.5 rounded-btn transition-colors active:scale-[0.98]"
@@ -163,16 +180,6 @@ export default function Header() {
                 Blog
               </Link>
               <Link
-                href="/account"
-                className="flex items-center gap-3 text-text-secondary hover:text-text-primary hover:bg-bg-hover font-medium px-4 py-3.5 rounded-btn transition-colors active:scale-[0.98]"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                Account
-              </Link>
-              <Link
                 href="/responsible-gambling"
                 className="flex items-center gap-3 text-text-secondary hover:text-text-primary hover:bg-bg-hover font-medium px-4 py-3.5 rounded-btn transition-colors active:scale-[0.98]"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -181,20 +188,6 @@ export default function Header() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 Responsible Gaming
-              </Link>
-              
-              {/* Divider */}
-              <div className="my-2 border-t border-divider" />
-              
-              <Link
-                href="/matches"
-                className="flex items-center justify-center gap-2 bg-accent text-bg px-5 py-3.5 rounded-btn font-semibold text-center transition-all duration-200 active:scale-[0.98] shadow-glow-accent"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-                Browse Matches
               </Link>
             </div>
           </div>
