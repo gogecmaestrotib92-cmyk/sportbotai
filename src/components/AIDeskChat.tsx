@@ -7,8 +7,8 @@
  * Ask any sports question and get intelligent, data-driven answers.
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, Sparkles, ExternalLink, X, MessageCircle } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Send, Bot, User, Loader2, Sparkles, ExternalLink, X, MessageCircle, Volume2, VolumeX, Square } from 'lucide-react';
 
 // ============================================
 // TYPES
@@ -30,6 +30,9 @@ interface ChatResponse {
   usedRealTimeSearch: boolean;
   error?: string;
 }
+
+// Audio playback states
+type AudioState = 'idle' | 'loading' | 'playing' | 'error';
 
 // ============================================
 // SUGGESTED QUESTIONS - Showcasing different categories
@@ -82,6 +85,12 @@ export default function AIDeskChat() {
   // Store random questions to prevent re-shuffle on every render
   const [suggestedQuestions] = useState(() => getRandomQuestions(4));
   
+  // Audio state for TTS
+  const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
+  const [audioState, setAudioState] = useState<AudioState>('idle');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -96,6 +105,105 @@ export default function AIDeskChat() {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current);
+      }
+    };
+  }, []);
+
+  // ==========================================
+  // TEXT-TO-SPEECH FUNCTIONS
+  // ==========================================
+  
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
+    setPlayingMessageId(null);
+    setAudioState('idle');
+  }, []);
+
+  const playMessage = useCallback(async (messageId: string, text: string) => {
+    // If already playing this message, stop it
+    if (playingMessageId === messageId && audioState === 'playing') {
+      stopAudio();
+      return;
+    }
+
+    // Stop any currently playing audio
+    stopAudio();
+
+    setPlayingMessageId(messageId);
+    setAudioState('loading');
+
+    try {
+      // Clean text for TTS (remove markdown, links, etc.)
+      const cleanText = text
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove markdown links
+        .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
+        .replace(/\*([^*]+)\*/g, '$1') // Remove italic
+        .replace(/`([^`]+)`/g, '$1') // Remove code
+        .replace(/#{1,6}\s/g, '') // Remove headers
+        .replace(/\n+/g, ' ') // Replace newlines with spaces
+        .trim();
+
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: cleanText }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to generate audio');
+      }
+
+      // Create audio from base64
+      const audioBlob = new Blob(
+        [Uint8Array.from(atob(data.audioBase64), c => c.charCodeAt(0))],
+        { type: data.contentType }
+      );
+      
+      const audioUrl = URL.createObjectURL(audioBlob);
+      audioUrlRef.current = audioUrl;
+
+      // Create and play audio
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onended = () => {
+        setPlayingMessageId(null);
+        setAudioState('idle');
+      };
+
+      audio.onerror = () => {
+        setAudioState('error');
+        setPlayingMessageId(null);
+      };
+
+      await audio.play();
+      setAudioState('playing');
+
+    } catch (err) {
+      console.error('TTS error:', err);
+      setAudioState('error');
+      setPlayingMessageId(null);
+    }
+  }, [playingMessageId, audioState, stopAudio]);
 
   const sendMessage = async (messageText?: string) => {
     const text = messageText || input.trim();
@@ -286,6 +394,47 @@ export default function AIDeskChat() {
                     <div className="flex items-center gap-1 mt-1 text-xs text-green-400">
                       <Sparkles className="w-3 h-3" />
                       <span>Used real-time search</span>
+                    </div>
+                  )}
+
+                  {/* Voice read button for assistant messages */}
+                  {msg.role === 'assistant' && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        onClick={() => playMessage(msg.id, msg.content)}
+                        disabled={audioState === 'loading' && playingMessageId === msg.id}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-all ${
+                          playingMessageId === msg.id && audioState === 'playing'
+                            ? 'bg-primary/20 text-primary border border-primary/30'
+                            : playingMessageId === msg.id && audioState === 'loading'
+                            ? 'bg-white/5 text-text-muted cursor-wait'
+                            : 'bg-white/5 text-text-muted hover:bg-white/10 hover:text-white'
+                        }`}
+                        title={playingMessageId === msg.id && audioState === 'playing' ? 'Stop' : 'Listen'}
+                      >
+                        {playingMessageId === msg.id && audioState === 'loading' ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Generating...</span>
+                          </>
+                        ) : playingMessageId === msg.id && audioState === 'playing' ? (
+                          <>
+                            <Square className="w-3.5 h-3.5" />
+                            <span>Stop</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-3.5 h-3.5" />
+                            <span>Listen</span>
+                          </>
+                        )}
+                      </button>
+                      {audioState === 'error' && playingMessageId === msg.id && (
+                        <span className="text-xs text-red-400 flex items-center gap-1">
+                          <VolumeX className="w-3 h-3" />
+                          Failed
+                        </span>
+                      )}
                     </div>
                   )}
 
