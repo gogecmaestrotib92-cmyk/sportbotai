@@ -333,19 +333,38 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
 
 /**
  * Get sport config by internal ID or Odds API sport key
+ * Also handles generic sport names like "Basketball" by matching category
  */
 export function getSportConfig(idOrKey: string): SportConfig | null {
+  if (!idOrKey) return null;
+  
   // Try direct lookup by ID
   if (SPORTS_CONFIG[idOrKey]) {
     return SPORTS_CONFIG[idOrKey];
   }
   
   // Try lookup by Odds API sport key
-  const found = Object.values(SPORTS_CONFIG).find(
+  const foundByKey = Object.values(SPORTS_CONFIG).find(
     config => config.oddsApiSportKey === idOrKey
   );
+  if (foundByKey) return foundByKey;
   
-  return found || null;
+  // Try lookup by category name (e.g., "Basketball" -> basketball_nba)
+  const normalizedInput = idOrKey.toLowerCase().trim();
+  const foundByCategory = Object.values(SPORTS_CONFIG).find(
+    config => config.category.toLowerCase() === normalizedInput
+  );
+  if (foundByCategory) return foundByCategory;
+  
+  // Try partial match on category or display name
+  const foundByPartial = Object.values(SPORTS_CONFIG).find(
+    config => 
+      config.category.toLowerCase().includes(normalizedInput) ||
+      config.displayName.toLowerCase().includes(normalizedInput) ||
+      normalizedInput.includes(config.category.toLowerCase())
+  );
+  
+  return foundByPartial || null;
 }
 
 /**

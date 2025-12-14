@@ -114,7 +114,7 @@ export default function ResultCard({ result }: ResultCardProps) {
       {/* Probabilities */}
       <div>
         <h4 className="text-sm font-semibold text-gray-700 mb-3">Estimated Probabilities</h4>
-        <div className="grid grid-cols-3 gap-4">
+        <div className={`grid gap-4 ${result.probabilities.draw !== null ? 'grid-cols-3' : 'grid-cols-2'}`}>
           {/* Home */}
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <p className="text-xs text-gray-500 mb-1">Home (1)</p>
@@ -130,20 +130,20 @@ export default function ResultCard({ result }: ResultCardProps) {
             </p>
           </div>
 
-          {/* Draw */}
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500 mb-1">Draw (X)</p>
-            <p className="text-2xl font-bold text-gray-600">
-              {result.probabilities.draw !== null
-                ? `${result.probabilities.draw}%`
-                : '-'}
-            </p>
-            <p className={`text-xs mt-1 ${valueFlagColors[result.valueAnalysis.valueFlags.draw]}`}>
-              {result.valueAnalysis.valueFlags.draw !== 'NONE' 
-                ? `Value: ${result.valueAnalysis.valueFlags.draw}` 
-                : ''}
-            </p>
-          </div>
+          {/* Draw - Only show for sports with draws */}
+          {result.probabilities.draw !== null && (
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-xs text-gray-500 mb-1">Draw (X)</p>
+              <p className="text-2xl font-bold text-gray-600">
+                {`${result.probabilities.draw}%`}
+              </p>
+              <p className={`text-xs mt-1 ${valueFlagColors[result.valueAnalysis.valueFlags.draw]}`}>
+                {result.valueAnalysis.valueFlags.draw !== 'NONE' 
+                  ? `Value: ${result.valueAnalysis.valueFlags.draw}` 
+                  : ''}
+              </p>
+            </div>
+          )}
 
           {/* Away */}
           <div className="text-center p-4 bg-gray-50 rounded-lg">
