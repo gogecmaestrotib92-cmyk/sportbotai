@@ -87,6 +87,258 @@ export function shouldPost(signals: MatchSignals): boolean {
 }
 
 // ============================================
+// CONVICTION SCORING (AIXBT-style 🔥)
+// ============================================
+
+export type ConvictionLevel = 1 | 2 | 3 | 4 | 5;
+
+export interface ConvictionScore {
+  level: ConvictionLevel;
+  display: string;
+  emoji: string;
+  descriptor: string;
+}
+
+export const CONVICTION_LEVELS: Record<ConvictionLevel, ConvictionScore> = {
+  1: { level: 1, display: '🔥', emoji: '🔥', descriptor: 'Watching' },
+  2: { level: 2, display: '🔥🔥', emoji: '🔥🔥', descriptor: 'Interesting' },
+  3: { level: 3, display: '🔥🔥🔥', emoji: '🔥🔥🔥', descriptor: 'Notable' },
+  4: { level: 4, display: '🔥🔥🔥🔥', emoji: '🔥🔥🔥🔥', descriptor: 'High Conviction' },
+  5: { level: 5, display: '🔥🔥🔥🔥🔥', emoji: '🔥🔥🔥🔥🔥', descriptor: 'Maximum Conviction' },
+};
+
+/**
+ * Calculate conviction score from match signals
+ */
+export function calculateConviction(signals: MatchSignals): ConvictionScore {
+  let score = 1;
+  
+  // High clarity = higher conviction
+  if (signals.clarityLevel > 80) score += 2;
+  else if (signals.clarityLevel > 60) score += 1;
+  
+  // Clear narrative = higher conviction
+  if (signals.narrativeAngle === 'BLOWOUT_POTENTIAL') score += 1;
+  if (signals.narrativeAngle === 'TRAP_SPOT') score += 1;
+  if (signals.publicMismatch === 'OVERHYPED' || signals.publicMismatch === 'SLEEPER') score += 1;
+  
+  // Penalize chaos/uncertainty
+  if (signals.volatility > 70) score -= 1;
+  if (signals.narrativeAngle === 'CHAOS') score -= 1;
+  
+  // Clamp to valid range
+  const level = Math.max(1, Math.min(5, score)) as ConvictionLevel;
+  return CONVICTION_LEVELS[level];
+}
+
+// ============================================
+// SIGNATURE CATCHPHRASES (AIXBT viral style)
+// ============================================
+
+export const SIGNATURE_CATCHPHRASES = {
+  // Opening hooks
+  openers: [
+    "📡 Signal detected.",
+    "🎯 Pattern recognition activated.",
+    "⚡ The data just spoke.",
+    "🔍 Spotted something.",
+    "📊 Numbers don't lie.",
+  ],
+  
+  // High conviction closers
+  highConviction: [
+    "This isn't complicated. The setup is clean.",
+    "When the data is this loud, you listen.",
+    "The market will catch up. It always does.",
+    "Pattern recognition says one thing. Loudly.",
+    "Structure over narrative. Always.",
+  ],
+  
+  // Contrarian takes
+  contrarian: [
+    "Everyone's looking at X. They should be looking at Y.",
+    "The public loves a narrative. The data tells a different story.",
+    "Popular ≠ Correct. Classic trap forming.",
+    "Name value is carrying a lot of water here. Too much.",
+    "The market is telling itself a story. The numbers disagree.",
+  ],
+  
+  // Chaos/uncertainty
+  chaos: [
+    "Prediction graveyard. Multiple scenarios equally viable.",
+    "The variance gods are awake. Proceed accordingly.",
+    "When structure breaks down, conviction should too.",
+    "This one could go any direction. And probably will.",
+    "Volatility isn't a bug here. It's the whole feature.",
+  ],
+  
+  // Post-match
+  postMatch: [
+    "The expected happened. Somehow still surprising.",
+    "Variance did what variance does.",
+    "Form held. Structure won.",
+    "The outlier came in. Chaos always has a voice.",
+    "Data was right. Market took a while.",
+  ],
+  
+  // Signature sign-offs
+  signoffs: [
+    "— SportBot 🤖",
+    "Pattern logged. Watching.",
+    "Signal stored. Moving on.",
+    "Intelligence delivered.",
+    "That's the read.",
+  ],
+};
+
+/**
+ * Get a random catchphrase for a given category
+ */
+export function getCatchphrase(category: keyof typeof SIGNATURE_CATCHPHRASES): string {
+  const phrases = SIGNATURE_CATCHPHRASES[category];
+  return phrases[Math.floor(Math.random() * phrases.length)];
+}
+
+// ============================================
+// HOT TAKES GENERATOR (quotable one-liners)
+// ============================================
+
+export const HOT_TAKE_TEMPLATES = [
+  // Form-based
+  "{team} hasn't looked this {adjective} since {period}. The {stat} tells the story.",
+  "Everyone's talking about {team}'s win streak. Nobody's talking about their {weakness}.",
+  "{team} are {wins}W in {games}. The xG says they should be {expected}. Regression incoming.",
+  
+  // Matchup-based  
+  "This fixture has produced {stat} in the last {period}. The pattern is screaming.",
+  "{home} at home vs {away} on the road. The splits couldn't be more different.",
+  "On paper: close. In reality: {reality}.",
+  
+  // Market-based
+  "The line moved {direction}% in 2 hours. Smart money knows something.",
+  "Public on {team}. Sharps fading. Tale as old as time.",
+  "When {percent}% of action is on one side, someone's wrong. Usually the {percent}%.",
+  
+  // Narrative-busting
+  "{team} are 'in form.' Their underlying numbers disagree. Strongly.",
+  "Momentum is a narrative. Data is structure. Guess which one I trust.",
+  "The eye test and the metrics are having a disagreement. I know which side I'm on.",
+];
+
+/**
+ * Generate a hot take from template + data
+ */
+export function generateHotTake(
+  template: string,
+  data: Record<string, string | number>
+): string {
+  let take = template;
+  for (const [key, value] of Object.entries(data)) {
+    take = take.replace(`{${key}}`, String(value));
+  }
+  return take;
+}
+
+// ============================================
+// CONTRARIAN MODE (narrative busting)
+// ============================================
+
+export interface ContrarianTake {
+  publicNarrative: string;
+  dataReality: string;
+  confidence: ConvictionLevel;
+  takeaway: string;
+}
+
+export const CONTRARIAN_TRIGGERS = [
+  'win streak',
+  'hot form',
+  'unbeatable at home',
+  'always lose to',
+  'bogey team',
+  'revenge game',
+  'must-win',
+  'statement game',
+  'bounce back',
+  'derby day magic',
+];
+
+/**
+ * Check if query contains narrative that should trigger contrarian analysis
+ */
+export function shouldTriggerContrarianMode(query: string): boolean {
+  const q = query.toLowerCase();
+  return CONTRARIAN_TRIGGERS.some(trigger => q.includes(trigger));
+}
+
+/**
+ * Build contrarian take from data mismatch
+ */
+export function buildContrarianTake(
+  narrativeClaim: string,
+  actualData: string,
+  confidence: ConvictionLevel
+): ContrarianTake {
+  return {
+    publicNarrative: narrativeClaim,
+    dataReality: actualData,
+    confidence,
+    takeaway: `The narrative says "${narrativeClaim}". The data says "${actualData}". ${
+      confidence >= 4 ? "Strong divergence. Worth noting." : "Minor divergence. Context matters."
+    }`,
+  };
+}
+
+// ============================================
+// THREAD BUILDER (multi-part analysis)
+// ============================================
+
+export interface ThreadPart {
+  partNumber: number;
+  type: 'hook' | 'context' | 'data' | 'insight' | 'conclusion';
+  content: string;
+}
+
+export interface Thread {
+  id: string;
+  title: string;
+  parts: ThreadPart[];
+  totalParts: number;
+  conviction: ConvictionScore;
+}
+
+/**
+ * Build a multi-part thread for complex analysis
+ */
+export function buildThread(
+  title: string,
+  hook: string,
+  dataPoints: string[],
+  insight: string,
+  conclusion: string,
+  conviction: ConvictionScore
+): Thread {
+  const parts: ThreadPart[] = [
+    { partNumber: 1, type: 'hook', content: `🧵 ${title}\n\n${hook}` },
+    ...dataPoints.map((dp, i) => ({
+      partNumber: i + 2,
+      type: 'data' as const,
+      content: `📊 ${dp}`,
+    })),
+    { partNumber: dataPoints.length + 2, type: 'insight', content: `💡 ${insight}` },
+    { partNumber: dataPoints.length + 3, type: 'conclusion', content: `${conviction.emoji} ${conclusion}` },
+  ];
+
+  return {
+    id: `thread_${Date.now()}`,
+    title,
+    parts,
+    totalParts: parts.length,
+    conviction,
+  };
+}
+
+// ============================================
 // RECURRING MOTIFS (signature phrases)
 // ============================================
 

@@ -8,7 +8,14 @@
  * Safe for: Stripe, App Store, Google Play, social sharing
  */
 
-import { POST_PERSONALITY, AGENT_PERSONALITY as MASTER_AGENT_PERSONALITY } from '@/lib/sportbot-brain';
+import { 
+  POST_PERSONALITY, 
+  AGENT_PERSONALITY as MASTER_AGENT_PERSONALITY,
+  getCatchphrase,
+  SIGNATURE_CATCHPHRASES,
+  type ConvictionLevel,
+  CONVICTION_LEVELS,
+} from '@/lib/sportbot-brain';
 
 // ============================================
 // AGENT IDENTITY
@@ -216,19 +223,61 @@ export const TRIGGER_CONDITIONS: TriggerCondition[] = [
 export function buildAgentPostPrompt(
   category: PostCategory,
   matchContext: string,
-  additionalContext?: string
+  additionalContext?: string,
+  options?: {
+    conviction?: ConvictionLevel;
+    includeOpener?: boolean;
+    includeSignoff?: boolean;
+    forceContrarian?: boolean;
+    receipts?: string; // Past correct calls for credibility
+  }
 ): string {
   const config = POST_CATEGORIES[category];
+  const conviction = options?.conviction || 3;
+  const convictionInfo = CONVICTION_LEVELS[conviction];
+  
+  // Build optional sections
+  let openerInstruction = '';
+  let signoffInstruction = '';
+  let contrarianInstruction = '';
+  let receiptsSection = '';
+  
+  if (options?.includeOpener) {
+    const openers = SIGNATURE_CATCHPHRASES.openers;
+    openerInstruction = `\nOPTIONAL OPENER (pick one or similar):\n${openers.map(o => `- "${o}"`).join('\n')}`;
+  }
+  
+  if (options?.includeSignoff) {
+    const signoffs = SIGNATURE_CATCHPHRASES.signoffs;
+    signoffInstruction = `\nEND WITH (pick one):\n${signoffs.map(s => `- "${s}"`).join('\n')}`;
+  }
+  
+  if (options?.forceContrarian) {
+    const contrarian = SIGNATURE_CATCHPHRASES.contrarian;
+    contrarianInstruction = `\nCONTRARIAN MODE ACTIVE - Challenge the popular narrative:\n${contrarian.map(c => `- "${c}"`).join('\n')}`;
+  }
+  
+  if (options?.receipts) {
+    receiptsSection = `\nTRACK RECORD CONTEXT (use sparingly for credibility):\n${options.receipts}`;
+  }
   
   return `${POST_PERSONALITY}
 
 TASK: Generate a SportBot Agent post for category: ${config.name}
+
+CONVICTION LEVEL: ${convictionInfo.display} (${convictionInfo.descriptor})
+${conviction >= 4 ? 'HIGH CONVICTION - Be bold and direct. The data is clear.' : ''}
+${conviction <= 2 ? 'LOW CONVICTION - Acknowledge uncertainty. The signals are mixed.' : ''}
 
 CATEGORY GUIDELINES:
 ${config.promptTemplate}
 
 EXAMPLE POSTS FOR THIS CATEGORY:
 ${config.examplePosts.map(p => `- "${p}"`).join('\n')}
+${openerInstruction}
+${contrarianInstruction}
+${signoffInstruction}
+${receiptsSection}
 
 MATCH CONTEXT:
 ${matchContext}
@@ -238,12 +287,50 @@ ${additionalContext ? `ADDITIONAL CONTEXT:\n${additionalContext}` : ''}
 RULES:
 1. Keep it to 1-3 sentences MAX
 2. Lead with the insight
-3. Sound confident and sharp
+3. Sound confident and sharp (but match conviction level)
 4. NO betting advice, recommendations, or implied actions
 5. Pure observation and analysis
-6. No emojis. No markdown formatting.
+6. No emojis in main text. No markdown formatting.
+7. If high conviction (4-5), be quotable and memorable
+8. If contrarian mode, directly challenge the popular take
 
 Return ONLY the post text. No quotes, no formatting, no explanation.`;
+}
+
+/**
+ * Build a thread prompt for multi-part analysis
+ */
+export function buildThreadPrompt(
+  title: string,
+  dataPoints: string[],
+  conviction: ConvictionLevel
+): string {
+  const convictionInfo = CONVICTION_LEVELS[conviction];
+  
+  return `${POST_PERSONALITY}
+
+TASK: Generate a SportBot analysis thread (4-5 parts)
+
+TITLE: ${title}
+CONVICTION: ${convictionInfo.display}
+
+DATA POINTS TO COVER:
+${dataPoints.map((dp, i) => `${i + 1}. ${dp}`).join('\n')}
+
+THREAD STRUCTURE:
+Part 1: 🧵 Hook - One punchy sentence that grabs attention
+Part 2: 📊 Data Point 1 - Sharp observation with numbers
+Part 3: 📊 Data Point 2 - Another key stat or pattern
+Part 4: 💡 Insight - Connect the dots, what does it mean?
+Part 5: ${convictionInfo.emoji} Conclusion - Bold takeaway
+
+RULES:
+- Each part should be 1-2 sentences MAX
+- Make it feel like a real analyst breaking down a story
+- No betting advice
+- End with a memorable line
+
+Return as JSON array: ["Part 1 text", "Part 2 text", ...]`;
 }
 
 // ============================================
@@ -289,6 +376,7 @@ export default {
   POST_CATEGORIES,
   TRIGGER_CONDITIONS,
   buildAgentPostPrompt,
+  buildThreadPrompt,
   sanitizeAgentPost,
   PROHIBITED_TERMS,
 };

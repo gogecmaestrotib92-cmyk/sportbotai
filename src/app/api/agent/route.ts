@@ -142,8 +142,15 @@ ${trigger ? `Trigger: ${trigger}` : ''}
 ${realTimeContext}
     `.trim();
 
-    // Build prompt
-    const prompt = buildAgentPostPrompt(category, contextString, additionalContext);
+    // Calculate conviction level based on data quality
+    const convictionLevel = usedRealTimeData ? 4 : 3; // Higher conviction with real data
+
+    // Build prompt with conviction scoring
+    const prompt = buildAgentPostPrompt(category, contextString, additionalContext, {
+      conviction: convictionLevel as 1 | 2 | 3 | 4 | 5,
+      includeOpener: category === 'AI_INSIGHT' || category === 'VOLATILITY_ALERT',
+      forceContrarian: category === 'FORM_ANALYSIS' && Math.random() > 0.7, // 30% chance contrarian
+    });
 
     // ============================================
     // STEP 3: Generate post via OpenAI

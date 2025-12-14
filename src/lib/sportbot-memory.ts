@@ -547,3 +547,165 @@ export async function cleanupOldData(daysToKeep = 90): Promise<void> {
     console.error('[Memory] Cleanup failed:', error);
   }
 }
+
+// ============================================
+// CALL TRACKING (AIXBT-style "I told you so")
+// ============================================
+
+export interface TrackedCall {
+  id: string;
+  callType: 'contrarian' | 'conviction' | 'upset' | 'trend';
+  matchRef: string;
+  claim: string;
+  conviction: number;
+  wasCorrect?: boolean;
+  timestamp: Date;
+}
+
+/**
+ * Track a bold call for later reference
+ */
+export async function trackBoldCall(data: {
+  matchRef: string;
+  claim: string;
+  callType: 'contrarian' | 'conviction' | 'upset' | 'trend';
+  conviction: number;
+  homeTeam?: string;
+  awayTeam?: string;
+  league?: string;
+}): Promise<string | null> {
+  try {
+    // Store as agent post with special category
+    const post = await prisma.agentPost.create({
+      data: {
+        content: data.claim,
+        category: `TRACKED_CALL_${data.callType.toUpperCase()}`,
+        homeTeam: data.homeTeam,
+        awayTeam: data.awayTeam,
+        matchRef: data.matchRef,
+        league: data.league,
+        confidence: data.conviction,
+        narrativeAngle: data.callType,
+      },
+    });
+    return post.id;
+  } catch (error) {
+    console.error('[Memory] Failed to track call:', error);
+    return null;
+  }
+}
+
+/**
+ * Get recent correct calls for bragging rights
+ */
+export async function getCorrectCalls(limit = 5): Promise<Array<{
+  matchRef: string;
+  claim: string;
+  conviction: number;
+  timestamp: Date;
+}>> {
+  try {
+    const outcomes = await prisma.predictionOutcome.findMany({
+      where: { wasAccurate: true },
+      orderBy: { matchDate: 'desc' },
+      take: limit,
+      select: {
+        matchRef: true,
+        predictedScenario: true,
+        confidenceLevel: true,
+        matchDate: true,
+      },
+    });
+    
+    return outcomes.map(o => ({
+      matchRef: o.matchRef,
+      claim: o.predictedScenario || '',
+      conviction: o.confidenceLevel || 3,
+      timestamp: o.matchDate,
+    }));
+  } catch (error) {
+    console.error('[Memory] Failed to get correct calls:', error);
+    return [];
+  }
+}
+
+/**
+ * Build "receipts" string for LLM context (AIXBT-style)
+ */
+export async function buildReceiptsContext(): Promise<string | undefined> {
+  try {
+    const stats = await getAccuracyStats();
+    const recentCorrect = await getCorrectCalls(3);
+    
+    if (stats.total < 5) return undefined;
+    
+    let context = `[SPORTBOT TRACK RECORD]\n`;
+    context += `Accuracy: ${stats.accuracyRate.toFixed(1)}% (${stats.accurate}/${stats.accurate + stats.inaccurate})\n`;
+    
+    if (recentCorrect.length > 0) {
+      context += `\nRecent correct calls:\n`;
+      recentCorrect.forEach(call => {
+        const ago = Math.floor((Date.now() - call.timestamp.getTime()) / (1000 * 60 * 60 * 24));
+        context += `- "${call.claim}" (${ago}d ago, ${call.matchRef})\n`;
+      });
+    }
+    
+    return context;
+  } catch (error) {
+    console.error('[Memory] Failed to build receipts:', error);
+    return undefined;
+  }
+}
+
+/**
+ * Get teams where SportBot has been historically accurate
+ */
+export async function getStrongTeamReads(limit = 5): Promise<Array<{
+  team: string;
+  correct: number;
+  total: number;
+  rate: number;
+}>> {
+  try {
+    // Get all outcomes with team references
+    const outcomes = await prisma.predictionOutcome.findMany({
+      where: { wasAccurate: { not: null } },
+      select: {
+        matchRef: true,
+        wasAccurate: true,
+      },
+    });
+    
+    // Count by team (extract from matchRef "Team A vs Team B")
+    const teamStats: Record<string, { correct: number; total: number }> = {};
+    
+    outcomes.forEach(o => {
+      const teams = o.matchRef.split(' vs ').map(t => t.trim());
+      teams.forEach(team => {
+        if (!teamStats[team]) {
+          teamStats[team] = { correct: 0, total: 0 };
+        }
+        teamStats[team].total += 1;
+        if (o.wasAccurate) teamStats[team].correct += 1;
+      });
+    });
+    
+    // Convert to array and sort by accuracy
+    const results = Object.entries(teamStats)
+      .filter(([, stats]) => stats.total >= 3) // Min 3 predictions
+      .map(([team, stats]) => ({
+        team,
+        correct: stats.correct,
+        total: stats.total,
+        rate: (stats.correct / stats.total) * 100,
+      }))
+      .sort((a, b) => b.rate - a.rate)
+      .slice(0, limit);
+    
+    return results;
+  } catch (error) {
+    console.error('[Memory] Failed to get strong team reads:', error);
+    return [];
+  }
+}
+
