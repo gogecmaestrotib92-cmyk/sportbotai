@@ -79,56 +79,136 @@ function detectBettingIntent(message: string): {
   isPlayerProp: boolean;
   detectedType: 'over' | 'under' | 'points' | 'rebounds' | 'assists' | 'general' | null;
   playerMentioned: string | null;
+  confidenceLevel: 'high' | 'medium' | 'low';
 } {
   const msg = message.toLowerCase();
   
-  // Multi-language betting keywords
+  // Multi-language betting keywords (EXPANDED)
   const bettingKeywords = {
-    // English
+    // English - comprehensive
     english: [
+      // Direct betting questions
       'should i bet', 'should i play', 'should i take', 'is it worth betting',
       'bet on', 'place a bet', 'wager on', 'lock', 'slam', 'max bet',
-      'good value', 'worth it', 'smart bet', 'safe bet',
+      'good value', 'worth it', 'smart bet', 'safe bet', 'sure bet',
+      'best bet', 'best pick', 'best play', 'top pick', 'top bet',
+      'what should i bet', 'what to bet', 'who to bet', 'where to bet',
+      'betting tip', 'betting advice', 'betting pick', 'betting recommendation',
+      'parlay', 'accumulator', 'acca', 'multi bet', 'combo bet',
+      'banker', 'banker bet', 'single bet', 'double bet', 'treble',
+      'handicap', 'asian handicap', 'spread', 'point spread', 'line',
+      'moneyline', 'money line', 'ml', '1x2', 'draw no bet', 'dnb',
+      'both teams to score', 'btts', 'clean sheet', 'correct score',
+      'first goalscorer', 'anytime scorer', 'last goalscorer',
+      'half time', 'full time', 'ht/ft', 'first half', 'second half',
+      'total goals', 'total points', 'total corners', 'total cards',
+      'win or draw', 'double chance', 'to qualify', 'to win',
+      'will they win', 'will he score', 'gonna win', 'going to win',
+      'can they win', 'chance to win', 'likely to win',
+      'good odds', 'value odds', 'boosted odds', 'enhanced odds',
+      'freebet', 'free bet', 'bonus bet', 'risk free',
+      'sure thing', 'guaranteed', 'certain', 'definitely',
+      'lock of the day', 'potd', 'pick of the day',
+      'units', 'bankroll', 'stake', 'wager', 'risk',
     ],
-    // Serbian/Croatian/Bosnian
+    // Serbian/Croatian/Bosnian - comprehensive
     serbian: [
       'da igram', 'da li da igram', 'treba li', 'da uplatim', 'da stavim',
       'isplati li se', 'vredi li', 'plus', 'minus', 'kladim se',
-      'da li vredi', 'da li da stavim', 'uplatiti',
+      'da li vredi', 'da li da stavim', 'uplatiti', 'kladionica',
+      'tiket', 'kvota', 'kvote', 'koeficijent', 'sigurica', 'sigurna igra',
+      'dupla šansa', 'kombinacija', 'singl', 'solo', 'sistem',
+      'hendikep', 'gol razlika', 'oba tima daju gol', 'gg', 'ng',
+      'poluvrije', 'prvo poluvrijeme', 'kraj', 'pobednik', 'pobeda',
+      'neriješeno', 'remi', 'domaćin', 'gost', 'kec', 'dvojka', 'iks',
+      'više od', 'manje od', 'ukupno golova', 'broj golova',
+      'tačan rezultat', 'strijelac', 'daje gol', 'prvi gol',
+      'sta da igram', 'šta da igram', 'koji tiket', 'kakav tiket',
+      'sigurna opklada', 'dobra opklada', 'isplativa opklada',
     ],
-    // Spanish
+    // Spanish - comprehensive
     spanish: [
       'debo apostar', 'apostar por', 'vale la pena', 'apuesta segura',
-      'más de', 'menos de', 'apuesto',
+      'más de', 'menos de', 'apuesto', 'cuota', 'cuotas', 'momio',
+      'handicap', 'hándicap', 'spread', 'línea', 'total',
+      'empate', 'victoria', 'ganador', 'perdedor', 'combinada',
+      'parlay', 'apuesta simple', 'apuesta múltiple', 'sistema',
+      'goles', 'córners', 'tarjetas', 'primer goleador',
+      'ambos marcan', 'resultado exacto', 'doble oportunidad',
+      'que apostar', 'donde apostar', 'mejor apuesta', 'tip',
     ],
-    // German
+    // German - comprehensive
     german: [
       'soll ich wetten', 'lohnt sich', 'wette auf', 'über', 'unter',
+      'quote', 'quoten', 'handicap', 'spread', 'linie',
+      'gewinner', 'verlierer', 'unentschieden', 'sieg', 'niederlage',
+      'kombiwette', 'einzelwette', 'systemwette', 'tore', 'ecken',
+      'beide teams treffen', 'genaues ergebnis', 'torschütze',
+      'was wetten', 'worauf wetten', 'beste wette', 'sichere wette',
+    ],
+    // Italian
+    italian: [
+      'devo scommettere', 'scommessa', 'quota', 'quote', 'handicap',
+      'vincitore', 'pareggio', 'over', 'under', 'goal', 'combo',
+      'multipla', 'singola', 'sistema', 'marcatore', 'risultato esatto',
+    ],
+    // French
+    french: [
+      'dois-je parier', 'pari', 'cote', 'cotes', 'handicap',
+      'vainqueur', 'match nul', 'plus de', 'moins de', 'combiné',
+      'simple', 'multiple', 'buteur', 'score exact', 'les deux marquent',
+    ],
+    // Portuguese
+    portuguese: [
+      'devo apostar', 'aposta', 'odds', 'cotação', 'handicap',
+      'vencedor', 'empate', 'mais de', 'menos de', 'combinada',
+      'simples', 'múltipla', 'goleador', 'resultado exato',
+    ],
+    // Russian
+    russian: [
+      'ставить', 'ставка', 'коэффициент', 'кэф', 'тотал', 'фора',
+      'победа', 'ничья', 'больше', 'меньше', 'экспресс', 'ординар',
     ],
     // Common betting terms (language-agnostic)
     universal: [
       'o/u', 'over under', 'over/under', 'pts o', 'reb o', 'ast o',
       'points over', 'points under', 'rebounds over', 'assists over',
       'player prop', 'prop bet', 'pts+reb', 'pra', 'p+r+a',
+      'o2.5', 'u2.5', 'o3.5', 'u3.5', 'o1.5', 'u1.5', // goal lines
+      '+1.5', '-1.5', '+2.5', '-2.5', // handicaps
+      '1x', 'x2', '12', // double chance notation
+      'w1', 'w2', 'x', // win notation
+      'ev', '+ev', '-ev', // expected value
+      'roi', 'yield', 'clf', 'closing line',
+      'sharp', 'square', 'public', 'steam', 'reverse line movement',
     ],
   };
   
-  // Player prop stat keywords
+  // Player prop stat keywords (expanded)
   const propStats = {
-    points: ['points', 'pts', 'poena', 'puntos', 'punkte', 'koseva'],
-    rebounds: ['rebounds', 'reb', 'rebs', 'skokovi', 'rebotes'],
-    assists: ['assists', 'ast', 'asistencije', 'asistencias'],
-    threes: ['threes', '3pt', '3s', 'trojke', 'triples'],
-    blocks: ['blocks', 'blk', 'blokade', 'tapones'],
-    steals: ['steals', 'stl', 'ukradene', 'robos'],
+    points: ['points', 'pts', 'poena', 'puntos', 'punkte', 'koseva', 'bodova', 'punti', 'pontos'],
+    rebounds: ['rebounds', 'reb', 'rebs', 'skokovi', 'rebotes', 'rebounds', 'rimbalzi', 'rebonds'],
+    assists: ['assists', 'ast', 'asistencije', 'asistencias', 'assist', 'passaggi decisivi'],
+    threes: ['threes', '3pt', '3s', 'trojke', 'triples', 'dreier', 'triple', 'três pontos'],
+    blocks: ['blocks', 'blk', 'blokade', 'tapones', 'blocks', 'stoppate', 'contres'],
+    steals: ['steals', 'stl', 'ukradene', 'robos', 'steals', 'palle rubate', 'interceptions'],
+    goals: ['goals', 'golova', 'goles', 'tore', 'buts', 'gol', 'goli'],
+    shots: ['shots', 'shots on target', 'sot', 'udarci', 'tiros', 'schüsse', 'tirs'],
+    corners: ['corners', 'korneri', 'córners', 'ecken', 'coins'],
+    cards: ['cards', 'kartoni', 'tarjetas', 'karten', 'cartons', 'yellow', 'red'],
+    fantasy: ['fantasy', 'fpts', 'fantasy points', 'dfs', 'draftkings', 'fanduel', 'prizepicks'],
   };
   
   // Check for betting advice intent
   let isBettingAdvice = false;
-  for (const keywords of Object.values(bettingKeywords)) {
-    if (keywords.some(kw => msg.includes(kw))) {
-      isBettingAdvice = true;
-      break;
+  let matchedKeywords: string[] = [];
+  
+  for (const [lang, keywords] of Object.entries(bettingKeywords)) {
+    for (const kw of keywords) {
+      if (msg.includes(kw)) {
+        isBettingAdvice = true;
+        matchedKeywords.push(kw);
+      }
     }
   }
   
@@ -136,11 +216,11 @@ function detectBettingIntent(message: string): {
   let isPlayerProp = false;
   let detectedType: 'over' | 'under' | 'points' | 'rebounds' | 'assists' | 'general' | null = null;
   
-  // Over/under pattern
-  if (/plus|over|\+|više|más|über|o\d|over \d/i.test(msg)) {
+  // Over/under pattern (expanded)
+  if (/plus|over|\+|više|más|über|maggiore|plus de|mais de|больше|o\d|over \d|više od/i.test(msg)) {
     detectedType = 'over';
     isPlayerProp = true;
-  } else if (/minus|under|-|manje|menos|unter|u\d|under \d/i.test(msg)) {
+  } else if (/minus|under|-|manje|menos|unter|meno|moins de|menos de|меньше|u\d|under \d|manje od/i.test(msg)) {
     detectedType = 'under';
     isPlayerProp = true;
   }
@@ -152,6 +232,14 @@ function detectBettingIntent(message: string): {
       isPlayerProp = true;
       break;
     }
+  }
+  
+  // Determine confidence level
+  let confidenceLevel: 'high' | 'medium' | 'low' = 'low';
+  if (matchedKeywords.length >= 3 || (isBettingAdvice && isPlayerProp)) {
+    confidenceLevel = 'high';
+  } else if (matchedKeywords.length >= 1 || isBettingAdvice || isPlayerProp) {
+    confidenceLevel = 'medium';
   }
   
   // Extract player name (look for capitalized words or known player patterns)
@@ -166,6 +254,22 @@ function detectBettingIntent(message: string): {
     /embiid|joel/i,
     /durant|kd/i,
     /tatum|jayson/i,
+    /harden|james harden/i,
+    /morant|ja morant/i,
+    /booker|devin/i,
+    /lillard|dame/i,
+    /edwards|ant|anthony edwards/i,
+    /brunson|jalen/i,
+    /shai|sga|gilgeous/i,
+    /wemby|wembanyama|victor/i,
+    // Soccer stars
+    /messi|lionel/i,
+    /ronaldo|cristiano|cr7/i,
+    /mbappe|mbappé|kylian/i,
+    /haaland|erling/i,
+    /salah|mohamed/i,
+    /vinicius|vini jr/i,
+    /bellingham|jude/i,
     // Generic pattern: Capitalized FirstName LastName
     /([A-Z][a-z]+\s+[A-Z][a-z]+)/,
   ];
@@ -178,7 +282,7 @@ function detectBettingIntent(message: string): {
     }
   }
   
-  return { isBettingAdvice, isPlayerProp, detectedType, playerMentioned };
+  return { isBettingAdvice, isPlayerProp, detectedType, playerMentioned, confidenceLevel };
 }
 
 /**
@@ -674,21 +778,46 @@ export async function POST(request: NextRequest) {
         } else if (propType === 'under') {
           propContext += `\nThey want to know if ${player} will go UNDER their line.`;
         }
+      } else if (bettingIntent.isBettingAdvice) {
+        propContext = `\n\nUSER IS ASKING FOR BETTING ADVICE/TIPS`;
+        propContext += `\nDetected betting intent with ${bettingIntent.confidenceLevel} confidence.`;
       }
       
       userContent = `USER QUESTION: ${message}
 ${propContext}
 
-IMPORTANT FRAMING:
-- User is asking about a player prop bet (points/rebounds/assists over/under)
-- You MUST acknowledge you understood the betting context
-- Provide statistical analysis WITHOUT giving direct betting advice
-- Discuss: current averages, recent form, matchup factors, injury status
-- End with something like: "The data is [favorable/concerning/mixed]. Make your own informed decision."
+⚠️ CRITICAL RESPONSE REQUIREMENTS:
+
+1. START with acknowledging you understand this is a betting-related question
+
+2. ALWAYS include this disclaimer early in your response (adapt to context):
+   "⚠️ This is my analytical assessment only, NOT betting advice. I cannot tell you what to bet on. Always gamble responsibly and only with money you can afford to lose."
+
+3. Provide STATISTICAL ANALYSIS:
+   - Current averages and recent form
+   - Matchup factors (opponent defense, pace, etc.)
+   - Injury/availability status
+   - Recent trends (last 5-10 games)
+   - Any relevant context (home/away splits, rest days, etc.)
+
+4. Be OBJECTIVE and DATA-DRIVEN:
+   - Present the facts neutrally
+   - Mention both favorable AND concerning factors
+   - Don't be one-sided
+
+5. END with a balanced conclusion like:
+   "Based on the data, [the metrics support/raise concerns about/are mixed regarding] this scenario. This is purely analytical - the final decision is always yours."
+
+6. NEVER say:
+   - "Bet on this"
+   - "This is a lock"
+   - "You should definitely play this"
+   - "I recommend betting"
+   - "This is a sure thing"
 
 ${perplexityContext ? `REAL-TIME SPORTS DATA:\n${perplexityContext}` : ''}
 
-Provide analysis that helps them understand the player's current form and metrics. Be analytical, not advisory.`;
+Remember: You are an analyst providing data, NOT a tipster giving betting advice.`;
     } else if (perplexityContext) {
       userContent = `USER QUESTION: ${message}
 
