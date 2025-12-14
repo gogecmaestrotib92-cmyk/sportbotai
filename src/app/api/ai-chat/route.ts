@@ -709,7 +709,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 2: Detect brain mode and build system prompt
-    const brainMode: BrainMode = detectChatMode(message);
+    // Use betting mode for betting/prop questions, otherwise auto-detect
+    let brainMode: BrainMode;
+    if (queryCategory === 'BETTING_ADVICE' || queryCategory === 'PLAYER_PROP') {
+      brainMode = 'betting';
+    } else {
+      brainMode = detectChatMode(message);
+    }
     
     // Step 2.5: Get learned context from knowledge base
     let learnedContext = '';
@@ -763,61 +769,43 @@ export async function POST(request: NextRequest) {
     // Add current message with Perplexity context
     let userContent = message;
     
-    // Special handling for betting/player prop questions
+    // Special handling for betting/player prop questions - AIXBT sharp style
     if (queryCategory === 'BETTING_ADVICE' || queryCategory === 'PLAYER_PROP') {
       const bettingIntent = detectBettingIntent(message);
       const propType = bettingIntent.detectedType;
       const player = bettingIntent.playerMentioned;
       
-      // Build context-aware prompt
-      let propContext = '';
+      // Build concise, sharp context prompt
+      let analysisContext = '';
       if (bettingIntent.isPlayerProp && player) {
-        propContext = `\n\nUSER IS ASKING ABOUT: ${player}'s ${propType || 'stats'} (over/under prop)`;
-        if (propType === 'over') {
-          propContext += `\nThey want to know if ${player} will EXCEED their line.`;
-        } else if (propType === 'under') {
-          propContext += `\nThey want to know if ${player} will go UNDER their line.`;
-        }
-      } else if (bettingIntent.isBettingAdvice) {
-        propContext = `\n\nUSER IS ASKING FOR BETTING ADVICE/TIPS`;
-        propContext += `\nDetected betting intent with ${bettingIntent.confidenceLevel} confidence.`;
+        analysisContext = `ANALYSIS TARGET: ${player} - ${propType || 'performance'} prop
+DIRECTION: ${propType === 'over' ? 'Over line' : propType === 'under' ? 'Under line' : 'General assessment'}`;
+      } else {
+        analysisContext = `ANALYSIS TYPE: Match/outcome betting question
+CONFIDENCE: Detected with ${bettingIntent.confidenceLevel} confidence`;
       }
       
-      userContent = `USER QUESTION: ${message}
-${propContext}
+      userContent = `${message}
 
-⚠️ CRITICAL RESPONSE REQUIREMENTS:
+${analysisContext}
 
-1. START with acknowledging you understand this is a betting-related question
+${perplexityContext ? `LIVE DATA:\n${perplexityContext}` : ''}
 
-2. ALWAYS include this disclaimer early in your response (adapt to context):
-   "⚠️ This is my analytical assessment only, NOT betting advice. I cannot tell you what to bet on. Always gamble responsibly and only with money you can afford to lose."
+YOUR RESPONSE STYLE:
+- Lead with data, not disclaimers
+- Be SHARP and SPECIFIC - numbers, trends, matchup context
+- Include ONE brief disclaimer mid-response: "⚠️ Analysis only, not betting advice."
+- End with YOUR honest data-driven assessment (supports/mixed/concerning)
+- Sound like a sharp analyst, not a bot reading a script
+- No walls of text - punchy paragraphs
+- If the data is clear, say so confidently
+- If the data is mixed, own that too
 
-3. Provide STATISTICAL ANALYSIS:
-   - Current averages and recent form
-   - Matchup factors (opponent defense, pace, etc.)
-   - Injury/availability status
-   - Recent trends (last 5-10 games)
-   - Any relevant context (home/away splits, rest days, etc.)
-
-4. Be OBJECTIVE and DATA-DRIVEN:
-   - Present the facts neutrally
-   - Mention both favorable AND concerning factors
-   - Don't be one-sided
-
-5. END with a balanced conclusion like:
-   "Based on the data, [the metrics support/raise concerns about/are mixed regarding] this scenario. This is purely analytical - the final decision is always yours."
-
-6. NEVER say:
-   - "Bet on this"
-   - "This is a lock"
-   - "You should definitely play this"
-   - "I recommend betting"
-   - "This is a sure thing"
-
-${perplexityContext ? `REAL-TIME SPORTS DATA:\n${perplexityContext}` : ''}
-
-Remember: You are an analyst providing data, NOT a tipster giving betting advice.`;
+DO NOT:
+- Start with "I understand you're asking about..."
+- Give long preachy disclaimers
+- Say "bet on this" or "I recommend"
+- Be wishy-washy when the data is actually clear`;
     } else if (perplexityContext) {
       userContent = `USER QUESTION: ${message}
 
