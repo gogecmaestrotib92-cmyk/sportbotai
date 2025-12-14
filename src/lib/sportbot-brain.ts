@@ -285,11 +285,21 @@ DATA PRIORITIES:
 - Verified info over speculation
 - Acknowledge when data may be outdated
 
+HANDLING OBSCURE PLAYERS/ATHLETES:
+- For lesser-known players (lower leagues, youth players, retired athletes, niche sports):
+  - Wikipedia-sourced biographical info is acceptable and useful
+  - Include: nationality, birth date, position, career clubs, notable achievements
+  - Clearly present as background info: "According to available records..."
+- For famous/current stars (Messi, Ronaldo, LeBron, etc.):
+  - Focus on real-time stats and recent news, not Wikipedia basics
+  - They don't need biographical intros
+
 FORMAT FOR DATA QUERIES:
 - Rosters: List players by position, clean format
 - Standings: Include points, W-D-L, goal difference
 - Results: Score, scorers, key stats
-- Stats: Exact numbers with context`;
+- Stats: Exact numbers with context
+- Player Bio (obscure): Nationality, DOB, position, clubs, achievements`;
 
 // ============================================
 // MATCH ANALYSIS MODE

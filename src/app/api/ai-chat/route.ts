@@ -128,9 +128,17 @@ function detectQueryCategory(message: string): QueryCategory {
     return 'BROADCAST';
   }
   
-  // Player lookup - "where does X play", "who is X", "X player"
-  // Detect: proper noun + play/team, or asking about a person
-  if (/where (does|do|did|is) \w+ \w* ?play|which team (does|is)|what team (does|is)|who is [A-Z]/i.test(message)) {
+  // Player/Athlete lookup patterns:
+  // - "where does X play", "who is X", "tell me about X"
+  // - "X player", "X career", "X biography"
+  // - Questions with proper nouns (capitalized names)
+  if (
+    /where (does|do|did|is) \w+ \w* ?play|which team (does|is)|what team (does|is)/i.test(message) ||
+    /who is [A-Z][a-z]+/i.test(message) ||
+    /tell me about [A-Z][a-z]+/i.test(message) ||
+    /(biography|career|born|nationality|height|age) of/i.test(message) ||
+    /[A-Z][a-z]+ [A-Z][a-z]+ (player|athlete|footballer|basketball|tennis)/i.test(message)
+  ) {
     // Make sure it's not asking about a team's home ground
     if (!/stadium|arena|venue|home ground|capacity/i.test(message)) {
       return 'PLAYER';
@@ -297,8 +305,9 @@ function extractSearchQuery(message: string): { query: string; category: QueryCa
   
   switch (category) {
     case 'PLAYER':
-      // For player lookups, search for their current team/profile
-      query += ' player profile current team club 2024 2025 career wikipedia';
+      // For player lookups, include Wikipedia for obscure players
+      // Famous players will get plenty of real-time results anyway
+      query += ' player profile current team club 2024 2025 career wikipedia biography nationality';
       recency = 'week';
       break;
       
