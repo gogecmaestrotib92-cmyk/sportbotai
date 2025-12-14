@@ -1467,26 +1467,63 @@ function getCurrentNBASeason(): number {
   return year - 1;
 }
 
+// Cache for all NBA teams (loaded once)
+let allNBATeams: any[] | null = null;
+
+async function getAllNBATeams(baseUrl: string): Promise<any[]> {
+  if (allNBATeams) return allNBATeams;
+  
+  const cacheKey = 'nba:all-teams';
+  const cached = getCached<any[]>(cacheKey);
+  if (cached) {
+    allNBATeams = cached;
+    return cached;
+  }
+  
+  const response = await apiRequest<any>(baseUrl, '/teams?league=standard');
+  if (response?.response) {
+    // Filter to NBA franchise teams only
+    allNBATeams = response.response.filter((t: any) => t.nbaFranchise === true);
+    setCache(cacheKey, allNBATeams);
+    console.log(`[NBA] Loaded ${allNBATeams?.length || 0} NBA teams`);
+    return allNBATeams || [];
+  }
+  return [];
+}
+
 async function findNBATeam(teamName: string, baseUrl: string): Promise<number | null> {
   const normalizedName = normalizeBasketballTeamName(teamName);
   const cacheKey = `nba:team:${normalizedName}`;
   const cached = getCached<number>(cacheKey);
   if (cached) return cached;
 
-  // NBA API uses different search - try both normalized and original
-  let response = await apiRequest<any>(baseUrl, `/teams?search=${encodeURIComponent(normalizedName)}`);
+  // Get all NBA teams and search locally (API search doesn't work well)
+  const teams = await getAllNBATeams(baseUrl);
   
-  if (!response?.response?.length && normalizedName !== teamName) {
-    response = await apiRequest<any>(baseUrl, `/teams?search=${encodeURIComponent(teamName)}`);
-  }
+  // Search strategies in order of preference
+  const searchStrategies = [
+    // Exact name match
+    (t: any) => t.name?.toLowerCase() === normalizedName.toLowerCase(),
+    (t: any) => t.name?.toLowerCase() === teamName.toLowerCase(),
+    // Nickname match (e.g., "Lakers")
+    (t: any) => t.nickname?.toLowerCase() === normalizedName.toLowerCase(),
+    (t: any) => t.nickname?.toLowerCase() === teamName.toLowerCase(),
+    // City match (e.g., "Los Angeles")
+    (t: any) => t.city?.toLowerCase() === normalizedName.toLowerCase(),
+    (t: any) => t.city?.toLowerCase() === teamName.toLowerCase(),
+    // Contains match
+    (t: any) => t.name?.toLowerCase().includes(normalizedName.toLowerCase()),
+    (t: any) => t.name?.toLowerCase().includes(teamName.toLowerCase()),
+    (t: any) => t.nickname?.toLowerCase().includes(normalizedName.toLowerCase()),
+  ];
   
-  if (response?.response?.length > 0) {
-    // Filter for NBA franchise teams only
-    const nbaTeam = response.response.find((t: any) => t.nbaFranchise === true) || response.response[0];
-    const teamId = nbaTeam.id;
-    console.log(`[NBA] Found team "${teamName}" -> ID ${teamId} (${nbaTeam.name})`);
-    setCache(cacheKey, teamId);
-    return teamId;
+  for (const strategy of searchStrategies) {
+    const found = teams.find(strategy);
+    if (found) {
+      console.log(`[NBA] Found team "${teamName}" -> ID ${found.id} (${found.name})`);
+      setCache(cacheKey, found.id);
+      return found.id;
+    }
   }
   
   console.warn(`[NBA] Team not found: "${teamName}" (normalized: "${normalizedName}")`);
