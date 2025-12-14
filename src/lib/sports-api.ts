@@ -852,7 +852,7 @@ async function getBasketballTeamGames(teamId: number, baseUrl: string): Promise<
   console.log(`[Basketball] Fetching games for team ${teamId}, season ${season}`);
   
   // Try with season first
-  let response = await apiRequest<any>(baseUrl, `/games?team=${teamId}&season=${season}`);
+  const response = await apiRequest<any>(baseUrl, `/games?team=${teamId}&season=${season}`);
   
   // Filter for finished games only and take last 5
   if (response?.response) {
