@@ -1,12 +1,34 @@
 /**
  * Basketball API Client (API-Sports)
  * 
- * Fetches NBA, EuroLeague, and other basketball data
+ * Routes to appropriate API based on league:
+ * - NBA: Uses dedicated NBA API (v2.nba.api-sports.io) - better data
+ * - EuroLeague, NCAAB, ACB, etc.: Uses general Basketball API (v1.basketball.api-sports.io)
+ * 
  * Uses same API key as football API
  */
 
 const API_KEY = process.env.API_FOOTBALL_KEY || '';
-const BASE_URL = 'https://v1.basketball.api-sports.io';
+const BASKETBALL_API_URL = 'https://v1.basketball.api-sports.io';
+const NBA_API_URL = 'https://v2.nba.api-sports.io';
+
+// ============================================
+// LEAGUE ID MAPPINGS (defined early for use in routing)
+// ============================================
+
+export const BASKETBALL_LEAGUES = {
+  // NBA - uses dedicated NBA API
+  NBA: 12,
+  // EuroLeague - uses general Basketball API
+  EUROLEAGUE: 120,
+  // NCAA - uses general Basketball API
+  NCAA: 116,
+  // Other major leagues - all use general Basketball API
+  ACB_SPAIN: 117,
+  LEGA_ITALY: 90,
+  PRO_A_FRANCE: 62,
+  BBL_GERMANY: 72,
+} as const;
 
 // ============================================
 // TYPES
@@ -121,18 +143,39 @@ export interface BasketballH2H {
 // API FUNCTIONS
 // ============================================
 
-async function fetchBasketball<T>(endpoint: string, params: Record<string, string | number>): Promise<T | null> {
+/**
+ * Determine if league is NBA (uses dedicated API)
+ */
+function isNBALeague(leagueId?: number): boolean {
+  return leagueId === BASKETBALL_LEAGUES.NBA;
+}
+
+/**
+ * Get the appropriate base URL for the league
+ */
+function getBaseUrl(leagueId?: number): string {
+  return isNBALeague(leagueId) ? NBA_API_URL : BASKETBALL_API_URL;
+}
+
+async function fetchBasketball<T>(
+  endpoint: string, 
+  params: Record<string, string | number>,
+  leagueId?: number
+): Promise<T | null> {
   if (!API_KEY) {
     console.error('Basketball API: No API key configured');
     return null;
   }
 
-  const url = new URL(`${BASE_URL}${endpoint}`);
+  const baseUrl = getBaseUrl(leagueId);
+  const url = new URL(`${baseUrl}${endpoint}`);
   Object.entries(params).forEach(([key, value]) => {
     url.searchParams.append(key, String(value));
   });
 
   try {
+    console.log(`[Basketball API] Fetching from ${isNBALeague(leagueId) ? 'NBA API' : 'Basketball API'}: ${endpoint}`);
+    
     const response = await fetch(url.toString(), {
       headers: {
         'x-apisports-key': API_KEY,
@@ -169,7 +212,7 @@ export async function getBasketballGames(
   if (options?.date) params.date = options.date;
   if (options?.next) params.next = options.next;
 
-  const games = await fetchBasketball<BasketballGame[]>('/games', params);
+  const games = await fetchBasketball<BasketballGame[]>('/games', params, leagueId);
   return games || [];
 }
 
@@ -183,7 +226,7 @@ export async function getBasketballStandings(
   const standings = await fetchBasketball<BasketballStanding[][]>('/standings', {
     league: leagueId,
     season,
-  });
+  }, leagueId);
   return standings || [];
 }
 
@@ -199,7 +242,7 @@ export async function getBasketballTeamStats(
     team: teamId,
     league: leagueId,
     season,
-  });
+  }, leagueId);
   return stats?.[0] || null;
 }
 
@@ -208,11 +251,12 @@ export async function getBasketballTeamStats(
  */
 export async function getBasketballH2H(
   team1Id: number,
-  team2Id: number
+  team2Id: number,
+  leagueId?: number
 ): Promise<BasketballGame[]> {
   const h2h = await fetchBasketball<BasketballGame[]>('/games/h2h', {
     h2h: `${team1Id}-${team2Id}`,
-  });
+  }, leagueId);
   return h2h || [];
 }
 
@@ -226,7 +270,7 @@ export async function searchBasketballTeam(
   const params: Record<string, string | number> = { search: name };
   if (leagueId) params.league = leagueId;
   
-  const teams = await fetchBasketball<Array<{ id: number; name: string; logo: string }>>('/teams', params);
+  const teams = await fetchBasketball<Array<{ id: number; name: string; logo: string }>>('/teams', params, leagueId);
   return teams || [];
 }
 
@@ -242,22 +286,8 @@ export async function getBasketballLeagues(): Promise<BasketballLeague[]> {
 }
 
 // ============================================
-// LEAGUE ID MAPPINGS
+// SEASON HELPERS
 // ============================================
-
-export const BASKETBALL_LEAGUES = {
-  // NBA
-  NBA: 12,
-  // EuroLeague
-  EUROLEAGUE: 120,
-  // NCAA
-  NCAA: 116,
-  // Other major leagues
-  ACB_SPAIN: 117,
-  LEGA_ITALY: 90,
-  PRO_A_FRANCE: 62,
-  BBL_GERMANY: 72,
-} as const;
 
 /**
  * Get current basketball season string
