@@ -390,7 +390,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 2: Build system prompt
-    let brainMode: BrainMode = 
+    const brainMode: BrainMode = 
       (queryCategory === 'BETTING_ADVICE' || queryCategory === 'PLAYER_PROP') 
         ? 'betting' 
         : detectChatMode(message);
