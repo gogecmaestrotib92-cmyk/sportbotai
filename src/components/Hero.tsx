@@ -132,7 +132,11 @@ export default function Hero() {
                         <p className="text-gray-200 text-sm leading-relaxed">
                           Sharp movement detected on the early Premier League fixture. Market uncertainty elevated after late team news.
                         </p>
-                        <p className="text-gray-500 text-xs mt-2">Chelsea vs Everton • 15m ago</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-sm">⚽</span>
+                          <span className="text-white/80 text-xs font-medium">Chelsea vs Everton</span>
+                          <span className="text-gray-500 text-[10px]">• 15m ago</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -149,7 +153,11 @@ export default function Hero() {
                         <p className="text-gray-200 text-sm leading-relaxed">
                           Key midfielder confirmed out. Model volatility adjusted upward. Classic mid-week rotation chaos.
                         </p>
-                        <p className="text-gray-500 text-xs mt-2">Man City vs Man United • 2h ago</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-sm">⚽</span>
+                          <span className="text-white/80 text-xs font-medium">Man City vs Man United</span>
+                          <span className="text-gray-500 text-[10px]">• 2h ago</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -166,7 +174,11 @@ export default function Hero() {
                         <p className="text-gray-200 text-sm leading-relaxed">
                           High-complexity alert. Both sides showing inconsistent form and a history of chaotic encounters.
                         </p>
-                        <p className="text-gray-500 text-xs mt-2">Liverpool vs Tottenham • 3h ago</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-sm">⚽</span>
+                          <span className="text-white/80 text-xs font-medium">Liverpool vs Tottenham</span>
+                          <span className="text-gray-500 text-[10px]">• 3h ago</span>
+                        </div>
                       </div>
                     </div>
                   </div>
