@@ -383,3 +383,59 @@ model PredictionOutcome {
   @@index([wasAccurate])
   @@index([matchDate])
 }
+
+// ============================================
+// AGENT KNOWLEDGE BASE - Self-Learning System
+// ============================================
+
+// Store successful Q&A pairs for retrieval and learning
+model KnowledgeBase {
+  id              String   @id @default(cuid())
+  
+  // The Q&A pair
+  question        String   @db.Text
+  answer          String   @db.Text
+  
+  // Categorization
+  sport           String?              // football, basketball, tennis, etc.
+  category        String?              // ROSTER, INJURY, FIXTURE, etc.
+  team            String?              // Primary team mentioned
+  
+  // Quality & Usage
+  quality         Int      @default(3) // 1-5 rating
+  useCount        Int      @default(1) // Times this answer was reused
+  
+  // Source tracking
+  citations       String[]             // Original source URLs
+  hadRealTimeData Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([sport])
+  @@index([category])
+  @@index([team])
+  @@index([quality])
+  @@index([useCount])
+}
+
+// Track learned patterns per sport (aggregated insights)
+model SportExpertise {
+  id              String   @id @default(cuid())
+  sport           String   @unique     // football, basketball, etc.
+  
+  // Learned patterns
+  topCategories   String[]             // Most asked categories
+  commonQuestions String[]             // Frequently asked question patterns
+  keyTerminology  String[]             // Sport-specific terms learned
+  learnedFacts    String[] @db.Text    // Key facts extracted from answers
+  
+  // Stats
+  totalQueries    Int      @default(0)
+  lastUpdated     DateTime @default(now())
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([sport])
+}

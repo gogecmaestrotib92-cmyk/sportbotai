@@ -4,11 +4,14 @@
  * Flow:
  * 1. User asks a sports question
  * 2. Detect mode: AGENT (opinionated) vs DATA (strict accuracy)
- * 3. Perplexity searches for real-time sports data
- * 4. GPT responds with appropriate personality
- * 5. Track query in memory system for learning
+ * 3. Check knowledge base for similar past answers
+ * 4. Perplexity searches for real-time sports data
+ * 5. GPT responds with appropriate personality
+ * 6. Save successful Q&A to knowledge base for learning
+ * 7. Track query in memory system for analytics
  * 
  * Uses SportBot Master Brain for consistent personality across app.
+ * Uses SportBot Knowledge for self-learning capabilities.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -16,6 +19,7 @@ import OpenAI from 'openai';
 import { getPerplexityClient } from '@/lib/perplexity';
 import { detectChatMode, buildSystemPrompt, type BrainMode } from '@/lib/sportbot-brain';
 import { trackQuery } from '@/lib/sportbot-memory';
+import { saveKnowledge, buildLearnedContext, getTerminologyForSport } from '@/lib/sportbot-knowledge';
 
 // ============================================
 // TYPES
@@ -233,6 +237,50 @@ function needsRealTimeSearch(message: string): boolean {
 }
 
 /**
+ * Detect sport from message
+ */
+function detectSport(message: string): string | undefined {
+  const lower = message.toLowerCase();
+  
+  // Football/Soccer
+  if (/football|soccer|premier league|la liga|serie a|bundesliga|ligue 1|champions league|europa|fc |united|city|real madrid|barcelona|bayern|goal|striker|midfielder/i.test(lower)) {
+    return 'football';
+  }
+  
+  // Basketball
+  if (/basketball|nba|euroleague|lakers|celtics|warriors|nets|point guard|center|forward|dunk|three.?pointer/i.test(lower)) {
+    return 'basketball';
+  }
+  
+  // Tennis
+  if (/tennis|atp|wta|grand slam|wimbledon|us open|french open|australian open|nadal|djokovic|federer|serve|backhand/i.test(lower)) {
+    return 'tennis';
+  }
+  
+  // MMA/UFC
+  if (/mma|ufc|bellator|knockout|submission|fighter|octagon|weight class|pound.for.pound/i.test(lower)) {
+    return 'mma';
+  }
+  
+  // American Football
+  if (/nfl|american football|quarterback|touchdown|super bowl|chiefs|eagles|cowboys|patriots/i.test(lower)) {
+    return 'american_football';
+  }
+  
+  // Baseball
+  if (/baseball|mlb|yankees|dodgers|red sox|home run|pitcher|batting/i.test(lower)) {
+    return 'baseball';
+  }
+  
+  // Hockey
+  if (/hockey|nhl|ice hockey|puck|goalie|rangers|bruins|maple leafs/i.test(lower)) {
+    return 'hockey';
+  }
+  
+  return undefined;
+}
+
+/**
  * Build optimized search query based on question category
  */
 function extractSearchQuery(message: string): { query: string; category: QueryCategory; recency: 'hour' | 'day' | 'week' | 'month' } {
@@ -395,14 +443,45 @@ export async function POST(request: NextRequest) {
 
     // Step 2: Detect brain mode and build system prompt
     const brainMode: BrainMode = detectChatMode(message);
+    
+    // Step 2.5: Get learned context from knowledge base
+    let learnedContext = '';
+    let sportTerminology: string[] = [];
+    try {
+      const { query: searchQuery, category } = extractSearchQuery(message);
+      const detectedSport = detectSport(message);
+      
+      // Get past similar answers for context
+      learnedContext = await buildLearnedContext(message, detectedSport);
+      
+      // Get sport terminology
+      if (detectedSport) {
+        sportTerminology = getTerminologyForSport(detectedSport);
+      }
+      
+      console.log('[AI-Chat] Learned context:', learnedContext ? 'Found' : 'None');
+      console.log('[AI-Chat] Sport detected:', detectedSport || 'Unknown');
+    } catch (err) {
+      console.error('[AI-Chat] Knowledge lookup failed:', err);
+    }
+    
     const systemPrompt = buildSystemPrompt(brainMode, {
       hasRealTimeData: !!perplexityContext,
     });
     
+    // Enhance system prompt with learned knowledge
+    let enhancedSystemPrompt = systemPrompt;
+    if (learnedContext) {
+      enhancedSystemPrompt += `\n\n${learnedContext}`;
+    }
+    if (sportTerminology.length > 0) {
+      enhancedSystemPrompt += `\n\nSPORT TERMINOLOGY TO USE: ${sportTerminology.slice(0, 10).join(', ')}`;
+    }
+    
     console.log('[AI-Chat] Brain mode:', brainMode);
     
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: enhancedSystemPrompt },
     ];
 
     // Add conversation history (last 10 messages to stay within context)
@@ -446,10 +525,22 @@ Please answer the user's question using the real-time data above. Cite sources i
       query: message,
       category: queryCategory,
       brainMode,
+      sport: detectSport(message),
       usedRealTimeSearch: !!perplexityContext,
       responseLength: response.length,
       hadCitations: citations.length > 0,
     }).catch(err => console.error('[AI-Chat] Memory tracking failed:', err));
+
+    // Save to knowledge base for learning (async, don't block response)
+    // Only save substantial answers with real-time data
+    saveKnowledge({
+      question: message,
+      answer: response,
+      sport: detectSport(message),
+      category: queryCategory,
+      hadRealTimeData: !!perplexityContext,
+      citations,
+    }).catch(err => console.error('[AI-Chat] Knowledge save failed:', err));
 
     return NextResponse.json({
       success: true,
