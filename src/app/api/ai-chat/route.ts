@@ -387,6 +387,9 @@ export async function POST(request: NextRequest) {
     let perplexityContext = '';
     let citations: string[] = [];
     const shouldSearch = needsRealTimeSearch(message);
+    
+    // Detect category for all queries (for tracking)
+    const queryCategory = detectQueryCategory(message);
 
     // Step 1: Use Perplexity for real-time search if needed
     if (shouldSearch) {
@@ -402,7 +405,7 @@ export async function POST(request: NextRequest) {
         console.log(`[AI-Chat] Search query: "${searchQuery}"`);
         
         // Use higher token limit for detailed queries like rosters or comparisons
-        const needsMoreTokens = ['ROSTER', 'COMPARISON', 'STANDINGS', 'STATS'].includes(category);
+        const needsMoreTokens = ['PLAYER', 'ROSTER', 'COMPARISON', 'STANDINGS', 'STATS'].includes(category);
         
         const searchResult = await perplexity.search(searchQuery, {
           recency,
@@ -472,7 +475,7 @@ Please answer the user's question using the real-time data above. Cite sources i
     // Track query in memory system (async, don't block response)
     trackQuery({
       query: message,
-      category,
+      category: queryCategory,
       brainMode,
       usedRealTimeSearch: !!perplexityContext,
       responseLength: response.length,
