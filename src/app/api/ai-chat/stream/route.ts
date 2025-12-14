@@ -399,9 +399,8 @@ export async function POST(request: NextRequest) {
       hasRealTimeData: !!perplexityContext,
     });
 
-    // Add learned context
+    // Add learned context (using detectedSport defined earlier)
     try {
-      const detectedSport = detectSport(message);
       const learnedContext = await buildLearnedContext(message, detectedSport);
       const sportTerminology = detectedSport ? getTerminologyForSport(detectedSport) : [];
       

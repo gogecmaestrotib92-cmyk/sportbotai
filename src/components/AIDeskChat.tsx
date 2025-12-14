@@ -244,8 +244,11 @@ export default function AIDeskChat() {
         }),
       });
 
-      // Check if streaming is supported
-      if (response.headers.get('Content-Type')?.includes('text/event-stream')) {
+      // Check if response is OK and has a body we can stream
+      const contentType = response.headers.get('Content-Type') || '';
+      const isStreamable = contentType.includes('text/event-stream') || response.body !== null;
+      
+      if (response.ok && isStreamable && response.body) {
         // Add empty assistant message for streaming
         setMessages(prev => [...prev, {
           id: assistantMessageId,
@@ -255,16 +258,20 @@ export default function AIDeskChat() {
         }]);
         setIsLoading(false); // Show the streaming message
 
-        const reader = response.body?.getReader();
+        const reader = response.body.getReader();
         const decoder = new TextDecoder();
+        let buffer = ''; // Buffer for incomplete lines
 
-        if (reader) {
+        try {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            
+            // Keep the last incomplete line in buffer
+            buffer = lines.pop() || '';
 
             for (const line of lines) {
               if (line.startsWith('data: ')) {
@@ -292,12 +299,15 @@ export default function AIDeskChat() {
                   } else if (data.type === 'error') {
                     throw new Error(data.error);
                   }
-                } catch (e) {
+                } catch (parseError) {
                   // Ignore JSON parse errors for incomplete chunks
+                  console.log('[Chat] Parse error, skipping chunk');
                 }
               }
             }
           }
+        } finally {
+          reader.releaseLock();
         }
       } else {
         // Fallback to non-streaming response
