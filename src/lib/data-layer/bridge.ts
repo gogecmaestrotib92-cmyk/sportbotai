@@ -12,14 +12,22 @@ import type { Sport, EnrichedMatchData } from './types';
 const SPORT_MAP: Record<string, Sport> = {
   'soccer': 'soccer',
   'football': 'soccer',
+  'soccer_epl': 'soccer',
+  'soccer_spain_la_liga': 'soccer',
+  'soccer_uefa_champs_league': 'soccer',
+  'soccer_germany_bundesliga': 'soccer',
+  'soccer_italy_serie_a': 'soccer',
+  'soccer_france_ligue_one': 'soccer',
   'basketball': 'basketball',
   'basketball_nba': 'basketball',
   'nba': 'basketball',
   'hockey': 'hockey',
   'icehockey': 'hockey',
+  'icehockey_nhl': 'hockey',
   'nhl': 'hockey',
   'americanfootball': 'american_football',
   'american_football': 'american_football',
+  'americanfootball_nfl': 'american_football',
   'nfl': 'american_football',
 };
 
