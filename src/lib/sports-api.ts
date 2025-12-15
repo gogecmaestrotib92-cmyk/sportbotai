@@ -1567,7 +1567,7 @@ export async function getMultiSportEnrichedData(
     return emptyResult;
   }
 
-  console.log(`[API-Sports] Fetching ${sportKey} data for ${homeTeam} vs ${awayTeam}`);
+  console.log(`[API-Sports] Fetching ${sportKey} data for ${homeTeam} vs ${awayTeam} (league: ${league})`);
 
   try {
     switch (sportKey) {
@@ -1576,8 +1576,8 @@ export async function getMultiSportEnrichedData(
       
       case 'basketball':
         // All basketball including NBA uses the Basketball API
-        // Pass sport to determine league ID (NBA = 12)
-        return await fetchBasketballData(homeTeam, awayTeam, baseUrl, sport);
+        // Pass sport and league to determine league ID (NBA = 12)
+        return await fetchBasketballData(homeTeam, awayTeam, baseUrl, sport, league);
       
       case 'hockey':
         return await fetchHockeyData(homeTeam, awayTeam, baseUrl);
@@ -1957,12 +1957,13 @@ async function fetchNBAData(homeTeam: string, awayTeam: string, baseUrl: string)
   };
 }
 
-async function fetchBasketballData(homeTeam: string, awayTeam: string, baseUrl: string, originalSport: string = 'basketball'): Promise<MultiSportEnrichedData> {
-  // Determine if this is NBA or other basketball
-  const isNBA = originalSport.toLowerCase().includes('nba');
-  const leagueId = isNBA ? BASKETBALL_LEAGUE_IDS.NBA : null;
+async function fetchBasketballData(homeTeam: string, awayTeam: string, baseUrl: string, originalSport: string = 'basketball', league?: string): Promise<MultiSportEnrichedData> {
+  // Determine if this is NBA - check both sport string and league
+  const sportLower = originalSport.toLowerCase();
+  const leagueLower = (league || '').toLowerCase();
+  const isNBA = sportLower.includes('nba') || leagueLower.includes('nba') || sportLower === 'basketball';
   
-  console.log(`[Basketball] Fetching ${isNBA ? 'NBA' : 'basketball'} data for ${homeTeam} vs ${awayTeam}`);
+  console.log(`[Basketball] Fetching ${isNBA ? 'NBA' : 'basketball'} data for ${homeTeam} vs ${awayTeam} (sport: ${originalSport}, league: ${league})`);
   
   const [homeTeamId, awayTeamId] = await Promise.all([
     findBasketballTeam(homeTeam, baseUrl, isNBA),
