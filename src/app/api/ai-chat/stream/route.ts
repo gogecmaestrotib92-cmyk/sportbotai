@@ -494,9 +494,11 @@ export async function POST(request: NextRequest) {
       
       return new Response(JSON.stringify({
         error: 'Rate limit exceeded',
-        message: `You've reached your limit of ${limits.requests} messages per hour. ${
+        message: `You've reached your daily limit of ${limits.requests} messages. ${
           !userPlan || userPlan === 'FREE' 
-            ? 'Upgrade to Pro for 100/hour or Premium for 500/hour.' 
+            ? 'Upgrade to Pro for 50/day or Premium for unlimited.' 
+            : userPlan === 'PRO'
+            ? 'Upgrade to Premium for unlimited messages.'
             : ''
         }`,
         remaining: 0,

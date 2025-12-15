@@ -18,14 +18,15 @@ const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_RE
   : null;
 
 // ============================================
-// TIER-BASED CHAT RATE LIMITS
+// TIER-BASED CHAT RATE LIMITS (Daily)
+// Matches pricing tiers displayed on /pricing
 // ============================================
 
 export const CHAT_RATE_LIMITS = {
-  FREE: { requests: 20, window: '1 h' },      // 20 per hour
-  PRO: { requests: 100, window: '1 h' },      // 100 per hour
-  PREMIUM: { requests: 500, window: '1 h' },  // 500 per hour
-  ANONYMOUS: { requests: 10, window: '1 h' }, // 10 per hour (not logged in)
+  FREE: { requests: 5, window: '1 d' },       // 5 per day (matches pricing)
+  PRO: { requests: 50, window: '1 d' },       // 50 per day (matches pricing)
+  PREMIUM: { requests: 1000, window: '1 d' }, // Effectively unlimited (1000/day)
+  ANONYMOUS: { requests: 3, window: '1 d' },  // 3 per day (not logged in)
 } as const;
 
 // Create tier-specific rate limiters for chat

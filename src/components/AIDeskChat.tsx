@@ -451,11 +451,16 @@ export default function AIDeskChat() {
           reader.releaseLock();
         }
       } else {
-        // Fallback to non-streaming response
-        const data: ChatResponse = await response.json();
+        // Non-streaming response (error or fallback)
+        const data = await response.json();
+        
+        // Handle rate limit specifically
+        if (response.status === 429) {
+          throw new Error(data.message || `You've reached your daily message limit. Upgrade for more!`);
+        }
 
         if (!response.ok || !data.success) {
-          throw new Error(data.error || 'Failed to get response');
+          throw new Error(data.error || data.message || 'Failed to get response');
         }
 
         const assistantMessage: ChatMessage = {
