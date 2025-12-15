@@ -44,12 +44,12 @@ export function PremiumBlur({
       </div>
       
       {/* Overlay with CTA */}
-      <div className="absolute inset-0 flex items-center justify-center bg-[#050506]/70 backdrop-blur-sm rounded-2xl">
-        <div className="text-center px-6 py-8 max-w-sm">
+      <div className="absolute inset-0 flex items-center justify-center bg-[#050506]/70 backdrop-blur-sm rounded-xl sm:rounded-2xl">
+        <div className="text-center px-4 sm:px-6 py-6 sm:py-8 max-w-sm mx-4">
           {/* Lock icon */}
-          <div className="w-12 h-12 bg-gradient-to-br from-violet-500/20 to-purple-600/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-violet-500/20">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-500/20 to-purple-600/10 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 border border-violet-500/20">
             <svg 
-              className="w-5 h-5 text-violet-400" 
+              className="w-4 h-4 sm:w-5 sm:h-5 text-violet-400" 
               fill="none" 
               viewBox="0 0 24 24" 
               stroke="currentColor"
@@ -64,27 +64,27 @@ export function PremiumBlur({
           </div>
           
           {/* Title */}
-          <h3 className="text-lg font-semibold text-white mb-2">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-1.5 sm:mb-2">
             {title}
           </h3>
           
           {/* Description */}
-          <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
+          <p className="text-xs sm:text-sm text-zinc-400 mb-4 sm:mb-6 leading-relaxed">
             {description}
           </p>
           
           {/* CTA Button */}
           <Link
             href="/pricing"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white text-sm font-semibold rounded-xl hover:from-violet-400 hover:to-purple-500 transition-all shadow-lg shadow-violet-500/20"
+            className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl hover:from-violet-400 hover:to-purple-500 transition-all shadow-lg shadow-violet-500/20"
           >
             <span>Upgrade to Pro</span>
-            <span className="text-xs opacity-75">$9/mo</span>
+            <span className="text-[10px] sm:text-xs opacity-75">$9/mo</span>
           </Link>
           
           {/* What's included */}
-          <div className="mt-5 pt-4 border-t border-white/5">
-            <div className="flex flex-wrap justify-center gap-2 text-[10px] text-zinc-500 uppercase tracking-wider">
+          <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-white/5">
+            <div className="flex flex-wrap justify-center gap-2 text-[9px] sm:text-[10px] text-zinc-500 uppercase tracking-wider">
               <span className="flex items-center gap-1">
                 <span className="text-violet-400">✓</span> Match Insights
               </span>

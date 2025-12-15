@@ -44,12 +44,12 @@ export function RegistrationBlur({
       </div>
       
       {/* Overlay with CTA */}
-      <div className="absolute inset-0 flex items-center justify-center bg-[#050506]/60 backdrop-blur-sm rounded-2xl">
-        <div className="text-center px-6 py-8 max-w-sm">
+      <div className="absolute inset-0 flex items-center justify-center bg-[#050506]/60 backdrop-blur-sm rounded-xl sm:rounded-2xl">
+        <div className="text-center px-4 sm:px-6 py-6 sm:py-8 max-w-sm mx-4">
           {/* Lock icon */}
-          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 border border-emerald-500/20">
             <svg 
-              className="w-5 h-5 text-emerald-400" 
+              className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" 
               fill="none" 
               viewBox="0 0 24 24" 
               stroke="currentColor"
@@ -64,28 +64,28 @@ export function RegistrationBlur({
           </div>
           
           {/* Title */}
-          <h3 className="text-lg font-semibold text-white mb-2">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-1.5 sm:mb-2">
             {title}
           </h3>
           
           {/* Description */}
-          <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
+          <p className="text-xs sm:text-sm text-zinc-400 mb-4 sm:mb-6 leading-relaxed">
             {description}
           </p>
           
           {/* CTA Button */}
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-semibold rounded-xl hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg shadow-emerald-500/20"
+            className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg shadow-emerald-500/20"
           >
             <span>Create Free Account</span>
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </Link>
           
           {/* Sign in link */}
-          <p className="mt-4 text-xs text-zinc-500">
+          <p className="mt-3 sm:mt-4 text-[10px] sm:text-xs text-zinc-500">
             Already have an account?{' '}
             <Link href="/login" className="text-emerald-400 hover:text-emerald-300 transition-colors">
               Sign in
@@ -93,8 +93,8 @@ export function RegistrationBlur({
           </p>
           
           {/* Bullet points - What they get */}
-          <div className="mt-6 pt-4 border-t border-white/5">
-            <div className="flex flex-wrap justify-center gap-3 text-[10px] text-zinc-500 uppercase tracking-wider">
+          <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/5">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 text-[9px] sm:text-[10px] text-zinc-500 uppercase tracking-wider">
               <span className="flex items-center gap-1">
                 <span className="text-emerald-400">✓</span> Match Signals
               </span>

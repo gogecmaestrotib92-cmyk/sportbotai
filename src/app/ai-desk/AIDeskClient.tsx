@@ -90,32 +90,32 @@ export default function AIDeskClient() {
         </div>
 
         {/* Registration Gate Overlay */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="bg-[#0a0a0b]/95 backdrop-blur-md border border-white/10 rounded-2xl p-8 max-w-md text-center shadow-2xl">
+        <div className="absolute inset-0 flex items-center justify-center px-4">
+          <div className="bg-[#0a0a0b]/95 backdrop-blur-md border border-white/10 rounded-xl sm:rounded-2xl p-5 sm:p-8 max-w-md text-center shadow-2xl">
             {/* Icon */}
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-violet-600/10 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-purple-500/20">
-              <span className="text-3xl">🧠</span>
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500/20 to-violet-600/10 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-5 border border-purple-500/20">
+              <span className="text-2xl sm:text-3xl">🧠</span>
             </div>
 
             {/* Title */}
-            <h2 className="text-xl font-bold text-white mb-2">
+            <h2 className="text-lg sm:text-xl font-bold text-white mb-1.5 sm:mb-2">
               Unlock AI Sports Desk
             </h2>
 
             {/* Description */}
-            <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
+            <p className="text-xs sm:text-sm text-zinc-400 mb-4 sm:mb-6 leading-relaxed">
               Create a free account to chat with our AI about any sport, get real-time intelligence, and access the live intel feed.
             </p>
 
             {/* Features List */}
-            <div className="flex flex-wrap justify-center gap-2 mb-6">
-              <span className="px-3 py-1.5 bg-purple-500/10 text-purple-400 text-xs font-medium rounded-full border border-purple-500/20 flex items-center gap-1.5">
+            <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
+              <span className="px-2 sm:px-3 py-1 sm:py-1.5 bg-purple-500/10 text-purple-400 text-[10px] sm:text-xs font-medium rounded-full border border-purple-500/20 flex items-center gap-1">
                 <span>💬</span> Ask Anything
               </span>
-              <span className="px-3 py-1.5 bg-blue-500/10 text-blue-400 text-xs font-medium rounded-full border border-blue-500/20 flex items-center gap-1.5">
-                <span>⚡</span> Real-Time Data
+              <span className="px-2 sm:px-3 py-1 sm:py-1.5 bg-blue-500/10 text-blue-400 text-[10px] sm:text-xs font-medium rounded-full border border-blue-500/20 flex items-center gap-1">
+                <span>⚡</span> Real-Time
               </span>
-              <span className="px-3 py-1.5 bg-green-500/10 text-green-400 text-xs font-medium rounded-full border border-green-500/20 flex items-center gap-1.5">
+              <span className="px-2 sm:px-3 py-1 sm:py-1.5 bg-green-500/10 text-green-400 text-[10px] sm:text-xs font-medium rounded-full border border-green-500/20 flex items-center gap-1">
                 <span>📡</span> Live Intel
               </span>
             </div>
@@ -123,16 +123,16 @@ export default function AIDeskClient() {
             {/* CTA Button */}
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-semibold rounded-xl hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg shadow-emerald-500/20 w-full justify-center"
+              className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg shadow-emerald-500/20 w-full justify-center"
             >
               <span>Create Free Account</span>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </Link>
 
             {/* Sign in link */}
-            <p className="mt-4 text-xs text-zinc-500">
+            <p className="mt-3 sm:mt-4 text-[10px] sm:text-xs text-zinc-500">
               Already have an account?{' '}
               <Link href="/login" className="text-emerald-400 hover:text-emerald-300 transition-colors">
                 Sign in
