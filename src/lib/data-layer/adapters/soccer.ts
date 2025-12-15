@@ -30,6 +30,7 @@ import {
   SoccerTeamStatsResponse,
   SoccerInjuryResponse,
 } from '../providers/api-sports';
+import { resolveTeamName, getSearchVariations } from '../team-resolver';
 
 // Popular league mappings
 const LEAGUE_MAPPINGS: Record<string, number> = {
@@ -94,7 +95,7 @@ export class SoccerAdapter extends BaseSportAdapter {
   }
   
   /**
-   * Find a soccer team
+   * Find a soccer team with improved matching
    */
   async findTeam(query: TeamQuery): Promise<DataLayerResponse<NormalizedTeam>> {
     if (!query.name && !query.id) {
@@ -116,24 +117,71 @@ export class SoccerAdapter extends BaseSportAdapter {
       }
     }
     
-    // Search by name
+    // Search by name with variations
     if (query.name) {
-      const params: { name?: string; league?: number; season?: number } = {
-        name: query.name,
-        season,
-      };
+      const searchVariations = getSearchVariations(query.name, 'soccer');
+      console.log(`[Soccer] Searching for "${query.name}" with variations:`, searchVariations);
       
-      if (leagueId) {
-        params.league = leagueId;
+      // Try each variation
+      for (const searchName of searchVariations) {
+        const params: { name?: string; search?: string; league?: number; season?: number } = {
+          season,
+        };
+        
+        // Try exact name first
+        params.name = searchName;
+        if (leagueId) {
+          params.league = leagueId;
+        }
+        
+        const result = await this.apiProvider.getSoccerTeams(params);
+        
+        if (result.success && result.data && result.data.length > 0) {
+          console.log(`[Soccer] Found team: "${query.name}" → "${result.data[0].team.name}"`);
+          return this.success(this.transformTeam(result.data[0]));
+        }
+        
+        // Try search parameter (more lenient)
+        delete params.name;
+        params.search = searchName;
+        
+        const searchResult = await this.apiProvider.getSoccerTeams(params);
+        
+        if (searchResult.success && searchResult.data && searchResult.data.length > 0) {
+          // Find best match from results
+          const lowerSearch = searchName.toLowerCase();
+          const exactMatch = searchResult.data.find(t => 
+            t.team.name.toLowerCase() === lowerSearch
+          );
+          
+          if (exactMatch) {
+            console.log(`[Soccer] Found exact match: "${query.name}" → "${exactMatch.team.name}"`);
+            return this.success(this.transformTeam(exactMatch));
+          }
+          
+          // Return first result if no exact match
+          console.log(`[Soccer] Found via search: "${query.name}" → "${searchResult.data[0].team.name}"`);
+          return this.success(this.transformTeam(searchResult.data[0]));
+        }
       }
       
-      const result = await this.apiProvider.getSoccerTeams(params);
-      
-      if (result.success && result.data && result.data.length > 0) {
-        return this.success(this.transformTeam(result.data[0]));
+      // Final fallback: try resolved name directly
+      const resolvedName = resolveTeamName(query.name, 'soccer');
+      if (resolvedName !== query.name) {
+        const finalResult = await this.apiProvider.getSoccerTeams({
+          search: resolvedName,
+          season,
+          ...(leagueId && { league: leagueId }),
+        });
+        
+        if (finalResult.success && finalResult.data && finalResult.data.length > 0) {
+          console.log(`[Soccer] Found via resolver: "${query.name}" → "${finalResult.data[0].team.name}"`);
+          return this.success(this.transformTeam(finalResult.data[0]));
+        }
       }
     }
     
+    console.error(`[Soccer] Could not find team: "${query.name}"`);
     return this.error('TEAM_NOT_FOUND', `Could not find soccer team: ${query.name || query.id}`);
   }
   

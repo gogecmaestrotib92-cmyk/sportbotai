@@ -749,12 +749,17 @@ export class DataLayer {
       this.findTeam({ name: awayTeam, sport }),
     ]);
     
-    if (!homeTeamResult.success || !homeTeamResult.data) {
+    // Log team lookup results
+    console.log(`[DataLayer] Home team lookup: ${homeTeamResult.success ? homeTeamResult.data?.name : 'FAILED - ' + homeTeamResult.error?.message}`);
+    console.log(`[DataLayer] Away team lookup: ${awayTeamResult.success ? awayTeamResult.data?.name : 'FAILED - ' + awayTeamResult.error?.message}`);
+    
+    // If BOTH teams fail, return error (can't do anything without teams)
+    if (!homeTeamResult.success && !awayTeamResult.success) {
       return {
         success: false,
         error: {
-          code: 'TEAM_NOT_FOUND',
-          message: `Could not find home team: ${homeTeam}`,
+          code: 'TEAMS_NOT_FOUND',
+          message: `Could not find either team: ${homeTeam} or ${awayTeam}`,
         },
         metadata: {
           provider: 'api-sports',
@@ -764,64 +769,70 @@ export class DataLayer {
       };
     }
     
-    if (!awayTeamResult.success || !awayTeamResult.data) {
-      return {
-        success: false,
-        error: {
-          code: 'TEAM_NOT_FOUND',
-          message: `Could not find away team: ${awayTeam}`,
-        },
-        metadata: {
-          provider: 'api-sports',
-          cached: false,
-          fetchedAt: new Date(),
-        },
-      };
-    }
+    // Create placeholder team if one fails (allows partial data to still work)
+    const createPlaceholderTeam = (name: string): NormalizedTeam => ({
+      id: `placeholder-${name.toLowerCase().replace(/\s+/g, '-')}`,
+      externalId: '0',
+      name,
+      shortName: name.split(' ').pop() || name,
+      sport,
+    });
     
-    const home = homeTeamResult.data;
-    const away = awayTeamResult.data;
+    const home = homeTeamResult.success && homeTeamResult.data 
+      ? homeTeamResult.data 
+      : createPlaceholderTeam(homeTeam);
+      
+    const away = awayTeamResult.success && awayTeamResult.data 
+      ? awayTeamResult.data 
+      : createPlaceholderTeam(awayTeam);
     
-    // Fetch all data in parallel
+    const homeFound = homeTeamResult.success && homeTeamResult.data;
+    const awayFound = awayTeamResult.success && awayTeamResult.data;
+    
+    // Fetch data in parallel (only for teams we found)
     const promises: Promise<unknown>[] = [];
     
-    // Stats
-    if (opts.includeStats) {
-      promises.push(
-        this.getTeamStats({ teamId: home.externalId, sport }),
-        this.getTeamStats({ teamId: away.externalId, sport })
-      );
+    // Stats - only fetch if team was found
+    if (opts.includeStats && homeFound) {
+      promises.push(this.getTeamStats({ teamId: home.externalId, sport }));
     } else {
-      promises.push(Promise.resolve(null), Promise.resolve(null));
+      promises.push(Promise.resolve(null));
     }
-    
-    // Recent games
-    if (opts.includeRecentGames) {
-      promises.push(
-        this.getRecentGames(sport, home.externalId, opts.recentGamesLimit),
-        this.getRecentGames(sport, away.externalId, opts.recentGamesLimit)
-      );
-    } else {
-      promises.push(Promise.resolve(null), Promise.resolve(null));
-    }
-    
-    // H2H
-    if (opts.includeH2H) {
-      promises.push(
-        this.getH2H({ team1: homeTeam, team2: awayTeam, sport, limit: opts.h2hLimit })
-      );
+    if (opts.includeStats && awayFound) {
+      promises.push(this.getTeamStats({ teamId: away.externalId, sport }));
     } else {
       promises.push(Promise.resolve(null));
     }
     
-    // Injuries
-    if (opts.includeInjuries) {
-      promises.push(
-        this.getInjuries(sport, home.externalId),
-        this.getInjuries(sport, away.externalId)
-      );
+    // Recent games - only fetch if team was found
+    if (opts.includeRecentGames && homeFound) {
+      promises.push(this.getRecentGames(sport, home.externalId, opts.recentGamesLimit));
     } else {
-      promises.push(Promise.resolve(null), Promise.resolve(null));
+      promises.push(Promise.resolve(null));
+    }
+    if (opts.includeRecentGames && awayFound) {
+      promises.push(this.getRecentGames(sport, away.externalId, opts.recentGamesLimit));
+    } else {
+      promises.push(Promise.resolve(null));
+    }
+    
+    // H2H - only if both teams found
+    if (opts.includeH2H && homeFound && awayFound) {
+      promises.push(this.getH2H({ team1: homeTeam, team2: awayTeam, sport, limit: opts.h2hLimit }));
+    } else {
+      promises.push(Promise.resolve(null));
+    }
+    
+    // Injuries - only fetch if team was found
+    if (opts.includeInjuries && homeFound) {
+      promises.push(this.getInjuries(sport, home.externalId));
+    } else {
+      promises.push(Promise.resolve(null));
+    }
+    if (opts.includeInjuries && awayFound) {
+      promises.push(this.getInjuries(sport, away.externalId));
+    } else {
+      promises.push(Promise.resolve(null));
     }
     
     const [

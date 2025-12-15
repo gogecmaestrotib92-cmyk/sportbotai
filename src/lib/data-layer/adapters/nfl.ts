@@ -28,8 +28,9 @@ import {
   NFLGameResponse,
   NFLStandingsResponse,
 } from '../providers/api-sports';
+import { resolveTeamName, getSearchVariations } from '../team-resolver';
 
-// Team name mappings for NFL
+// Team name mappings for NFL - DEPRECATED: Now using team-resolver.ts
 const NFL_TEAM_MAPPINGS: Record<string, string> = {
   // Short names
   'chiefs': 'Chiefs',
@@ -148,15 +149,14 @@ export class NFLAdapter extends BaseSportAdapter {
   }
   
   /**
-   * Normalize team name for search
+   * Normalize team name for search - Uses centralized team resolver
    */
   private normalizeTeamName(name: string): string {
-    const lower = name.toLowerCase().trim();
-    return NFL_TEAM_MAPPINGS[lower] || name;
+    return resolveTeamName(name, 'american_football');
   }
   
   /**
-   * Find an NFL team
+   * Find an NFL team with improved fuzzy matching
    */
   async findTeam(query: TeamQuery): Promise<DataLayerResponse<NormalizedTeam>> {
     if (!query.name && !query.id) {
@@ -179,38 +179,70 @@ export class NFLAdapter extends BaseSportAdapter {
       }
     }
     
-    // Search by name
+    // Search by name with multiple variations
     if (query.name) {
-      const searchName = this.normalizeTeamName(query.name);
+      const searchVariations = getSearchVariations(query.name, 'american_football');
+      console.log(`[NFL] Searching for "${query.name}" with variations:`, searchVariations);
       
-      const result = await this.apiProvider.getNFLTeams({
-        name: searchName,
-        league: leagueId,
-        season,
-      });
-      
-      if (result.success && result.data && result.data.length > 0) {
-        return this.success(this.transformTeam(result.data[0]));
-      }
-      
-      // Try search with just league to get all teams and filter
+      // Get all teams once for efficient matching
       const allTeams = await this.apiProvider.getNFLTeams({
         league: leagueId,
         season,
       });
       
-      if (allTeams.success && allTeams.data) {
+      if (!allTeams.success || !allTeams.data || allTeams.data.length === 0) {
+        return this.error('FETCH_ERROR', 'Could not fetch NFL teams');
+      }
+      
+      // Try each variation
+      for (const searchName of searchVariations) {
         const lowerSearch = searchName.toLowerCase();
-        const found = allTeams.data.find(t => 
-          t.name.toLowerCase().includes(lowerSearch)
-        );
         
-        if (found) {
-          return this.success(this.transformTeam(found));
+        // Exact match
+        const exactMatch = allTeams.data.find(t => 
+          t.name.toLowerCase() === lowerSearch
+        );
+        if (exactMatch) {
+          console.log(`[NFL] Exact match found: "${query.name}" → "${exactMatch.name}"`);
+          return this.success(this.transformTeam(exactMatch));
         }
+        
+        // Partial match (contains)
+        const partialMatch = allTeams.data.find(t => 
+          t.name.toLowerCase().includes(lowerSearch) || lowerSearch.includes(t.name.toLowerCase())
+        );
+        if (partialMatch) {
+          console.log(`[NFL] Partial match found: "${query.name}" → "${partialMatch.name}"`);
+          return this.success(this.transformTeam(partialMatch));
+        }
+      }
+      
+      // Final fallback: fuzzy match on best similarity
+      const resolvedName = resolveTeamName(query.name, 'american_football');
+      const lowerResolved = resolvedName.toLowerCase();
+      
+      let bestMatch: NFLTeamResponse | null = null;
+      let bestScore = 0;
+      
+      for (const team of allTeams.data) {
+        const teamWords = team.name.toLowerCase().split(/\s+/);
+        const searchWords = lowerResolved.split(/\s+/);
+        const overlap = teamWords.filter(w => searchWords.some(sw => w.includes(sw) || sw.includes(w))).length;
+        const score = overlap / Math.max(teamWords.length, searchWords.length);
+        
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = team;
+        }
+      }
+      
+      if (bestMatch && bestScore >= 0.5) {
+        console.log(`[NFL] Fuzzy match found: "${query.name}" → "${bestMatch.name}" (score: ${bestScore})`);
+        return this.success(this.transformTeam(bestMatch));
       }
     }
     
+    console.error(`[NFL] Could not find team: "${query.name}"`);
     return this.error('TEAM_NOT_FOUND', `Could not find NFL team: ${query.name || query.id}`);
   }
   

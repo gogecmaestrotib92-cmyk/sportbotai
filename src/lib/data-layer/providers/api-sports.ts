@@ -133,7 +133,7 @@ export class APISportsProvider {
   // Soccer Endpoints
   // ============================================================================
   
-  async getSoccerTeams(params: { league?: number; season?: number; name?: string; id?: number }) {
+  async getSoccerTeams(params: { league?: number; season?: number; name?: string; search?: string; id?: number }) {
     return this.request<SoccerTeamResponse[]>(
       API_SPORTS_URLS.soccer,
       '/teams',
