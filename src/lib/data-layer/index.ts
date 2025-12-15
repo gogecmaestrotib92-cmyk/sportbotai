@@ -681,11 +681,38 @@ export class DataLayer {
   
   /**
    * Fuzzy match team names (handles partial matches)
+   * Improved to handle teams that share common words (e.g., "Real Madrid" vs "Real Betis")
    */
-  private fuzzyMatchTeam(name1: string, name2: string): boolean {
-    const n1 = name1.toLowerCase().split(' ')[0];
-    const n2 = name2.toLowerCase().split(' ')[0];
-    return n1.includes(n2) || n2.includes(n1);
+  private fuzzyMatchTeam(oddsName: string, teamName: string): boolean {
+    const n1 = oddsName.toLowerCase().trim();
+    const n2 = teamName.toLowerCase().trim();
+    
+    // Exact match
+    if (n1 === n2) return true;
+    
+    // One contains the other fully
+    if (n1.includes(n2) || n2.includes(n1)) return true;
+    
+    // Split into words and check for significant word matches
+    const words1 = n1.split(/\s+/).filter(w => w.length > 2);
+    const words2 = n2.split(/\s+/).filter(w => w.length > 2);
+    
+    // Skip common prefixes like "Real", "FC", "CF", "AC", "AS", "SC"
+    const commonPrefixes = ['real', 'fc', 'cf', 'ac', 'as', 'sc', 'cd', 'ud', 'rc', 'rcd', 'athletic', 'atletico'];
+    const significantWords1 = words1.filter(w => !commonPrefixes.includes(w));
+    const significantWords2 = words2.filter(w => !commonPrefixes.includes(w));
+    
+    // If we have significant words, match on those
+    if (significantWords1.length > 0 && significantWords2.length > 0) {
+      return significantWords1.some(w1 => 
+        significantWords2.some(w2 => w1.includes(w2) || w2.includes(w1))
+      );
+    }
+    
+    // Fallback: check if any word matches (excluding very short words)
+    return words1.some(w1 => 
+      words2.some(w2 => (w1.length >= 4 && w2.length >= 4) && (w1.includes(w2) || w2.includes(w1)))
+    );
   }
   
   /**
