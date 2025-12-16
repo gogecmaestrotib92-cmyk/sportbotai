@@ -1446,13 +1446,13 @@ const LEAGUE_LOGOS: Record<string, string> = {
   // SOCCER/FOOTBALL (using Wikipedia Commons for reliable logos)
   // ============================================
   
-  // Premier League - All variations
-  'Premier League': 'https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg',
-  'EPL': 'https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg',
-  'English Premier League': 'https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg',
-  'soccer_epl': 'https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg',
-  'soccer_england_premier_league': 'https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg',
-  'England - Premier League': 'https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg',
+  // Premier League - All variations (using api-sports.io - league 39)
+  'Premier League': 'https://media.api-sports.io/football/leagues/39.png',
+  'EPL': 'https://media.api-sports.io/football/leagues/39.png',
+  'English Premier League': 'https://media.api-sports.io/football/leagues/39.png',
+  'soccer_epl': 'https://media.api-sports.io/football/leagues/39.png',
+  'soccer_england_premier_league': 'https://media.api-sports.io/football/leagues/39.png',
+  'England - Premier League': 'https://media.api-sports.io/football/leagues/39.png',
   
   // La Liga - All variations
   'La Liga': 'https://upload.wikimedia.org/wikipedia/commons/5/54/LaLiga_EA_Sports_2023_Horizontal_Logo.svg',
