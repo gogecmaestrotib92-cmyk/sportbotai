@@ -88,10 +88,12 @@ export default function LeagueLogo({
           style={{ backgroundColor: `${getColor(leagueName)}40` }}
         />
       )}
+      {/* Light background for dark logos visibility */}
+      <div className="absolute inset-0 bg-white/90 rounded-lg" />
       <img
         src={logoUrl}
         alt={`${leagueName} logo`}
-        className={`w-full h-full object-contain transition-opacity duration-300 ${
+        className={`relative w-full h-full object-contain p-0.5 transition-opacity duration-300 ${
           isLoaded ? 'opacity-100' : 'opacity-0'
         }`}
         onLoad={() => setIsLoaded(true)}

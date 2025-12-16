@@ -2031,8 +2031,13 @@ export function getTeamLogo(teamName: string, sport: string, league?: string): s
  * @returns Logo URL or fallback SVG
  */
 export function getLeagueLogo(leagueName: string, sport?: string): string {
+  // DEBUG - remove after fixing
+  console.log('[getLeagueLogo] Input:', { leagueName, sport });
+  console.log('[getLeagueLogo] Exact match check:', LEAGUE_LOGOS[leagueName] ? 'FOUND' : 'NOT FOUND');
+  
   // Try exact match
   if (LEAGUE_LOGOS[leagueName]) {
+    console.log('[getLeagueLogo] Returning exact match:', LEAGUE_LOGOS[leagueName]);
     return LEAGUE_LOGOS[leagueName];
   }
   
@@ -2042,8 +2047,11 @@ export function getLeagueLogo(leagueName: string, sport?: string): string {
     leagueName.toLowerCase().includes(key.toLowerCase())
   );
   if (leagueKey) {
+    console.log('[getLeagueLogo] Found partial match:', leagueKey, '->', LEAGUE_LOGOS[leagueKey]);
     return LEAGUE_LOGOS[leagueKey];
   }
+  
+  console.log('[getLeagueLogo] NO MATCH FOUND, using fallback');
   
   // Check sport for default league logo
   const normalizedSport = sport ? normalizeSport(sport) : '';
