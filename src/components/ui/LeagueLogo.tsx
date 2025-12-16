@@ -81,14 +81,24 @@ export default function LeagueLogo({
     return darkLogos.some(dark => name.toLowerCase().includes(dark));
   };
 
+  // Logos that need to be rendered larger (SVG logos that appear too small)
+  const needsLargerSize = (name: string) => {
+    const smallLogos = ['euroleague'];
+    return smallLogos.some(small => name.toLowerCase().includes(small));
+  };
+
   if (hasError || isFallback) {
     return <FallbackLogo />;
   }
 
   const hasDarkLogo = needsLightBackground(leagueName);
+  const needsBigger = needsLargerSize(leagueName);
+  
+  // Use a bigger size for logos that appear too small (like EuroLeague SVG)
+  const actualSize = needsBigger && size === 'xs' ? 'sm' : (needsBigger && size === 'sm' ? 'md' : size);
 
   return (
-    <div className={`${sizeClasses[size]} relative flex-shrink-0 ${className}`}>
+    <div className={`${sizeClasses[actualSize]} relative flex-shrink-0 ${className}`}>
       {/* Placeholder while loading */}
       {!isLoaded && (
         <div 

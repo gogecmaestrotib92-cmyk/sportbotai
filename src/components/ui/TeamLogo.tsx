@@ -85,6 +85,12 @@ export default function TeamLogo({
     return `hsl(${hue}, 65%, 45%)`;
   };
 
+  // Dark logos that need a light background (black/dark logos on dark UI)
+  const needsLightBackground = (name: string) => {
+    const darkLogos = ['asvel', 'lyon', 'ldlc asvel', 'villeurbanne'];
+    return darkLogos.some(dark => name.toLowerCase().includes(dark));
+  };
+
   // Fallback component with initials
   const FallbackLogo = () => (
     <div 
@@ -96,6 +102,8 @@ export default function TeamLogo({
       </span>
     </div>
   );
+
+  const hasDarkLogo = needsLightBackground(teamName);
 
   // If external logo fails, show initials
   if (hasError || isFallback) {
@@ -111,10 +119,12 @@ export default function TeamLogo({
           style={{ backgroundColor: `${getColor(teamName)}40` }}
         />
       )}
+      {/* Light background only for dark logos (ASVEL/Lyon) */}
+      {hasDarkLogo && <div className="absolute inset-0 bg-white/90 rounded-lg" />}
       <img
         src={logoUrl}
         alt={`${teamName} logo`}
-        className={`w-full h-full object-contain transition-opacity duration-300 ${
+        className={`${hasDarkLogo ? 'relative p-0.5' : ''} w-full h-full object-contain transition-opacity duration-300 ${
           isLoaded ? 'opacity-100' : 'opacity-0'
         }`}
         onLoad={() => setIsLoaded(true)}
