@@ -1443,41 +1443,71 @@ const LEAGUE_LOGOS: Record<string, string> = {
   'Major League Soccer': 'https://a.espncdn.com/i/teamlogos/leagues/500/mls.png',
   
   // ============================================
-  // SOCCER/FOOTBALL (using Transfermarkt CDN for reliable logos)
+  // SOCCER/FOOTBALL (using Wikipedia Commons for reliable logos)
   // ============================================
   
   // Premier League - All variations
-  'Premier League': 'https://tmssl.akamaized.net/images/logo/header/gb1.png',
-  'EPL': 'https://tmssl.akamaized.net/images/logo/header/gb1.png',
-  'English Premier League': 'https://tmssl.akamaized.net/images/logo/header/gb1.png',
-  'soccer_epl': 'https://tmssl.akamaized.net/images/logo/header/gb1.png',
-  'soccer_england_premier_league': 'https://tmssl.akamaized.net/images/logo/header/gb1.png',
-  'England - Premier League': 'https://tmssl.akamaized.net/images/logo/header/gb1.png',
+  'Premier League': 'https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg',
+  'EPL': 'https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg',
+  'English Premier League': 'https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg',
+  'soccer_epl': 'https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg',
+  'soccer_england_premier_league': 'https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg',
+  'England - Premier League': 'https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg',
   
   // La Liga - All variations
-  'La Liga': 'https://tmssl.akamaized.net/images/logo/header/es1.png',
-  'LaLiga': 'https://tmssl.akamaized.net/images/logo/header/es1.png',
-  'La Liga - Spain': 'https://tmssl.akamaized.net/images/logo/header/es1.png',
-  'soccer_spain_la_liga': 'https://tmssl.akamaized.net/images/logo/header/es1.png',
-  'Spain - La Liga': 'https://tmssl.akamaized.net/images/logo/header/es1.png',
-  'La Liga Santander': 'https://tmssl.akamaized.net/images/logo/header/es1.png',
-  'La Liga EA Sports': 'https://tmssl.akamaized.net/images/logo/header/es1.png',
-  'La Liga 2 - Spain': 'https://tmssl.akamaized.net/images/logo/header/es2.png',
-  'soccer_spain_segunda_division': 'https://tmssl.akamaized.net/images/logo/header/es2.png',
+  'La Liga': 'https://upload.wikimedia.org/wikipedia/commons/5/54/LaLiga_EA_Sports_2023_Horizontal_Logo.svg',
+  'LaLiga': 'https://upload.wikimedia.org/wikipedia/commons/5/54/LaLiga_EA_Sports_2023_Horizontal_Logo.svg',
+  'La Liga - Spain': 'https://upload.wikimedia.org/wikipedia/commons/5/54/LaLiga_EA_Sports_2023_Horizontal_Logo.svg',
+  'soccer_spain_la_liga': 'https://upload.wikimedia.org/wikipedia/commons/5/54/LaLiga_EA_Sports_2023_Horizontal_Logo.svg',
+  'Spain - La Liga': 'https://upload.wikimedia.org/wikipedia/commons/5/54/LaLiga_EA_Sports_2023_Horizontal_Logo.svg',
+  'La Liga Santander': 'https://upload.wikimedia.org/wikipedia/commons/5/54/LaLiga_EA_Sports_2023_Horizontal_Logo.svg',
+  'La Liga EA Sports': 'https://upload.wikimedia.org/wikipedia/commons/5/54/LaLiga_EA_Sports_2023_Horizontal_Logo.svg',
+  'La Liga 2 - Spain': 'https://upload.wikimedia.org/wikipedia/commons/9/92/LaLiga_Hypermotion_2023_Horizontal_Logo.svg',
+  'soccer_spain_segunda_division': 'https://upload.wikimedia.org/wikipedia/commons/9/92/LaLiga_Hypermotion_2023_Horizontal_Logo.svg',
   
-  // Serie A - All variations (using Transfermarkt CDN for reliable logos)
-  'Serie A': 'https://tmssl.akamaized.net/images/logo/header/it1.png',
-  'Serie A - Italy': 'https://tmssl.akamaized.net/images/logo/header/it1.png',
-  'soccer_italy_serie_a': 'https://tmssl.akamaized.net/images/logo/header/it1.png',
-  'Italy - Serie A': 'https://tmssl.akamaized.net/images/logo/header/it1.png',
-  'Serie A TIM': 'https://tmssl.akamaized.net/images/logo/header/it1.png',
-  'Italy Serie A': 'https://tmssl.akamaized.net/images/logo/header/it1.png',
-  'Serie B - Italy': 'https://tmssl.akamaized.net/images/logo/header/it2.png',
-  'soccer_italy_serie_b': 'https://tmssl.akamaized.net/images/logo/header/it2.png',
+  // Serie A - All variations (using fifplay high quality PNG)
+  'Serie A': 'https://www.fifplay.com/img/public/serie-a-logo.png',
+  'Serie A - Italy': 'https://www.fifplay.com/img/public/serie-a-logo.png',
+  'soccer_italy_serie_a': 'https://www.fifplay.com/img/public/serie-a-logo.png',
+  'Italy - Serie A': 'https://www.fifplay.com/img/public/serie-a-logo.png',
+  'Serie A TIM': 'https://www.fifplay.com/img/public/serie-a-logo.png',
+  'Italy Serie A': 'https://www.fifplay.com/img/public/serie-a-logo.png',
+  'Serie B - Italy': 'https://upload.wikimedia.org/wikipedia/commons/3/30/Serie_B_Logo_2022.svg',
+  'soccer_italy_serie_b': 'https://upload.wikimedia.org/wikipedia/commons/3/30/Serie_B_Logo_2022.svg',
   
   // Bundesliga - All variations
-  'Bundesliga': 'https://media.api-sports.io/football/leagues/78.png',
-  // Bundesliga - All variations\n  'Bundesliga': 'https://tmssl.akamaized.net/images/logo/header/l1.png',\n  'Bundesliga - Germany': 'https://tmssl.akamaized.net/images/logo/header/l1.png',\n  'soccer_germany_bundesliga': 'https://tmssl.akamaized.net/images/logo/header/l1.png',\n  'Germany - Bundesliga': 'https://tmssl.akamaized.net/images/logo/header/l1.png',\n  '2. Bundesliga': 'https://tmssl.akamaized.net/images/logo/header/l2.png',\n  'Bundesliga 2': 'https://tmssl.akamaized.net/images/logo/header/l2.png',\n  'Bundesliga 2 - Germany': 'https://tmssl.akamaized.net/images/logo/header/l2.png',\n  'soccer_germany_bundesliga2': 'https://tmssl.akamaized.net/images/logo/header/l2.png',\n  \n  // 3. Liga - Germany\n  '3. Liga': 'https://tmssl.akamaized.net/images/logo/header/l3.png',\n  '3. Liga - Germany': 'https://tmssl.akamaized.net/images/logo/header/l3.png',\n  'Germany - 3. Liga': 'https://tmssl.akamaized.net/images/logo/header/l3.png',\n  'soccer_germany_liga3': 'https://tmssl.akamaized.net/images/logo/header/l3.png',\n  \n  // Ligue 1 - All variations (using Transfermarkt CDN for reliable logos)\n  'Ligue 1': 'https://tmssl.akamaized.net/images/logo/header/fr1.png',\n  'Ligue 1 - France': 'https://tmssl.akamaized.net/images/logo/header/fr1.png',\n  'soccer_france_ligue_one': 'https://tmssl.akamaized.net/images/logo/header/fr1.png',\n  'France - Ligue 1': 'https://tmssl.akamaized.net/images/logo/header/fr1.png',\n  'Ligue 1 Uber Eats': 'https://tmssl.akamaized.net/images/logo/header/fr1.png',\n  'France Ligue 1': 'https://tmssl.akamaized.net/images/logo/header/fr1.png',\n  \n  // Ligue 2 - France\n  'Ligue 2': 'https://tmssl.akamaized.net/images/logo/header/fr2.png',\n  'Ligue 2 - France': 'https://tmssl.akamaized.net/images/logo/header/fr2.png',\n  'France - Ligue 2': 'https://tmssl.akamaized.net/images/logo/header/fr2.png',\n  'soccer_france_ligue_two': 'https://tmssl.akamaized.net/images/logo/header/fr2.png',\n  \n  // Eredivisie - Netherlands\n  'Eredivisie': 'https://tmssl.akamaized.net/images/logo/header/nl1.png',\n  'Dutch Eredivisie': 'https://tmssl.akamaized.net/images/logo/header/nl1.png',
+  'Bundesliga': 'https://upload.wikimedia.org/wikipedia/en/d/df/Bundesliga_logo_%282017%29.svg',
+  'Bundesliga - Germany': 'https://upload.wikimedia.org/wikipedia/en/d/df/Bundesliga_logo_%282017%29.svg',
+  'soccer_germany_bundesliga': 'https://upload.wikimedia.org/wikipedia/en/d/df/Bundesliga_logo_%282017%29.svg',
+  'Germany - Bundesliga': 'https://upload.wikimedia.org/wikipedia/en/d/df/Bundesliga_logo_%282017%29.svg',
+  '2. Bundesliga': 'https://upload.wikimedia.org/wikipedia/en/4/4c/2._Bundesliga_logo_%282017%29.svg',
+  'Bundesliga 2': 'https://upload.wikimedia.org/wikipedia/en/4/4c/2._Bundesliga_logo_%282017%29.svg',
+  'Bundesliga 2 - Germany': 'https://upload.wikimedia.org/wikipedia/en/4/4c/2._Bundesliga_logo_%282017%29.svg',
+  'soccer_germany_bundesliga2': 'https://upload.wikimedia.org/wikipedia/en/4/4c/2._Bundesliga_logo_%282017%29.svg',
+  
+  // 3. Liga - Germany
+  '3. Liga': 'https://upload.wikimedia.org/wikipedia/en/6/66/3._Liga_logo.svg',
+  '3. Liga - Germany': 'https://upload.wikimedia.org/wikipedia/en/6/66/3._Liga_logo.svg',
+  'Germany - 3. Liga': 'https://upload.wikimedia.org/wikipedia/en/6/66/3._Liga_logo.svg',
+  'soccer_germany_liga3': 'https://upload.wikimedia.org/wikipedia/en/6/66/3._Liga_logo.svg',
+  
+  // Ligue 1 - All variations (using Wikipedia Commons)
+  'Ligue 1': 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Ligue1_logo.png',
+  'Ligue 1 - France': 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Ligue1_logo.png',
+  'soccer_france_ligue_one': 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Ligue1_logo.png',
+  'France - Ligue 1': 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Ligue1_logo.png',
+  'Ligue 1 Uber Eats': 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Ligue1_logo.png',
+  'France Ligue 1': 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Ligue1_logo.png',
+  
+  // Ligue 2 - France
+  'Ligue 2': 'https://upload.wikimedia.org/wikipedia/commons/c/cf/Ligue2_logo.png',
+  'Ligue 2 - France': 'https://upload.wikimedia.org/wikipedia/commons/c/cf/Ligue2_logo.png',
+  'France - Ligue 2': 'https://upload.wikimedia.org/wikipedia/commons/c/cf/Ligue2_logo.png',
+  'soccer_france_ligue_two': 'https://upload.wikimedia.org/wikipedia/commons/c/cf/Ligue2_logo.png',
+  
+  // Eredivisie - Netherlands
+  'Eredivisie': 'https://media.api-sports.io/football/leagues/88.png',
+  'Dutch Eredivisie': 'https://media.api-sports.io/football/leagues/88.png',
   'soccer_netherlands_eredivisie': 'https://media.api-sports.io/football/leagues/88.png',
   'Netherlands - Eredivisie': 'https://media.api-sports.io/football/leagues/88.png',
   
@@ -1587,20 +1617,20 @@ const LEAGUE_LOGOS: Record<string, string> = {
   'Super League - Greece': 'https://media.api-sports.io/football/leagues/197.png',
   'soccer_greece_super_league': 'https://media.api-sports.io/football/leagues/197.png',
   
-  // UEFA Competitions (using Transfermarkt CDN for reliable logos)
-  'Champions League': 'https://tmssl.akamaized.net/images/logo/header/cl.png',
-  'UEFA Champions League': 'https://tmssl.akamaized.net/images/logo/header/cl.png',
-  'soccer_uefa_champs_league': 'https://tmssl.akamaized.net/images/logo/header/cl.png',
-  'UCL': 'https://tmssl.akamaized.net/images/logo/header/cl.png',
-  'UEFA CL': 'https://tmssl.akamaized.net/images/logo/header/cl.png',
-  'Europa League': 'https://tmssl.akamaized.net/images/logo/header/el.png',
-  'UEFA Europa League': 'https://tmssl.akamaized.net/images/logo/header/el.png',
-  'soccer_uefa_europa_league': 'https://tmssl.akamaized.net/images/logo/header/el.png',
-  'UEFA EL': 'https://tmssl.akamaized.net/images/logo/header/el.png',
-  'Conference League': 'https://tmssl.akamaized.net/images/logo/header/uecl.png',
-  'UEFA Conference League': 'https://tmssl.akamaized.net/images/logo/header/uecl.png',
-  'UEFA Europa Conference League': 'https://tmssl.akamaized.net/images/logo/header/uecl.png',
-  'soccer_uefa_europa_conference_league': 'https://tmssl.akamaized.net/images/logo/header/uecl.png',
+  // UEFA Competitions (using Wikipedia Commons for reliable logos)
+  'Champions League': 'https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg',
+  'UEFA Champions League': 'https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg',
+  'soccer_uefa_champs_league': 'https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg',
+  'UCL': 'https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg',
+  'UEFA CL': 'https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg',
+  'Europa League': 'https://upload.wikimedia.org/wikipedia/en/0/03/Europa_League.svg',
+  'UEFA Europa League': 'https://upload.wikimedia.org/wikipedia/en/0/03/Europa_League.svg',
+  'soccer_uefa_europa_league': 'https://upload.wikimedia.org/wikipedia/en/0/03/Europa_League.svg',
+  'UEFA EL': 'https://upload.wikimedia.org/wikipedia/en/0/03/Europa_League.svg',
+  'Conference League': 'https://upload.wikimedia.org/wikipedia/en/5/5b/UEFA_Europa_Conference_League_Logo.svg',
+  'UEFA Conference League': 'https://upload.wikimedia.org/wikipedia/en/5/5b/UEFA_Europa_Conference_League_Logo.svg',
+  'UEFA Europa Conference League': 'https://upload.wikimedia.org/wikipedia/en/5/5b/UEFA_Europa_Conference_League_Logo.svg',
+  'soccer_uefa_europa_conference_league': 'https://upload.wikimedia.org/wikipedia/en/5/5b/UEFA_Europa_Conference_League_Logo.svg',
   
   // World Cup / International
   'FIFA World Cup': 'https://media.api-sports.io/football/leagues/1.png',
