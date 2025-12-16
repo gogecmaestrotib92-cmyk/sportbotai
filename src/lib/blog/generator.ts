@@ -29,12 +29,13 @@ export async function generateBlogPost(config: BlogGenerationConfig): Promise<Bl
     }
 
     // Step 2: Check for recent posts with this keyword (avoid duplicates)
+    // Allow regeneration after 7 days (aligned with getNextKeyword)
     if (!config.forceRegenerate) {
       const recentPost = await prisma.blogPost.findFirst({
         where: {
           keywordId: keywordRecord.id,
           createdAt: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days (was 30)
           },
         },
       });

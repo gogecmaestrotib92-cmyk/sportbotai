@@ -70,6 +70,9 @@ export const SEED_KEYWORDS = [
   "machine learning sports predictions explained",
   "automated sports analytics platforms",
   "AI powered match analysis software",
+  "sports prediction AI apps 2025",
+  "ChatGPT for sports betting analysis",
+  "AI football prediction accuracy rates",
   
   // Sports Analysis (core value proposition)
   "how to analyze football matches like a pro",
@@ -78,6 +81,9 @@ export const SEED_KEYWORDS = [
   "tennis match outcome predictors",
   "head to head statistics importance sports",
   "team form analysis for predictions",
+  "pre match analysis checklist football",
+  "what to look for before betting on a match",
+  "reading team lineups for predictions",
   
   // Probability & Statistics (educational)
   "understanding probability in sports outcomes",
@@ -85,6 +91,9 @@ export const SEED_KEYWORDS = [
   "implied probability vs true probability",
   "expected value sports analysis guide",
   "statistical models for sports predictions",
+  "Poisson distribution football predictions",
+  "xG expected goals explained betting",
+  "how to calculate true odds from bookmaker odds",
   
   // Specific Features (what SportBot offers)
   "real time sports data analysis",
@@ -92,6 +101,9 @@ export const SEED_KEYWORDS = [
   "risk assessment in sports predictions",
   "Kelly criterion sports betting calculator",
   "momentum analysis in football matches",
+  "live match analysis tools",
+  "injury impact on match predictions",
+  "finding value bets guide 2025",
   
   // Sport-specific deep dives
   "Premier League match analysis guide",
@@ -99,6 +111,11 @@ export const SEED_KEYWORDS = [
   "NFL game analysis statistics",
   "NBA player performance metrics",
   "how weather affects soccer matches",
+  "La Liga betting analysis tips",
+  "Serie A match prediction guide",
+  "Bundesliga football analysis",
+  "EuroLeague basketball predictions",
+  "UFC fight prediction factors",
   
   // Educational & Responsible
   "sports betting vs sports analysis difference",
@@ -106,6 +123,10 @@ export const SEED_KEYWORDS = [
   "why most sports predictions fail",
   "responsible approach to sports analytics",
   "free sports analysis tools comparison",
+  "common sports betting mistakes to avoid",
+  "bankroll management for sports betting",
+  "how to stop losing at sports betting",
+  "sports betting psychology explained",
   
   // Long-tail high-intent
   "how to predict football match results accurately",
@@ -113,6 +134,32 @@ export const SEED_KEYWORDS = [
   "understanding home advantage statistics",
   "what data do professional analysts use",
   "building sports prediction strategy",
+  "how sharps analyze matches differently",
+  "professional sports betting strategies",
+  "is it possible to beat the bookmakers",
+  
+  // Trending & Seasonal (2025)
+  "World Cup 2026 predictions analysis",
+  "Euro 2028 qualifying predictions",
+  "Super Bowl prediction factors",
+  "March Madness bracket analysis AI",
+  "Christmas Premier League predictions",
+  "how to analyze derbies and rivalries",
+  
+  // Comparison & Tools
+  "best football prediction sites 2025",
+  "free vs paid sports prediction tools",
+  "sports analytics software comparison",
+  "how accurate are prediction algorithms",
+  "betting odds comparison tools guide",
+  
+  // Niche Sports
+  "cricket match prediction analysis",
+  "rugby union betting analysis guide",
+  "ice hockey NHL prediction factors",
+  "golf tournament prediction methods",
+  "esports betting analysis guide",
+  "MMA fight prediction statistics",
 ];
 
 // Blog categories
