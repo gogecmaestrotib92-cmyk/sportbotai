@@ -64,16 +64,8 @@ export function UserMenu() {
     };
   }, [isOpen]);
 
-  // Refresh session in background (separate from menu toggle)
-  useEffect(() => {
-    // Refresh session every 30 seconds when logged in (not tied to menu)
-    if (session && status === 'authenticated') {
-      const interval = setInterval(() => {
-        update();
-      }, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [session, status, update]);
+  // Session refresh is now handled by AuthProvider (5 min interval)
+  // No need to refresh here - it causes unnecessary re-renders
 
   // Loading state
   if (status === 'loading') {
