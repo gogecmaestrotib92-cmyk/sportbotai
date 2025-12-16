@@ -349,8 +349,66 @@ export const PROHIBITED_TERMS = [
   'free money', 'easy money', 'printing money',
 ];
 
+/**
+ * Ensure content ends with a complete sentence.
+ * If truncated mid-sentence (ends with "..."), trim to last complete sentence.
+ */
+export function ensureCompleteSentence(text: string): string {
+  if (!text) return text;
+  
+  let cleaned = text.trim();
+  
+  // Check if truncated (ends with "..." or incomplete sentence indicators)
+  const isTruncated = 
+    cleaned.endsWith('...') ||
+    cleaned.endsWith('..') ||
+    cleaned.endsWith('—') ||
+    cleaned.endsWith('-') ||
+    // Ends with a word but no punctuation
+    (/[a-zA-Z0-9]$/.test(cleaned) && !/[.!?]$/.test(cleaned));
+  
+  if (!isTruncated) return cleaned;
+  
+  // Remove trailing ellipsis or dash
+  cleaned = cleaned.replace(/\.{2,}$/, '').replace(/[—-]$/, '').trim();
+  
+  // Find the last complete sentence (ends with . ! or ?)
+  const sentenceEndings = ['.', '!', '?'];
+  let lastSentenceEnd = -1;
+  
+  for (let i = cleaned.length - 1; i >= 0; i--) {
+    if (sentenceEndings.includes(cleaned[i])) {
+      // Make sure it's not a decimal point (e.g., "2.5")
+      if (cleaned[i] === '.' && i > 0 && i < cleaned.length - 1) {
+        const before = cleaned[i - 1];
+        const after = cleaned[i + 1];
+        if (/\d/.test(before) && /\d/.test(after)) {
+          continue; // This is a decimal, keep looking
+        }
+      }
+      lastSentenceEnd = i;
+      break;
+    }
+  }
+  
+  // If we found a complete sentence, trim to that
+  if (lastSentenceEnd > 0) {
+    return cleaned.slice(0, lastSentenceEnd + 1).trim();
+  }
+  
+  // Fallback: if no complete sentence found but text is substantial, add period
+  if (cleaned.length > 20 && /[a-zA-Z]$/.test(cleaned)) {
+    return cleaned + '.';
+  }
+  
+  return cleaned;
+}
+
 export function sanitizeAgentPost(post: string): { safe: boolean; post: string; flaggedTerms: string[] } {
-  const lowerPost = post.toLowerCase();
+  // First ensure the post ends with a complete sentence
+  let cleanedPost = ensureCompleteSentence(post);
+  
+  const lowerPost = cleanedPost.toLowerCase();
   const flaggedTerms: string[] = [];
   
   for (const term of PROHIBITED_TERMS) {
@@ -361,7 +419,7 @@ export function sanitizeAgentPost(post: string): { safe: boolean; post: string; 
   
   return {
     safe: flaggedTerms.length === 0,
-    post: flaggedTerms.length === 0 ? post : '',
+    post: flaggedTerms.length === 0 ? cleanedPost : '',
     flaggedTerms,
   };
 }
@@ -378,5 +436,6 @@ export default {
   buildAgentPostPrompt,
   buildThreadPrompt,
   sanitizeAgentPost,
+  ensureCompleteSentence,
   PROHIBITED_TERMS,
 };
