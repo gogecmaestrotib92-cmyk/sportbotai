@@ -24,10 +24,10 @@ const sizeClasses = {
   xl: 'w-16 h-16',
 };
 
-// Country code mappings
+// Country code mappings - using standard ISO codes
 const COUNTRY_CODES: Record<string, string> = {
   // Europe
-  'england': 'gb-eng',
+  'england': 'gb',
   'uk': 'gb',
   'spain': 'es',
   'germany': 'de',
@@ -36,7 +36,7 @@ const COUNTRY_CODES: Record<string, string> = {
   'portugal': 'pt',
   'netherlands': 'nl',
   'belgium': 'be',
-  'scotland': 'gb-sct',
+  'scotland': 'gb',
   'turkey': 'tr',
   'greece': 'gr',
   'russia': 'ru',
