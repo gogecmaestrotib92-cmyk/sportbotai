@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import { MatchData } from '@/types';
 import MatchCard from '@/components/MatchCard';
 import LeagueLogo from '@/components/ui/LeagueLogo';
+import CountryFlag, { getCountryForLeague } from '@/components/ui/CountryFlag';
 
 interface MatchBrowserProps {
   initialSport?: string;
@@ -189,7 +190,12 @@ export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 
                         : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-300'
                   }`}
                 >
-                  <LeagueLogo leagueName={league.name} sport={league.key} size="xs" />
+                  {/* Use country flag for domestic leagues, league logo for international competitions */}
+                  {getCountryForLeague(league.name) && !league.name.toLowerCase().includes('champions') && !league.name.toLowerCase().includes('europa') ? (
+                    <CountryFlag country={getCountryForLeague(league.name)!} size="xs" />
+                  ) : (
+                    <LeagueLogo leagueName={league.name} sport={league.key} size="xs" />
+                  )}
                   <span>{league.name}</span>
                   {matchCount !== undefined && matchCount > 0 && (
                     <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/10 text-gray-400">
