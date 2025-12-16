@@ -726,11 +726,18 @@ const SOCCER_TEAM_LOGOS: Record<string, string> = {
   'Slavia Praha': 'https://media.api-sports.io/football/teams/592.png',
   'Slavia Prague': 'https://media.api-sports.io/football/teams/592.png',
   'SK Slavia Praha': 'https://media.api-sports.io/football/teams/592.png',
+  'SK Slavia Prague': 'https://media.api-sports.io/football/teams/592.png',
   'Slavia': 'https://media.api-sports.io/football/teams/592.png',
+  'SK Slavia': 'https://media.api-sports.io/football/teams/592.png',
+  'Slavia Prag': 'https://media.api-sports.io/football/teams/592.png',
   
   // Pafos FC (Cyprus)
   'Pafos FC': 'https://media.api-sports.io/football/teams/4741.png',
   'Pafos': 'https://media.api-sports.io/football/teams/4741.png',
+  'Paphos FC': 'https://media.api-sports.io/football/teams/4741.png',
+  'Paphos': 'https://media.api-sports.io/football/teams/4741.png',
+  'AEK Paphos': 'https://media.api-sports.io/football/teams/4741.png',
+  'Páfos FC': 'https://media.api-sports.io/football/teams/4741.png',
   
   // Olympiacos (Greece)
   'Olympiakos': 'https://media.api-sports.io/football/teams/553.png',
