@@ -958,56 +958,65 @@ const SOCCER_TEAM_LOGOS: Record<string, string> = {
  */
 const BASKETBALL_TEAM_LOGOS: Record<string, string> = {
   // ============================================
-  // EUROLEAGUE TEAMS (using ESPN basketball logos)
+  // EUROLEAGUE TEAMS (using api-sports.io basketball CDN)
   // ============================================
-  'Real Madrid Baloncesto': 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png',
-  'Real Madrid Basketball': 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png',
-  'Real Madrid': 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png',
+  'Real Madrid Baloncesto': 'https://media.api-sports.io/basketball/teams/119.png',
+  'Real Madrid Basketball': 'https://media.api-sports.io/basketball/teams/119.png',
+  'Real Madrid': 'https://media.api-sports.io/basketball/teams/119.png',
   'FC Barcelona Basket': 'https://media.api-sports.io/basketball/teams/120.png',
   'FC Barcelona Basketball': 'https://media.api-sports.io/basketball/teams/120.png',
-  'FC Barcelona': 'https://a.espncdn.com/i/teamlogos/soccer/500/83.png',
+  'FC Barcelona': 'https://media.api-sports.io/basketball/teams/120.png',
+  'FC Barcelona Bàsquet': 'https://media.api-sports.io/basketball/teams/120.png',
   'Barcelona Basket': 'https://media.api-sports.io/basketball/teams/120.png',
   'Barcelona Basketball': 'https://media.api-sports.io/basketball/teams/120.png',
-  'Barcelona': 'https://a.espncdn.com/i/teamlogos/soccer/500/83.png',
-  'Olympiacos': 'https://crests.football-data.org/6607.png',
-  'Olympiacos BC': 'https://crests.football-data.org/6607.png',
-  'Olympiacos Piraeus': 'https://crests.football-data.org/6607.png',
-  'Olympiakos': 'https://crests.football-data.org/6607.png',
-  'Olympiakos BC': 'https://crests.football-data.org/6607.png',
+  'Barcelona': 'https://media.api-sports.io/basketball/teams/120.png',
+  'Olympiacos': 'https://media.api-sports.io/basketball/teams/135.png',
+  'Olympiacos BC': 'https://media.api-sports.io/basketball/teams/135.png',
+  'Olympiacos Piraeus': 'https://media.api-sports.io/basketball/teams/135.png',
+  'Olympiakos': 'https://media.api-sports.io/basketball/teams/135.png',
+  'Olympiakos BC': 'https://media.api-sports.io/basketball/teams/135.png',
   'Panathinaikos': 'https://media.api-sports.io/basketball/teams/121.png',
   'Panathinaikos BC': 'https://media.api-sports.io/basketball/teams/121.png',
   'Panathinaikos Athens': 'https://media.api-sports.io/basketball/teams/121.png',
   'Panathinaikos AKTOR Athens': 'https://media.api-sports.io/basketball/teams/121.png',
+  'Fenerbahce': 'https://media.api-sports.io/basketball/teams/122.png',
+  'Fenerbahce SK': 'https://media.api-sports.io/basketball/teams/122.png',
   'Fenerbahce Basketball': 'https://media.api-sports.io/basketball/teams/122.png',
   'Fenerbahce Beko': 'https://media.api-sports.io/basketball/teams/122.png',
   'Fenerbahce Beko Istanbul': 'https://media.api-sports.io/basketball/teams/122.png',
   'Fenerbahçe': 'https://media.api-sports.io/basketball/teams/122.png',
+  'Fenerbahçe SK': 'https://media.api-sports.io/basketball/teams/122.png',
   'Anadolu Efes': 'https://media.api-sports.io/basketball/teams/123.png',
   'Anadolu Efes Istanbul': 'https://media.api-sports.io/basketball/teams/123.png',
   'Efes Istanbul': 'https://media.api-sports.io/basketball/teams/123.png',
   'Efes': 'https://media.api-sports.io/basketball/teams/123.png',
-  'CSKA Moscow': 'https://a.espncdn.com/i/teamlogos/soccer/500/5970.png',
-  'CSKA': 'https://a.espncdn.com/i/teamlogos/soccer/500/5970.png',
+  'CSKA Moscow': 'https://media.api-sports.io/basketball/teams/130.png',
+  'CSKA': 'https://media.api-sports.io/basketball/teams/130.png',
   'Maccabi Tel Aviv': 'https://media.api-sports.io/basketball/teams/124.png',
   'Maccabi': 'https://media.api-sports.io/basketball/teams/124.png',
   'Maccabi Playtika Tel Aviv': 'https://media.api-sports.io/basketball/teams/124.png',
   'Bayern Munich Basketball': 'https://media.api-sports.io/basketball/teams/117.png',
   'Bayern München Basketball': 'https://media.api-sports.io/basketball/teams/117.png',
   'FC Bayern Munich': 'https://media.api-sports.io/basketball/teams/117.png',
+  'FC Bayern München': 'https://media.api-sports.io/basketball/teams/117.png',
   'FC Bayern Basketball': 'https://media.api-sports.io/basketball/teams/117.png',
   'Bayern Munich': 'https://media.api-sports.io/basketball/teams/117.png',
+  'Bayern München': 'https://media.api-sports.io/basketball/teams/117.png',
   'Alba Berlin': 'https://media.api-sports.io/basketball/teams/116.png',
   'ALBA Berlin': 'https://media.api-sports.io/basketball/teams/116.png',
   'Zalgiris Kaunas': 'https://media.api-sports.io/basketball/teams/141.png',
   'Zalgiris': 'https://media.api-sports.io/basketball/teams/141.png',
   'Žalgiris Kaunas': 'https://media.api-sports.io/basketball/teams/141.png',
+  'Žalgiris': 'https://media.api-sports.io/basketball/teams/141.png',
   'Virtus Bologna': 'https://media.api-sports.io/basketball/teams/125.png',
   'Virtus Segafredo Bologna': 'https://media.api-sports.io/basketball/teams/125.png',
   'Segafredo Virtus Bologna': 'https://media.api-sports.io/basketball/teams/125.png',
   'AS Monaco Basketball': 'https://media.api-sports.io/basketball/teams/137.png',
+  'AS Monaco': 'https://media.api-sports.io/basketball/teams/137.png',
   'Monaco Basketball': 'https://media.api-sports.io/basketball/teams/137.png',
   'AS Monaco Basket': 'https://media.api-sports.io/basketball/teams/137.png',
   'Monaco Basket': 'https://media.api-sports.io/basketball/teams/137.png',
+  'Monaco': 'https://media.api-sports.io/basketball/teams/137.png',
   'Partizan Belgrade': 'https://media.api-sports.io/basketball/teams/139.png',
   'Partizan': 'https://media.api-sports.io/basketball/teams/139.png',
   'Partizan Mozzart Bet Belgrade': 'https://media.api-sports.io/basketball/teams/139.png',
@@ -1016,22 +1025,29 @@ const BASKETBALL_TEAM_LOGOS: Record<string, string> = {
   'Crvena Zvezda Meridianbet Belgrade': 'https://media.api-sports.io/basketball/teams/138.png',
   'Red Star Belgrade': 'https://media.api-sports.io/basketball/teams/138.png',
   'KK Crvena Zvezda': 'https://media.api-sports.io/basketball/teams/138.png',
+  'KK Crvena zvezda': 'https://media.api-sports.io/basketball/teams/138.png',
   'Baskonia': 'https://media.api-sports.io/basketball/teams/118.png',
   'Saski Baskonia': 'https://media.api-sports.io/basketball/teams/118.png',
   'Baskonia Vitoria-Gasteiz': 'https://media.api-sports.io/basketball/teams/118.png',
   'Cazoo Baskonia Vitoria-Gasteiz': 'https://media.api-sports.io/basketball/teams/118.png',
   'Olimpia Milano': 'https://media.api-sports.io/basketball/teams/127.png',
+  'Pallacanestro Olimpia Milano': 'https://media.api-sports.io/basketball/teams/127.png',
+  'Pallacanestro Olimpia': 'https://media.api-sports.io/basketball/teams/127.png',
   'EA7 Emporio Armani Milano': 'https://media.api-sports.io/basketball/teams/127.png',
   'EA7 Olimpia Milano': 'https://media.api-sports.io/basketball/teams/127.png',
   'AX Armani Exchange Milano': 'https://media.api-sports.io/basketball/teams/127.png',
   'Armani Milano': 'https://media.api-sports.io/basketball/teams/127.png',
+  'Milano': 'https://media.api-sports.io/basketball/teams/127.png',
   'Valencia Basket': 'https://media.api-sports.io/basketball/teams/131.png',
   'Valencia BC': 'https://media.api-sports.io/basketball/teams/131.png',
+  'Valencia': 'https://media.api-sports.io/basketball/teams/131.png',
   'LDLC ASVEL': 'https://media.api-sports.io/basketball/teams/134.png',
   'LDLC ASVEL Villeurbanne': 'https://media.api-sports.io/basketball/teams/134.png',
   'ASVEL': 'https://media.api-sports.io/basketball/teams/134.png',
   'ASVEL Lyon-Villeurbanne': 'https://media.api-sports.io/basketball/teams/134.png',
+  'ASVEL Lyon Villeurbanne': 'https://media.api-sports.io/basketball/teams/134.png',
   'Paris Basketball': 'https://media.api-sports.io/basketball/teams/2188.png',
+  'Paris': 'https://media.api-sports.io/basketball/teams/2188.png',
   'Joventut Badalona': 'https://media.api-sports.io/basketball/teams/119.png',
   'Joventut': 'https://media.api-sports.io/basketball/teams/119.png',
   'CB Gran Canaria': 'https://media.api-sports.io/basketball/teams/126.png',
@@ -1045,10 +1061,10 @@ const BASKETBALL_TEAM_LOGOS: Record<string, string> = {
   // ============================================
   'Dubai Basketball': 'https://media.api-sports.io/basketball/teams/6792.png',
   'Dubai BC': 'https://media.api-sports.io/basketball/teams/6792.png',
-  'FC Bayern München Basketball': 'https://media.api-sports.io/basketball/teams/117.png',
-  'FC Barcelona Bàsquet': 'https://media.api-sports.io/basketball/teams/120.png',
+  'Dubai': 'https://media.api-sports.io/basketball/teams/6792.png',
   'Hapoel Tel Aviv': 'https://media.api-sports.io/basketball/teams/3395.png',
   'Hapoel Shlomo Tel Aviv': 'https://media.api-sports.io/basketball/teams/3395.png',
+  'Hapoel': 'https://media.api-sports.io/basketball/teams/3395.png',
   
   // ============================================
   // ACB SPAIN BASKETBALL TEAMS
@@ -1834,11 +1850,98 @@ function generateFallbackLogo(name: string, type: 'team' | 'league' = 'team'): s
  * @returns Logo URL (ESPN, API-Sports, or fallback SVG)
  */
 export function getTeamLogo(teamName: string, sport: string, league?: string): string {
-  const normalizedSport = normalizeSport(sport);
   const cleanName = teamName.trim();
+  const sportLower = sport.toLowerCase();
   
-  // Try ESPN for US sports (NBA, NFL, NHL, MLB)
-  if (['nba', 'nfl', 'nhl', 'mlb'].includes(normalizedSport)) {
+  // ============================================
+  // BASKETBALL: Handle NBA vs European leagues separately
+  // ============================================
+  const isEuropeanBasketball = sportLower.includes('euroleague') || 
+    sportLower.includes('eurocup') ||
+    sportLower.includes('acb') || 
+    sportLower.includes('lega') ||
+    sportLower.includes('bbl') || 
+    sportLower.includes('bsl') ||
+    sportLower.includes('vtb') ||
+    (league && (
+      league.toLowerCase().includes('euroleague') ||
+      league.toLowerCase().includes('eurocup') ||
+      league.toLowerCase().includes('acb') ||
+      league.toLowerCase().includes('lega')
+    ));
+  
+  const isNBA = sportLower.includes('nba') || sportLower === 'basketball_nba' ||
+    (league && league.toLowerCase() === 'nba');
+  
+  // For European basketball, check BASKETBALL_TEAM_LOGOS FIRST (before ESPN NBA)
+  if (isEuropeanBasketball && !isNBA) {
+    // Try exact match
+    if (BASKETBALL_TEAM_LOGOS[cleanName]) {
+      return BASKETBALL_TEAM_LOGOS[cleanName];
+    }
+    // Try case-insensitive exact match
+    const exactKey = Object.keys(BASKETBALL_TEAM_LOGOS).find(key => 
+      key.toLowerCase() === cleanName.toLowerCase()
+    );
+    if (exactKey) {
+      return BASKETBALL_TEAM_LOGOS[exactKey];
+    }
+    // Try partial match
+    const partialKey = Object.keys(BASKETBALL_TEAM_LOGOS).find(key => 
+      key.toLowerCase().includes(cleanName.toLowerCase()) ||
+      cleanName.toLowerCase().includes(key.toLowerCase())
+    );
+    if (partialKey) {
+      return BASKETBALL_TEAM_LOGOS[partialKey];
+    }
+    // For European basketball, return fallback directly - DON'T check ESPN NBA
+    return generateFallbackLogo(cleanName, 'team');
+  }
+  
+  // For NBA specifically, use ESPN NBA logos
+  if (isNBA || sportLower.includes('nba')) {
+    const espnIds = ESPN_TEAM_IDS['nba'];
+    if (espnIds) {
+      // Try exact match first
+      if (espnIds[cleanName]) {
+        return `https://a.espncdn.com/i/teamlogos/nba/500/${espnIds[cleanName]}.png`;
+      }
+      // Try case-insensitive exact match
+      const exactKey = Object.keys(espnIds).find(key => 
+        key.toLowerCase() === cleanName.toLowerCase()
+      );
+      if (exactKey) {
+        return `https://a.espncdn.com/i/teamlogos/nba/500/${espnIds[exactKey]}.png`;
+      }
+      // Try partial match - team name contains key or key contains team name
+      const partialKey = Object.keys(espnIds).find(key => 
+        key.toLowerCase().includes(cleanName.toLowerCase()) ||
+        cleanName.toLowerCase().includes(key.toLowerCase())
+      );
+      if (partialKey) {
+        return `https://a.espncdn.com/i/teamlogos/nba/500/${espnIds[partialKey]}.png`;
+      }
+      // Try matching just the main part (e.g., "Lakers" from "Los Angeles Lakers")
+      const teamWords = cleanName.split(/\s+/);
+      for (const word of teamWords) {
+        if (word.length >= 4) { // Skip short words like "FC", "LA", etc.
+          const wordMatch = Object.keys(espnIds).find(key =>
+            key.toLowerCase().includes(word.toLowerCase())
+          );
+          if (wordMatch) {
+            return `https://a.espncdn.com/i/teamlogos/nba/500/${espnIds[wordMatch]}.png`;
+          }
+        }
+      }
+    }
+    // Fallback for NBA
+    return generateFallbackLogo(cleanName, 'team');
+  }
+  
+  const normalizedSport = normalizeSport(sport);
+  
+  // Try ESPN for other US sports (NFL, NHL, MLB)
+  if (['nfl', 'nhl', 'mlb'].includes(normalizedSport)) {
     const espnIds = ESPN_TEAM_IDS[normalizedSport];
     if (espnIds) {
       // Try exact match first
@@ -1872,33 +1975,6 @@ export function getTeamLogo(teamName: string, sport: string, league?: string): s
           }
         }
       }
-    }
-  }
-  
-  // Try basketball team logos for European basketball leagues
-  if (normalizedSport === 'nba' || sport.toLowerCase().includes('euroleague') || 
-      sport.toLowerCase().includes('basketball') || sport.toLowerCase().includes('eurocup') ||
-      sport.toLowerCase().includes('acb') || sport.toLowerCase().includes('lega') ||
-      sport.toLowerCase().includes('bbl') || sport.toLowerCase().includes('bsl') ||
-      sport.toLowerCase().includes('vtb')) {
-    // Try exact match
-    if (BASKETBALL_TEAM_LOGOS[cleanName]) {
-      return BASKETBALL_TEAM_LOGOS[cleanName];
-    }
-    // Try case-insensitive exact match
-    const exactKey = Object.keys(BASKETBALL_TEAM_LOGOS).find(key => 
-      key.toLowerCase() === cleanName.toLowerCase()
-    );
-    if (exactKey) {
-      return BASKETBALL_TEAM_LOGOS[exactKey];
-    }
-    // Try partial match
-    const partialKey = Object.keys(BASKETBALL_TEAM_LOGOS).find(key => 
-      key.toLowerCase().includes(cleanName.toLowerCase()) ||
-      cleanName.toLowerCase().includes(key.toLowerCase())
-    );
-    if (partialKey) {
-      return BASKETBALL_TEAM_LOGOS[partialKey];
     }
   }
   
