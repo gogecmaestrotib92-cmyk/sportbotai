@@ -406,7 +406,7 @@ export function ensureCompleteSentence(text: string): string {
 
 export function sanitizeAgentPost(post: string): { safe: boolean; post: string; flaggedTerms: string[] } {
   // First ensure the post ends with a complete sentence
-  let cleanedPost = ensureCompleteSentence(post);
+  const cleanedPost = ensureCompleteSentence(post);
   
   const lowerPost = cleanedPost.toLowerCase();
   const flaggedTerms: string[] = [];
