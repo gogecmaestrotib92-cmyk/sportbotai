@@ -42,7 +42,7 @@ export function detectSportAPI(sportKey: string): SupportedSportAPI {
   const key = sportKey.toLowerCase();
   
   // Basketball
-  if (key.includes('basketball') || key.includes('nba') || key.includes('euroleague') || key.includes('ncaab')) {
+  if (key.includes('basketball') || key.includes('nba') || key.includes('euroleague')) {
     return 'basketball';
   }
   
@@ -79,11 +79,6 @@ export function getLeagueIdForSport(sportKey: string): { api: SupportedSportAPI;
   // EuroLeague
   if (key.includes('euroleague')) {
     return { api: 'basketball', leagueId: BASKETBALL_LEAGUES.EUROLEAGUE, season: getCurrentBasketballSeason() };
-  }
-  
-  // NCAA Basketball
-  if (key.includes('ncaab') || key === 'basketball_ncaab') {
-    return { api: 'basketball', leagueId: BASKETBALL_LEAGUES.NCAA, season: getCurrentBasketballSeason() };
   }
   
   // NFL

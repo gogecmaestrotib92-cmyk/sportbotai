@@ -175,19 +175,6 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     dataSource: 'odds-api',
     priority: 11,
   },
-  'basketball_ncaab': {
-    id: 'basketball_ncaab',
-    oddsApiSportKey: 'basketball_ncaab',
-    displayName: 'NCAA Basketball',
-    category: 'Basketball',
-    hasDraw: false,
-    scoringUnit: 'points',
-    matchTerm: 'game',
-    participantTerm: 'team',
-    icon: '🏀',
-    dataSource: 'odds-api',
-    priority: 12,
-  },
   
   // ====================
   // AMERICAN FOOTBALL

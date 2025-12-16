@@ -357,7 +357,6 @@ export const POPULAR_SPORTS: Record<string, string> = {
   // Basketball
   'basketball_nba': 'NBA',
   'basketball_euroleague': 'EuroLeague',
-  'basketball_ncaab': 'NCAA Basketball',
   
   // Tennis
   'tennis_atp_aus_open': 'ATP Australian Open',

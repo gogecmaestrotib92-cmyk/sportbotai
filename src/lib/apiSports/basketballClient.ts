@@ -3,7 +3,7 @@
  * 
  * Routes to appropriate API based on league:
  * - NBA: Uses dedicated NBA API (v2.nba.api-sports.io) - better data
- * - EuroLeague, NCAAB, ACB, etc.: Uses general Basketball API (v1.basketball.api-sports.io)
+ * - EuroLeague, ACB, etc.: Uses general Basketball API (v1.basketball.api-sports.io)
  * 
  * Uses same API key as football API
  */
@@ -21,8 +21,6 @@ export const BASKETBALL_LEAGUES = {
   NBA: 12,
   // EuroLeague - uses general Basketball API
   EUROLEAGUE: 120,
-  // NCAA - uses general Basketball API
-  NCAA: 116,
   // Other major leagues - all use general Basketball API
   ACB_SPAIN: 117,
   LEGA_ITALY: 90,

@@ -120,7 +120,6 @@ const SPORT_MAPPING: Record<string, string> = {
   'basketball': 'basketball',
   'basketball_euroleague': 'basketball',  // EuroLeague
   'basketball_eurocup': 'basketball',      // EuroCup
-  'basketball_ncaab': 'basketball',        // NCAA
   'basketball_acb': 'basketball',          // ACB Spain
   'euroleague': 'basketball',
   'eurocup': 'basketball',
@@ -625,7 +624,7 @@ async function getSoccerH2H(homeTeamId: number, awayTeamId: number, baseUrl: str
 }
 
 // ============================================
-// BASKETBALL FUNCTIONS (EuroLeague, NCAAB, ACB, etc.)
+// BASKETBALL FUNCTIONS (EuroLeague, ACB, etc.)
 // Uses v1.basketball.api-sports.io
 // ============================================
 
@@ -635,18 +634,15 @@ async function getSoccerH2H(homeTeamId: number, awayTeamId: number, baseUrl: str
  * - 120: EuroLeague
  * - 202: EuroCup
  * - 117: ACB (Spain)
- * - 194: NCAAB (USA College)
  * - 110: France Pro A
  * - 80: Germany BBL
  * - 203: Italy Lega Basket
- * - 12: NBA (USA)
  */
 const BASKETBALL_LEAGUE_IDS = {
   NBA: 12,  // NBA is league 12 in Basketball API
   EUROLEAGUE: 120,
   EUROCUP: 202,
   ACB_SPAIN: 117,
-  NCAAB: 194,
   FRANCE_PRO_A: 110,
   GERMANY_BBL: 80,
   ITALY_LEGA: 203,
@@ -813,8 +809,6 @@ async function findBasketballTeam(teamName: string, baseUrl: string, isNBA: bool
     targetLeagueId = BASKETBALL_LEAGUE_IDS.EUROCUP;
   } else if (leagueLower.includes('acb') || leagueLower.includes('spain')) {
     targetLeagueId = BASKETBALL_LEAGUE_IDS.ACB_SPAIN;
-  } else if (leagueLower.includes('ncaa') || leagueLower.includes('college')) {
-    targetLeagueId = BASKETBALL_LEAGUE_IDS.NCAAB;
   } else if (leagueLower.includes('italy') || leagueLower.includes('lega')) {
     targetLeagueId = BASKETBALL_LEAGUE_IDS.ITALY_LEGA;
   } else if (leagueLower.includes('germany') || leagueLower.includes('bbl')) {
@@ -870,7 +864,6 @@ async function findBasketballTeam(teamName: string, baseUrl: string, isNBA: bool
     BASKETBALL_LEAGUE_IDS.FRANCE_PRO_A,
     BASKETBALL_LEAGUE_IDS.BSL_TURKEY,
     BASKETBALL_LEAGUE_IDS.VTB_LEAGUE,
-    BASKETBALL_LEAGUE_IDS.NCAAB,
   ];
   
   // Try each league in priority order (with season parameter required by API)
@@ -1991,11 +1984,10 @@ async function fetchBasketballData(homeTeam: string, awayTeam: string, baseUrl: 
   // Determine league type from league parameter
   const isNBA = sportLower.includes('nba') || leagueLower.includes('nba') || leagueLower === '';
   const isEuroleague = leagueLower.includes('euroleague');
-  const isNCAAB = leagueLower.includes('ncaa') || leagueLower.includes('college');
   const isACB = leagueLower.includes('acb') || leagueLower.includes('spain');
   
   // Default to NBA if no specific league is identified (most common use case)
-  const leagueType = isEuroleague ? 'Euroleague' : isNCAAB ? 'NCAAB' : isACB ? 'ACB' : 'NBA';
+  const leagueType = isEuroleague ? 'Euroleague' : isACB ? 'ACB' : 'NBA';
   
   console.log(`[Basketball] Fetching ${leagueType} data for ${homeTeam} vs ${awayTeam} (sport: ${originalSport}, league: ${league})`);
   
