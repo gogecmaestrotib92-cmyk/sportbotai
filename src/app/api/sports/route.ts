@@ -1,27 +1,25 @@
 /**
  * API Route: /api/sports
  * 
- * Dohvata listu dostupnih sportova iz The Odds API.
- * Ovaj endpoint je BESPLATAN i ne troši API kvotu.
+ * Fetches list of available sports from The Odds API.
+ * This endpoint is FREE and does not use API quota.
  */
 
 import { NextResponse } from 'next/server';
-import { getSports, groupSportsByCategory } from '@/lib/odds-api';
+import { theOddsClient, groupSportsByCategory } from '@/lib/theOdds';
 
 export async function GET() {
   try {
-    const apiKey = process.env.ODDS_API_KEY;
-
-    if (!apiKey) {
+    if (!theOddsClient.isConfigured()) {
       return NextResponse.json(
         { error: 'ODDS_API_KEY is not configured' },
         { status: 500 }
       );
     }
 
-    const { data: sports, requestsRemaining } = await getSports(apiKey);
+    const { data: sports, requestsRemaining } = await theOddsClient.getSports();
     
-    // Filtriraj samo aktivne sportove i grupiši ih
+    // Filter active sports and group them
     const activeSports = sports.filter(s => s.active && !s.has_outrights);
     const grouped = groupSportsByCategory(activeSports);
 

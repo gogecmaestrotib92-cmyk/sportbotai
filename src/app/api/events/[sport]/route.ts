@@ -1,12 +1,12 @@
 /**
  * API Route: /api/events/[sport]
  * 
- * Dohvata listu događaja za specifični sport.
- * Ovaj endpoint je BESPLATAN i ne troši API kvotu.
+ * Fetches list of events for a specific sport.
+ * This endpoint is FREE and does not use API quota.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getEvents } from '@/lib/odds-api';
+import { theOddsClient } from '@/lib/theOdds';
 
 export async function GET(
   request: NextRequest,
@@ -14,9 +14,8 @@ export async function GET(
 ) {
   try {
     const { sport } = await params;
-    const apiKey = process.env.ODDS_API_KEY;
 
-    if (!apiKey) {
+    if (!theOddsClient.isConfigured()) {
       return NextResponse.json(
         { error: 'ODDS_API_KEY is not configured' },
         { status: 500 }
@@ -30,9 +29,9 @@ export async function GET(
       );
     }
 
-    const { data: events, requestsRemaining } = await getEvents(apiKey, sport);
+    const { data: events, requestsRemaining } = await theOddsClient.getEvents(sport);
 
-    // Sortiraj po vremenu početka
+    // Sort by start time
     const sortedEvents = events.sort(
       (a, b) => new Date(a.commence_time).getTime() - new Date(b.commence_time).getTime()
     );
