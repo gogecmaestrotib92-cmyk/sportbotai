@@ -439,6 +439,14 @@ export default function AIDeskChat() {
                           }
                         : m
                     ));
+                  } else if (data.type === 'followUps') {
+                    // Update with smart follow-ups (generated after response completes)
+                    streamFollowUps = data.followUps || [];
+                    setMessages(prev => prev.map(m => 
+                      m.id === assistantMessageId 
+                        ? { ...m, followUps: streamFollowUps }
+                        : m
+                    ));
                   } else if (data.type === 'done') {
                     // Mark streaming as complete
                     setMessages(prev => prev.map(m => 

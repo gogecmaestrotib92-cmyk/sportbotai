@@ -346,205 +346,265 @@ async function fetchDataLayerContext(
 // ============================================
 
 /**
- * Extract team and player names from text using common patterns
+ * Extract entities from text - teams, players, leagues, topics
  */
-function extractEntities(text: string): { teams: string[]; players: string[] } {
+function extractEntities(text: string): { 
+  teams: string[]; 
+  players: string[]; 
+  leagues: string[];
+  topics: string[];
+} {
   const teams: string[] = [];
   const players: string[] = [];
+  const leagues: string[] = [];
+  const topics: string[] = [];
   
-  // Common team patterns (2-4 words starting with capital)
-  const teamPatterns = [
-    /(?:^|[\s,])([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3})\s+(?:vs?\.?|against|playing|plays|beat|lost|drew|winning|losing)/gi,
-    /(?:^|[\s,])([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3})\s+(?:FC|United|City|Athletic|Rovers|Town|Wanderers|Hotspur)/gi,
-    /(?:match|game|fixture)(?:\s+between)?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:vs?\.?|and)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/gi,
-  ];
+  // Known teams (major leagues)
+  const knownTeams: Record<string, string[]> = {
+    soccer: ['Manchester United', 'Man United', 'Liverpool', 'Arsenal', 'Chelsea', 'Manchester City', 'Man City', 'Tottenham', 'Spurs', 'Newcastle', 'West Ham', 'Aston Villa', 'Brighton', 'Real Madrid', 'Barcelona', 'Barca', 'Atletico Madrid', 'Bayern Munich', 'Bayern', 'Dortmund', 'Borussia Dortmund', 'PSG', 'Paris Saint-Germain', 'Juventus', 'Juve', 'Inter Milan', 'AC Milan', 'Napoli', 'Roma', 'Lazio'],
+    basketball: ['Lakers', 'Celtics', 'Warriors', 'Heat', 'Bucks', 'Nets', 'Knicks', '76ers', 'Sixers', 'Clippers', 'Suns', 'Nuggets', 'Mavericks', 'Mavs', 'Grizzlies', 'Timberwolves', 'Cavaliers', 'Bulls', 'Hawks', 'Raptors', 'Pelicans', 'Thunder', 'Kings', 'Spurs'],
+    nfl: ['Chiefs', 'Eagles', 'Bills', 'Cowboys', 'Dolphins', 'Ravens', 'Bengals', '49ers', 'Niners', 'Lions', 'Seahawks', 'Packers', 'Vikings', 'Steelers', 'Chargers', 'Broncos', 'Raiders', 'Patriots', 'Titans', 'Texans', 'Browns', 'Bears', 'Saints', 'Buccaneers', 'Falcons', 'Cardinals', 'Rams'],
+  };
   
-  // Known team name patterns
-  const knownTeamWords = ['United', 'City', 'FC', 'Real', 'Bayern', 'Inter', 'Milan', 'Barcelona', 'Liverpool', 'Chelsea', 'Arsenal', 'Tottenham', 'Manchester', 'Juventus', 'PSG', 'Dortmund', 'Lakers', 'Celtics', 'Warriors', 'Heat', 'Bucks', 'Nets', 'Knicks'];
+  // Known leagues
+  const knownLeagues = ['Premier League', 'La Liga', 'Serie A', 'Bundesliga', 'Ligue 1', 'Champions League', 'UCL', 'Europa League', 'NBA', 'NFL', 'NHL', 'MLS', 'EuroLeague'];
   
-  for (const pattern of teamPatterns) {
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      if (match[1]) teams.push(match[1].trim());
-      if (match[2]) teams.push(match[2].trim());
-    }
-  }
+  // Known players (sample - expand as needed)
+  const knownPlayers = ['Haaland', 'Salah', 'Mbappe', 'Mbappé', 'Messi', 'Ronaldo', 'Kane', 'Bellingham', 'Vinicius', 'Saka', 'Palmer', 'LeBron', 'Curry', 'Durant', 'Giannis', 'Luka', 'Jokic', 'Tatum', 'Edwards', 'Mahomes', 'Hurts', 'Allen', 'Burrow', 'Lamar'];
   
-  // Also check for known team keywords
-  for (const word of knownTeamWords) {
-    const regex = new RegExp(`\\b([A-Z][a-z]*\\s+)?${word}(\\s+[A-Z][a-z]*)?\\b`, 'g');
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-      teams.push(match[0].trim());
-    }
-  }
+  const lowerText = text.toLowerCase();
   
-  // Player patterns (typically first + last name, or known player indicator)
-  const playerIndicators = ['scored', 'goal by', 'assist', 'player', 'stats for', 'form of', 'performance of'];
-  for (const indicator of playerIndicators) {
-    const regex = new RegExp(`${indicator}\\s+([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)?)`, 'gi');
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-      if (match[1] && !teams.includes(match[1].trim())) {
-        players.push(match[1].trim());
+  // Find teams
+  for (const sportTeams of Object.values(knownTeams)) {
+    for (const team of sportTeams) {
+      if (lowerText.includes(team.toLowerCase())) {
+        teams.push(team);
       }
     }
   }
   
-  // Deduplicate
+  // Find leagues
+  for (const league of knownLeagues) {
+    if (lowerText.includes(league.toLowerCase())) {
+      leagues.push(league);
+    }
+  }
+  
+  // Find players
+  for (const player of knownPlayers) {
+    if (lowerText.includes(player.toLowerCase())) {
+      players.push(player);
+    }
+  }
+  
+  // Extract topics from the conversation
+  const topicPatterns = [
+    { pattern: /injur|hurt|out|miss|sidelined/i, topic: 'injuries' },
+    { pattern: /transfer|sign|buy|sell|rumor/i, topic: 'transfers' },
+    { pattern: /form|streak|win|los|recent/i, topic: 'form' },
+    { pattern: /goal|scor|point|stat/i, topic: 'stats' },
+    { pattern: /lineup|squad|roster|team sheet/i, topic: 'lineup' },
+    { pattern: /predict|odds|bet|value/i, topic: 'predictions' },
+    { pattern: /stand|table|position|rank/i, topic: 'standings' },
+    { pattern: /next|upcoming|fixture|schedule/i, topic: 'fixtures' },
+    { pattern: /head.to.head|h2h|history|vs/i, topic: 'h2h' },
+  ];
+  
+  for (const { pattern, topic } of topicPatterns) {
+    if (pattern.test(text)) {
+      topics.push(topic);
+    }
+  }
+  
   return {
     teams: Array.from(new Set(teams)).slice(0, 3),
     players: Array.from(new Set(players)).slice(0, 2),
+    leagues: Array.from(new Set(leagues)).slice(0, 2),
+    topics: Array.from(new Set(topics)).slice(0, 3),
   };
 }
 
 /**
- * Generate contextual follow-up suggestions based on the query, category, and extracted context
+ * Generate AI-powered contextual follow-ups based on the conversation
  */
-function generateFollowUps(
+async function generateSmartFollowUps(
+  question: string,
+  answer: string,
+  category: QueryCategory,
+  sport: string | undefined
+): Promise<string[]> {
+  try {
+    // Extract entities from both Q&A
+    const qEntities = extractEntities(question);
+    const aEntities = extractEntities(answer);
+    
+    // Merge entities, prioritizing from question
+    const teams = [...new Set([...qEntities.teams, ...aEntities.teams])].slice(0, 3);
+    const players = [...new Set([...qEntities.players, ...aEntities.players])].slice(0, 2);
+    const leagues = [...new Set([...qEntities.leagues, ...aEntities.leagues])].slice(0, 2);
+    const topics = [...new Set([...qEntities.topics, ...aEntities.topics])].slice(0, 3);
+    
+    // Build context summary for GPT
+    const contextParts: string[] = [];
+    if (teams.length > 0) contextParts.push(`Teams: ${teams.join(', ')}`);
+    if (players.length > 0) contextParts.push(`Players: ${players.join(', ')}`);
+    if (leagues.length > 0) contextParts.push(`Leagues: ${leagues.join(', ')}`);
+    if (topics.length > 0) contextParts.push(`Topics: ${topics.join(', ')}`);
+    
+    // Use GPT to generate smart follow-ups
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `Generate 3 natural follow-up questions based on this sports conversation. 
+Rules:
+- Questions must be DIRECTLY related to the entities and topics discussed
+- Use specific team/player names from the conversation
+- Each question should explore a different angle (stats, news, predictions, comparisons, etc.)
+- Questions should feel like what a curious fan would naturally ask next
+- Keep questions short (under 10 words ideally)
+- No generic questions - be specific to the conversation
+- Return ONLY a JSON array of 3 strings, nothing else
+
+Example good follow-ups for "Liverpool vs Arsenal":
+["Liverpool's injury list for this match?", "Head to head record last 5 games?", "Who's the top scorer between these two?"]
+
+Example bad follow-ups (too generic):
+["What teams are playing?", "Tell me more", "Any other news?"]`
+        },
+        {
+          role: 'user',
+          content: `Question: "${question}"
+Answer summary: "${answer.slice(0, 500)}..."
+${contextParts.length > 0 ? `Context: ${contextParts.join(' | ')}` : ''}
+Category: ${category}
+${sport ? `Sport: ${sport}` : ''}
+
+Generate 3 specific follow-up questions:`
+        }
+      ],
+      max_tokens: 150,
+      temperature: 0.8,
+    });
+    
+    const content = response.choices[0]?.message?.content || '';
+    
+    // Parse JSON array from response
+    try {
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.slice(0, 3).map(q => String(q).replace(/^\d+\.\s*/, '').trim());
+      }
+    } catch {
+      // If JSON parse fails, try to extract questions manually
+      const lines = content.split('\n').filter(l => l.trim());
+      const questions = lines
+        .map(l => l.replace(/^[\d\-\*\.]+\s*/, '').replace(/^["']|["']$/g, '').trim())
+        .filter(l => l.length > 10 && l.includes('?'));
+      if (questions.length > 0) {
+        return questions.slice(0, 3);
+      }
+    }
+    
+    // Fallback to rule-based if GPT fails
+    return generateFallbackFollowUps(teams, players, topics, category, sport);
+    
+  } catch (error) {
+    console.error('[AI-Chat] Follow-up generation error:', error);
+    return generateFallbackFollowUps([], [], [], category, sport);
+  }
+}
+
+/**
+ * Fallback rule-based follow-ups when GPT fails
+ */
+function generateFallbackFollowUps(
+  teams: string[],
+  players: string[],
+  topics: string[],
+  category: QueryCategory,
+  sport: string | undefined
+): string[] {
+  const suggestions: string[] = [];
+  const team = teams[0];
+  const player = players[0];
+  
+  if (team && teams[1]) {
+    suggestions.push(
+      `${team} vs ${teams[1]} head to head?`,
+      `Key injuries for ${team}?`,
+      `Who's favored in this match?`
+    );
+  } else if (team) {
+    suggestions.push(
+      `${team} recent form?`,
+      `${team} next fixture?`,
+      `${team} top performers?`
+    );
+  } else if (player) {
+    suggestions.push(
+      `${player} stats this season?`,
+      `${player} recent performances?`,
+      `${player} injury status?`
+    );
+  } else {
+    // Sport-specific defaults
+    if (sport === 'football' || sport === 'soccer') {
+      suggestions.push('Premier League standings?', 'Champions League results?', 'Top scorers this week?');
+    } else if (sport === 'basketball') {
+      suggestions.push('NBA standings?', 'Top performers tonight?', 'Injury updates?');
+    } else {
+      suggestions.push('Latest sports news?', 'Today\'s top matches?', 'Any breaking news?');
+    }
+  }
+  
+  return suggestions.slice(0, 3);
+}
+
+/**
+ * Quick follow-ups for initial metadata (before response is ready)
+ * These will be replaced by smart follow-ups after response completes
+ */
+function generateQuickFollowUps(
   message: string, 
   category: QueryCategory, 
   sport: string | undefined
 ): string[] {
-  const suggestions: string[] = [];
   const { teams, players } = extractEntities(message);
-  
-  const team1 = teams[0];
-  const team2 = teams[1];
+  const team = teams[0];
   const player = players[0];
   
-  // If we have specific teams/players, generate contextual follow-ups
-  if (team1 && team2) {
-    // Match-specific follow-ups
-    suggestions.push(
-      `Head to head record: ${team1} vs ${team2}?`,
-      `Key players to watch in ${team1} vs ${team2}?`,
-      `Recent form comparison: ${team1} vs ${team2}?`
-    );
-  } else if (team1) {
-    // Single team follow-ups based on category
-    switch (category) {
-      case 'STANDINGS':
-        suggestions.push(
-          `${team1} upcoming fixtures?`,
-          `${team1} recent results?`,
-          `${team1} top scorers this season?`
-        );
-        break;
-      case 'ROSTER':
-      case 'INJURY':
-        suggestions.push(
-          `${team1} injury updates?`,
-          `${team1} starting lineup prediction?`,
-          `${team1} squad depth analysis?`
-        );
-        break;
-      case 'FIXTURE':
-        suggestions.push(
-          `${team1} form going into this match?`,
-          `${team1} key players for this game?`,
-          `${team1} tactics breakdown?`
-        );
-        break;
-      case 'RESULT':
-        suggestions.push(
-          `${team1} next match?`,
-          `How does this result affect ${team1}'s season?`,
-          `${team1} player ratings from this match?`
-        );
-        break;
-      case 'TRANSFER':
-        suggestions.push(
-          `${team1} transfer targets?`,
-          `${team1} transfer budget?`,
-          `Players leaving ${team1}?`
-        );
-        break;
-      default:
-        suggestions.push(
-          `${team1} latest news?`,
-          `${team1} standings position?`,
-          `${team1} recent form?`
-        );
-    }
+  if (team) {
+    return [
+      `${team} recent form?`,
+      `${team} injury news?`,
+      `${team} next match?`
+    ];
   } else if (player) {
-    // Player-specific follow-ups
-    suggestions.push(
-      `${player} season stats breakdown?`,
-      `${player} recent performances?`,
-      `${player} compared to similar players?`
-    );
-  } else {
-    // No entities extracted - use category-based generic suggestions
-    switch (category) {
-      case 'STANDINGS':
-        suggestions.push(
-          'Which team is leading the league?',
-          'Current relegation battle?',
-          'Who has the best goal difference?'
-        );
-        break;
-      case 'FIXTURE':
-        suggestions.push(
-          'Biggest match this weekend?',
-          'Any derby matches coming up?',
-          'Which games have title implications?'
-        );
-        break;
-      case 'TRANSFER':
-        suggestions.push(
-          'Biggest transfer rumors today?',
-          'Any deadline day moves expected?',
-          'Top free agents available?'
-        );
-        break;
-      case 'INJURY':
-        suggestions.push(
-          'Major injuries affecting top teams?',
-          'Return dates for key players?',
-          'Teams with the most injuries?'
-        );
-        break;
-      case 'BETTING_ADVICE':
-      case 'PLAYER_PROP':
-        suggestions.push(
-          'Best value bets this week?',
-          'Under/over trends to watch?',
-          'Which favorites are vulnerable?'
-        );
-        break;
-      default:
-        // Sport-specific defaults when no context
-        if (sport === 'football' || sport === 'soccer') {
-          suggestions.push(
-            'Premier League title race update?',
-            'Champions League latest?',
-            'Top scorers this season?'
-          );
-        } else if (sport === 'basketball') {
-          suggestions.push(
-            'NBA playoff picture?',
-            'MVP race update?',
-            'Tonight\'s NBA games?'
-          );
-        } else if (sport === 'american_football') {
-          suggestions.push(
-            'NFL playoff standings?',
-            'This week\'s best matchups?',
-            'Quarterback rankings?'
-          );
-        } else {
-          suggestions.push(
-            'Latest sports headlines?',
-            'Top matches this week?',
-            'Any breaking news?'
-          );
-        }
-    }
+    return [
+      `${player} season stats?`,
+      `${player} recent form?`,
+      `${player} latest news?`
+    ];
   }
   
-  // Return max 3 unique suggestions
-  return Array.from(new Set(suggestions)).slice(0, 3);
+  // Category-based defaults
+  switch (category) {
+    case 'STANDINGS':
+      return ['Title race update?', 'Relegation battle?', 'Form table?'];
+    case 'FIXTURE':
+      return ['Biggest match this week?', 'TV schedule?', 'Team news?'];
+    case 'INJURY':
+      return ['Expected return dates?', 'Squad impact?', 'Replacement options?'];
+    case 'TRANSFER':
+      return ['Latest rumors?', 'Deal likelihood?', 'Fee expectations?'];
+    default:
+      if (sport === 'basketball') {
+        return ['NBA standings?', 'Top scorers?', 'Tonight\'s games?'];
+      }
+      return ['Latest headlines?', 'Top matches today?', 'Any breaking news?'];
+  }
 }
 
 // ============================================
@@ -818,20 +878,20 @@ export async function POST(request: NextRequest) {
     const encoder = new TextEncoder();
     let fullResponse = '';
     
-    // Generate follow-up suggestions
-    const followUps = generateFollowUps(message, queryCategory, detectedSport);
+    // Generate quick follow-ups initially (will be replaced by smart ones after response)
+    const quickFollowUps = generateQuickFollowUps(message, queryCategory, detectedSport);
     
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          // Send metadata first
+          // Send metadata first with quick follow-ups
           const metadata = {
             type: 'metadata',
             citations,
             usedRealTimeSearch: !!perplexityContext,
             usedDataLayer: !!dataLayerContext,
             brainMode,
-            followUps,
+            followUps: quickFollowUps,
           };
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(metadata)}\n\n`));
 
@@ -843,6 +903,17 @@ export async function POST(request: NextRequest) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', content })}\n\n`));
             }
           }
+
+          // Generate smart follow-ups based on the full conversation (async but wait for it)
+          let smartFollowUps: string[] = quickFollowUps;
+          try {
+            smartFollowUps = await generateSmartFollowUps(message, fullResponse, queryCategory, detectedSport);
+          } catch (err) {
+            console.error('[AI-Chat] Smart follow-up generation failed:', err);
+          }
+          
+          // Send updated follow-ups
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'followUps', followUps: smartFollowUps })}\n\n`));
 
           // Send done signal
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
