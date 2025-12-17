@@ -373,8 +373,8 @@ function extractEntities(text: string): { teams: string[]; players: string[] } {
   
   // Deduplicate
   return {
-    teams: [...new Set(teams)].slice(0, 3),
-    players: [...new Set(players)].slice(0, 2),
+    teams: Array.from(new Set(teams)).slice(0, 3),
+    players: Array.from(new Set(players)).slice(0, 2),
   };
 }
 
