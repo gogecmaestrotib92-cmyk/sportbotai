@@ -28,6 +28,14 @@ interface ChatMessage {
   usedRealTimeSearch?: boolean;
   followUps?: string[];
   fromCache?: boolean;
+
+interface ChatResponse {
+  success: boolean;
+  response: string;
+  citations?: string[];
+  usedRealTimeSearch?: boolean;
+  error?: string;
+}
   isStreaming?: boolean;
   feedbackGiven?: 'up' | 'down' | null;
   timestamp: Date;
