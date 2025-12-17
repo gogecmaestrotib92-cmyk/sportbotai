@@ -26,6 +26,10 @@
     {
       "path": "/api/cron/live-intel",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/track-predictions",
+      "schedule": "0 */2 * * *"
     }
   ]
 }

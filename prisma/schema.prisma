@@ -245,12 +245,17 @@ model AgentPost {
   impressions    Int      @default(0)
   engagement     Int      @default(0)
   createdAt      DateTime @default(now())
+  
+  // Link to prediction outcome
+  predictionId   String?
+  prediction     PredictionOutcome? @relation(fields: [predictionId], references: [id])
 
   @@index([category])
   @@index([homeTeam])
   @@index([awayTeam])
   @@index([createdAt])
   @@index([postedToX])
+  @@index([predictionId])
 }
 
 model PredictionOutcome {
@@ -266,11 +271,16 @@ model PredictionOutcome {
   keyFactor         String?
   wasAccurate       Boolean?
   learningNote      String?
+  source            String?  @default("AGENT_POST") // AGENT_POST or MATCH_ANALYSIS
   createdAt         DateTime @default(now())
+  
+  // Back-link to agent posts
+  agentPosts        AgentPost[]
 
   @@index([matchRef])
   @@index([wasAccurate])
   @@index([matchDate])
+  @@index([source])
 }
 
 model KnowledgeBase {
