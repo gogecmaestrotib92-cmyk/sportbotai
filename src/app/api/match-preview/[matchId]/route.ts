@@ -384,6 +384,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     try {
       // Use data layer to fetch odds
       const dataLayer = getDataLayer();
+      console.log(`[Match-Preview] Fetching odds for ${matchInfo.homeTeam} vs ${matchInfo.awayTeam}, sport: ${matchInfo.sport}, normalized: ${normalizeSport(matchInfo.sport)}`);
+      
       const oddsResult = await dataLayer.getOdds(
         normalizeSport(matchInfo.sport) as 'soccer' | 'basketball' | 'hockey' | 'american_football' | 'baseball' | 'mma' | 'tennis',
         matchInfo.homeTeam,
@@ -394,9 +396,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         }
       );
       
+      console.log(`[Match-Preview] Odds result: success=${oddsResult.success}, dataLength=${oddsResult.data?.length || 0}, error=${oddsResult.error?.message || 'none'}`);
+      
       if (oddsResult.success && oddsResult.data && oddsResult.data.length > 0) {
         // Get the first bookmaker's odds
         const firstBookmaker = oddsResult.data[0];
+        console.log(`[Match-Preview] First bookmaker: ${firstBookmaker.bookmaker}, hasMoneyline: ${!!firstBookmaker.moneyline}`);
         
         if (firstBookmaker.moneyline) {
           odds = {

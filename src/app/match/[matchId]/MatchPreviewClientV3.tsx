@@ -152,7 +152,11 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
         setLoading(true);
         setError(null);
         
-        const response = await fetch(`/api/match-preview/${matchId}`);
+        // Add cache-busting timestamp to force fresh fetch (no browser cache)
+        const response = await fetch(`/api/match-preview/${matchId}?_t=${Date.now()}`, {
+          credentials: 'include', // Ensure cookies are sent
+          cache: 'no-store', // Don't use browser cache
+        });
         
         if (!response.ok) {
           throw new Error('Failed to load match preview');
