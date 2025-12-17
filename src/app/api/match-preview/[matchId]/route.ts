@@ -108,7 +108,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     console.log(`[Match-Preview] Registered user: ${session.user.email} - proceeding with live analysis`);
 
     // Determine if this is a non-soccer sport
-    const isNonSoccer = ['basketball', 'basketball_nba', 'basketball_euroleague', 'euroleague', 'nba', 'americanfootball', 'nfl', 'icehockey', 'nhl', 'baseball', 'mlb', 'mma', 'ufc']
+    const isNonSoccer = ['basketball', 'basketball_nba', 'basketball_euroleague', 'euroleague', 'nba', 'americanfootball', 'americanfootball_nfl', 'nfl', 'icehockey', 'icehockey_nhl', 'nhl', 'hockey', 'baseball', 'mlb', 'mma', 'ufc']
       .includes(matchInfo.sport.toLowerCase());
 
     // Fetch enriched data based on sport type
