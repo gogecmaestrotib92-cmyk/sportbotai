@@ -439,10 +439,10 @@ async function generateSmartFollowUps(
     const aEntities = extractEntities(answer);
     
     // Merge entities, prioritizing from question
-    const teams = [...new Set([...qEntities.teams, ...aEntities.teams])].slice(0, 3);
-    const players = [...new Set([...qEntities.players, ...aEntities.players])].slice(0, 2);
-    const leagues = [...new Set([...qEntities.leagues, ...aEntities.leagues])].slice(0, 2);
-    const topics = [...new Set([...qEntities.topics, ...aEntities.topics])].slice(0, 3);
+    const teams = Array.from(new Set([...qEntities.teams, ...aEntities.teams])).slice(0, 3);
+    const players = Array.from(new Set([...qEntities.players, ...aEntities.players])).slice(0, 2);
+    const leagues = Array.from(new Set([...qEntities.leagues, ...aEntities.leagues])).slice(0, 2);
+    const topics = Array.from(new Set([...qEntities.topics, ...aEntities.topics])).slice(0, 3);
     
     // Build context summary for GPT
     const contextParts: string[] = [];
