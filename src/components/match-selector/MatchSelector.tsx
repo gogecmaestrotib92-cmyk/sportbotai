@@ -244,9 +244,13 @@ export default function MatchSelector({ onResult, onLoading }: MatchSelectorProp
     onLoading(true);
     setError(null);
 
+    // Use the sport from the selected event, not the category selector
+    // This ensures NBA matches are analyzed as basketball even if NFL is selected in UI
+    const matchSport = selectedEvent.sport || selectedEvent.sportKey || selectedSportConfig?.displayName || 'Soccer';
+
     const data: AnalyzeRequest = {
       matchData: {
-        sport: selectedSportConfig?.displayName || 'Soccer',
+        sport: matchSport,
         league: selectedEvent.league,
         homeTeam: selectedEvent.homeTeam,
         awayTeam: selectedEvent.awayTeam,
