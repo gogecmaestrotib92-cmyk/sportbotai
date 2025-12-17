@@ -116,8 +116,8 @@ export default function LiveIntelCard() {
 
   return (
     <div className="relative">
-      {/* Card Container - Premium minimal style */}
-      <div className="bg-[#0a0a0b] border border-white/[0.06] rounded-xl sm:rounded-2xl overflow-hidden">
+      {/* Card Container - Premium minimal style with green accent border */}
+      <div className="bg-[#0a0a0b] border border-emerald-500/30 rounded-xl sm:rounded-2xl overflow-hidden ring-1 ring-emerald-500/10">
         {/* Header */}
         <div className="px-3 sm:px-5 py-3 sm:py-4 border-b border-white/[0.06] flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
@@ -134,7 +134,7 @@ export default function LiveIntelCard() {
           </div>
           <Link 
             href="/ai-desk" 
-            className="px-2 sm:px-3 py-1 sm:py-1.5 text-[9px] sm:text-[10px] font-medium text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] rounded-md sm:rounded-lg border border-white/[0.06] transition-all"
+            className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-[9px] sm:text-[10px] font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-md sm:rounded-lg transition-all shadow-sm shadow-emerald-500/20"
           >
             Open →
           </Link>
