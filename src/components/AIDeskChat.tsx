@@ -790,11 +790,11 @@ export default function AIDeskChat() {
             <p className="text-xs text-red-400 flex-1">{error}</p>
             {(error.toLowerCase().includes('limit') || error.toLowerCase().includes('upgrade')) && (
               <Link
-                href="/pricing"
-                className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-lg transition-colors"
+                href="/pricing#pro"
+                className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 bg-accent hover:bg-accent/80 text-black text-xs font-medium rounded-lg transition-colors"
               >
                 <Zap className="w-3 h-3" />
-                Upgrade
+                Upgrade to Pro
               </Link>
             )}
           </div>

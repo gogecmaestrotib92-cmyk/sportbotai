@@ -142,6 +142,7 @@ export default function PricingCards() {
         {plans.map((plan) => (
           <div
             key={plan.id}
+            id={plan.id}
             className={`flex-shrink-0 w-[85vw] xs:w-[75vw] sm:w-[320px] md:w-auto snap-center bg-bg-card rounded-card p-5 sm:p-6 relative ${
               plan.highlighted
                 ? 'border-2 border-primary shadow-glow-primary md:scale-105'
