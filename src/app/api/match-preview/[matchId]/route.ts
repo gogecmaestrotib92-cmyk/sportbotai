@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee, getMatchFixtureInfo } from '@/lib/football-api';
 import { getEnrichedMatchDataV2, normalizeSport } from '@/lib/data-layer/bridge';
 import { normalizeToUniversalSignals, formatSignalsForAI, getSignalSummary, type RawMatchInput } from '@/lib/universal-signals';
@@ -523,6 +524,35 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       marketIntel: marketIntel,
       odds: odds,
     };
+
+    // ========================================
+    // SAVE TO DATABASE FOR STATS COUNTER
+    // ========================================
+    try {
+      const userId = session?.user?.id;
+      if (userId) {
+        await prisma.analysis.create({
+          data: {
+            userId,
+            sport: matchInfo.sport,
+            league: matchInfo.league || 'Unknown',
+            homeTeam: matchInfo.homeTeam,
+            awayTeam: matchInfo.awayTeam,
+            matchDate: matchInfo.kickoff ? new Date(matchInfo.kickoff) : null,
+            homeWinProb: 0, // Match preview doesn't calculate probabilities
+            drawProb: 0,
+            awayWinProb: 0,
+            riskLevel: 'medium',
+            bestValueSide: aiAnalysis?.story?.favored || null,
+            fullResponse: response as any,
+          },
+        });
+        console.log(`[Match-Preview] Analysis saved to database for user ${userId}`);
+      }
+    } catch (saveError) {
+      // Don't fail the request if save fails
+      console.error('[Match-Preview] Failed to save analysis:', saveError);
+    }
 
     console.log(`[Match-Preview] Completed in ${Date.now() - startTime}ms`);
     return NextResponse.json(response);
