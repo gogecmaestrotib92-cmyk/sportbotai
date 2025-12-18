@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import ProBadge from '@/components/ProBadge';
@@ -55,11 +55,32 @@ const PLAN_COLORS: Record<string, { bg: string; text: string; border: string }> 
 
 export default function AccountDashboard({ user, recentAnalyses }: Props) {
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const [usageData, setUsageData] = useState<{ used: number; limit: number; remaining: number } | null>(null);
+
+  // Fetch real-time usage on mount
+  useEffect(() => {
+    const fetchUsage = async () => {
+      try {
+        const res = await fetch('/api/usage');
+        if (res.ok) {
+          const data = await res.json();
+          setUsageData({
+            used: data.used ?? user.analysisCount,
+            limit: data.limit ?? PLAN_LIMITS[user.plan] ?? 1,
+            remaining: data.remaining ?? 0,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch usage:', error);
+      }
+    };
+    fetchUsage();
+  }, [user.analysisCount, user.plan]);
 
   const planColors = PLAN_COLORS[user.plan] || PLAN_COLORS.FREE;
-  const limit = PLAN_LIMITS[user.plan] ?? 3;
-  const used = user.analysisCount;
-  const remaining = limit === -1 ? Infinity : Math.max(0, limit - used);
+  const limit = usageData?.limit ?? PLAN_LIMITS[user.plan] ?? 1;
+  const used = usageData?.used ?? user.analysisCount;
+  const remaining = usageData?.remaining ?? (limit === -1 ? Infinity : Math.max(0, limit - used));
   const usagePercent = limit === -1 ? 0 : (used / limit) * 100;
 
   const handleManageSubscription = async () => {
