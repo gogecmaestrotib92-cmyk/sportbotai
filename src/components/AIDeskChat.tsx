@@ -645,12 +645,6 @@ export default function AIDeskChat() {
                   {/* Status indicators */}
                   {msg.role === 'assistant' && (
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      {msg.usedRealTimeSearch && (
-                        <div className="flex items-center gap-1 text-xs text-green-400">
-                          <Sparkles className="w-3 h-3" />
-                          <span>Live search</span>
-                        </div>
-                      )}
                       {msg.fromCache && (
                         <div className="flex items-center gap-1 text-xs text-yellow-400/70">
                           <span className="text-[10px]">⚡</span>
