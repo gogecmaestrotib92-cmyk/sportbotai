@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { authOptions, canUserAnalyze, incrementAnalysisCount } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee, getMatchFixtureInfo } from '@/lib/football-api';
 import { getEnrichedMatchDataV2, normalizeSport } from '@/lib/data-layer/bridge';
@@ -109,6 +109,29 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // REGISTERED USER - Full API analysis
     // ==========================================
     console.log(`[Match-Preview] Registered user: ${session.user.email} - proceeding with live analysis`);
+
+    // ==========================================
+    // CHECK USER USAGE LIMITS
+    // ==========================================
+    const userId = session.user.id;
+    const usageCheck = await canUserAnalyze(userId);
+    
+    if (!usageCheck.allowed) {
+      console.log(`[Match-Preview] User ${session.user.email} has exceeded daily limit (${usageCheck.limit})`);
+      return NextResponse.json(
+        { 
+          error: 'Daily analysis limit reached',
+          message: usageCheck.plan === 'FREE' 
+            ? 'You\'ve used your free daily analysis. Upgrade to Pro for 30 analyses/day!'
+            : usageCheck.plan === 'PRO'
+            ? 'You\'ve reached your Pro limit (30/day). Upgrade to Premium for unlimited!'
+            : 'Daily limit reached. Please try again tomorrow.',
+          limit: usageCheck.limit,
+          plan: usageCheck.plan,
+        },
+        { status: 429 }
+      );
+    }
 
     // ==========================================
     // CHECK CACHE FIRST (shared across all users)
@@ -648,6 +671,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       } catch (cacheError) {
         console.error('[Match-Preview] Failed to cache:', cacheError);
       }
+    }
+
+    // ==========================================
+    // INCREMENT USER'S ANALYSIS COUNT (only for fresh analyses, not cached)
+    // ==========================================
+    try {
+      await incrementAnalysisCount(userId);
+      console.log(`[Match-Preview] Incremented analysis count for user ${session.user.email}`);
+    } catch (incrementError) {
+      console.error('[Match-Preview] Failed to increment analysis count:', incrementError);
     }
 
     console.log(`[Match-Preview] Completed in ${Date.now() - startTime}ms`);
