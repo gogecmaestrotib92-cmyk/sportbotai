@@ -7,6 +7,8 @@
 
 'use client';
 
+import { InfoTooltip } from '@/components/ui/Tooltip';
+
 // ============================================
 // FORM DOTS - Shows recent form as colored dots
 // ============================================
@@ -210,7 +212,13 @@ export function ConfidenceRing({ score, confidence, size = 80 }: ConfidenceRingP
       {/* Center text */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className={`text-lg font-semibold ${color.text}`}>{score}%</span>
-        <span className="text-[9px] text-zinc-500 uppercase tracking-wider">clarity</span>
+        <div className="flex items-center gap-1">
+          <span className="text-[9px] text-zinc-500 uppercase tracking-wider">data</span>
+          <InfoTooltip 
+            content="Measures how complete our data is (form, H2H, injuries). NOT a prediction of outcome."
+            position="bottom"
+          />
+        </div>
       </div>
     </div>
   );

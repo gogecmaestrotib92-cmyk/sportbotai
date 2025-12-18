@@ -62,3 +62,6 @@ export { default as Tabs, TabPanel, TabsContainer, ToggleGroup } from './Tabs';
 
 // Data Tables
 export { default as DataTable, StatsTable, ComparisonTable, MiniStatsList } from './DataTable';
+
+// Tooltips
+export { Tooltip, InfoTooltip } from './Tooltip';
