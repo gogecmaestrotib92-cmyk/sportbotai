@@ -41,8 +41,8 @@ export default function ListenToAnalysisButton({ result }: ListenToAnalysisButto
 
     // Probabilities summary
     const { probabilities } = result;
-    parts.push(`Win probabilities: ${homeTeam} has a ${probabilities.homeWin}% chance of winning.`);
-    parts.push(`${awayTeam} has a ${probabilities.awayWin}% chance of winning.`);
+    parts.push(`Win probabilities: ${homeTeam} has a ${probabilities.homeWin ?? 0}% chance of winning.`);
+    parts.push(`${awayTeam} has a ${probabilities.awayWin ?? 0}% chance of winning.`);
     if (probabilities.draw !== undefined && probabilities.draw !== null) {
       parts.push(`The probability of a draw is ${probabilities.draw}%.`);
     }

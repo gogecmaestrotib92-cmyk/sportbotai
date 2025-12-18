@@ -301,17 +301,17 @@ function buildBriefingPoints(result: AnalyzeResponse): BriefingPoint[] {
 
   // 2. Probability difference analysis (neutral, not betting advice)
   // Use oddsComparison if available, otherwise fall back to valueAnalysis
-  if (result.oddsComparison?.largestDifference && result.oddsComparison.largestDifference.outcome !== 'NONE') {
+  const comp = result.oddsComparison?.comparison;
+  if (result.oddsComparison?.largestDifference && result.oddsComparison.largestDifference.outcome !== 'NONE' && comp?.homeWin && comp?.awayWin) {
     const diff = result.oddsComparison.largestDifference;
-    const comp = result.oddsComparison.comparison;
     
     if (diff.difference >= 5) {
       const outcomeName = diff.outcome === 'HOME' ? matchInfo.homeTeam :
                           diff.outcome === 'AWAY' ? matchInfo.awayTeam : 'Draw';
-      const aiProb = diff.outcome === 'HOME' ? comp.homeWin.aiEstimate :
-                     diff.outcome === 'AWAY' ? comp.awayWin.aiEstimate : comp.draw.aiEstimate;
-      const marketProb = diff.outcome === 'HOME' ? comp.homeWin.marketImplied :
-                         diff.outcome === 'AWAY' ? comp.awayWin.marketImplied : comp.draw.marketImplied;
+      const aiProb = diff.outcome === 'HOME' ? comp.homeWin?.aiEstimate :
+                     diff.outcome === 'AWAY' ? comp.awayWin?.aiEstimate : comp.draw?.aiEstimate;
+      const marketProb = diff.outcome === 'HOME' ? comp.homeWin?.marketImplied :
+                         diff.outcome === 'AWAY' ? comp.awayWin?.marketImplied : comp.draw?.marketImplied;
       
       points.push({
         icon: '🔍',
