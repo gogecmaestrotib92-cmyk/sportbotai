@@ -7,8 +7,6 @@
 
 'use client';
 
-import { InfoTooltip } from '@/components/ui/Tooltip';
-
 // ============================================
 // FORM DOTS - Shows recent form as colored dots
 // ============================================
@@ -212,13 +210,7 @@ export function ConfidenceRing({ score, confidence, size = 80 }: ConfidenceRingP
       {/* Center text */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className={`text-lg font-semibold ${color.text}`}>{score}%</span>
-        <div className="flex items-center gap-1">
-          <span className="text-[9px] text-zinc-500 uppercase tracking-wider">data</span>
-          <InfoTooltip 
-            content="Measures how complete our data is (form, H2H, injuries). NOT a prediction of outcome."
-            position="bottom"
-          />
-        </div>
+        <span className="text-[8px] text-zinc-500 uppercase tracking-wider">data</span>
       </div>
     </div>
   );
@@ -298,22 +290,29 @@ export function VerdictBadge({ favored, confidence, clarityScore }: VerdictBadge
   };
 
   return (
-    <div className={`
-      relative overflow-hidden rounded-2xl p-6
-      bg-gradient-to-br ${colors[confidence].split(' ').slice(0, 2).join(' ')}
-      border ${colors[confidence].split(' ')[2]}
-    `}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">
-            Analysis Points To
-          </p>
-          <p className="text-xl font-semibold text-white">
-            {favored || 'No Clear Edge'}
-          </p>
+    <div className="space-y-2">
+      <div className={`
+        relative overflow-hidden rounded-2xl p-6
+        bg-gradient-to-br ${colors[confidence].split(' ').slice(0, 2).join(' ')}
+        border ${colors[confidence].split(' ')[2]}
+      `}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">
+              Analysis Points To
+            </p>
+            <p className="text-xl font-semibold text-white">
+              {favored || 'No Clear Edge'}
+            </p>
+          </div>
+          <div className="text-center">
+            <ConfidenceRing score={clarityScore} confidence={confidence} size={72} />
+          </div>
         </div>
-        <ConfidenceRing score={clarityScore} confidence={confidence} size={72} />
       </div>
+      <p className="text-[10px] text-zinc-600 text-center">
+        Data % = How complete our stats are · Not a prediction
+      </p>
     </div>
   );
 }

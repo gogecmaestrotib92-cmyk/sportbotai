@@ -9,7 +9,6 @@
 'use client';
 
 import { UniversalSignals } from '@/lib/universal-signals';
-import { InfoTooltip } from '@/components/ui/Tooltip';
 import {
   FormDots,
   EdgeBar,
@@ -215,7 +214,6 @@ export function SignalPills({ signals }: { signals: UniversalSignals }) {
         label="Data" 
         value={`${signals.clarity_score}%`}
         color={confidence === 'high' ? 'emerald' : confidence === 'medium' ? 'amber' : 'zinc'}
-        tooltip="How complete our data is (form, H2H, injuries). NOT a prediction."
       />
     </div>
   );
@@ -225,12 +223,10 @@ function Pill({
   label, 
   value, 
   color = 'zinc',
-  tooltip,
 }: { 
   label: string; 
   value: string; 
   color?: 'emerald' | 'amber' | 'blue' | 'zinc';
-  tooltip?: string;
 }) {
   const colors = {
     emerald: 'text-emerald-400 bg-emerald-500/10',
@@ -240,10 +236,9 @@ function Pill({
   };
 
   return (
-    <div className={`px-2.5 py-1.5 rounded-lg ${colors[color]} flex items-center gap-1`}>
+    <div className={`px-2.5 py-1.5 rounded-lg ${colors[color]}`}>
       <span className="text-[9px] text-zinc-500 uppercase tracking-wider">{label}</span>
-      {tooltip && <InfoTooltip content={tooltip} position="bottom" />}
-      <span className="mx-1 text-zinc-700">·</span>
+      <span className="mx-1.5 text-zinc-700">·</span>
       <span className="text-[11px] font-medium">{value}</span>
     </div>
   );
