@@ -176,7 +176,9 @@ export function calculateModelProbability(
   const draw = hasDraw ? 100 - home - away : undefined;
   
   // Confidence based on clarity score
-  const confidence = signals.clarity_score;
+  // Cap at 85% - sports are inherently unpredictable, 100% confidence is misleading
+  const rawConfidence = signals.clarity_score;
+  const confidence = Math.min(85, rawConfidence);
   
   return {
     home,

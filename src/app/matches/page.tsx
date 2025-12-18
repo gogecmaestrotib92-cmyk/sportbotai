@@ -65,7 +65,7 @@ export default function MatchesPage() {
               </div>
               <div className="flex items-center gap-2 text-sm text-text-secondary">
                 <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-                <span>Live data from 17+ sports</span>
+                <span>Live data from 7 major sports</span>
               </div>
             </div>
           </div>

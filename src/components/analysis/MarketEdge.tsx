@@ -345,9 +345,9 @@ function MarketIntelContent({
       {/* Recommendation */}
       <RecommendationCard marketIntel={marketIntel} />
 
-      {/* Model Confidence */}
+      {/* Signal Quality */}
       <div className="flex items-center justify-between text-sm pt-2 border-t border-[#1a3a1a]">
-        <span className="text-gray-400">Model Confidence</span>
+        <span className="text-gray-400">Signal Quality</span>
         <div className="flex items-center gap-2">
           <div className="w-20 h-1.5 bg-[#1a2a1a] rounded-full overflow-hidden">
             <div 

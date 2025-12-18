@@ -76,6 +76,19 @@ export default function LiveIntelCard() {
   const [posts, setPosts] = useState<IntelPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
+  
+  const togglePostExpanded = (postId: string) => {
+    setExpandedPosts(prev => {
+      const next = new Set(prev);
+      if (next.has(postId)) {
+        next.delete(postId);
+      } else {
+        next.add(postId);
+      }
+      return next;
+    });
+  };
 
   const fetchPosts = async () => {
     try {
@@ -165,10 +178,14 @@ export default function LiveIntelCard() {
             </div>
           ) : (
             // Real posts
-            posts.map((post) => (
+            posts.map((post) => {
+              const isPostExpanded = expandedPosts.has(post.id);
+              const isLongContent = post.content.length > 100;
+              
+              return (
               <div 
                 key={post.id} 
-                className="px-3 sm:px-5 py-3 sm:py-4 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                className="px-3 sm:px-5 py-3 sm:py-4 hover:bg-white/[0.02] transition-colors"
               >
                 <div className="flex items-start gap-2 sm:gap-3">
                   <span className="text-lg sm:text-xl flex-shrink-0">{post.categoryIcon}</span>
@@ -183,10 +200,20 @@ export default function LiveIntelCard() {
                       </span>
                     </div>
                     
-                    {/* Content */}
-                    <p className="text-zinc-300 text-xs sm:text-sm leading-relaxed line-clamp-2">
+                    {/* Content - Expandable */}
+                    <p className={`text-zinc-300 text-xs sm:text-sm leading-relaxed ${!isPostExpanded && isLongContent ? 'line-clamp-2' : ''}`}>
                       {post.content}
                     </p>
+                    
+                    {/* Read more/less toggle */}
+                    {isLongContent && (
+                      <button
+                        onClick={() => togglePostExpanded(post.id)}
+                        className="text-[10px] sm:text-xs text-emerald-400 hover:text-emerald-300 mt-1 transition-colors"
+                      >
+                        {isPostExpanded ? '← Show less' : 'Read more →'}
+                      </button>
+                    )}
                     
                     {/* Match ref + Time */}
                     <div className="flex items-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-2">
@@ -197,7 +224,7 @@ export default function LiveIntelCard() {
                   </div>
                 </div>
               </div>
-            ))
+            );})
           )}
         </div>
 

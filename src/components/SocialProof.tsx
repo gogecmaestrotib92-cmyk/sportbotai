@@ -133,8 +133,8 @@ interface StatsStripProps {
 
 export function StatsStrip({ className = '' }: StatsStripProps) {
   const stats = [
-    { value: '17+', label: 'Sports Covered' },
-    { value: '50K+', label: 'Analyses Run' },
+    { value: '7', label: 'Sports Covered' },
+    { value: '1K+', label: 'Analyses Run' },
     { value: '< 60s', label: 'Per Analysis' },
     { value: '24/7', label: 'Live Data' },
   ];

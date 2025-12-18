@@ -67,9 +67,22 @@ export default function AIDeskFeedSidebar({ limit = 8 }: { limit?: number }) {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   
   // Use ref to track if initial fetch has been done
   const hasFetched = useRef(false);
+  
+  const togglePostExpanded = (postId: string) => {
+    setExpandedPosts(prev => {
+      const next = new Set(prev);
+      if (next.has(postId)) {
+        next.delete(postId);
+      } else {
+        next.add(postId);
+      }
+      return next;
+    });
+  };
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -164,7 +177,12 @@ export default function AIDeskFeedSidebar({ limit = 8 }: { limit?: number }) {
             </div>
           ) : (
             <div className="max-h-[400px] overflow-y-auto">
-              {posts.map((post, idx) => (
+              {posts.map((post, idx) => {
+                const isPostExpanded = expandedPosts.has(post.id);
+                const contentText = stripMarkdown(post.content);
+                const isLongContent = contentText.length > 120;
+                
+                return (
                 <div
                   key={post.id}
                   className={`px-4 py-3 hover:bg-white/5 transition-colors ${
@@ -185,10 +203,20 @@ export default function AIDeskFeedSidebar({ limit = 8 }: { limit?: number }) {
                     </span>
                   </div>
 
-                  {/* Content */}
-                  <p className="text-xs text-text-secondary leading-relaxed line-clamp-2">
-                    {stripMarkdown(post.content)}
+                  {/* Content - Expandable */}
+                  <p className={`text-xs text-text-secondary leading-relaxed ${!isPostExpanded && isLongContent ? 'line-clamp-2' : ''}`}>
+                    {contentText}
                   </p>
+                  
+                  {/* Read more/less toggle */}
+                  {isLongContent && (
+                    <button
+                      onClick={() => togglePostExpanded(post.id)}
+                      className="text-[10px] text-emerald-400 hover:text-emerald-300 mt-1 transition-colors"
+                    >
+                      {isPostExpanded ? '← Show less' : 'Read more →'}
+                    </button>
+                  )}
 
                   {/* Match Reference - Teams */}
                   {post.matchRef && (
@@ -199,7 +227,8 @@ export default function AIDeskFeedSidebar({ limit = 8 }: { limit?: number }) {
                     </div>
                   )}
                 </div>
-              ))}
+              );
+              })}
             </div>
           )}
 

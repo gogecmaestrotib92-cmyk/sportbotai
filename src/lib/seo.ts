@@ -52,7 +52,7 @@ export const META = {
   
   matches: {
     title: 'Browse Matches – Live Sports Analysis Tool',
-    description: 'Browse upcoming matches across 17+ sports. Get instant AI analysis for Premier League, La Liga, Champions League, NBA, NFL, Tennis & more. Real-time odds and probability models.',
+    description: 'Browse upcoming matches across 7 major sports. Get instant AI analysis for Premier League, La Liga, Champions League, NBA, NFL, Tennis & more. Real-time odds and probability models.',
     keywords: [
       'upcoming matches',
       'live sports analysis',
@@ -244,7 +244,7 @@ export function getMatchAnalyzerSchema() {
     },
     featureList: [
       'AI-powered match analysis in 60 seconds',
-      'Probability models for 17+ sports',
+      'Probability models for 7 major sports',
       'Real-time odds comparison',
       'Value detection algorithm',
       'Risk assessment scoring',

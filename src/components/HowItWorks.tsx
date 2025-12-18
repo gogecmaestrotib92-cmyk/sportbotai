@@ -9,7 +9,7 @@ export default function HowItWorks() {
     {
       number: '01',
       title: 'Choose Your Match',
-      description: 'Pick from trending matches or search any fixture across 17+ sports.',
+      description: 'Pick from trending matches or search any fixture across 7 major sports.',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
