@@ -230,9 +230,10 @@ async function getAgentPostsCount() {
 
 async function getPredictionStats() {
   try {
-    // Get all predictions with outcomes
+    // Get all predictions with outcomes - using unique matchRef to avoid counting duplicates
     const [
       totalPredictions,
+      totalUniqueMatches,
       evaluatedPredictions,
       accuratePredictions,
       recentPredictions,
@@ -241,23 +242,34 @@ async function getPredictionStats() {
       last30Days,
       last7Days,
     ] = await Promise.all([
-      // Total predictions
+      // Total prediction records (for reference)
       prisma.predictionOutcome.count(),
       
-      // Evaluated (has wasAccurate set)
-      prisma.predictionOutcome.count({
+      // Total UNIQUE matches (the real count we care about)
+      prisma.predictionOutcome.findMany({
+        distinct: ['matchRef'],
+        select: { matchRef: true },
+      }).then(results => results.length),
+      
+      // Evaluated unique matches (has wasAccurate set) - count unique matchRefs
+      prisma.predictionOutcome.findMany({
         where: { wasAccurate: { not: null } },
-      }),
+        distinct: ['matchRef'],
+        select: { matchRef: true },
+      }).then(results => results.length),
       
-      // Accurate predictions
-      prisma.predictionOutcome.count({
+      // Accurate predictions - count unique matchRefs where wasAccurate is true
+      prisma.predictionOutcome.findMany({
         where: { wasAccurate: true },
-      }),
+        distinct: ['matchRef'],
+        select: { matchRef: true },
+      }).then(results => results.length),
       
-      // Recent predictions (last 50)
+      // Recent predictions (last 50 unique matches)
       prisma.predictionOutcome.findMany({
         take: 50,
         orderBy: { matchDate: 'desc' },
+        distinct: ['matchRef'],
         select: {
           id: true,
           matchRef: true,
@@ -385,10 +397,11 @@ async function getPredictionStats() {
     }
 
     return {
-      totalPredictions,
+      totalPredictions: totalUniqueMatches, // Use unique match count as the main number
+      totalRecords: totalPredictions, // Keep raw record count for debugging
       evaluatedPredictions,
       accuratePredictions,
-      pendingEvaluation: totalPredictions - evaluatedPredictions,
+      pendingEvaluation: totalUniqueMatches - evaluatedPredictions,
       overallAccuracy,
       accuracy7d,
       accuracy30d,
@@ -403,6 +416,7 @@ async function getPredictionStats() {
     console.error('Error fetching prediction stats:', error);
     return {
       totalPredictions: 0,
+      totalRecords: 0,
       evaluatedPredictions: 0,
       accuratePredictions: 0,
       pendingEvaluation: 0,
