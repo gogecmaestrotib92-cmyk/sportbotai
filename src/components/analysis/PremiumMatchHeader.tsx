@@ -153,9 +153,9 @@ export default function PremiumMatchHeader({
         }} />
       </div>
 
-      <div className="relative p-6 sm:p-8">
+      <div className="relative p-5 sm:p-6">
         {/* League and Time Row */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-5 sm:mb-6">
           <div className="flex items-center gap-3">
             <LeagueLogo leagueName={league} sport={sport} size="sm" className="opacity-70" />
             <span className="text-sm font-medium text-zinc-400">{league}</span>
