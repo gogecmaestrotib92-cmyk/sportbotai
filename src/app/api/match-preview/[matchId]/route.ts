@@ -538,11 +538,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     };
 
     // ========================================
-    // SAVE TO DATABASE FOR STATS COUNTER
+    // SAVE TO DATABASE FOR STATS COUNTER + PREDICTIONS
     // ========================================
     try {
       const userId = session?.user?.id;
+      const userEmail = session?.user?.email;
+      console.log(`[Match-Preview] Save check - userId: ${userId}, email: ${userEmail}, session exists: ${!!session}`);
+      
       if (userId) {
+        const matchRef = `${matchInfo.homeTeam} vs ${matchInfo.awayTeam}`;
+        const favored = aiAnalysis?.story?.favored || 'draw';
+        const confidence = aiAnalysis?.story?.confidence || 'moderate';
+        const matchDate = matchInfo.kickoff ? new Date(matchInfo.kickoff) : new Date();
+        
+        // Save to Analysis table (for history + stats counter)
         await prisma.analysis.create({
           data: {
             userId,
@@ -550,20 +559,52 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             league: matchInfo.league || 'Unknown',
             homeTeam: matchInfo.homeTeam,
             awayTeam: matchInfo.awayTeam,
-            matchDate: matchInfo.kickoff ? new Date(matchInfo.kickoff) : null,
-            homeWinProb: 0, // Match preview doesn't calculate probabilities
-            drawProb: 0,
-            awayWinProb: 0,
-            riskLevel: 'medium',
-            bestValueSide: aiAnalysis?.story?.favored || null,
+            matchDate,
+            homeWinProb: favored === 'home' ? 0.6 : favored === 'away' ? 0.3 : 0.33,
+            drawProb: favored === 'draw' ? 0.5 : 0.25,
+            awayWinProb: favored === 'away' ? 0.6 : favored === 'home' ? 0.3 : 0.33,
+            riskLevel: confidence === 'strong' ? 'low' : confidence === 'slight' ? 'high' : 'medium',
+            bestValueSide: favored,
             fullResponse: response as any,
           },
         });
-        console.log(`[Match-Preview] Analysis saved to database for user ${userId}`);
+        console.log(`[Match-Preview] Analysis saved for user ${userId}`);
+        
+        // Also create PredictionOutcome for tracking accuracy
+        // Check if prediction already exists for this match
+        const existingPrediction = await prisma.predictionOutcome.findFirst({
+          where: {
+            matchRef,
+            createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+          },
+        });
+        
+        if (!existingPrediction) {
+          const predictedScenario = favored === 'home' 
+            ? `${matchInfo.homeTeam} win` 
+            : favored === 'away' 
+              ? `${matchInfo.awayTeam} win` 
+              : 'Draw';
+          
+          await prisma.predictionOutcome.create({
+            data: {
+              matchRef,
+              league: matchInfo.league || 'Unknown',
+              matchDate,
+              narrativeAngle: aiAnalysis?.story?.narrative?.substring(0, 500) || `Analysis: ${matchRef}`,
+              predictedScenario,
+              confidenceLevel: confidence === 'strong' ? 85 : confidence === 'moderate' ? 65 : 45,
+              source: 'MATCH_ANALYSIS',
+            },
+          });
+          console.log(`[Match-Preview] Prediction saved: ${matchRef} -> ${predictedScenario}`);
+        }
+      } else {
+        console.log(`[Match-Preview] No userId in session, skipping database save`);
       }
     } catch (saveError) {
       // Don't fail the request if save fails
-      console.error('[Match-Preview] Failed to save analysis:', saveError);
+      console.error('[Match-Preview] Failed to save analysis/prediction:', saveError);
     }
 
     console.log(`[Match-Preview] Completed in ${Date.now() - startTime}ms`);
