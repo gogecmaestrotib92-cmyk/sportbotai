@@ -790,7 +790,7 @@ export default function AIDeskChat() {
             {error.toLowerCase().includes('limit') && userPlan === 'FREE' && (
               <Link
                 href="/pricing#pro"
-                className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 bg-accent hover:bg-accent/80 text-black text-xs font-medium rounded-lg transition-colors"
+                className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-lg transition-colors"
               >
                 <Zap className="w-3 h-3" />
                 Upgrade to Pro

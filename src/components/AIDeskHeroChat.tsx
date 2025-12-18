@@ -730,7 +730,7 @@ export default function AIDeskHeroChat() {
             {error.toLowerCase().includes('rate limit') && userPlan === 'FREE' && (
               <Link
                 href="/pricing#pro"
-                className="flex-shrink-0 px-4 py-1.5 bg-gradient-to-r from-primary to-accent text-white text-xs font-semibold rounded-lg hover:from-primary/90 hover:to-accent/90 transition-all"
+                className="flex-shrink-0 px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition-all"
               >
                 Upgrade to Pro
               </Link>
@@ -738,7 +738,7 @@ export default function AIDeskHeroChat() {
             {error.toLowerCase().includes('rate limit') && userPlan === 'PRO' && (
               <Link
                 href="/pricing#premium"
-                className="flex-shrink-0 px-4 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-semibold rounded-lg hover:from-yellow-400 hover:to-orange-400 transition-all"
+                className="flex-shrink-0 px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition-all"
               >
                 Upgrade to Premium
               </Link>

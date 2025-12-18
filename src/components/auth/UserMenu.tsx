@@ -191,7 +191,7 @@ export function UserMenu() {
               <Link
                 href="/pricing"
                 onClick={closeMenu}
-                className="mt-3 flex items-center justify-center gap-2 w-full px-3 py-2 bg-primary hover:bg-primary/80 text-white text-xs font-semibold rounded-lg transition-colors"
+                className="mt-3 flex items-center justify-center gap-2 w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
