@@ -28,7 +28,8 @@ function LoginForm() {
       });
 
       if (result?.error) {
-        setError('Invalid email or password');
+        // Show the actual error message from the server
+        setError(result.error);
       } else {
         router.push(callbackUrl);
         router.refresh();

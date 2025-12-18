@@ -53,7 +53,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null;
+          throw new Error('Email and password are required');
         }
 
         // Case-insensitive email lookup
@@ -66,15 +66,20 @@ export const authOptions: NextAuthOptions = {
           },
         });
 
-        if (!user || !user.password) {
-          // User doesn't exist or was created via OAuth (no password)
-          return null;
+        if (!user) {
+          // User doesn't exist
+          throw new Error('No account found with this email');
+        }
+
+        if (!user.password) {
+          // User exists but was created via OAuth (no password)
+          throw new Error('This account uses Google sign-in. Please click "Continue with Google"');
         }
 
         const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-
+        
         if (!isPasswordValid) {
-          return null;
+          throw new Error('Incorrect password');
         }
 
         return {
