@@ -136,7 +136,7 @@ function getSteamSignal(alert: MarketAlert): { icon: string; label: string; inte
 // ============================================
 
 /**
- * Market Summary Brain - Sticky top insight bar
+ * Market Summary Brain - Compact insight bar
  */
 function MarketSummary({ 
   edgeCount, 
@@ -159,120 +159,105 @@ function MarketSummary({
   const state = getMarketState();
   
   return (
-    <div className="bg-gradient-to-r from-bg-card via-bg-card to-bg-card/80 border border-divider rounded-xl p-4 mb-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="bg-bg-card/80 border border-divider rounded-lg px-4 py-3 mb-6">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         {/* Market State */}
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
-            <span className="text-xl">🧠</span>
-          </div>
+        <div className="flex items-center gap-3">
+          <span className="text-lg">🧠</span>
           <div>
-            <div className="text-xs text-text-muted uppercase tracking-wider mb-0.5">Market Intelligence</div>
-            <div className={`font-semibold ${state.color}`}>{state.text}</div>
+            <span className="text-[10px] text-text-muted uppercase tracking-wider mr-2">Status:</span>
+            <span className={`text-sm font-medium ${state.color}`}>{state.text}</span>
           </div>
         </div>
         
-        {/* Quick Stats */}
-        <div className="flex items-center gap-6">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-emerald-400">{edgeCount}</div>
-            <div className="text-xs text-text-muted">Value Edges</div>
+        {/* Stats row */}
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xl font-bold text-emerald-400">{edgeCount}</span>
+            <span className="text-text-muted text-xs">edges</span>
           </div>
-          <div className="w-px h-8 bg-divider"></div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-amber-400">{steamCount}</div>
-            <div className="text-xs text-text-muted">Steam Moves</div>
+          <div className="w-px h-4 bg-divider"></div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xl font-bold text-amber-400">{steamCount}</span>
+            <span className="text-text-muted text-xs">steam</span>
           </div>
-          <div className="w-px h-8 bg-divider hidden sm:block"></div>
-          <div className="text-center hidden sm:block">
-            <div className="text-sm text-text-secondary">{matchesScanned}</div>
-            <div className="text-xs text-text-muted">Scanned</div>
+          <div className="w-px h-4 bg-divider"></div>
+          <div className="text-text-muted/50 text-xs">
+            {matchesScanned} scanned
+            {lastRefresh && ` • ${lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
           </div>
         </div>
-        
-        {/* Last Updated - Subtle */}
-        {lastRefresh && (
-          <div className="text-xs text-text-muted/60 sm:text-right">
-            Updated {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </div>
-        )}
       </div>
     </div>
   );
 }
 
 /**
- * Edge Strength Bar - Visual indicator
+ * Edge Strength Bar - Compact inline indicator
  */
 function EdgeStrengthBar({ percent, alertLevel }: { percent: number; alertLevel: 'HIGH' | 'MEDIUM' | 'LOW' | null }) {
   const { bars, label } = getEdgeStrength(percent);
   const confidence = getConfidenceLevel(alertLevel);
   
-  // Color based on edge strength
   const barColor = percent >= 8 ? 'bg-emerald-400' : 
                    percent >= 5 ? 'bg-emerald-500/80' : 
                    'bg-emerald-600/60';
   
   return (
-    <div className="bg-bg-primary/80 rounded-lg p-3 space-y-2">
+    <div className="flex items-center gap-4 pt-2 border-t border-divider/50">
       {/* Edge Strength */}
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-text-muted uppercase tracking-wider">Edge Strength</span>
-        <span className="text-xs font-medium text-emerald-400">{label}</span>
+      <div className="flex items-center gap-2 flex-1">
+        <span className="text-[10px] text-text-muted uppercase">Strength</span>
+        <div className="flex gap-0.5 flex-1 max-w-[60px]">
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className={`h-1 flex-1 rounded-full ${i <= bars ? barColor : 'bg-text-muted/20'}`} />
+          ))}
+        </div>
+        <span className="text-[10px] text-emerald-400">{label}</span>
       </div>
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map(i => (
-          <div 
-            key={i} 
-            className={`h-1.5 flex-1 rounded-full transition-all ${i <= bars ? barColor : 'bg-text-muted/20'}`}
-          />
-        ))}
-      </div>
-      
       {/* Confidence */}
-      <div className="flex items-center justify-between pt-1">
-        <span className="text-xs text-text-muted uppercase tracking-wider">Confidence</span>
-        <span className={`text-xs font-medium ${confidence.color}`}>{confidence.label}</span>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] text-text-muted uppercase">Conf</span>
+        <span className={`text-[10px] font-medium ${confidence.color}`}>{confidence.label}</span>
       </div>
     </div>
   );
 }
 
 /**
- * League Header - Faded for context level
+ * League Header - Ultra compact context
  */
-function LeagueHeader({ sport, sportTitle }: { sport: string; sportTitle: string }) {
+function LeagueHeader({ sport, sportTitle, time }: { sport: string; sportTitle: string; time?: string }) {
   const config = leagueConfig[sport] || { isInternational: false };
   const leagueLogo = getLeagueLogo(sport);
   const [imgError, setImgError] = useState(false);
   
   return (
-    <div className="flex items-center gap-2 opacity-70">
-      {config.countryFlag && !config.isInternational && (
-        <span className="text-sm">{config.countryFlag}</span>
-      )}
-      {!imgError ? (
-        <Image
-          src={leagueLogo}
-          alt={sportTitle}
-          width={16}
-          height={16}
-          className="w-4 h-4 object-contain opacity-80"
-          onError={() => setImgError(true)}
-          unoptimized
-        />
-      ) : (
-        <span className="w-4 h-4 rounded-full bg-bg-primary/50 flex items-center justify-center text-[10px]">
-          {sportTitle.charAt(0)}
-        </span>
-      )}
-      <span className="text-text-muted text-xs font-medium">{sportTitle}</span>
+    <div className="flex items-center justify-between w-full">
+      <div className="flex items-center gap-1.5 opacity-60">
+        {config.countryFlag && !config.isInternational && (
+          <span className="text-xs">{config.countryFlag}</span>
+        )}
+        {!imgError ? (
+          <Image
+            src={leagueLogo}
+            alt={sportTitle}
+            width={14}
+            height={14}
+            className="w-3.5 h-3.5 object-contain"
+            onError={() => setImgError(true)}
+            unoptimized
+          />
+        ) : null}
+        <span className="text-text-muted text-[11px]">{sportTitle}</span>
+      </div>
+      {time && <span className="text-text-muted/40 text-[10px]">{time}</span>}
     </div>
   );
 }
 
 /**
- * Edge Match Card - Redesigned with visual hierarchy
+ * Edge Match Card - Compact with strong hierarchy
  */
 function EdgeMatchCard({ alert }: { alert: MarketAlert }) {
   const matchTime = new Date(alert.matchDate).toLocaleString('en-US', {
@@ -288,81 +273,67 @@ function EdgeMatchCard({ alert }: { alert: MarketAlert }) {
   const edgeTeam = edgeOutcome === 'home' ? alert.homeTeam : 
                    edgeOutcome === 'away' ? alert.awayTeam : 'Draw';
   
-  // Edge color based on strength
   const edgeColor = edgePercent >= 8 ? 'text-emerald-300' : 
                     edgePercent >= 5 ? 'text-emerald-400' : 
                     'text-emerald-500';
   
   return (
-    <div className="group bg-bg-card border border-divider rounded-xl p-5 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300">
-      {/* Level 3: Context (faded) */}
-      <div className="flex items-center justify-between mb-3">
-        <LeagueHeader sport={alert.sport} sportTitle={alert.sportTitle} />
-        <span className="text-text-muted/50 text-xs">{matchTime}</span>
-      </div>
+    <div className="group bg-bg-card border border-divider rounded-lg p-3.5 hover:border-emerald-500/40 transition-all">
+      {/* Context row - ultra compact */}
+      <LeagueHeader sport={alert.sport} sportTitle={alert.sportTitle} time={matchTime} />
       
-      {/* Level 1: Decision Driver - BIG EDGE */}
-      <div className="bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 rounded-xl p-4 mb-4 group-hover:border-emerald-500/30 transition-colors">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <span className="text-xs text-emerald-400/70 uppercase tracking-wider">Edge Detected</span>
-            <div className="font-bold text-text-primary text-lg">{edgeTeam}</div>
+      {/* Main content: Edge highlight */}
+      <div className="flex items-center justify-between mt-2.5 mb-2">
+        <div className="flex-1 min-w-0">
+          <div className={`font-semibold text-base truncate ${edgeOutcome === 'home' ? 'text-emerald-400' : edgeOutcome === 'away' ? 'text-text-primary' : 'text-text-primary'}`}>
+            {alert.homeTeam}
           </div>
-          <div className="text-right">
-            <div className={`text-3xl font-black ${edgeColor} group-hover:scale-105 transition-transform`}>
-              +{edgePercent.toFixed(1)}%
-            </div>
+          <div className={`text-sm truncate ${edgeOutcome === 'away' ? 'text-emerald-400' : 'text-text-secondary'}`}>
+            {alert.awayTeam}
           </div>
         </div>
         
-        {/* Odds Display */}
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-text-muted">Odds:</span>
-          <span className="font-mono text-text-secondary">
-            {edgeOutcome === 'home' ? alert.homeOdds.toFixed(2) : 
-             edgeOutcome === 'away' ? alert.awayOdds.toFixed(2) : 
-             alert.drawOdds?.toFixed(2)}
-          </span>
-          <span className="text-text-muted mx-1">→</span>
-          <span className="text-text-muted">Model:</span>
-          <span className="font-mono text-emerald-400">
-            {edgeOutcome === 'home' ? alert.modelHomeProb : 
-             edgeOutcome === 'away' ? alert.modelAwayProb : 
-             alert.modelDrawProb}%
-          </span>
-        </div>
-      </div>
-      
-      {/* Level 2: Match Context */}
-      <div className="space-y-2 mb-4">
-        <div className="flex items-center justify-between">
-          <span className={`font-medium ${edgeOutcome === 'home' ? 'text-emerald-400' : 'text-text-primary'}`}>
-            {alert.homeTeam}
-          </span>
-          <span className="font-mono text-text-secondary text-sm">{alert.homeOdds.toFixed(2)}</span>
-        </div>
-        {alert.drawOdds && (
-          <div className="flex items-center justify-between">
-            <span className={`text-sm ${edgeOutcome === 'draw' ? 'text-emerald-400' : 'text-text-muted'}`}>Draw</span>
-            <span className="font-mono text-text-muted text-xs">{alert.drawOdds.toFixed(2)}</span>
+        {/* Big Edge % */}
+        <div className="text-right pl-3">
+          <div className={`text-2xl font-black ${edgeColor}`}>
+            +{edgePercent.toFixed(1)}%
           </div>
-        )}
-        <div className="flex items-center justify-between">
-          <span className={`font-medium ${edgeOutcome === 'away' ? 'text-emerald-400' : 'text-text-primary'}`}>
-            {alert.awayTeam}
-          </span>
-          <span className="font-mono text-text-secondary text-sm">{alert.awayOdds.toFixed(2)}</span>
+          <div className="text-[10px] text-text-muted uppercase">on {edgeOutcome}</div>
         </div>
       </div>
       
-      {/* Edge Strength Indicator */}
+      {/* Compact odds row */}
+      <div className="flex items-center gap-3 text-xs mb-2.5 bg-emerald-500/5 rounded px-2 py-1.5">
+        <span className="text-text-muted">Odds</span>
+        <span className="font-mono text-text-secondary">
+          {edgeOutcome === 'home' ? alert.homeOdds.toFixed(2) : 
+           edgeOutcome === 'away' ? alert.awayOdds.toFixed(2) : 
+           alert.drawOdds?.toFixed(2)}
+        </span>
+        <span className="text-text-muted/50">→</span>
+        <span className="text-text-muted">Model</span>
+        <span className="font-mono text-emerald-400 font-medium">
+          {edgeOutcome === 'home' ? alert.modelHomeProb : 
+           edgeOutcome === 'away' ? alert.modelAwayProb : 
+           alert.modelDrawProb}%
+        </span>
+        {alert.drawOdds && (
+          <>
+            <span className="text-text-muted/30 mx-1">|</span>
+            <span className="text-text-muted">Draw</span>
+            <span className="font-mono text-text-muted">{alert.drawOdds.toFixed(2)}</span>
+          </>
+        )}
+      </div>
+      
+      {/* Inline strength indicator */}
       <EdgeStrengthBar percent={edgePercent} alertLevel={alert.alertLevel} />
     </div>
   );
 }
 
 /**
- * Steam Move Card - Redesigned with direction clarity
+ * Steam Move Card - Compact ticker-style
  */
 function SteamMoveCard({ alert }: { alert: MarketAlert }) {
   const matchTime = new Date(alert.matchDate).toLocaleString('en-US', {
@@ -382,111 +353,77 @@ function SteamMoveCard({ alert }: { alert: MarketAlert }) {
   const homeHasMove = homePrevOdds !== null;
   const awayHasMove = awayPrevOdds !== null;
   
-  // Steam signal
+  // Steam signal - simplified
   const signal = getSteamSignal(alert);
   
-  // Intensity colors
-  const intensityColors = {
-    hot: 'from-orange-500/20 via-amber-500/10 to-transparent border-orange-500/30',
-    warm: 'from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/25',
-    cooling: 'from-amber-500/10 to-transparent border-amber-500/20',
-  };
-  
-  const badgeColors = {
-    hot: 'bg-orange-500/20 text-orange-400 border-orange-500/40 animate-pulse',
-    warm: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    cooling: 'bg-amber-500/15 text-amber-500/80 border-amber-500/20',
+  // Compact pill styles
+  const pillColors = {
+    hot: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    warm: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
+    cooling: 'bg-amber-500/10 text-amber-500/70 border-amber-500/15',
   };
   
   return (
-    <div className="group bg-bg-card border border-amber-500/20 rounded-xl p-5 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5 transition-all duration-300">
-      {/* Level 3: Context (faded) */}
-      <div className="flex items-center justify-between mb-3">
-        <LeagueHeader sport={alert.sport} sportTitle={alert.sportTitle} />
-        <span className="text-text-muted/50 text-xs">{matchTime}</span>
-      </div>
-      
-      {/* Level 1: Decision Driver - Steam Signal */}
-      <div className={`bg-gradient-to-r ${intensityColors[signal.intensity]} border rounded-xl p-4 mb-4`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{signal.icon}</span>
-            <div>
-              <span className={`font-bold text-lg ${signal.intensity === 'hot' ? 'text-orange-400' : 'text-amber-400'}`}>
-                {signal.label}
-              </span>
-            </div>
-          </div>
-          <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${badgeColors[signal.intensity]}`}>
-            STEAM
+    <div className="group bg-bg-card border border-amber-500/15 rounded-lg p-3 hover:border-amber-500/30 transition-all">
+      {/* Top row: League + Signal pill + Time */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <LeagueHeader sport={alert.sport} sportTitle={alert.sportTitle} />
+          <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${pillColors[signal.intensity]}`}>
+            {signal.icon} {signal.intensity === 'hot' ? 'HOT' : signal.intensity === 'warm' ? 'SHARP' : 'MOVE'}
           </span>
         </div>
+        <span className="text-text-muted/40 text-[10px]">{matchTime}</span>
       </div>
       
-      {/* Level 2: Odds Movement - OPEN / NOW / Δ format */}
-      <div className="space-y-3 mb-4">
+      {/* Teams with inline odds movement */}
+      <div className="space-y-1">
         {/* Home Team */}
-        <div className="flex items-center justify-between">
-          <span className={`font-medium ${homeHasMove ? 'text-text-primary' : 'text-text-secondary'}`}>
+        <div className="flex items-center justify-between text-sm">
+          <span className={`truncate flex-1 ${homeHasMove ? 'text-text-primary font-medium' : 'text-text-secondary'}`}>
             {alert.homeTeam}
           </span>
           {homeHasMove ? (
-            <div className="flex items-center gap-3 font-mono text-sm">
-              <div className="text-right">
-                <div className="text-text-muted/60 text-[10px] uppercase">Open</div>
-                <div className="text-text-muted">{homePrevOdds!.toFixed(2)}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-text-muted/60 text-[10px] uppercase">Now</div>
-                <div className={`font-semibold ${alert.homeChange! < 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {alert.homeOdds.toFixed(2)}
-                </div>
-              </div>
-              <div className="text-right min-w-[50px]">
-                <div className="text-text-muted/60 text-[10px] uppercase">Δ</div>
-                <div className={`font-semibold ${alert.homeChange! < 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {alert.homeChange! > 0 ? '+' : ''}{alert.homeChange!.toFixed(1)}%
-                </div>
-              </div>
+            <div className="flex items-center gap-1.5 font-mono text-xs">
+              <span className="text-text-muted/50">{homePrevOdds!.toFixed(2)}</span>
+              <span className="text-text-muted/30">→</span>
+              <span className={`font-semibold ${alert.homeChange! < 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {alert.homeOdds.toFixed(2)}
+              </span>
+              <span className={`text-[10px] ${alert.homeChange! < 0 ? 'text-emerald-400/70' : 'text-rose-400/70'}`}>
+                {alert.homeChange! > 0 ? '+' : ''}{alert.homeChange!.toFixed(1)}%
+              </span>
             </div>
           ) : (
-            <span className="font-mono text-text-muted text-sm">{alert.homeOdds.toFixed(2)}</span>
+            <span className="font-mono text-text-muted/50 text-xs">{alert.homeOdds.toFixed(2)}</span>
           )}
         </div>
         
         {/* Away Team */}
-        <div className="flex items-center justify-between">
-          <span className={`font-medium ${awayHasMove ? 'text-text-primary' : 'text-text-secondary'}`}>
+        <div className="flex items-center justify-between text-sm">
+          <span className={`truncate flex-1 ${awayHasMove ? 'text-text-primary font-medium' : 'text-text-secondary'}`}>
             {alert.awayTeam}
           </span>
           {awayHasMove ? (
-            <div className="flex items-center gap-3 font-mono text-sm">
-              <div className="text-right">
-                <div className="text-text-muted/60 text-[10px] uppercase">Open</div>
-                <div className="text-text-muted">{awayPrevOdds!.toFixed(2)}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-text-muted/60 text-[10px] uppercase">Now</div>
-                <div className={`font-semibold ${alert.awayChange! < 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {alert.awayOdds.toFixed(2)}
-                </div>
-              </div>
-              <div className="text-right min-w-[50px]">
-                <div className="text-text-muted/60 text-[10px] uppercase">Δ</div>
-                <div className={`font-semibold ${alert.awayChange! < 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {alert.awayChange! > 0 ? '+' : ''}{alert.awayChange!.toFixed(1)}%
-                </div>
-              </div>
+            <div className="flex items-center gap-1.5 font-mono text-xs">
+              <span className="text-text-muted/50">{awayPrevOdds!.toFixed(2)}</span>
+              <span className="text-text-muted/30">→</span>
+              <span className={`font-semibold ${alert.awayChange! < 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {alert.awayOdds.toFixed(2)}
+              </span>
+              <span className={`text-[10px] ${alert.awayChange! < 0 ? 'text-emerald-400/70' : 'text-rose-400/70'}`}>
+                {alert.awayChange! > 0 ? '+' : ''}{alert.awayChange!.toFixed(1)}%
+              </span>
             </div>
           ) : (
-            <span className="font-mono text-text-muted text-sm">{alert.awayOdds.toFixed(2)}</span>
+            <span className="font-mono text-text-muted/50 text-xs">{alert.awayOdds.toFixed(2)}</span>
           )}
         </div>
       </div>
       
-      {/* Alert Note if present */}
+      {/* Alert Note - ultra compact */}
       {alert.alertNote && (
-        <div className="text-xs text-amber-400/80 bg-amber-500/10 rounded-lg px-3 py-2">
+        <div className="text-[10px] text-amber-400/60 mt-1.5 truncate">
           💡 {alert.alertNote}
         </div>
       )}
@@ -696,21 +633,21 @@ export default function MarketAlertsPage() {
         />
 
         {/* Two Column Layout */}
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-6">
           {/* Value Edges */}
           <section>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <span className="text-xl">🎯</span>
-                <h2 className="text-lg font-semibold text-text-primary">Value Edges</h2>
-                <span className="text-xs text-text-muted bg-bg-card px-2 py-0.5 rounded-full">
-                  Top {Math.min(5, topEdgeMatches.length)}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🎯</span>
+                <h2 className="text-base font-semibold text-text-primary">Value Edges</h2>
+                <span className="text-[10px] text-text-muted bg-bg-card px-1.5 py-0.5 rounded">
+                  {topEdgeMatches.length}
                 </span>
               </div>
               {topEdgeMatches.length > 5 && (
                 <button 
                   onClick={() => setShowAllEdges(!showAllEdges)}
-                  className="text-xs text-emerald-400 hover:text-emerald-300 font-medium"
+                  className="text-[10px] text-emerald-400 hover:text-emerald-300 font-medium"
                 >
                   {showAllEdges ? '← Less' : `All ${topEdgeMatches.length}`}
                 </button>
@@ -718,13 +655,13 @@ export default function MarketAlertsPage() {
             </div>
             
             {topEdgeMatches.length === 0 ? (
-              <div className="bg-bg-card/50 border border-divider rounded-xl p-8 text-center">
-                <div className="text-3xl mb-3 opacity-50">📊</div>
-                <h3 className="font-semibold text-text-primary mb-1">No Edges Detected</h3>
-                <p className="text-text-muted text-sm">Markets appear efficient right now</p>
+              <div className="bg-bg-card/50 border border-divider rounded-lg p-6 text-center">
+                <div className="text-2xl mb-2 opacity-50">📊</div>
+                <h3 className="font-medium text-text-primary text-sm mb-0.5">No Edges Detected</h3>
+                <p className="text-text-muted text-xs">Markets appear efficient</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-2.5">
                 {(showAllEdges ? topEdgeMatches : topEdgeMatches.slice(0, 5)).map(alert => (
                   <EdgeMatchCard key={alert.id} alert={alert} />
                 ))}
@@ -734,35 +671,35 @@ export default function MarketAlertsPage() {
 
           {/* Steam Moves */}
           <section>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <span className="text-xl">⚡</span>
-                <h2 className="text-lg font-semibold text-text-primary">Steam Moves</h2>
-                <span className="text-xs text-text-muted bg-bg-card px-2 py-0.5 rounded-full">
-                  {steamMoves.length} active
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-base">⚡</span>
+                <h2 className="text-base font-semibold text-text-primary">Steam Moves</h2>
+                <span className="text-[10px] text-text-muted bg-bg-card px-1.5 py-0.5 rounded">
+                  {steamMoves.length}
                 </span>
               </div>
               {steamMoves.length > 5 && (
                 <button 
                   onClick={() => setShowAllSteam(!showAllSteam)}
-                  className="text-xs text-amber-400 hover:text-amber-300 font-medium"
+                  className="text-[10px] text-amber-400 hover:text-amber-300 font-medium"
                 >
                   {showAllSteam ? '← Less' : `All ${steamMoves.length}`}
                 </button>
               )}
             </div>
             
-            {/* Steam Legend */}
+            {/* Steam Legend - inline */}
             <SteamLegend />
             
             {steamMoves.length === 0 ? (
-              <div className="bg-bg-card/50 border border-divider rounded-xl p-8 text-center">
-                <div className="text-3xl mb-3 opacity-50">📉</div>
-                <h3 className="font-semibold text-text-primary mb-1">No Steam Detected</h3>
-                <p className="text-text-muted text-sm">Sharp money alerts appear here</p>
+              <div className="bg-bg-card/50 border border-divider rounded-lg p-6 text-center">
+                <div className="text-2xl mb-2 opacity-50">📉</div>
+                <h3 className="font-medium text-text-primary text-sm mb-0.5">No Steam Detected</h3>
+                <p className="text-text-muted text-xs">Sharp money alerts appear here</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {(showAllSteam ? steamMoves : steamMoves.slice(0, 5)).map(alert => (
                   <SteamMoveCard key={alert.id} alert={alert} />
                 ))}
@@ -772,8 +709,8 @@ export default function MarketAlertsPage() {
         </div>
 
         {/* Disclaimer - Very subtle */}
-        <div className="mt-12 text-center">
-          <p className="text-text-muted/50 text-xs">
+        <div className="mt-8 text-center">
+          <p className="text-text-muted/50 text-[10px]">
             ⚠️ Educational purposes only. Model edges are statistical analysis, not guaranteed outcomes. 18+
           </p>
         </div>
