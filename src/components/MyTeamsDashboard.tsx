@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useFavorites } from '@/lib/FavoritesContext'
-import { Heart, Trash2, Calendar, Trophy, ChevronRight, Star, Loader2 } from 'lucide-react'
+import { Heart, Trash2, Calendar, Trophy, ChevronRight, Star, Loader2, Users } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 
