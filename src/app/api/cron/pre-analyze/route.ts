@@ -24,7 +24,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { theOddsClient, OddsApiEvent } from '@/lib/theOdds';
 import { cacheSet, CACHE_TTL, CACHE_KEYS } from '@/lib/cache';
-import { analyzeMarket, type MarketIntel, type OddsData } from '@/lib/value-detection';
+import { analyzeMarket, type MarketIntel, type OddsData, oddsToImpliedProb } from '@/lib/value-detection';
 import { getEnrichedMatchDataV2, normalizeSport } from '@/lib/data-layer/bridge';
 import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee, getMatchFixtureInfo } from '@/lib/football-api';
 import { normalizeToUniversalSignals, formatSignalsForAI, getSignalSummary, type RawMatchInput } from '@/lib/universal-signals';
@@ -528,13 +528,23 @@ export async function GET(request: NextRequest) {
           // Update OddsSnapshot with real AI edge
           try {
             const probs = analysis.probabilities;
-            const impliedHome = 1 / consensus.home;
-            const impliedAway = 1 / consensus.away;
-            const impliedDraw = consensus.draw ? 1 / consensus.draw : 0;
             
-            const homeEdge = (probs.home - impliedHome) * 100;
-            const awayEdge = (probs.away - impliedAway) * 100;
-            const drawEdge = probs.draw ? (probs.draw - impliedDraw) * 100 : null;
+            // Normalize probabilities to percentages (0-100)
+            // AI may return decimals (0.45) or percentages (45) - detect and normalize
+            const isDecimal = probs.home < 1 && probs.away < 1;
+            const homeProb = isDecimal ? probs.home * 100 : probs.home;
+            const awayProb = isDecimal ? probs.away * 100 : probs.away;
+            const drawProb = probs.draw ? (isDecimal ? probs.draw * 100 : probs.draw) : 0;
+            
+            // Use oddsToImpliedProb which returns percentages (e.g., 54.05)
+            const impliedHome = oddsToImpliedProb(consensus.home);
+            const impliedAway = oddsToImpliedProb(consensus.away);
+            const impliedDraw = consensus.draw ? oddsToImpliedProb(consensus.draw) : 0;
+            
+            // Edge = model probability - implied probability (both in percentage)
+            const homeEdge = homeProb - impliedHome;
+            const awayEdge = awayProb - impliedAway;
+            const drawEdge = probs.draw ? drawProb - impliedDraw : null;
             
             const bestEdge = Math.max(homeEdge, awayEdge, drawEdge || 0);
             const alertLevel = bestEdge > 10 ? 'HIGH' : bestEdge > 5 ? 'MEDIUM' : bestEdge > 3 ? 'LOW' : null;
@@ -557,9 +567,9 @@ export async function GET(request: NextRequest) {
                 homeOdds: consensus.home,
                 awayOdds: consensus.away,
                 drawOdds: consensus.draw ?? null,
-                modelHomeProb: probs.home,
-                modelAwayProb: probs.away,
-                modelDrawProb: probs.draw ?? null,
+                modelHomeProb: homeProb,  // Store as percentage (0-100)
+                modelAwayProb: awayProb,
+                modelDrawProb: drawProb || null,
                 homeEdge,
                 awayEdge,
                 drawEdge,
@@ -572,9 +582,9 @@ export async function GET(request: NextRequest) {
                 homeOdds: consensus.home,
                 awayOdds: consensus.away,
                 drawOdds: consensus.draw ?? null,
-                modelHomeProb: probs.home,
-                modelAwayProb: probs.away,
-                modelDrawProb: probs.draw ?? null,
+                modelHomeProb: homeProb,  // Store as percentage (0-100)
+                modelAwayProb: awayProb,
+                modelDrawProb: drawProb || null,
                 homeEdge,
                 awayEdge,
                 drawEdge,

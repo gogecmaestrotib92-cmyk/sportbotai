@@ -287,14 +287,22 @@ export async function GET(request: NextRequest) {
             consensus.draw
           );
           
-          const impliedHome = 1 / consensus.home;
-          const impliedAway = 1 / consensus.away;
-          const impliedDraw = consensus.draw ? 1 / consensus.draw : 0;
+          // Convert to percentages for consistency with pre-analyze
+          // modelProbs returns decimals (0.40), convert to percentages (40)
+          const modelHomeProb = modelProbs.home * 100;
+          const modelAwayProb = modelProbs.away * 100;
+          const modelDrawProb = modelProbs.draw ? modelProbs.draw * 100 : null;
           
-          const homeEdge = (modelProbs.home - impliedHome) * 100;
-          const awayEdge = (modelProbs.away - impliedAway) * 100;
-          const drawEdge = modelProbs.draw && impliedDraw
-            ? (modelProbs.draw - impliedDraw) * 100
+          // Use percentage-based implied probabilities
+          const impliedHome = (1 / consensus.home) * 100;
+          const impliedAway = (1 / consensus.away) * 100;
+          const impliedDraw = consensus.draw ? (1 / consensus.draw) * 100 : 0;
+          
+          // Edge = model probability - implied probability (both in percentage)
+          const homeEdge = modelHomeProb - impliedHome;
+          const awayEdge = modelAwayProb - impliedAway;
+          const drawEdge = modelDrawProb && impliedDraw
+            ? modelDrawProb - impliedDraw
             : undefined;
           
           // Determine best edge
@@ -329,9 +337,9 @@ export async function GET(request: NextRequest) {
             homeChange: homeChange ?? null,
             awayChange: awayChange ?? null,
             drawChange: drawChange ?? null,
-            modelHomeProb: modelProbs.home,
-            modelAwayProb: modelProbs.away,
-            modelDrawProb: modelProbs.draw ?? null,
+            modelHomeProb: modelHomeProb,  // Store as percentage (0-100)
+            modelAwayProb: modelAwayProb,
+            modelDrawProb: modelDrawProb,
             homeEdge,
             awayEdge,
             drawEdge: drawEdge ?? null,
