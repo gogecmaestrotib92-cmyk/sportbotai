@@ -296,13 +296,14 @@ async function getPredictionStats() {
         by: ['league'],
         where: { 
           outcome: { in: ['HIT', 'MISS'] },
-          NOT: { league: null },
+          league: { not: '' }, // Filter out empty strings, nulls are excluded by groupBy
         },
         _count: { id: true },
       }).then(async (leagues) => {
-        // For each league, get accurate count
+        // For each league, get accurate count (filter out null leagues)
+        const validLeagues = leagues.filter(l => l.league !== null);
         const leagueStats = await Promise.all(
-          leagues.map(async (l) => {
+          validLeagues.map(async (l) => {
             const accurate = await prisma.prediction.count({
               where: { league: l.league, outcome: 'HIT' },
             });
