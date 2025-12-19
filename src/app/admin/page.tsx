@@ -323,12 +323,12 @@ async function getPredictionStats() {
         by: ['conviction'],
         where: { 
           outcome: { in: ['HIT', 'MISS'] },
-          conviction: { not: null },
+          conviction: { gte: 0 },  // Filter non-null by requiring >= 0
         },
         _count: { id: true },
       }).then(async (levels) => {
         const levelStats = await Promise.all(
-          levels.map(async (l) => {
+          levels.filter(l => l.conviction !== null).map(async (l) => {
             const accurate = await prisma.prediction.count({
               where: { conviction: l.conviction, outcome: 'HIT' },
             });
