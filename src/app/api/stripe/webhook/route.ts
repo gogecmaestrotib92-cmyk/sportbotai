@@ -20,10 +20,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
-// Map Price IDs to plan names
+// Map Price IDs to plan names (monthly and yearly)
 function getPlanFromPriceId(priceId: string): 'FREE' | 'PRO' | 'PREMIUM' {
   if (priceId === process.env.STRIPE_PREMIUM_PRICE_ID) return 'PREMIUM';
+  if (priceId === process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID) return 'PREMIUM';
   if (priceId === process.env.STRIPE_PRO_PRICE_ID) return 'PRO';
+  if (priceId === process.env.STRIPE_PRO_YEARLY_PRICE_ID) return 'PRO';
   return 'FREE';
 }
 
