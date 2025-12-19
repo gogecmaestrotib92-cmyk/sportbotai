@@ -29,11 +29,17 @@ interface AnalysisSummary {
   bestValueSide: string | null;
   userPick: string | null;
   createdAt: string;
+  marketEdge?: {
+    label: string | null;
+    strength: string | null;
+    summary: string | null;
+  } | null;
   predictionOutcome?: {
     wasAccurate: boolean | null;
     actualResult: string | null;
     actualScore: string | null;
     predictedScenario: string | null;
+    outcome?: string | null; // PENDING, HIT, MISS, VOID, PUSH
   } | null;
 }
 
@@ -227,18 +233,21 @@ export default function HistoryPage() {
                       </span>
                     )}
                     {/* Prediction Outcome Badge */}
-                    {analysis.predictionOutcome?.wasAccurate !== null && analysis.predictionOutcome?.wasAccurate !== undefined && (
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold ${
-                        analysis.predictionOutcome.wasAccurate 
-                          ? 'bg-success/10 text-success border-success/20' 
-                          : 'bg-danger/10 text-danger border-danger/20'
-                      }`}>
-                        {analysis.predictionOutcome.wasAccurate ? '✓ Correct' : '✗ Wrong'}
+                    {analysis.predictionOutcome?.wasAccurate === true && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full border font-semibold bg-success/10 text-success border-success/20">
+                        ✓ Correct
                       </span>
                     )}
-                    {analysis.predictionOutcome === null && analysis.matchDate && new Date(analysis.matchDate) < new Date() && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full border bg-gray-500/10 text-gray-400 border-gray-500/20">
-                        Pending
+                    {analysis.predictionOutcome?.wasAccurate === false && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full border font-semibold bg-danger/10 text-danger border-danger/20">
+                        ✗ Wrong
+                      </span>
+                    )}
+                    {/* Show Pending for: PENDING outcome, or no prediction yet for past matches */}
+                    {((analysis.predictionOutcome?.outcome === 'PENDING' || analysis.predictionOutcome?.wasAccurate === null) ||
+                      (analysis.predictionOutcome === null && analysis.matchDate && new Date(analysis.matchDate) < new Date())) && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-400 border-amber-500/20">
+                        ⏳ Pending
                       </span>
                     )}
                   </div>
@@ -269,6 +278,17 @@ export default function HistoryPage() {
                     {analysis.bestValueSide && analysis.bestValueSide !== 'NONE' && (
                       <span className="text-success font-medium">
                         Value: {analysis.bestValueSide}
+                      </span>
+                    )}
+                    
+                    {/* Market Edge */}
+                    {analysis.marketEdge?.label && (
+                      <span className={`font-medium ${
+                        analysis.marketEdge.strength === 'strong' ? 'text-emerald-400' :
+                        analysis.marketEdge.strength === 'moderate' ? 'text-yellow-400' :
+                        'text-zinc-400'
+                      }`}>
+                        📊 {analysis.marketEdge.label}
                       </span>
                     )}
                     

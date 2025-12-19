@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
           userPick: true,
           userStake: true,
           createdAt: true,
+          fullResponse: true, // Include full response for market edge extraction
         },
       }),
       prisma.analysis.count({ where }),
@@ -84,6 +85,21 @@ export async function GET(request: NextRequest) {
     // Try to fetch prediction outcomes for these analyses to show accuracy
     const analysesWithOutcomes = await Promise.all(
       analyses.map(async (analysis) => {
+        // Extract market edge from fullResponse
+        let marketEdge = null;
+        try {
+          const fr = analysis.fullResponse as Record<string, unknown> | null;
+          const mi = fr?.marketIntel as Record<string, unknown> | undefined;
+          const ve = mi?.valueEdge as Record<string, unknown> | undefined;
+          if (ve?.label || mi?.summary) {
+            marketEdge = {
+              label: ve?.label as string | null,
+              strength: ve?.strength as string | null,
+              summary: mi?.summary as string | null,
+            };
+          }
+        } catch {}
+        
         // Build matchName pattern to find matching prediction
         const matchRef = `${analysis.homeTeam} vs ${analysis.awayTeam}`;
         
@@ -107,17 +123,25 @@ export async function GET(request: NextRequest) {
             },
           });
           
+          // Remove fullResponse from returned data (too large for list view)
+          const { fullResponse, ...analysisWithoutFull } = analysis;
+          
           return {
-            ...analysis,
+            ...analysisWithoutFull,
+            marketEdge,
             predictionOutcome: prediction ? {
-              wasAccurate: prediction.outcome === 'HIT',
+              // Only set wasAccurate for evaluated predictions (HIT/MISS), null for PENDING/VOID/PUSH
+              wasAccurate: prediction.outcome === 'HIT' ? true : 
+                           prediction.outcome === 'MISS' ? false : null,
               actualResult: prediction.actualResult,
               actualScore: prediction.actualScore,
               predictedScenario: prediction.prediction,
+              outcome: prediction.outcome, // Pass the actual outcome for UI display
             } : null,
           };
         } catch {
-          return { ...analysis, predictionOutcome: null };
+          const { fullResponse, ...analysisWithoutFull } = analysis;
+          return { ...analysisWithoutFull, marketEdge, predictionOutcome: null };
         }
       })
     );
