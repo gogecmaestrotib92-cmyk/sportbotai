@@ -107,8 +107,11 @@ export default async function AdminPage() {
     // Agent posts count
     getAgentPostsCount(),
     
-    // Prediction accuracy stats
+    // Prediction accuracy stats (PredictionOutcome model)
     getPredictionStats(),
+    
+    // AI Prediction stats (Prediction model from pre-analyze)
+    getAIPredictionStats(),
   ]);
 
   // Calculate MRR (Monthly Recurring Revenue)
@@ -139,6 +142,7 @@ export default async function AdminPage() {
       recentAnalyses={recentAnalyses}
       chatAnalytics={chatAnalytics}
       predictionStats={predictionStats}
+      aiPredictionStats={aiPredictionStats}
     />
   );
 }
@@ -429,6 +433,126 @@ async function getPredictionStats() {
       byLeague: [],
       byConfidence: [],
       dailyTrend: [],
+    };
+  }
+}
+
+/**
+ * Get AI Prediction stats from the Prediction model (pre-analyzed matches)
+ */
+async function getAIPredictionStats() {
+  try {
+    const [
+      totalPredictions,
+      pendingPredictions,
+      hitPredictions,
+      missPredictions,
+      recentPredictions,
+      byLeague,
+      bySport,
+    ] = await Promise.all([
+      // Total predictions
+      prisma.prediction.count(),
+      
+      // Pending (not yet validated)
+      prisma.prediction.count({ where: { outcome: 'PENDING' } }),
+      
+      // Hits
+      prisma.prediction.count({ where: { outcome: 'HIT' } }),
+      
+      // Misses
+      prisma.prediction.count({ where: { outcome: 'MISS' } }),
+      
+      // Recent 50 predictions
+      prisma.prediction.findMany({
+        take: 50,
+        orderBy: { kickoff: 'desc' },
+        select: {
+          id: true,
+          matchName: true,
+          sport: true,
+          league: true,
+          kickoff: true,
+          prediction: true,
+          conviction: true,
+          odds: true,
+          outcome: true,
+          actualResult: true,
+          createdAt: true,
+        },
+      }),
+      
+      // By league
+      prisma.prediction.groupBy({
+        by: ['league'],
+        where: { outcome: { not: 'PENDING' } },
+        _count: { id: true },
+      }).then(async (leagues) => {
+        return Promise.all(
+          leagues.map(async (l) => {
+            const hits = await prisma.prediction.count({
+              where: { league: l.league, outcome: 'HIT' },
+            });
+            return {
+              league: l.league,
+              total: l._count.id,
+              hits,
+              accuracy: l._count.id > 0 ? Math.round((hits / l._count.id) * 100) : 0,
+            };
+          })
+        );
+      }),
+      
+      // By sport
+      prisma.prediction.groupBy({
+        by: ['sport'],
+        where: { outcome: { not: 'PENDING' } },
+        _count: { id: true },
+      }).then(async (sports) => {
+        return Promise.all(
+          sports.map(async (s) => {
+            const hits = await prisma.prediction.count({
+              where: { sport: s.sport, outcome: 'HIT' },
+            });
+            return {
+              sport: s.sport,
+              total: s._count.id,
+              hits,
+              accuracy: s._count.id > 0 ? Math.round((hits / s._count.id) * 100) : 0,
+            };
+          })
+        );
+      }),
+    ]);
+    
+    const evaluatedCount = hitPredictions + missPredictions;
+    const overallAccuracy = evaluatedCount > 0 
+      ? Math.round((hitPredictions / evaluatedCount) * 100) 
+      : 0;
+    
+    return {
+      totalPredictions,
+      pendingPredictions,
+      hitPredictions,
+      missPredictions,
+      evaluatedCount,
+      overallAccuracy,
+      recentPredictions,
+      byLeague: byLeague.sort((a, b) => b.total - a.total).slice(0, 10),
+      bySport: bySport.sort((a, b) => b.total - a.total),
+    };
+  } catch (error) {
+    console.error('Error fetching AI prediction stats:', error);
+    return {
+      totalPredictions: 0,
+      pendingPredictions: 0,
+      hitPredictions: 0,
+      missPredictions: 0,
+      evaluatedCount: 0,
+      overallAccuracy: 0,
+      recentPredictions: [],
+      byLeague: [],
+      bySport: [],
     };
   }
 }

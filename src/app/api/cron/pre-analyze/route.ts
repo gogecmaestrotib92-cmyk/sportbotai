@@ -260,6 +260,7 @@ export async function GET(request: NextRequest) {
     matchesAnalyzed: 0,
     cacheWrites: 0,
     oddsSnapshotUpdates: 0,
+    predictionsCreated: 0,
     errors: [] as string[],
     analyzedMatches: [] as string[],
   };
@@ -429,6 +430,74 @@ export async function GET(request: NextRequest) {
             console.log(`[Pre-Analyze] OddsSnapshot updated: ${matchRef} (${bestEdge.toFixed(1)}% edge)`);
           } catch (dbError) {
             console.error(`[Pre-Analyze] OddsSnapshot update failed:`, dbError);
+          }
+          
+          // Create Prediction record for accuracy tracking
+          try {
+            const probs = analysis.probabilities;
+            const matchDate = new Date(event.commence_time);
+            
+            // Determine the predicted outcome based on highest probability
+            let predictedOutcome: 'home' | 'away' | 'draw';
+            let predictedProb: number;
+            let predictedOdds: number;
+            
+            if (probs.draw && probs.draw > probs.home && probs.draw > probs.away) {
+              predictedOutcome = 'draw';
+              predictedProb = probs.draw;
+              predictedOdds = consensus.draw || 0;
+            } else if (probs.home > probs.away) {
+              predictedOutcome = 'home';
+              predictedProb = probs.home;
+              predictedOdds = consensus.home;
+            } else {
+              predictedOutcome = 'away';
+              predictedProb = probs.away;
+              predictedOdds = consensus.away;
+            }
+            
+            // Calculate conviction (1-10 scale based on probability edge)
+            const impliedProb = 1 / predictedOdds;
+            const edge = (predictedProb - impliedProb) * 100;
+            const conviction = Math.min(10, Math.max(1, Math.round(3 + edge))); // 3 baseline + edge
+            
+            // Only create predictions for matches with positive edge
+            if (edge > 0) {
+              const predictionId = `pre_${sport.key}_${event.id}_${Date.now()}`;
+              
+              // Store prediction as "Home Win", "Away Win", or "Draw" for validation compatibility
+              const predictionText = predictedOutcome === 'home' ? `Home Win - ${event.home_team}` :
+                                     predictedOutcome === 'away' ? `Away Win - ${event.away_team}` : 'Draw';
+              
+              await prisma.prediction.upsert({
+                where: { id: predictionId },
+                create: {
+                  id: predictionId,
+                  matchId: event.id,
+                  matchName: matchRef,
+                  sport: sport.key,
+                  league: sport.league,
+                  kickoff: matchDate,
+                  type: 'MATCH_RESULT',
+                  prediction: predictionText,
+                  reasoning: analysis.story?.narrative || 'AI model analysis',
+                  conviction,
+                  odds: predictedOdds,
+                  impliedProb: impliedProb * 100,
+                  outcome: 'PENDING',
+                },
+                update: {
+                  conviction,
+                  odds: predictedOdds,
+                  reasoning: analysis.story?.narrative || 'AI model analysis',
+                },
+              });
+              
+              stats.predictionsCreated++;
+              console.log(`[Pre-Analyze] Prediction created: ${matchRef} → ${predictedOutcome} (${(predictedProb * 100).toFixed(1)}%)`);
+            }
+          } catch (predError) {
+            console.error(`[Pre-Analyze] Prediction creation failed:`, predError);
           }
           
           // Small delay to avoid rate limits
