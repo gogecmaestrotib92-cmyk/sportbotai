@@ -298,12 +298,12 @@ export async function GET(request: NextRequest) {
             : undefined;
           
           // Determine best edge
-          const edges = [
-            { outcome: 'home' as const, edge: homeEdge },
-            { outcome: 'away' as const, edge: awayEdge },
+          const edges: Array<{ outcome: 'home' | 'away' | 'draw'; edge: number }> = [
+            { outcome: 'home', edge: homeEdge },
+            { outcome: 'away', edge: awayEdge },
           ];
           if (drawEdge !== undefined) {
-            edges.push({ outcome: 'draw' as const, edge: drawEdge });
+            edges.push({ outcome: 'draw', edge: drawEdge });
           }
           
           const bestEdge = edges.reduce((max, e) => e.edge > max.edge ? e : max, edges[0]);
