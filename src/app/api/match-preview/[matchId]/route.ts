@@ -1352,14 +1352,16 @@ SNAPSHOT RULES:
 - If no detailed stats available, be honest: "Limited data available"
 - ${!sportConfig.hasDraw ? 'This sport has NO DRAWS - pick a winner.' : 'Draw is possible.'}`;
 
-  const prompt = `${systemPrompt}\n\n${userPrompt}`;
-
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }],
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
       response_format: { type: 'json_object' },
       max_tokens: 800,
+      temperature: 0.3, // Lower for more consistent analytical output
     });
 
     const content = completion.choices[0].message.content;
