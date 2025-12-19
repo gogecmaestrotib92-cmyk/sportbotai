@@ -1,75 +1,87 @@
 import { MetadataRoute } from 'next';
+import { prisma } from '@/lib/prisma';
 
 const BASE_URL = 'https://sportbotai.com';
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const currentDate = new Date().toISOString();
+// Static pages with their priorities and change frequencies
+const STATIC_PAGES = [
+  // Core Product Pages
+  { path: '', priority: 1, changeFreq: 'daily' as const },
+  { path: '/matches', priority: 0.95, changeFreq: 'hourly' as const },
+  { path: '/ai-desk', priority: 0.95, changeFreq: 'hourly' as const },
+  
+  // Content & Conversion
+  { path: '/blog', priority: 0.85, changeFreq: 'daily' as const },
+  { path: '/pricing', priority: 0.8, changeFreq: 'monthly' as const },
+  { path: '/contact', priority: 0.6, changeFreq: 'monthly' as const },
+  
+  // Legal & Compliance
+  { path: '/responsible-gambling', priority: 0.5, changeFreq: 'monthly' as const },
+  { path: '/terms', priority: 0.3, changeFreq: 'yearly' as const },
+  { path: '/privacy', priority: 0.3, changeFreq: 'yearly' as const },
+];
 
-  return [
-    // ===========================================
-    // HIGH PRIORITY - Core Product Pages
-    // ===========================================
-    {
-      url: BASE_URL,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 1,
-    },
-    {
-      url: `${BASE_URL}/matches`,
-      lastModified: currentDate,
-      changeFrequency: 'hourly', // Match data updates frequently
-      priority: 0.95,
-    },
-    {
-      url: `${BASE_URL}/ai-desk`,
-      lastModified: currentDate,
-      changeFrequency: 'hourly', // Live intelligence feed
-      priority: 0.95,
-    },
-    
-    // ===========================================
-    // MEDIUM PRIORITY - Content & Conversion
-    // ===========================================
-    {
-      url: `${BASE_URL}/blog`,
-      lastModified: currentDate,
-      changeFrequency: 'daily',
-      priority: 0.85,
-    },
-    {
-      url: `${BASE_URL}/pricing`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/contact`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    
-    // ===========================================
-    // LOWER PRIORITY - Legal & Compliance
-    // ===========================================
-    {
-      url: `${BASE_URL}/responsible-gambling`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${BASE_URL}/terms`,
-      lastModified: currentDate,
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    {
-      url: `${BASE_URL}/privacy`,
-      lastModified: currentDate,
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-  ];
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const currentDate = new Date().toISOString();
+  
+  // Build static pages
+  const staticEntries: MetadataRoute.Sitemap = STATIC_PAGES.map(page => ({
+    url: `${BASE_URL}${page.path}`,
+    lastModified: currentDate,
+    changeFrequency: page.changeFreq,
+    priority: page.priority,
+  }));
+
+  // Fetch published blog posts for dynamic sitemap
+  let blogEntries: MetadataRoute.Sitemap = [];
+  try {
+    const blogPosts = await prisma.blogPost.findMany({
+      where: { 
+        status: 'PUBLISHED',
+        publishedAt: { not: null },
+      },
+      select: {
+        slug: true,
+        updatedAt: true,
+        publishedAt: true,
+      },
+      orderBy: { publishedAt: 'desc' },
+      take: 100, // Limit to latest 100 posts
+    });
+
+    blogEntries = blogPosts.map(post => ({
+      url: `${BASE_URL}/blog/${post.slug}`,
+      lastModified: post.updatedAt?.toISOString() || post.publishedAt?.toISOString() || currentDate,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
+  } catch (error) {
+    console.error('[Sitemap] Error fetching blog posts:', error);
+  }
+
+  // Fetch popular teams for team pages
+  let teamEntries: MetadataRoute.Sitemap = [];
+  try {
+    // Get most favorited teams
+    const popularTeams = await prisma.favoriteTeam.groupBy({
+      by: ['teamName', 'sport'],
+      _count: { teamName: true },
+      orderBy: { _count: { teamName: 'desc' } },
+      take: 50,
+    });
+
+    teamEntries = popularTeams.map(team => {
+      const slug = team.teamName.toLowerCase().replace(/\s+/g, '-');
+      return {
+        url: `${BASE_URL}/team/${slug}`,
+        lastModified: currentDate,
+        changeFrequency: 'daily' as const,
+        priority: 0.6,
+      };
+    });
+  } catch (error) {
+    console.error('[Sitemap] Error fetching teams:', error);
+  }
+
+  return [...staticEntries, ...blogEntries, ...teamEntries];
 }

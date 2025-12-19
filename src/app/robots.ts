@@ -5,6 +5,7 @@ export default function robots(): MetadataRoute.Robots {
   
   return {
     rules: [
+      // Default rules for all crawlers
       {
         userAgent: '*',
         allow: [
@@ -12,6 +13,8 @@ export default function robots(): MetadataRoute.Robots {
           '/matches',
           '/ai-desk',
           '/blog',
+          '/blog/*',
+          '/team/*',
           '/pricing',
           '/contact',
           '/terms',
@@ -26,14 +29,53 @@ export default function robots(): MetadataRoute.Robots {
           '/my-teams/',
           '/login',
           '/register',
-          '/match/', // Individual match pages (dynamic, not for indexing)
+          '/match/', // Dynamic match analysis pages (require auth)
+          '/market-alerts/',
+          '/_next/',
+          '/static/',
         ],
       },
-      // Be nice to crawlers - allow specific bots faster crawl
+      // Googlebot - allow faster crawling for main content
       {
         userAgent: 'Googlebot',
+        allow: [
+          '/',
+          '/matches',
+          '/ai-desk',
+          '/blog/',
+          '/team/',
+          '/pricing',
+        ],
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/account/',
+          '/login',
+          '/register',
+        ],
+      },
+      // Bingbot
+      {
+        userAgent: 'Bingbot',
         allow: '/',
         disallow: ['/api/', '/admin/', '/account/'],
+      },
+      // Block AI training crawlers
+      {
+        userAgent: 'GPTBot',
+        disallow: '/',
+      },
+      {
+        userAgent: 'ChatGPT-User',
+        disallow: '/',
+      },
+      {
+        userAgent: 'CCBot',
+        disallow: '/',
+      },
+      {
+        userAgent: 'anthropic-ai',
+        disallow: '/',
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
