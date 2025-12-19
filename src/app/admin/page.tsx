@@ -40,6 +40,7 @@ export default async function AdminPage() {
     agentPostsCount,
     // Prediction stats
     predictionStats,
+    aiPredictionStats,
   ] = await Promise.all([
     // Total users
     prisma.user.count(),
