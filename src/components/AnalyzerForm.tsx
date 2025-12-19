@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { AnalyzeRequest, AnalyzeResponse } from '@/types';
+import { USAGE_UPDATED_EVENT } from './auth/UserMenu';
 
 interface AnalyzerFormProps {
   onResult: (result: AnalyzeResponse) => void;
@@ -91,6 +92,9 @@ export default function AnalyzerForm({ onResult, onLoading }: AnalyzerFormProps)
       if (!response.ok) {
         throw new Error(result.error || 'Analysis error');
       }
+
+      // Dispatch usage update event so header refreshes
+      window.dispatchEvent(new Event(USAGE_UPDATED_EVENT));
 
       onResult(result);
     } catch (err) {

@@ -28,6 +28,7 @@ import MatchPreview from './MatchPreview';
 import { TrendingMatches } from './TrendingMatches';
 import { groupMatchesByLeague, filterLeagueGroupsBySearch, LeagueGroup } from './utils';
 import { getTrendingMatches, TrendingMatch } from './trending';
+import { USAGE_UPDATED_EVENT } from '@/components/auth/UserMenu';
 
 interface UsageInfo {
   authenticated: boolean;
@@ -335,6 +336,9 @@ export default function MatchSelector({ onResult, onLoading }: MatchSelectorProp
           setUsageInfo(usageData);
         }
       } catch {}
+
+      // Dispatch usage update event so header refreshes
+      window.dispatchEvent(new Event(USAGE_UPDATED_EVENT));
 
       onResult(result);
     } catch (err) {

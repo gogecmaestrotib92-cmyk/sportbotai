@@ -10,6 +10,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AnalyzeRequest, AnalyzeResponse } from '@/types';
 import TeamLogo from './ui/TeamLogo';
+import { USAGE_UPDATED_EVENT } from './auth/UserMenu';
 
 // Types for API response
 interface Sport {
@@ -220,6 +221,9 @@ export default function AnalyzerFormLive({ onResult, onLoading }: AnalyzerFormPr
         throw new Error(result.error || 'Error during analysis');
       }
 
+      // Dispatch usage update event so header refreshes
+      window.dispatchEvent(new Event(USAGE_UPDATED_EVENT));
+      
       onResult(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unexpected error');

@@ -12,6 +12,7 @@ import { AnalyzeRequest, AnalyzeResponse, MatchData } from '@/types';
 import { SPORTS_CONFIG, SportConfig, getSportsGroupedByCategory } from '@/lib/config/sportsConfig';
 import TeamLogo from './ui/TeamLogo';
 import LeagueLogo from './ui/LeagueLogo';
+import { USAGE_UPDATED_EVENT } from './auth/UserMenu';
 
 // ============================================
 // TYPES
@@ -273,6 +274,9 @@ export default function MultiSportAnalyzerForm({
       if (!response.ok) {
         throw new Error(result.error || 'Analysis failed');
       }
+
+      // Dispatch usage update event so header refreshes
+      window.dispatchEvent(new Event(USAGE_UPDATED_EVENT));
 
       onResult(result);
     } catch (err) {

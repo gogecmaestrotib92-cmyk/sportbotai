@@ -17,6 +17,9 @@ const PLAN_LIMITS: Record<string, number> = {
   PREMIUM: -1, // Unlimited
 };
 
+// Custom event for usage updates
+export const USAGE_UPDATED_EVENT = 'sportbot:usage-updated';
+
 export function UserMenu() {
   const { data: session, status, update } = useSession();
   const [isOpen, setIsOpen] = useState(false);
@@ -42,6 +45,29 @@ export function UserMenu() {
           // Fallback to session data on error
         });
     }
+  }, [session]);
+
+  // Listen for usage update events (dispatched after analysis)
+  useEffect(() => {
+    const handleUsageUpdate = () => {
+      if (session) {
+        fetch('/api/usage')
+          .then(res => res.json())
+          .then(data => {
+            if (data.remaining !== undefined) {
+              setUsageData({
+                remaining: data.remaining,
+                limit: data.limit,
+                plan: data.plan || session.user?.plan || 'FREE',
+              });
+            }
+          })
+          .catch(() => {});
+      }
+    };
+
+    window.addEventListener(USAGE_UPDATED_EVENT, handleUsageUpdate);
+    return () => window.removeEventListener(USAGE_UPDATED_EVENT, handleUsageUpdate);
   }, [session]);
   
   // Refetch when menu opens to get latest data

@@ -18,6 +18,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { USAGE_UPDATED_EVENT } from '@/components/auth/UserMenu';
 import {
   PremiumMatchHeader,
   ShareCard,
@@ -184,12 +185,17 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
         // Handle 429 (usage limit reached) specifically
         if (response.status === 429 && result.usageLimitReached) {
           setUsageLimit(result as UsageLimitData);
+          // Dispatch usage update event so header refreshes
+          window.dispatchEvent(new Event(USAGE_UPDATED_EVENT));
           return;
         }
         
         if (!response.ok) {
           throw new Error(result.error || 'Failed to load match preview');
         }
+        
+        // Successful analysis - dispatch usage update event
+        window.dispatchEvent(new Event(USAGE_UPDATED_EVENT));
         
         setData(result);
       } catch (err) {
