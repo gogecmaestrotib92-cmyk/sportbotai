@@ -147,6 +147,7 @@ type QueryCategory =
   | 'VENUE'       // Stadium info
   | 'PLAYER_PROP' // Player prop questions (over/under on stats)
   | 'BETTING_ADVICE' // Should I bet? (decline with analysis)
+  | 'MATCH_ANALYSIS' // Full match analysis request (triggers /api/analyze)
   | 'GENERAL';    // Generic sports question
 
 // ============================================
@@ -368,11 +369,275 @@ function detectBettingIntent(message: string): {
   return { isBettingAdvice, isPlayerProp, detectedType, playerMentioned, confidenceLevel };
 }
 
+// ============================================
+// MATCH ANALYSIS DETECTION
+// ============================================
+
+/**
+ * Detect if the user is requesting a full match analysis
+ * Patterns: "analyze X vs Y", "breakdown of X vs Y", "what do you think about X vs Y"
+ * Returns parsed match info if detected
+ */
+function detectMatchAnalysisRequest(message: string): {
+  isMatchAnalysis: boolean;
+  homeTeam: string | null;
+  awayTeam: string | null;
+  sport: string | null;
+} {
+  const msg = message.toLowerCase();
+  
+  // Analysis trigger phrases (multi-language)
+  const analysisPatterns = [
+    // English
+    /(?:analyze|analyse|analysis|breakdown|preview|assess|evaluate)\s+(?:the\s+)?(?:match\s+)?(.+?)\s+(?:vs\.?|versus|v\.?)\s+(.+?)(?:\s+(?:match|game|tonight|today|tomorrow))?$/i,
+    /(?:what do you think|thoughts on|your take on|give me a breakdown|break down)\s+(?:about\s+)?(?:the\s+)?(.+?)\s+(?:vs\.?|versus|v\.?)\s+(.+?)(?:\s+(?:match|game))?$/i,
+    /(?:can you analyze|could you analyze|please analyze|i want analysis)\s+(.+?)\s+(?:vs\.?|versus|v\.?)\s+(.+)/i,
+    /(.+?)\s+(?:vs\.?|versus|v\.?)\s+(.+?)\s+(?:analysis|breakdown|preview|prediction)/i,
+    // Generic "X vs Y" if context suggests analysis
+    /^(.+?)\s+(?:vs\.?|versus|v\.?)\s+(.+?)(?:\s*\?)?$/i, // Just "Lakers vs Celtics?"
+    
+    // Serbian/Croatian
+    /(?:analiziraj|analiza|analizu|pregledaj)\s+(?:utakmicu?\s+)?(.+?)\s+(?:vs\.?|protiv|v\.?|-)\s+(.+)/i,
+    /(?:šta misliš|sta mislis|mišljenje|tvoje mišljenje)\s+(?:o\s+)?(.+?)\s+(?:vs\.?|protiv|v\.?|-)\s+(.+)/i,
+    
+    // Spanish
+    /(?:analiza|analizar|dame análisis)\s+(?:del?\s+)?(?:partido\s+)?(.+?)\s+(?:vs\.?|contra|v\.?)\s+(.+)/i,
+    
+    // German
+    /(?:analysiere|analyse)\s+(?:das\s+)?(?:spiel\s+)?(.+?)\s+(?:vs\.?|gegen|v\.?)\s+(.+)/i,
+  ];
+  
+  // Check for analysis patterns
+  for (const pattern of analysisPatterns) {
+    const match = message.match(pattern);
+    if (match && match[1] && match[2]) {
+      // Clean up team names (remove extra words)
+      let homeTeam = match[1].trim()
+        .replace(/^(the|match|game)\s+/i, '')
+        .replace(/\s+(match|game|tonight|today)?$/i, '')
+        .trim();
+      let awayTeam = match[2].trim()
+        .replace(/^(the)\s+/i, '')
+        .replace(/\s+(match|game|tonight|today|\?)?$/i, '')
+        .trim();
+      
+      // Must have reasonable team names (2+ chars each)
+      if (homeTeam.length >= 2 && awayTeam.length >= 2) {
+        // Detect sport from team names or message
+        const sport = detectSportFromTeams(homeTeam, awayTeam, message);
+        
+        return {
+          isMatchAnalysis: true,
+          homeTeam,
+          awayTeam,
+          sport,
+        };
+      }
+    }
+  }
+  
+  return { isMatchAnalysis: false, homeTeam: null, awayTeam: null, sport: null };
+}
+
+/**
+ * Detect sport from team names or context
+ */
+function detectSportFromTeams(homeTeam: string, awayTeam: string, message: string): string {
+  const combined = `${homeTeam} ${awayTeam} ${message}`.toLowerCase();
+  
+  // NBA teams
+  const nbaTeams = /lakers|celtics|warriors|bulls|heat|nets|knicks|76ers|sixers|bucks|nuggets|suns|mavs|mavericks|clippers|rockets|spurs|thunder|grizzlies|kings|pelicans|jazz|blazers|timberwolves|hornets|hawks|magic|pistons|pacers|wizards|cavaliers|cavs|raptors/i;
+  if (nbaTeams.test(combined) || /nba|basketball/i.test(message)) {
+    return 'basketball_nba';
+  }
+  
+  // NFL teams
+  const nflTeams = /chiefs|eagles|bills|49ers|niners|cowboys|ravens|lions|dolphins|bengals|chargers|broncos|jets|patriots|giants|raiders|saints|packers|steelers|seahawks|commanders|falcons|buccaneers|cardinals|rams|bears|vikings|browns|texans|colts|jaguars|titans|panthers/i;
+  if (nflTeams.test(combined) || /nfl|football|american football/i.test(message)) {
+    return 'americanfootball_nfl';
+  }
+  
+  // NHL teams  
+  const nhlTeams = /bruins|rangers|maple leafs|leafs|canadiens|habs|blackhawks|penguins|flyers|red wings|oilers|flames|canucks|avalanche|lightning|panthers|stars|blues|wild|kraken|knights|ducks|sharks|kings|senators|sabres|devils|islanders|hurricanes|predators|jets|coyotes|blue jackets/i;
+  if (nhlTeams.test(combined) || /nhl|hockey/i.test(message)) {
+    return 'icehockey_nhl';
+  }
+  
+  // MMA/UFC
+  if (/ufc|mma|fight|fighter/i.test(message)) {
+    return 'mma_mixed_martial_arts';
+  }
+  
+  // Soccer (default for most European team names)
+  const soccerIndicators = /fc|united|city|real|barcelona|madrid|bayern|arsenal|chelsea|liverpool|tottenham|manchester|juventus|inter|milan|psg|dortmund|atletico|sevilla|valencia|napoli|roma|lazio|sporting|benfica|porto|ajax|feyenoord|psv/i;
+  if (soccerIndicators.test(combined) || /premier league|la liga|bundesliga|serie a|ligue 1|champions league|europa|soccer|football|epl/i.test(message)) {
+    return 'soccer_epl'; // Default to EPL, will be overridden if league detected
+  }
+  
+  // Default to soccer (most common globally)
+  return 'soccer_epl';
+}
+
+/**
+ * Call the analyze API and format response for chat
+ */
+async function performMatchAnalysis(
+  homeTeam: string,
+  awayTeam: string,
+  sport: string,
+  request: NextRequest
+): Promise<{ success: boolean; response: string; error?: string }> {
+  try {
+    // Build analyze request with default odds (user can refine later)
+    const analyzeRequest = {
+      matchData: {
+        sport: sport,
+        league: 'Auto-detected',
+        homeTeam: homeTeam,
+        awayTeam: awayTeam,
+        matchDate: new Date().toISOString(),
+        sourceType: 'chat',
+        odds: {
+          home: 2.0,  // Default even odds
+          draw: sport.includes('soccer') ? 3.5 : null,
+          away: 2.0,
+        },
+      },
+    };
+    
+    // Get the host from the request
+    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+    const host = request.headers.get('host') || 'localhost:3000';
+    const baseUrl = `${protocol}://${host}`;
+    
+    // Forward cookies for authentication
+    const cookies = request.headers.get('cookie') || '';
+    
+    // Call the analyze API
+    const analyzeResponse = await fetch(`${baseUrl}/api/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': cookies,
+      },
+      body: JSON.stringify(analyzeRequest),
+    });
+    
+    if (!analyzeResponse.ok) {
+      const errorData = await analyzeResponse.json().catch(() => ({}));
+      
+      // Check for usage limit
+      if (analyzeResponse.status === 403) {
+        return {
+          success: false,
+          response: `⚠️ **Analysis Limit Reached**\n\nYou've used your daily analysis quota. To get full match analysis for **${homeTeam} vs ${awayTeam}**, please upgrade your plan or wait until tomorrow.\n\n👉 [View Pricing](/pricing)`,
+        };
+      }
+      
+      // Check for auth required
+      if (analyzeResponse.status === 401) {
+        return {
+          success: false,
+          response: `🔐 **Sign In Required**\n\nTo get AI-powered match analysis for **${homeTeam} vs ${awayTeam}**, please sign in to your account.\n\n👉 [Sign In](/login) or [Create Account](/register)`,
+        };
+      }
+      
+      return {
+        success: false,
+        error: errorData.error || 'Analysis failed',
+        response: `Sorry, I couldn't analyze **${homeTeam} vs ${awayTeam}** right now. Please try using the [Match Analyzer](/analyzer) directly.`,
+      };
+    }
+    
+    const analysisData = await analyzeResponse.json();
+    
+    // Format the analysis for chat display
+    const formattedResponse = formatAnalysisForChat(analysisData, homeTeam, awayTeam);
+    
+    return {
+      success: true,
+      response: formattedResponse,
+    };
+  } catch (error) {
+    console.error('[AI-Chat] Match analysis error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      response: `Sorry, I couldn't analyze **${homeTeam} vs ${awayTeam}** right now. Please try using the [Match Analyzer](/analyzer) directly.`,
+    };
+  }
+}
+
+/**
+ * Format the analysis response for chat display
+ */
+function formatAnalysisForChat(analysis: any, homeTeam: string, awayTeam: string): string {
+  const { matchInfo, probabilities, valueSummary, keyFactors, briefing, responsibleGamblingNote } = analysis;
+  
+  let response = `## 🎯 Match Analysis: ${homeTeam} vs ${awayTeam}\n\n`;
+  
+  // AI Briefing (the main insight)
+  if (briefing?.narrative) {
+    response += `### 💡 Key Insight\n${briefing.narrative}\n\n`;
+  }
+  
+  // Probabilities
+  if (probabilities) {
+    response += `### 📊 AI Probability Estimates\n`;
+    if (probabilities.homeWin) {
+      response += `- **${homeTeam}** win: ${Math.round(probabilities.homeWin * 100)}%\n`;
+    }
+    if (probabilities.draw !== null && probabilities.draw !== undefined) {
+      response += `- **Draw**: ${Math.round(probabilities.draw * 100)}%\n`;
+    }
+    if (probabilities.awayWin) {
+      response += `- **${awayTeam}** win: ${Math.round(probabilities.awayWin * 100)}%\n`;
+    }
+    response += '\n';
+  }
+  
+  // Value Summary
+  if (valueSummary?.bestValue) {
+    const edge = valueSummary.estimatedEdge ? ` (${valueSummary.estimatedEdge > 0 ? '+' : ''}${(valueSummary.estimatedEdge * 100).toFixed(1)}% edge)` : '';
+    response += `### 💎 Value Indication\n`;
+    response += `Best value: **${valueSummary.bestValue}**${edge}\n`;
+    response += `Confidence: ${valueSummary.confidence || 'Medium'}\n\n`;
+  }
+  
+  // Key Factors (top 3)
+  if (keyFactors && keyFactors.length > 0) {
+    response += `### 🔑 Key Factors\n`;
+    const topFactors = keyFactors.slice(0, 3);
+    for (const factor of topFactors) {
+      const emoji = factor.favors === 'home' ? '🏠' : factor.favors === 'away' ? '✈️' : '⚖️';
+      response += `${emoji} **${factor.factor}**: ${factor.insight}\n`;
+    }
+    response += '\n';
+  }
+  
+  // Risk Level
+  if (valueSummary?.riskLevel) {
+    const riskEmoji = valueSummary.riskLevel === 'LOW' ? '🟢' : valueSummary.riskLevel === 'MEDIUM' ? '🟡' : '🔴';
+    response += `**Risk Level**: ${riskEmoji} ${valueSummary.riskLevel}\n\n`;
+  }
+  
+  // Disclaimer
+  response += `---\n⚠️ *${responsibleGamblingNote || 'This is educational analysis, not betting advice. Always gamble responsibly.'}*`;
+  
+  return response;
+}
+
 /**
  * Detect the category of sports question
  */
 function detectQueryCategory(message: string): QueryCategory {
-  // FIRST: Check for betting advice / player props (highest priority)
+  // FIRST: Check for match analysis request (highest priority)
+  const analysisIntent = detectMatchAnalysisRequest(message);
+  if (analysisIntent.isMatchAnalysis) {
+    return 'MATCH_ANALYSIS';
+  }
+  
+  // Check for betting advice / player props
   const bettingIntent = detectBettingIntent(message);
   if (bettingIntent.isBettingAdvice) {
     return 'BETTING_ADVICE';
@@ -1108,6 +1373,34 @@ export async function POST(request: NextRequest) {
     
     // Detect category for all queries (for tracking) - use English for better accuracy
     const queryCategory = detectQueryCategory(searchMessage);
+
+    // SPECIAL HANDLING: Match Analysis Request
+    // If user asks "Analyze X vs Y", call the /api/analyze endpoint
+    if (queryCategory === 'MATCH_ANALYSIS') {
+      const analysisIntent = detectMatchAnalysisRequest(searchMessage);
+      
+      if (analysisIntent.isMatchAnalysis && analysisIntent.homeTeam && analysisIntent.awayTeam) {
+        console.log(`[AI-Chat] Match analysis requested: ${analysisIntent.homeTeam} vs ${analysisIntent.awayTeam}`);
+        console.log(`[AI-Chat] Detected sport: ${analysisIntent.sport}`);
+        
+        const analysisResult = await performMatchAnalysis(
+          analysisIntent.homeTeam,
+          analysisIntent.awayTeam,
+          analysisIntent.sport || 'soccer_epl',
+          request
+        );
+        
+        return NextResponse.json({
+          success: true,
+          response: analysisResult.response,
+          citations: [],
+          usedRealTimeSearch: false,
+          routingDecision: 'match-analysis',
+          model: 'analyze-api',
+          isMatchAnalysis: true,
+        });
+      }
+    }
 
     // Step 1: Use Perplexity for real-time search if needed
     if (shouldSearch) {

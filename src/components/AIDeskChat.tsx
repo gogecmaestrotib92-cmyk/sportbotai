@@ -63,6 +63,8 @@ function stripMarkdown(text: string): string {
 // ============================================
 
 const SUGGESTED_QUESTIONS = [
+  // Match Analysis (NEW - triggers full /api/analyze)
+  "Analyze Real Madrid vs Barcelona",
   // Rosters & Squads
   "Who is the starting goalkeeper for Real Madrid?",
   // Injuries
