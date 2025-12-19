@@ -532,6 +532,7 @@ export default function MarketAlertsPage() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [showAllEdges, setShowAllEdges] = useState(false);
   const [showAllSteam, setShowAllSteam] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchAlerts = useCallback(async () => {
     try {
@@ -600,8 +601,28 @@ export default function MarketAlertsPage() {
 
   const { topEdgeMatches = [], allMatches = [], steamMoves = [], allSteamMoves = [], recentUpdates } = data?.data || {};
   
-  // Remaining matches (after top 5)
-  const remainingMatches = allMatches.slice(5);
+  // Search filter function
+  const matchesSearch = (alert: MarketAlert) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      alert.homeTeam.toLowerCase().includes(query) ||
+      alert.awayTeam.toLowerCase().includes(query) ||
+      alert.matchRef.toLowerCase().includes(query)
+    );
+  };
+  
+  // Filter matches based on search
+  const isSearching = searchQuery.trim().length > 0;
+  const filteredEdgeMatches = isSearching 
+    ? allMatches.filter(matchesSearch) 
+    : topEdgeMatches;
+  const filteredSteamMoves = isSearching 
+    ? allSteamMoves.filter(matchesSearch) 
+    : steamMoves;
+  
+  // Remaining matches (after top 5) - only when not searching
+  const remainingMatches = isSearching ? [] : allMatches.slice(5);
 
   return (
     <div className="min-h-screen bg-bg-primary py-8 sm:py-10">
@@ -637,6 +658,42 @@ export default function MarketAlertsPage() {
           lastRefresh={lastRefresh}
         />
 
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="w-4 h-4 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search team or match..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-10 py-2.5 bg-bg-card border border-divider rounded-lg text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted hover:text-text-primary transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+          {isSearching && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-text-muted">
+              <span>Found:</span>
+              <span className="text-emerald-400 font-medium">{filteredEdgeMatches.length}</span>
+              <span>in Value Edges,</span>
+              <span className="text-amber-400 font-medium">{filteredSteamMoves.length}</span>
+              <span>in Steam Moves</span>
+            </div>
+          )}
+        </div>
         {/* Two Column Layout */}
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Value Edges */}
@@ -644,29 +701,43 @@ export default function MarketAlertsPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="text-base">🎯</span>
-                <h2 className="text-base font-semibold text-text-primary">Top Value Edges</h2>
+                <h2 className="text-base font-semibold text-text-primary">
+                  {isSearching ? 'Value Edges' : 'Top Value Edges'}
+                </h2>
                 <span className="text-[10px] text-text-muted bg-bg-card px-1.5 py-0.5 rounded">
-                  Top 5
+                  {isSearching ? filteredEdgeMatches.length : 'Top 5'}
                 </span>
               </div>
+              {isSearching && filteredEdgeMatches.length === 0 && (
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="text-[10px] text-primary hover:text-primary/80 font-medium"
+                >
+                  Clear search
+                </button>
+              )}
             </div>
             
-            {topEdgeMatches.length === 0 ? (
+            {filteredEdgeMatches.length === 0 ? (
               <div className="bg-bg-card/50 border border-divider rounded-lg p-6 text-center">
-                <div className="text-2xl mb-2 opacity-50">📊</div>
-                <h3 className="font-medium text-text-primary text-sm mb-0.5">No Edges Detected</h3>
-                <p className="text-text-muted text-xs">Markets appear efficient</p>
+                <div className="text-2xl mb-2 opacity-50">{isSearching ? '🔍' : '📊'}</div>
+                <h3 className="font-medium text-text-primary text-sm mb-0.5">
+                  {isSearching ? 'No matches found' : 'No Edges Detected'}
+                </h3>
+                <p className="text-text-muted text-xs">
+                  {isSearching ? `No results for "${searchQuery}"` : 'Markets appear efficient'}
+                </p>
               </div>
             ) : (
               <div className="space-y-2.5">
-                {topEdgeMatches.map(alert => (
+                {filteredEdgeMatches.map(alert => (
                   <EdgeMatchCard key={alert.id} alert={alert} />
                 ))}
               </div>
             )}
             
-            {/* Expandable: All Other Matches */}
-            {remainingMatches.length > 0 && (
+            {/* Expandable: All Other Matches - only when not searching */}
+            {!isSearching && remainingMatches.length > 0 && (
               <div className="mt-4">
                 <button 
                   onClick={() => setShowAllEdges(!showAllEdges)}
@@ -709,30 +780,42 @@ export default function MarketAlertsPage() {
                 <span className="text-base">⚡</span>
                 <h2 className="text-base font-semibold text-text-primary">Steam Moves</h2>
                 <span className="text-[10px] text-text-muted bg-bg-card px-1.5 py-0.5 rounded">
-                  Top 5
+                  {isSearching ? filteredSteamMoves.length : 'Top 5'}
                 </span>
               </div>
+              {isSearching && filteredSteamMoves.length === 0 && (
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="text-[10px] text-primary hover:text-primary/80 font-medium"
+                >
+                  Clear search
+                </button>
+              )}
             </div>
             
             {/* Steam Legend - inline */}
             <SteamLegend />
             
-            {steamMoves.length === 0 ? (
+            {filteredSteamMoves.length === 0 ? (
               <div className="bg-bg-card/50 border border-divider rounded-lg p-6 text-center">
-                <div className="text-2xl mb-2 opacity-50">📉</div>
-                <h3 className="font-medium text-text-primary text-sm mb-0.5">No Steam Detected</h3>
-                <p className="text-text-muted text-xs">Sharp money alerts appear here</p>
+                <div className="text-2xl mb-2 opacity-50">{isSearching ? '🔍' : '📉'}</div>
+                <h3 className="font-medium text-text-primary text-sm mb-0.5">
+                  {isSearching ? 'No matches found' : 'No Steam Detected'}
+                </h3>
+                <p className="text-text-muted text-xs">
+                  {isSearching ? `No results for "${searchQuery}"` : 'Sharp money alerts appear here'}
+                </p>
               </div>
             ) : (
               <div className="space-y-2">
-                {steamMoves.map(alert => (
+                {filteredSteamMoves.map(alert => (
                   <SteamMoveCard key={alert.id} alert={alert} />
                 ))}
               </div>
             )}
             
-            {/* Expandable: All Other Steam Moves */}
-            {allSteamMoves.length > 5 && (
+            {/* Expandable: All Other Steam Moves - only when not searching */}
+            {!isSearching && allSteamMoves.length > 5 && (
               <div className="mt-4">
                 <button 
                   onClick={() => setShowAllSteam(!showAllSteam)}
