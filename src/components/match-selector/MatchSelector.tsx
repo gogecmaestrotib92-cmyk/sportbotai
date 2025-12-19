@@ -20,7 +20,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { MatchData, AnalyzeRequest, AnalyzeResponse } from '@/types';
-import { SPORTS_CONFIG, SportConfig, getSportsGroupedByCategory } from '@/lib/config/sportsConfig';
+import { SPORTS_CONFIG, SportConfig, getEnabledSportsGroupedByCategory } from '@/lib/config/sportsConfig';
 import SportTabs from './SportTabs';
 import MatchSearchBar from './MatchSearchBar';
 import LeagueAccordion from './LeagueAccordion';
@@ -73,8 +73,8 @@ export default function MatchSelector({ onResult, onLoading }: MatchSelectorProp
   // Error state
   const [error, setError] = useState<string | null>(null);
 
-  // Grouped sports
-  const groupedSports = useMemo(() => getSportsGroupedByCategory(), []);
+  // Grouped sports - only show enabled sports with data layer support
+  const groupedSports = useMemo(() => getEnabledSportsGroupedByCategory(), []);
   const categories = useMemo(() => Object.keys(groupedSports).sort((a, b) => {
     // Priority order
     const priority: Record<string, number> = {

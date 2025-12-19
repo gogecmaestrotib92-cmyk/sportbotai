@@ -42,6 +42,9 @@ export interface SportConfig {
   
   /** Priority for sorting (lower = higher priority) */
   priority: number;
+  
+  /** Whether this sport has full data layer support (stats, H2H, form, etc.) */
+  enabled: boolean;
 }
 
 // ============================================
@@ -64,6 +67,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '⚽',
     dataSource: 'football-api',
     priority: 1,
+    enabled: true,
   },
   
   // Soccer leagues via Odds API (for markets comparison)
@@ -79,6 +83,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '⚽',
     dataSource: 'odds-api',
     priority: 2,
+    enabled: true,
   },
   'soccer_spain_la_liga': {
     id: 'soccer_spain_la_liga',
@@ -92,6 +97,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '⚽',
     dataSource: 'odds-api',
     priority: 3,
+    enabled: true,
   },
   'soccer_germany_bundesliga': {
     id: 'soccer_germany_bundesliga',
@@ -105,6 +111,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '⚽',
     dataSource: 'odds-api',
     priority: 4,
+    enabled: true,
   },
   'soccer_italy_serie_a': {
     id: 'soccer_italy_serie_a',
@@ -118,6 +125,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '⚽',
     dataSource: 'odds-api',
     priority: 5,
+    enabled: true,
   },
   'soccer_france_ligue_one': {
     id: 'soccer_france_ligue_one',
@@ -131,6 +139,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '⚽',
     dataSource: 'odds-api',
     priority: 6,
+    enabled: true,
   },
   'soccer_uefa_champs_league': {
     id: 'soccer_uefa_champs_league',
@@ -144,6 +153,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '⚽',
     dataSource: 'odds-api',
     priority: 7,
+    enabled: true,
   },
   
   // ====================
@@ -161,6 +171,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🏀',
     dataSource: 'odds-api',
     priority: 10,
+    enabled: true,
   },
   'basketball_euroleague': {
     id: 'basketball_euroleague',
@@ -174,6 +185,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🏀',
     dataSource: 'odds-api',
     priority: 11,
+    enabled: false, // No data layer support yet
   },
   'basketball_eurocup': {
     id: 'basketball_eurocup',
@@ -187,6 +199,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🏀',
     dataSource: 'api-sports',
     priority: 12,
+    enabled: false, // No data layer support yet
   },
   'basketball_acb_spain': {
     id: 'basketball_acb_spain',
@@ -198,6 +211,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     matchTerm: 'game',
     participantTerm: 'team',
     icon: '🏀',
+    enabled: false, // No data layer support yet
     dataSource: 'api-sports',
     priority: 13,
   },
@@ -213,6 +227,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🏀',
     dataSource: 'api-sports',
     priority: 14,
+    enabled: false, // No data layer support yet
   },
   'basketball_germany_bbl': {
     id: 'basketball_germany_bbl',
@@ -226,6 +241,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🏀',
     dataSource: 'api-sports',
     priority: 15,
+    enabled: false, // No data layer support yet
   },
   'basketball_france_pro_a': {
     id: 'basketball_france_pro_a',
@@ -239,6 +255,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🏀',
     dataSource: 'api-sports',
     priority: 16,
+    enabled: false, // No data layer support yet
   },
   'basketball_turkey_bsl': {
     id: 'basketball_turkey_bsl',
@@ -252,6 +269,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🏀',
     dataSource: 'api-sports',
     priority: 17,
+    enabled: false, // No data layer support yet
   },
   'basketball_russia_vtb': {
     id: 'basketball_russia_vtb',
@@ -265,6 +283,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🏀',
     dataSource: 'api-sports',
     priority: 18,
+    enabled: false, // No data layer support yet
   },
   
   // ====================
@@ -282,6 +301,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🏈',
     dataSource: 'odds-api',
     priority: 20,
+    enabled: true,
   },
   'americanfootball_ncaaf': {
     id: 'americanfootball_ncaaf',
@@ -295,6 +315,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🏈',
     dataSource: 'odds-api',
     priority: 21,
+    enabled: false, // No data layer support yet
   },
   
   // ====================
@@ -312,6 +333,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🎾',
     dataSource: 'odds-api',
     priority: 30,
+    enabled: false, // No data layer support yet
   },
   'tennis_atp_french_open': {
     id: 'tennis_atp_french_open',
@@ -325,6 +347,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🎾',
     dataSource: 'odds-api',
     priority: 31,
+    enabled: false, // No data layer support yet
   },
   'tennis_atp_wimbledon': {
     id: 'tennis_atp_wimbledon',
@@ -338,6 +361,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🎾',
     dataSource: 'odds-api',
     priority: 32,
+    enabled: false, // No data layer support yet
   },
   'tennis_atp_us_open': {
     id: 'tennis_atp_us_open',
@@ -351,6 +375,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🎾',
     dataSource: 'odds-api',
     priority: 33,
+    enabled: false, // No data layer support yet
   },
   
   // ====================
@@ -368,6 +393,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🏒',
     dataSource: 'odds-api',
     priority: 40,
+    enabled: true,
   },
   
   // ====================
@@ -385,6 +411,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '🥊',
     dataSource: 'odds-api',
     priority: 50,
+    enabled: false, // No data layer support yet
   },
   
   // ====================
@@ -402,6 +429,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     icon: '⚾',
     dataSource: 'odds-api',
     priority: 60,
+    enabled: false, // No data layer support yet
   },
 };
 
@@ -450,6 +478,29 @@ export function getSportConfig(idOrKey: string): SportConfig | null {
  */
 export function getAllSportsConfigs(): SportConfig[] {
   return Object.values(SPORTS_CONFIG).sort((a, b) => a.priority - b.priority);
+}
+
+/**
+ * Get only enabled sports (those with full data layer support)
+ */
+export function getEnabledSportsConfigs(): SportConfig[] {
+  return getAllSportsConfigs().filter(config => config.enabled);
+}
+
+/**
+ * Get enabled sports grouped by category (only shows categories with enabled sports)
+ */
+export function getEnabledSportsGroupedByCategory(): Record<string, SportConfig[]> {
+  const grouped: Record<string, SportConfig[]> = {};
+  
+  for (const config of getEnabledSportsConfigs()) {
+    if (!grouped[config.category]) {
+      grouped[config.category] = [];
+    }
+    grouped[config.category].push(config);
+  }
+  
+  return grouped;
 }
 
 /**
