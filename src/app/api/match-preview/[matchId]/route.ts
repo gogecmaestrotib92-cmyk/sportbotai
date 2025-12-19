@@ -658,6 +658,79 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           });
           console.log(`[Match-Preview] Prediction saved: ${matchRef} -> ${predictedScenario}`);
         }
+        
+        // ========================================
+        // UPDATE MARKET ALERTS WITH REAL AI EDGE
+        // ========================================
+        // When we have marketIntel from full AI analysis, update OddsSnapshot
+        // so Market Alerts shows consistent edge values
+        if (marketIntel && odds) {
+          try {
+            const modelProb = marketIntel.modelProbability;
+            const valueEdge = marketIntel.valueEdge;
+            
+            // Calculate individual edges
+            const homeEdge = modelProb.home - (marketIntel.impliedProbability?.home || 0);
+            const awayEdge = modelProb.away - (marketIntel.impliedProbability?.away || 0);
+            const drawEdge = modelProb.draw && marketIntel.impliedProbability?.draw 
+              ? modelProb.draw - marketIntel.impliedProbability.draw 
+              : null;
+            
+            // Determine alert level based on edge
+            const bestEdgePercent = valueEdge?.edgePercent || Math.max(homeEdge, awayEdge, drawEdge || 0);
+            const alertLevel = bestEdgePercent >= 10 ? 'HIGH' : 
+                              bestEdgePercent >= 5 ? 'MEDIUM' : 
+                              bestEdgePercent >= 3 ? 'LOW' : null;
+            
+            // Upsert to OddsSnapshot
+            await prisma.oddsSnapshot.upsert({
+              where: {
+                matchRef_sport_bookmaker: {
+                  matchRef,
+                  sport: matchInfo.sport,
+                  bookmaker: 'consensus',
+                },
+              },
+              create: {
+                matchRef,
+                sport: matchInfo.sport,
+                league: matchInfo.league || 'Unknown',
+                homeTeam: matchInfo.homeTeam,
+                awayTeam: matchInfo.awayTeam,
+                matchDate,
+                homeOdds: odds.homeOdds,
+                awayOdds: odds.awayOdds,
+                drawOdds: odds.drawOdds,
+                modelHomeProb: modelProb.home,
+                modelAwayProb: modelProb.away,
+                modelDrawProb: modelProb.draw,
+                homeEdge,
+                awayEdge,
+                drawEdge,
+                hasValueEdge: bestEdgePercent >= 5,
+                alertLevel,
+                alertNote: valueEdge?.label || null,
+              },
+              update: {
+                // Update with real AI edge values
+                modelHomeProb: modelProb.home,
+                modelAwayProb: modelProb.away,
+                modelDrawProb: modelProb.draw,
+                homeEdge,
+                awayEdge,
+                drawEdge,
+                hasValueEdge: bestEdgePercent >= 5,
+                alertLevel,
+                alertNote: valueEdge?.label || null,
+                updatedAt: new Date(),
+              },
+            });
+            console.log(`[Match-Preview] Updated OddsSnapshot with real edge: ${matchRef} -> ${bestEdgePercent.toFixed(1)}%`);
+          } catch (oddsUpdateError) {
+            console.error('[Match-Preview] Failed to update OddsSnapshot:', oddsUpdateError);
+            // Don't fail the request
+          }
+        }
       } else {
         console.log(`[Match-Preview] No userId in session, skipping database save`);
       }

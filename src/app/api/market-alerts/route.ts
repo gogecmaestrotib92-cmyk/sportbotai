@@ -501,6 +501,61 @@ export async function GET(request: NextRequest) {
           allAlerts.push(alert);
           
           // Update snapshot in database
+          // IMPORTANT: Don't overwrite AI-calculated edges if they exist and are higher
+          // Check if this match has been analyzed with full AI model
+          const existingSnapshot = await prisma.oddsSnapshot.findUnique({
+            where: {
+              matchRef_sport_bookmaker: {
+                matchRef,
+                sport: sport.key,
+                bookmaker: 'consensus',
+              },
+            },
+          });
+          
+          // If existing snapshot has higher edges (from AI analysis), preserve them
+          const hasAIEdge = existingSnapshot && (
+            (existingSnapshot.homeEdge ?? 0) > homeEdge + 2 ||
+            (existingSnapshot.awayEdge ?? 0) > awayEdge + 2 ||
+            (existingSnapshot.drawEdge ?? 0) > (drawEdge ?? 0) + 2
+          );
+          
+          // If AI-calculated edge exists and is significantly higher, use it for the alert
+          if (hasAIEdge && existingSnapshot) {
+            const aiHomeEdge = existingSnapshot.homeEdge ?? 0;
+            const aiAwayEdge = existingSnapshot.awayEdge ?? 0;
+            const aiDrawEdge = existingSnapshot.drawEdge ?? 0;
+            
+            // Recalculate best edge from AI values
+            const aiEdges: Array<{ outcome: 'home' | 'away' | 'draw'; percent: number }> = [
+              { outcome: 'home', percent: aiHomeEdge },
+              { outcome: 'away', percent: aiAwayEdge },
+            ];
+            if (aiDrawEdge > 0) {
+              aiEdges.push({ outcome: 'draw', percent: aiDrawEdge });
+            }
+            const aiBestEdge = aiEdges.reduce((best, curr) => 
+              curr.percent > best.percent ? curr : best
+            , aiEdges[0]);
+            
+            // Update the alert with AI edge values
+            alert.homeEdge = aiHomeEdge;
+            alert.awayEdge = aiAwayEdge;
+            alert.drawEdge = aiDrawEdge || undefined;
+            alert.bestEdge = {
+              outcome: aiBestEdge.outcome,
+              percent: Math.round(aiBestEdge.percent * 10) / 10,
+              label: existingSnapshot.alertNote || `${aiBestEdge.outcome.charAt(0).toUpperCase() + aiBestEdge.outcome.slice(1)} +${aiBestEdge.percent.toFixed(1)}%`,
+            };
+            alert.hasValueEdge = aiBestEdge.percent >= 5;
+            alert.alertLevel = aiBestEdge.percent >= 10 ? 'HIGH' : 
+                              aiBestEdge.percent >= 5 ? 'MEDIUM' : 
+                              steam.hasSteam ? 'LOW' : null;
+            alert.alertNote = existingSnapshot.alertNote || alert.alertNote;
+            
+            console.log(`[Market Alerts] Preserving AI edge for ${matchRef}: ${aiBestEdge.percent.toFixed(1)}% (vs quick model ${bestEdge.percent.toFixed(1)}%)`);
+          }
+          
           await prisma.oddsSnapshot.upsert({
             where: {
               matchRef_sport_bookmaker: {
@@ -540,16 +595,19 @@ export async function GET(request: NextRequest) {
               homeChange,
               awayChange,
               drawChange,
-              modelHomeProb: modelProb.home,
-              modelAwayProb: modelProb.away,
-              modelDrawProb: modelProb.draw,
-              homeEdge,
-              awayEdge,
-              drawEdge,
+              // Only update model/edge values if we don't have AI edge
+              ...(hasAIEdge ? {} : {
+                modelHomeProb: modelProb.home,
+                modelAwayProb: modelProb.away,
+                modelDrawProb: modelProb.draw,
+                homeEdge,
+                awayEdge,
+                drawEdge,
+                hasValueEdge,
+                alertLevel,
+                alertNote: alert.alertNote,
+              }),
               hasSteamMove: steam.hasSteam,
-              hasValueEdge,
-              alertLevel,
-              alertNote: alert.alertNote,
               updatedAt: new Date(),
             },
           });
