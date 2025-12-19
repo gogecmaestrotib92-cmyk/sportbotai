@@ -52,14 +52,14 @@ async function fetchAndUpdateResults() {
   console.log('\n--- Updating predictions ---\n');
   
   // Get pending predictions
-  const predictions = await prisma.predictionOutcome.findMany({
-    where: { wasAccurate: null }
+  const predictions = await prisma.prediction.findMany({
+    where: { outcome: 'PENDING' }
   });
   
   let updated = 0;
   
   for (const pred of predictions) {
-    const [homeTeam, awayTeam] = pred.matchRef.split(' vs ').map(t => t.trim());
+    const [homeTeam, awayTeam] = pred.matchName.split(' vs ').map(t => t.trim());
     
     // Try to find result - check both exact and partial matches
     let result = null;
@@ -81,10 +81,10 @@ async function fetchAndUpdateResults() {
     
     if (result) {
       // Determine if prediction was correct
-      const predictedHome = pred.predictedScenario?.toLowerCase().includes('home') ||
-        pred.predictedScenario?.toLowerCase().includes(homeTeam.split(' ').pop()?.toLowerCase() || '');
-      const predictedAway = pred.predictedScenario?.toLowerCase().includes('away') ||
-        pred.predictedScenario?.toLowerCase().includes(awayTeam.split(' ').pop()?.toLowerCase() || '');
+      const predictedHome = pred.prediction?.toLowerCase().includes('home') ||
+        pred.prediction?.toLowerCase().includes(homeTeam.split(' ').pop()?.toLowerCase() || '');
+      const predictedAway = pred.prediction?.toLowerCase().includes('away') ||
+        pred.prediction?.toLowerCase().includes(awayTeam.split(' ').pop()?.toLowerCase() || '');
       
       let wasAccurate = false;
       if (predictedHome && result.winner === 'home') wasAccurate = true;
@@ -92,20 +92,20 @@ async function fetchAndUpdateResults() {
       
       const actualResult = result.winner === 'home' ? `${homeTeam} Win` : `${awayTeam} Win`;
       
-      await prisma.predictionOutcome.update({
+      await prisma.prediction.update({
         where: { id: pred.id },
         data: {
           actualScore: `${result.homeScore}-${result.awayScore}`,
           actualResult,
-          wasAccurate,
-          learningNote: wasAccurate ? 'Correct prediction!' : `Wrong. Predicted: ${pred.predictedScenario}, Actual: ${actualResult}`
+          outcome: wasAccurate ? 'HIT' : 'MISS',
+          validatedAt: new Date(),
         }
       });
       
-      console.log(`✅ ${pred.matchRef}: ${result.homeScore}-${result.awayScore} -> ${wasAccurate ? 'CORRECT' : 'WRONG'}`);
+      console.log(`✅ ${pred.matchName}: ${result.homeScore}-${result.awayScore} -> ${wasAccurate ? 'CORRECT' : 'WRONG'}`);
       updated++;
     } else {
-      console.log(`⏳ ${pred.matchRef}: No result found`);
+      console.log(`⏳ ${pred.matchName}: No result found`);
     }
   }
   

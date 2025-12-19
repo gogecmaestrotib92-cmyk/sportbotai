@@ -47,16 +47,16 @@ async function updatePredictions() {
   
   for (const result of REAL_RESULTS) {
     // Find matching prediction
-    const prediction = await prisma.predictionOutcome.findFirst({
+    const prediction = await prisma.prediction.findFirst({
       where: {
-        matchRef: result.matchRef,
-        wasAccurate: null,  // Only pending ones
+        matchName: result.matchRef,
+        outcome: 'PENDING',  // Only pending ones
       }
     });
     
     if (prediction) {
       // Check if prediction was correct
-      const predictedOutcome = prediction.predictedScenario?.toLowerCase() || '';
+      const predictedOutcome = prediction.prediction?.toLowerCase() || '';
       const actualOutcome = result.actualResult.toLowerCase();
       
       let wasAccurate = false;
@@ -68,9 +68,9 @@ async function updatePredictions() {
         wasAccurate = true;
       } else if (predictedOutcome.includes('draw') && actualOutcome.includes('draw')) {
         wasAccurate = true;
-      } else if (prediction.predictedScenario && prediction.predictedScenario.includes('win')) {
+      } else if (prediction.prediction && prediction.prediction.includes('win')) {
         // Check if team name matches - e.g. "Detroit Red Wings win"
-        const predictedTeam = prediction.predictedScenario.replace(' win', '').toLowerCase();
+        const predictedTeam = prediction.prediction.replace(' win', '').toLowerCase();
         const [homeTeam, awayTeam] = result.matchRef.split(' vs ').map(t => t.toLowerCase());
         
         if (actualOutcome.includes('home') && predictedTeam.includes(homeTeam.split(' ')[0])) {
@@ -81,13 +81,13 @@ async function updatePredictions() {
       }
       
       // Update the prediction
-      await prisma.predictionOutcome.update({
+      await prisma.prediction.update({
         where: { id: prediction.id },
         data: {
           actualResult: result.actualResult,
           actualScore: result.actualScore,
-          wasAccurate: wasAccurate,
-          learningNote: wasAccurate ? 'Prediction was correct!' : 'Prediction was incorrect'
+          outcome: wasAccurate ? 'HIT' : 'MISS',
+          validatedAt: new Date(),
         }
       });
       
@@ -96,7 +96,7 @@ async function updatePredictions() {
       else incorrect++;
       
       console.log(`✅ ${result.matchRef}`);
-      console.log(`   Predicted: ${prediction.predictedScenario}`);
+      console.log(`   Predicted: ${prediction.prediction}`);
       console.log(`   Actual: ${result.actualResult} (${result.actualScore})`);
       console.log(`   Result: ${wasAccurate ? '🎯 CORRECT' : '❌ INCORRECT'}`);
       console.log('');

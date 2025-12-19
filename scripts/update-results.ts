@@ -132,8 +132,8 @@ function evaluatePrediction(predictedScenario: string, homeScore: number, awaySc
 async function updatePredictionResults() {
   console.log('Fetching pending predictions...');
   
-  const pendingPredictions = await prisma.predictionOutcome.findMany({
-    where: { wasAccurate: null },
+  const pendingPredictions = await prisma.prediction.findMany({
+    where: { outcome: 'PENDING' },
   });
   
   console.log(`Found ${pendingPredictions.length} pending predictions`);
@@ -141,7 +141,7 @@ async function updatePredictionResults() {
   let updated = 0;
   
   for (const prediction of pendingPredictions) {
-    const [homeTeam, awayTeam] = prediction.matchRef.split(' vs ').map(t => t.trim());
+    const [homeTeam, awayTeam] = prediction.matchName.split(' vs ').map(t => t.trim());
     if (!homeTeam || !awayTeam) continue;
     
     const searchHome = homeTeam.toLowerCase();
@@ -166,8 +166,8 @@ async function updatePredictionResults() {
     
     if (result && result.completed) {
       const homeWon = result.homeScore > result.awayScore;
-      const predictedHome = prediction.predictedScenario?.toLowerCase().includes(homeTeam.split(' ').pop()?.toLowerCase() || '');
-      const predictedAway = prediction.predictedScenario?.toLowerCase().includes(awayTeam.split(' ').pop()?.toLowerCase() || '');
+      const predictedHome = prediction.prediction?.toLowerCase().includes(homeTeam.split(' ').pop()?.toLowerCase() || '');
+      const predictedAway = prediction.prediction?.toLowerCase().includes(awayTeam.split(' ').pop()?.toLowerCase() || '');
       
       let wasAccurate = false;
       if (predictedHome && homeWon) wasAccurate = true;
@@ -175,15 +175,13 @@ async function updatePredictionResults() {
       
       const actualResult = homeWon ? `${homeTeam} Win` : `${awayTeam} Win`;
       
-      await prisma.predictionOutcome.update({
+      await prisma.prediction.update({
         where: { id: prediction.id },
         data: {
           actualResult,
           actualScore: `${result.homeScore}-${result.awayScore}`,
-          wasAccurate,
-          learningNote: wasAccurate
-            ? 'Prediction validated successfully'
-            : `Predicted: ${prediction.predictedScenario}, Actual: ${actualResult}`,
+          outcome: wasAccurate ? 'HIT' : 'MISS',
+          validatedAt: new Date(),
         },
       });
       
