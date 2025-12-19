@@ -36,17 +36,17 @@ const STATIC_PROMPTS = {
     "When do Liverpool play next in the Premier League?",
     "Who's top of the Serie A table?",
     "How many goals has Haaland scored this season?",
-    "Compare Messi and Ronaldo's stats this season",
-    "What are the odds for the Lakers game tonight?",
+    "What are the current NBA standings?",
+    "Who leads the NFL in passing yards?",
   ],
   // Seasonal/timely (December/January)
   seasonal: [
     "Any transfer rumors for the January window?",
-    "What's happening in the Boxing Day fixtures?",
     "Who leads the MVP race in the NBA?",
     "Which teams are in the Champions League knockouts?",
     "Who's on a hot streak in the NHL right now?",
     "What's the latest on the NFL playoff picture?",
+    "Who are the top scorers in La Liga this season?",
   ],
   // Breaking news style
   news: [
@@ -54,7 +54,7 @@ const STATIC_PROMPTS = {
     "What matches are happening this weekend?",
     "Latest manager news in the Premier League",
     "Who scored hat-tricks this week?",
-    "Any red cards or controversies recently?",
+    "What did Guardiola say in his latest press conference?",
   ],
 };
 
@@ -90,7 +90,7 @@ async function getUpcomingMatchPrompts(): Promise<string[]> {
 
     // Check each sport for upcoming events
     for (const sportKey of prioritySports) {
-      if (prompts.length >= 3) break; // Get up to 3 match prompts
+      if (prompts.length >= 1) break; // Get only 1 match prompt as example
       
       try {
         const { data: events } = await theOddsClient.getEvents(sportKey);
@@ -210,20 +210,23 @@ function shuffleArray<T>(array: T[]): T[] {
 
 /**
  * Build the final prompts list
+ * Structure: 1 match analysis + diverse sports questions
  */
 async function buildPrompts(): Promise<string[]> {
   const prompts: string[] = [];
 
-  // 1. Get upcoming match prompts (top priority - real matches happening soon)
+  // 1. Get ONE upcoming match prompt (shows users we can analyze matches)
   const upcomingMatches = await getUpcomingMatchPrompts();
-  prompts.push(...upcomingMatches);
-  console.log(`[Suggested Prompts] Got ${upcomingMatches.length} upcoming match prompts`);
+  if (upcomingMatches.length > 0) {
+    prompts.push(upcomingMatches[0]); // Only add the first one
+  }
+  console.log(`[Suggested Prompts] Got ${upcomingMatches.length > 0 ? 1 : 0} match prompt`);
 
-  // 2. Try to get trending topics from Perplexity
+  // 2. Try to get trending topics from Perplexity (diverse sports news)
   const trending = await getTrendingTopics();
   console.log(`[Suggested Prompts] Got ${trending.length} trending topics`);
   
-  // 3. Add trending topics (up to 2, to leave room for variety)
+  // 3. Add trending topics (up to 2)
   const usableTrending = trending.slice(0, 2);
   prompts.push(...usableTrending);
 

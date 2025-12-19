@@ -77,12 +77,12 @@ function stripMarkdown(text: string): string {
 // ============================================
 
 const FALLBACK_QUESTIONS = [
-  { text: "Who is the starting goalkeeper for Real Madrid?", icon: "👥", category: "Rosters" },
+  { text: "Analyze Real Madrid vs Barcelona", icon: "⚽", category: "Match" },
   { text: "What's the latest injury news for Arsenal?", icon: "🏥", category: "Injuries" },
-  { text: "When do Liverpool play next?", icon: "📅", category: "Fixtures" },
-  { text: "What was the score in last night's NBA games?", icon: "📊", category: "Results" },
   { text: "Who's top of the Serie A table?", icon: "🏆", category: "Standings" },
-  { text: "How many goals has Haaland scored this season?", icon: "⚽", category: "Stats" },
+  { text: "How many goals has Haaland scored this season?", icon: "📊", category: "Stats" },
+  { text: "Any transfer rumors for the January window?", icon: "💰", category: "Transfers" },
+  { text: "When do Liverpool play next?", icon: "📅", category: "Fixtures" },
 ];
 
 function getRandomQuestions(count: number) {

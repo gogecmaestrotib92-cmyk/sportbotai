@@ -63,28 +63,18 @@ function stripMarkdown(text: string): string {
 // ============================================
 
 const FALLBACK_QUESTIONS = [
-  // Match Analysis (triggers full /api/analyze)
+  // Match Analysis (shows users we can analyze matches)
   "Analyze Real Madrid vs Barcelona",
-  // Rosters & Squads
-  "Who is the starting goalkeeper for Real Madrid?",
   // Injuries
   "What's the latest injury news for Arsenal?",
-  // Fixtures
-  "When do Liverpool play next in the Premier League?",
-  // Results
-  "What was the score in last night's NBA games?",
   // Standings
   "Who's top of the Serie A table?",
   // Stats
   "How many goals has Haaland scored this season?",
   // Transfers
   "Any transfer rumors for the January window?",
-  // Managers
-  "What did Klopp say in his last press conference?",
-  // Odds
-  "What are the odds for the Lakers game tonight?",
-  // Comparisons
-  "Compare Messi and Ronaldo's stats this season",
+  // Fixtures
+  "When do Liverpool play next in the Premier League?",
 ];
 
 // Get initial questions for SSR
