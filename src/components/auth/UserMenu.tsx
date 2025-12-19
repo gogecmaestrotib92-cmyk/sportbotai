@@ -24,9 +24,9 @@ export function UserMenu() {
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Fetch fresh usage data when menu opens
+  // Fetch fresh usage data on mount and when session changes
   useEffect(() => {
-    if (isOpen && session) {
+    if (session) {
       fetch('/api/usage')
         .then(res => res.json())
         .then(data => {
@@ -41,6 +41,24 @@ export function UserMenu() {
         .catch(() => {
           // Fallback to session data on error
         });
+    }
+  }, [session]);
+  
+  // Refetch when menu opens to get latest data
+  useEffect(() => {
+    if (isOpen && session) {
+      fetch('/api/usage')
+        .then(res => res.json())
+        .then(data => {
+          if (data.remaining !== undefined) {
+            setUsageData({
+              remaining: data.remaining,
+              limit: data.limit,
+              plan: data.plan || session.user?.plan || 'FREE',
+            });
+          }
+        })
+        .catch(() => {});
     }
   }, [isOpen, session]);
 
@@ -126,7 +144,9 @@ export function UserMenu() {
   // Use fresh usageData if available, otherwise fall back to session data
   const plan = usageData?.plan || session.user?.plan || 'FREE';
   const limit = usageData?.limit ?? PLAN_LIMITS[plan] ?? 1;
-  const remaining = usageData?.remaining ?? (limit === -1 ? Infinity : Math.max(0, limit - (session.user?.analysisCount || 0)));
+  // IMPORTANT: Prefer usageData.remaining as it's fresh from DB
+  // Only use session.analysisCount as absolute last resort (it's stale in JWT)
+  const remaining = usageData?.remaining ?? (limit === -1 ? Infinity : limit);
   const isUnlimited = limit === -1;
 
   return (
