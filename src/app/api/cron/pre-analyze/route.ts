@@ -107,6 +107,79 @@ function generateMatchId(event: OddsApiEvent, sportKey: string, league: string):
 }
 
 /**
+ * Build a meaningful fallback snapshot from actual data
+ */
+function buildFallbackSnapshot(
+  homeTeam: string,
+  awayTeam: string,
+  homeForm: string,
+  awayForm: string,
+  homeStats: { played: number; wins: number; draws: number; losses: number; goalsScored: number; goalsConceded: number },
+  awayStats: { played: number; wins: number; draws: number; losses: number; goalsScored: number; goalsConceded: number },
+  h2h: { total: number; homeWins: number; awayWins: number; draws: number },
+  signals: any
+): string[] {
+  const snapshot: string[] = [];
+  
+  // 1. Form comparison with actual data
+  const homeWins = homeForm.split('').filter(r => r === 'W').length;
+  const awayWins = awayForm.split('').filter(r => r === 'W').length;
+  const homeFormLength = homeForm.replace(/-/g, '').length;
+  const awayFormLength = awayForm.replace(/-/g, '').length;
+  
+  if (homeFormLength > 0 && awayFormLength > 0) {
+    const betterForm = homeWins > awayWins ? homeTeam : awayWins > homeWins ? awayTeam : 'Both teams';
+    if (homeWins !== awayWins) {
+      snapshot.push(`${betterForm} in better form: ${homeWins}W in last ${homeFormLength} vs ${awayWins}W for opponent`);
+    } else {
+      snapshot.push(`Similar form: Both with ${homeWins}W in last ${Math.max(homeFormLength, awayFormLength)} games`);
+    }
+  }
+  
+  // 2. Scoring/defensive edge
+  if (homeStats.played > 0 && awayStats.played > 0) {
+    const homeAvgScored = homeStats.goalsScored / homeStats.played;
+    const awayAvgConceded = awayStats.goalsConceded / awayStats.played;
+    const awayAvgScored = awayStats.goalsScored / awayStats.played;
+    const homeAvgConceded = homeStats.goalsConceded / homeStats.played;
+    
+    if (homeAvgScored > awayAvgScored + 0.3) {
+      snapshot.push(`${homeTeam} more clinical: ${homeAvgScored.toFixed(1)} goals/game vs ${awayAvgScored.toFixed(1)}`);
+    } else if (awayAvgScored > homeAvgScored + 0.3) {
+      snapshot.push(`${awayTeam} more clinical: ${awayAvgScored.toFixed(1)} goals/game vs ${homeAvgScored.toFixed(1)}`);
+    } else if (homeAvgConceded < awayAvgConceded - 0.3) {
+      snapshot.push(`${homeTeam} tighter defense: ${homeAvgConceded.toFixed(1)} conceded/game vs ${awayAvgConceded.toFixed(1)}`);
+    }
+  }
+  
+  // 3. H2H if available
+  if (h2h.total >= 3) {
+    const h2hWinner = h2h.homeWins > h2h.awayWins ? homeTeam : h2h.awayWins > h2h.homeWins ? awayTeam : null;
+    if (h2hWinner) {
+      const wins = Math.max(h2h.homeWins, h2h.awayWins);
+      snapshot.push(`H2H edge: ${h2hWinner} leads ${wins}-${Math.min(h2h.homeWins, h2h.awayWins)} in last ${h2h.total} meetings`);
+    } else {
+      snapshot.push(`H2H balanced: ${h2h.homeWins}-${h2h.draws}-${h2h.awayWins} in last ${h2h.total} meetings`);
+    }
+  }
+  
+  // 4. Risk/uncertainty caveat
+  if (signals?.clarity_score && signals.clarity_score < 60) {
+    snapshot.push(`Lower confidence: ${signals.clarity_score}% data clarity score`);
+  } else if (homeFormLength < 3 || awayFormLength < 3) {
+    snapshot.push(`Limited recent form data available for analysis`);
+  } else {
+    snapshot.push(`Standard confidence level based on available data`);
+  }
+  
+  return snapshot.length >= 3 ? snapshot : [
+    `${homeTeam} vs ${awayTeam} analysis`,
+    `Form: ${homeTeam} (${homeForm}) vs ${awayTeam} (${awayForm})`,
+    `Pre-match edge assessment in progress`,
+  ];
+}
+
+/**
  * Quick AI analysis for pre-caching
  * Now matches the full API format for consistency
  */
@@ -198,7 +271,7 @@ async function runQuickAnalysis(
     const hasDraw = !!odds.draw;
     const favoredOptions = hasDraw ? '"home" | "away" | "draw"' : '"home" | "away"';
     
-    // Build AI prompt - match full API format for consistency
+    // Build AI prompt - focused on explaining VALUE EDGE reasoning
     const prompt = `Analyze this ${league} match: ${homeTeam} vs ${awayTeam}
 
 ODDS: Home ${odds.home} | Away ${odds.away}${odds.draw ? ` | Draw ${odds.draw}` : ''}
@@ -213,19 +286,21 @@ Generate JSON matching this exact structure:
   "favored": ${favoredOptions},
   "confidence": "high" | "medium" | "low",
   "snapshot": [
-    "First insight with a specific stat (e.g., '4W-1L form')",
-    "Second insight about the matchup",
-    "Third insight about H2H or trends",
-    "Fourth insight about risk or uncertainty"
+    "WHY WE FAVOR [team]: Primary statistical reason (e.g., '${homeTeam}'s 4W-1L form + strong home record')",
+    "VALUE EDGE: What the market might miss (e.g., 'Opponents avg just 0.8 goals vs them')",
+    "SUPPORTING: H2H or momentum evidence (e.g., '3 wins in last 4 meetings')",
+    "RISK: Honest caveat (e.g., 'Away side improving, 2W in last 3')"
   ],
-  "gameFlow": "2-3 sentences about expected game dynamics",
+  "gameFlow": "2-3 sentences about expected game dynamics with scoring rate references",
   "riskFactors": ["Primary risk", "Secondary risk (optional)"]
 }
 
-RULES:
-- snapshot must have 3-4 bullet points with real stats
-- gameFlow is the narrative about how the match will unfold
-- Be analytical, cite numbers from form and context
+SNAPSHOT RULES:
+1. First bullet: WHO you favor + the PRIMARY reason with a stat
+2. Second bullet: The VALUE EDGE - what data suggests vs what odds imply
+3. Third bullet: Supporting evidence (H2H, streaks, momentum)
+4. Fourth bullet: Honest risk acknowledgment
+- Every bullet needs at least one number
 ${!hasDraw ? '- This sport has NO DRAWS - pick home or away.' : ''}`;
 
     const completion = await openai.chat.completions.create({
@@ -281,17 +356,18 @@ ${!hasDraw ? '- This sport has NO DRAWS - pick home or away.' : ''}`;
       draws: enrichedData.h2hSummary?.draws || enrichedData.h2h?.draws || 0,
     };
     
+    // Build fallback snapshot from actual data if AI doesn't provide one
+    const fallbackSnapshot = buildFallbackSnapshot(
+      homeTeam, awayTeam, homeFormStr, awayFormStr, homeStats, awayStats, h2hData, signals
+    );
+    
     // Return story in SAME format as generateAIAnalysis
     return {
       story: {
         favored: aiResponse.favored || (hasDraw ? 'draw' : 'home'),
         confidence: mapConfidence(aiResponse.confidence),
         narrative: aiResponse.gameFlow || aiResponse.narrative || 'Analysis not available.',
-        snapshot: aiResponse.snapshot || [
-          `${homeTeam} form: ${homeFormStr}`,
-          `${awayTeam} form: ${awayFormStr}`,
-          `Pre-match analysis`,
-        ],
+        snapshot: aiResponse.snapshot || fallbackSnapshot,
         riskFactors: aiResponse.riskFactors || ['Limited historical data'],
       },
       probabilities: aiResponse.probabilities || { home: 0.33, away: 0.33, draw: 0.34 },

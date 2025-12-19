@@ -1330,10 +1330,10 @@ Generate JSON:
     "favored": ${favoredOptions},
     "confidence": "${universalSignals.confidence}",
     "snapshot": [
-      "First insight WITH A NUMBER (e.g., '4W-1L form, averaging 2.1 goals/game')",
-      "Second insight WITH A NUMBER (e.g., 'Conceding just 0.8/game at home')", 
-      "Third insight WITH A NUMBER (e.g., 'H2H: 5-2 in last 7 meetings')",
-      "Fourth insight (risk or gap in data)"
+      "WHY WE FAVOR [team]: The core reason with a stat (e.g., 'Arsenal's 8W-2L form + 2.4 goals/game at home')",
+      "EDGE SOURCE: What the market might be missing (e.g., 'Opponents averaging just 0.9 goals vs their defense')",
+      "SUPPORTING FACTOR: H2H or momentum stat (e.g., '5 wins in last 6 H2H, outscoring 14-3')",
+      "RISK DISCLOSURE: Why this isn't a certainty (e.g., 'Away side won 3 of last 4 league games')"
     ],
     "gameFlow": "2-3 sentences describing expected game dynamics. Reference scoring rates and defensive records.",
     "riskFactors": ["Key risk with context", "Secondary risk (optional)"]
@@ -1341,8 +1341,13 @@ Generate JSON:
   "headline": "One analytical line with a stat (e.g., 'Arsenal's 2.4 goals/game meets Chelsea's leaky defense')"
 }
 
-RULES:
-- EVERY snapshot bullet must contain at least one specific number from the context
+SNAPSHOT RULES:
+1. First bullet: State WHO you favor and the PRIMARY statistical reason
+2. Second bullet: Explain the VALUE EDGE - what does the data show that odds might not reflect?
+3. Third bullet: Add supporting evidence (H2H, streaks, home/away splits)
+4. Fourth bullet: Be honest about risks - what could go wrong?
+
+- EVERY bullet must contain at least one specific number
 - gameFlow must reference actual scoring/conceding rates
 - If no detailed stats available, be honest: "Limited data available"
 - ${!sportConfig.hasDraw ? 'This sport has NO DRAWS - pick a winner.' : 'Draw is possible.'}`;
@@ -1402,10 +1407,13 @@ RULES:
   } catch (error) {
     console.error('AI generation failed:', error);
     
-    // Fallback using Universal Signals
+    // Fallback using Universal Signals with meaningful snapshot
     const favored = universalSignals.display?.edge?.direction === 'even' 
       ? (sportConfig.hasDraw ? 'draw' : 'home')
       : (universalSignals.display?.edge?.direction || 'home');
+    
+    const favoredTeam = favored === 'home' ? data.homeTeam : favored === 'away' ? data.awayTeam : 'Neither';
+    const edgePercentage = universalSignals.display?.edge?.percentage || 50;
 
     return {
       story: {
@@ -1413,10 +1421,10 @@ RULES:
         confidence: mapConfidence(universalSignals.confidence),
         narrative: `${data.homeTeam} hosts ${data.awayTeam} in this ${data.league} fixture.`,
         snapshot: [
-          `${universalSignals.form} form heading into this match.`,
-          `Strength edge: ${universalSignals.strength_edge}.`,
-          `Expected tempo: ${universalSignals.tempo}.`,
-          `Availability impact: ${universalSignals.availability_impact}.`,
+          `Edge favors ${favoredTeam}: ${edgePercentage}% strength based on form & stats`,
+          `Form analysis: ${universalSignals.form}`,
+          `${data.homeTeam} record: ${data.homeStats.wins}W-${data.homeStats.draws}D-${data.homeStats.losses}L`,
+          `${universalSignals.confidence} confidence (${universalSignals.clarity_score || 50}% clarity)`,
         ],
         riskFactors: ['Limited data for deeper analysis.'],
       },
