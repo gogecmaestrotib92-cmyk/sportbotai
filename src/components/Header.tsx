@@ -11,7 +11,6 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { UserMenu } from './auth';
-import { ShortcutHint } from './CommandPalette';
 
 // Admin emails list (same as in admin/page.tsx)
 const ADMIN_EMAILS = [
@@ -85,7 +84,6 @@ export default function Header() {
             >
               Blog
             </Link>
-            <ShortcutHint />
             <UserMenu />
           </div>
 
