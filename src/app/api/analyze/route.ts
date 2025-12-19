@@ -386,32 +386,8 @@ export async function POST(request: NextRequest) {
     const userId = token.id as string;
 
     // ========================================
-    // USAGE LIMIT CHECK
-    // ========================================
-    const usageCheck = await canUserAnalyze(userId);
-    
-    if (!usageCheck.allowed) {
-      const limitMessage = usageCheck.limit === -1 
-        ? 'Unable to check usage limits. Please try again.'
-        : `Daily limit reached (${usageCheck.limit} analyses). Upgrade your plan for more analyses.`;
-      
-      return NextResponse.json(
-        {
-          success: false,
-          error: limitMessage,
-          usageInfo: {
-            plan: usageCheck.plan,
-            used: usageCheck.limit - usageCheck.remaining,
-            limit: usageCheck.limit,
-            remaining: 0,
-          }
-        },
-        { status: 429 }
-      );
-    }
-
-    // ========================================
-    // PARSE AND VALIDATE REQUEST
+    // PARSE AND VALIDATE REQUEST FIRST
+    // (So we can show limited preview if no credits)
     // ========================================
     const body = await request.json();
     
@@ -425,6 +401,42 @@ export async function POST(request: NextRequest) {
         createErrorResponse(validation.error!),
         { status: 400 }
       );
+    }
+
+    // ========================================
+    // USAGE LIMIT CHECK
+    // ========================================
+    const usageCheck = await canUserAnalyze(userId);
+    
+    if (!usageCheck.allowed) {
+      // If limit is -1 (error checking), return error
+      if (usageCheck.limit === -1) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Unable to check usage limits. Please try again.',
+            usageInfo: {
+              plan: usageCheck.plan,
+              used: 0,
+              limit: 0,
+              remaining: 0,
+            }
+          },
+          { status: 500 }
+        );
+      }
+      
+      // Return LIMITED PREVIEW with basic info + upgrade CTA
+      // This shows the match info but hides the AI analysis
+      console.log(`[Usage] User ${userId} has no credits remaining, returning limited preview`);
+      
+      const limitedResponse = generateLimitedPreview(normalizedRequest, {
+        plan: usageCheck.plan,
+        limit: usageCheck.limit,
+        remaining: 0,
+      });
+      
+      return NextResponse.json(limitedResponse, { status: 200 });
     }
 
     // Check for OpenAI API key
@@ -1690,6 +1702,138 @@ function generateDefaultBriefing(raw: any, request: AnalyzeRequest): AIBriefing 
     keyPoints: keyPoints.slice(0, 5),
     verdict: raw.tacticalAnalysis?.expertConclusionOneLiner || `${favorite} slight edge, proceed with caution.`,
     confidenceRating,
+  };
+}
+
+// ============================================
+// LIMITED PREVIEW RESPONSE (No credits remaining)
+// ============================================
+
+/**
+ * Generate a limited preview for users who have exhausted their free credits.
+ * Shows basic match info with a clear upgrade CTA.
+ */
+function generateLimitedPreview(
+  request: AnalyzeRequest,
+  usageInfo: { plan: string; limit: number; remaining: number }
+): AnalyzeResponse & { limitedPreview: true; upgradeRequired: true } {
+  const now = new Date().toISOString();
+  const { matchData } = request;
+
+  // Calculate implied probabilities from odds (this is public info)
+  const homeOdds = matchData.odds.home || 2;
+  const drawOdds = matchData.odds.draw || null;
+  const awayOdds = matchData.odds.away || 2;
+
+  const impliedHome = Math.round((1 / homeOdds) * 100);
+  const impliedDraw = drawOdds ? Math.round((1 / drawOdds) * 100) : null;
+  const impliedAway = Math.round((1 / awayOdds) * 100);
+
+  // Determine favorite based on odds
+  const favorite = homeOdds < awayOdds ? matchData.homeTeam : matchData.awayTeam;
+  const underdog = homeOdds < awayOdds ? matchData.awayTeam : matchData.homeTeam;
+
+  return {
+    success: true,
+    limitedPreview: true,
+    upgradeRequired: true,
+    matchInfo: {
+      sport: matchData.sport,
+      leagueName: matchData.league,
+      matchDate: matchData.matchDate || now,
+      homeTeam: matchData.homeTeam,
+      awayTeam: matchData.awayTeam,
+      sourceType: matchData.sourceType || 'MANUAL',
+      dataQuality: 'LOW',
+    },
+    probabilities: {
+      homeWin: null,  // Hidden - requires upgrade
+      draw: null,
+      awayWin: null,
+      over: null,
+      under: null,
+    },
+    valueAnalysis: {
+      impliedProbabilities: { 
+        homeWin: impliedHome, 
+        draw: impliedDraw, 
+        awayWin: impliedAway 
+      },
+      aiProbabilities: { homeWin: null, draw: null, awayWin: null }, // Hidden
+      valueFlags: { homeWin: 'NONE', draw: 'NONE', awayWin: 'NONE' },
+      bestValueSide: 'NONE',
+      kellyStake: null,
+      valueCommentShort: '🔒 Upgrade to Pro for full AI analysis',
+      valueCommentDetailed: `You've used your free analysis for today. Upgrade to Pro for unlimited access to AI probability estimates, form analysis, and tactical insights.`,
+    },
+    riskAnalysis: {
+      overallRiskLevel: 'MEDIUM',
+      riskExplanation: '🔒 Risk analysis available with Pro plan',
+      bankrollImpact: 'Upgrade for detailed bankroll recommendations.',
+      psychologyBias: { name: 'N/A', description: 'Upgrade to unlock.' },
+    },
+    momentumAndForm: {
+      homeMomentumScore: null,
+      awayMomentumScore: null,
+      homeTrend: 'UNKNOWN',
+      awayTrend: 'UNKNOWN',
+      keyFormFactors: ['🔒 Form analysis available with Pro plan'],
+    },
+    marketStability: {
+      markets: {
+        main_1x2: { stability: 'MEDIUM', confidence: 1, comment: '🔒 Upgrade for insights' },
+        over_under: { stability: 'MEDIUM', confidence: 1, comment: '🔒 Upgrade for insights' },
+        btts: { stability: 'MEDIUM', confidence: 1, comment: '🔒 Upgrade for insights' },
+      },
+      safestMarketType: 'NONE',
+      safestMarketExplanation: '🔒 Market analysis requires Pro plan',
+    },
+    upsetPotential: {
+      upsetProbability: 0,
+      upsetComment: '🔒 Upset analysis available with Pro plan',
+    },
+    tacticalAnalysis: {
+      stylesSummary: `${matchData.homeTeam} vs ${matchData.awayTeam} - Basic preview`,
+      matchNarrative: `Based on the odds, ${favorite} is favored over ${underdog}. Upgrade to Pro for full tactical analysis, form data, head-to-head stats, and AI insights.`,
+      keyMatchFactors: [
+        `⚽ ${matchData.homeTeam} vs ${matchData.awayTeam}`,
+        `📊 Implied favorite: ${favorite}`,
+        '🔒 Unlock full analysis with Pro',
+      ],
+      expertConclusionOneLiner: '🔒 Expert verdict available with Pro plan',
+    },
+    userContext: {
+      userPick: request.userPick || '',
+      userStake: request.userStake || 0,
+      pickComment: 'Upgrade for personalized pick analysis.',
+    },
+    responsibleGambling: {
+      coreNote: 'This preview is for educational purposes only.',
+      tailoredNote: 'Remember: gambling involves risk. Always bet responsibly.',
+    },
+    briefing: {
+      headline: `${matchData.homeTeam} vs ${matchData.awayTeam} - Upgrade for full analysis`,
+      keyPoints: [
+        `Market favorite: ${favorite}`,
+        `Implied probabilities: ${impliedHome}% / ${impliedDraw || '-'}% / ${impliedAway}%`,
+        '🔒 Full AI analysis requires Pro plan',
+      ],
+      verdict: '🔒 Upgrade to Pro for AI verdict',
+      confidenceRating: 1,
+    },
+    meta: {
+      modelVersion: '1.0.0',
+      analysisGeneratedAt: now,
+      warnings: [
+        'This is a limited preview. Upgrade to Pro for full analysis.',
+        'AI probability estimates and form data require Pro subscription.',
+      ],
+    },
+    usageInfo: {
+      plan: usageInfo.plan,
+      remaining: 0,
+      limit: usageInfo.limit,
+    },
   };
 }
 
