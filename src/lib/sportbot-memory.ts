@@ -395,20 +395,26 @@ export async function recordPrediction(data: {
   narrativeAngle?: string;
   predictedScenario?: string;
   confidenceLevel?: number;
+  sport?: string;
 }): Promise<string | null> {
   try {
-    const outcome = await prisma.predictionOutcome.create({
+    const prediction = await prisma.prediction.create({
       data: {
-        matchRef: data.matchRef,
-        matchDate: data.matchDate,
-        league: data.league,
-        narrativeAngle: data.narrativeAngle,
-        predictedScenario: data.predictedScenario,
-        confidenceLevel: data.confidenceLevel,
+        matchId: data.matchRef.replace(/\s+/g, '_').toLowerCase(),
+        matchName: data.matchRef,
+        sport: data.sport || 'soccer',
+        league: data.league || 'Unknown',
+        kickoff: data.matchDate,
+        type: 'MATCH_RESULT',
+        prediction: data.predictedScenario || '',
+        reasoning: data.narrativeAngle || '',
+        conviction: data.confidenceLevel || 5,
+        source: 'AGENT_POST',
+        outcome: 'PENDING',
       },
     });
     
-    return outcome.id;
+    return prediction.id;
   } catch (error) {
     console.error('[Memory] Failed to record prediction:', error);
     return null;
@@ -429,14 +435,13 @@ export async function updatePredictionOutcome(
   }
 ): Promise<boolean> {
   try {
-    await prisma.predictionOutcome.update({
+    await prisma.prediction.update({
       where: { id },
       data: {
         actualResult: data.actualResult,
         actualScore: data.actualScore,
-        keyFactor: data.keyFactor,
-        wasAccurate: data.wasAccurate,
-        learningNote: data.learningNote,
+        outcome: data.wasAccurate ? 'HIT' : 'MISS',
+        validatedAt: new Date(),
       },
     });
     
@@ -459,9 +464,9 @@ export async function getAccuracyStats(): Promise<{
 }> {
   try {
     const [total, accurate, inaccurate] = await Promise.all([
-      prisma.predictionOutcome.count(),
-      prisma.predictionOutcome.count({ where: { wasAccurate: true } }),
-      prisma.predictionOutcome.count({ where: { wasAccurate: false } }),
+      prisma.prediction.count(),
+      prisma.prediction.count({ where: { outcome: 'HIT' } }),
+      prisma.prediction.count({ where: { outcome: 'MISS' } }),
     ]);
     
     const pending = total - accurate - inaccurate;
@@ -495,7 +500,7 @@ export async function getMemoryStats(): Promise<{
     const [totalQueries, agentPosts, predictions, topCategories, topTeams] = await Promise.all([
       prisma.chatQuery.count(),
       prisma.agentPost.count(),
-      prisma.predictionOutcome.count(),
+      prisma.prediction.count(),
       getTopCategories(1),
       getTopTeams(1),
     ]);
@@ -605,23 +610,23 @@ export async function getCorrectCalls(limit = 5): Promise<Array<{
   timestamp: Date;
 }>> {
   try {
-    const outcomes = await prisma.predictionOutcome.findMany({
-      where: { wasAccurate: true },
-      orderBy: { matchDate: 'desc' },
+    const outcomes = await prisma.prediction.findMany({
+      where: { outcome: 'HIT' },
+      orderBy: { kickoff: 'desc' },
       take: limit,
       select: {
-        matchRef: true,
-        predictedScenario: true,
-        confidenceLevel: true,
-        matchDate: true,
+        matchName: true,
+        prediction: true,
+        conviction: true,
+        kickoff: true,
       },
     });
     
     return outcomes.map(o => ({
-      matchRef: o.matchRef,
-      claim: o.predictedScenario || '',
-      conviction: o.confidenceLevel || 3,
-      timestamp: o.matchDate,
+      matchRef: o.matchName,
+      claim: o.prediction || '',
+      conviction: o.conviction || 3,
+      timestamp: o.kickoff,
     }));
   } catch (error) {
     console.error('[Memory] Failed to get correct calls:', error);
@@ -668,25 +673,25 @@ export async function getStrongTeamReads(limit = 5): Promise<Array<{
 }>> {
   try {
     // Get all outcomes with team references
-    const outcomes = await prisma.predictionOutcome.findMany({
-      where: { wasAccurate: { not: null } },
+    const outcomes = await prisma.prediction.findMany({
+      where: { outcome: { in: ['HIT', 'MISS'] } },
       select: {
-        matchRef: true,
-        wasAccurate: true,
+        matchName: true,
+        outcome: true,
       },
     });
     
-    // Count by team (extract from matchRef "Team A vs Team B")
+    // Count by team (extract from matchName "Team A vs Team B")
     const teamStats: Record<string, { correct: number; total: number }> = {};
     
     outcomes.forEach(o => {
-      const teams = o.matchRef.split(' vs ').map(t => t.trim());
+      const teams = o.matchName.split(' vs ').map(t => t.trim());
       teams.forEach(team => {
         if (!teamStats[team]) {
           teamStats[team] = { correct: 0, total: 0 };
         }
         teamStats[team].total += 1;
-        if (o.wasAccurate) teamStats[team].correct += 1;
+        if (o.outcome === 'HIT') teamStats[team].correct += 1;
       });
     });
     

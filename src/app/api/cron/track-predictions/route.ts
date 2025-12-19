@@ -350,6 +350,7 @@ function evaluatePrediction(
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
+  console.log('[Track-Predictions] Starting cron job...');
 
   try {
     // Verify authorization
@@ -357,6 +358,8 @@ export async function GET(request: NextRequest) {
     const vercelCron = request.headers.get('x-vercel-cron');
     const isVercelCron = vercelCron === '1' || vercelCron === 'true';
     const isAuthorized = !CRON_SECRET || authHeader === `Bearer ${CRON_SECRET}`;
+    
+    console.log(`[Track-Predictions] Auth check: isVercelCron=${isVercelCron}, isAuthorized=${isAuthorized}`);
 
     if (!isVercelCron && !isAuthorized) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

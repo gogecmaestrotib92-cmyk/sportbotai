@@ -246,9 +246,8 @@ model AgentPost {
   engagement     Int      @default(0)
   createdAt      DateTime @default(now())
   
-  // Link to prediction outcome
+  // Link to prediction (unified model)
   predictionId   String?
-  prediction     PredictionOutcome? @relation(fields: [predictionId], references: [id])
 
   @@index([category])
   @@index([homeTeam])
@@ -256,31 +255,6 @@ model AgentPost {
   @@index([createdAt])
   @@index([postedToX])
   @@index([predictionId])
-}
-
-model PredictionOutcome {
-  id                String   @id @default(cuid())
-  matchRef          String
-  league            String?
-  matchDate         DateTime
-  narrativeAngle    String?
-  predictedScenario String?
-  confidenceLevel   Int?
-  actualResult      String?
-  actualScore       String?
-  keyFactor         String?
-  wasAccurate       Boolean?
-  learningNote      String?
-  source            String?  @default("AGENT_POST") // AGENT_POST or MATCH_ANALYSIS
-  createdAt         DateTime @default(now())
-  
-  // Back-link to agent posts
-  agentPosts        AgentPost[]
-
-  @@index([matchRef])
-  @@index([wasAccurate])
-  @@index([matchDate])
-  @@index([source])
 }
 
 model KnowledgeBase {
