@@ -215,8 +215,6 @@ Base probabilities on form, signals, and market odds. Be analytical, not promoti
       homeOdds: odds.home,
       awayOdds: odds.away,
       drawOdds: odds.draw,
-      homeTeam,
-      awayTeam,
     };
     
     const marketIntel = analyzeMarket(oddsData, {
