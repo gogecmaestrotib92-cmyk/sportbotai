@@ -418,6 +418,14 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
     (data.requestedMatch.homeTeam !== data.matchInfo.homeTeam || 
      data.requestedMatch.awayTeam !== data.matchInfo.awayTeam);
 
+  // Determine if user has access to premium content
+  // Logic: If user got a 200 response with real data (not demo), they have access
+  // This includes: PRO/PREMIUM users, OR FREE users who used their 1 credit
+  const hasPremiumAccess = 
+    session?.user?.plan === 'PRO' || 
+    session?.user?.plan === 'PREMIUM' ||
+    (session && !isDemo); // FREE user with valid session who got real data = used their credit
+
   return (
     <div className="min-h-screen bg-[#050506]">
       {/* Subtle gradient overlay */}
@@ -532,7 +540,7 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
 
         {/* LAYER 2: Premium Blur - Match Snapshot, Game Flow, Market Edge */}
         <PremiumBlur
-          isPro={session?.user?.plan === 'PRO' || session?.user?.plan === 'PREMIUM'}
+          isPro={hasPremiumAccess}
           title="Pro Match Analysis"
           description="Get detailed match insights, game flow predictions, and value detection with Pro."
         >
