@@ -25,6 +25,7 @@ interface ChatMessage {
   followUps?: string[];
   fromCache?: boolean;
   isStreaming?: boolean;
+  statusMessage?: string;  // Shows "Searching..." or "Generating..." during processing
   feedbackGiven?: 'up' | 'down' | null;
   timestamp: Date;
 }
@@ -431,11 +432,24 @@ export default function AIDeskChat() {
                 try {
                   const data = JSON.parse(line.slice(6));
                   
-                  if (data.type === 'metadata') {
+                  if (data.type === 'status') {
+                    // Update status message (e.g., "Searching real-time data...")
+                    setMessages(prev => prev.map(m => 
+                      m.id === assistantMessageId 
+                        ? { ...m, statusMessage: data.status, isStreaming: true }
+                        : m
+                    ));
+                  } else if (data.type === 'metadata') {
                     streamCitations = data.citations || [];
                     streamUsedSearch = data.usedRealTimeSearch;
                     streamFollowUps = data.followUps || [];
                     isFromCache = data.fromCache || false;
+                    // Clear status message when we get metadata (about to stream content)
+                    setMessages(prev => prev.map(m => 
+                      m.id === assistantMessageId 
+                        ? { ...m, statusMessage: undefined }
+                        : m
+                    ));
                   } else if (data.type === 'content') {
                     streamedContent += data.content;
                     // Update the message with streamed content
@@ -449,6 +463,7 @@ export default function AIDeskChat() {
                             followUps: streamFollowUps,
                             fromCache: isFromCache,
                             isStreaming: true,
+                            statusMessage: undefined,  // Clear status when content arrives
                           }
                         : m
                     ));
@@ -464,7 +479,7 @@ export default function AIDeskChat() {
                     // Mark streaming as complete
                     setMessages(prev => prev.map(m => 
                       m.id === assistantMessageId 
-                        ? { ...m, isStreaming: false }
+                        ? { ...m, isStreaming: false, statusMessage: undefined }
                         : m
                     ));
                   } else if (data.type === 'error') {
@@ -643,13 +658,20 @@ export default function AIDeskChat() {
                       ? 'bg-primary text-white rounded-tr-md'
                       : 'bg-white/[0.03] text-white/90 rounded-tl-md border border-white/[0.06]'
                   }`}>
+                    {/* Status message (e.g., "Searching real-time data...") */}
+                    {msg.role === 'assistant' && msg.statusMessage && !msg.content && (
+                      <div className="flex items-center gap-2 text-sm text-primary/80 animate-pulse">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{msg.statusMessage}</span>
+                      </div>
+                    )}
                     <p className={`whitespace-pre-wrap ${
                       msg.role === 'user'
                         ? 'text-sm'
                         : 'text-[14px] leading-[1.7] tracking-[-0.01em] font-light'
-                    }`}>
+                    } ${msg.role === 'assistant' && msg.statusMessage && !msg.content ? 'hidden' : ''}`}>
                       {msg.role === 'assistant' ? stripMarkdown(msg.content) : msg.content}
-                      {msg.role === 'assistant' && msg.isStreaming && (
+                      {msg.role === 'assistant' && msg.isStreaming && !msg.statusMessage && (
                         <span className="inline-block w-2 h-4 ml-1 bg-primary animate-pulse rounded-sm" />
                       )}
                     </p>

@@ -767,127 +767,143 @@ export async function POST(request: NextRequest) {
     const shouldSearch = needsSearch(searchMessage);
     // queryCategory already defined above for caching
 
-    // Step 1: Perplexity search if needed
-    if (shouldSearch) {
-      const perplexity = getPerplexityClient();
-      
-      if (perplexity.isConfigured()) {
-        console.log('[AI-Chat-Stream] Fetching real-time context...');
-        
-        const searchResult = await perplexity.search(searchMessage, {
-          recency: 'week',
-          model: 'sonar-pro',
-          maxTokens: 1000,
-        });
-
-        if (searchResult.success && searchResult.content) {
-          perplexityContext = searchResult.content;
-          citations = searchResult.citations || [];
-        }
-      }
-    }
-
-    // Step 1.5: DataLayer stats if needed (form, H2H, season stats)
-    let dataLayerContext = '';
-    if (needsDataLayerStats(searchMessage, queryCategory)) {
-      const teams = extractTeamNames(searchMessage);
-      if (teams.homeTeam) {
-        console.log('[AI-Chat-Stream] Fetching DataLayer stats for:', teams);
-        dataLayerContext = await fetchDataLayerContext(teams, detectedSport);
-        if (dataLayerContext) {
-          console.log('[AI-Chat-Stream] DataLayer context added');
-        }
-      }
-    }
-
-    // Step 2: Build system prompt
-    const brainMode: BrainMode = 
-      (queryCategory === 'BETTING_ADVICE' || queryCategory === 'PLAYER_PROP') 
-        ? 'betting' 
-        : detectChatMode(message);
-    
-    let systemPrompt = buildSystemPrompt(brainMode, {
-      hasRealTimeData: !!perplexityContext,
-    });
-    
-    // Enhance system prompt when DataLayer stats are available
-    if (dataLayerContext) {
-      systemPrompt += `\n\nYou have access to VERIFIED STRUCTURED DATA including team form, head-to-head records, and season statistics. Prioritize this data for factual claims about records and stats.`;
-    }
-
-    // Add learned context (using detectedSport defined earlier)
-    try {
-      const learnedContext = await buildLearnedContext(message, detectedSport);
-      const sportTerminology = detectedSport ? getTerminologyForSport(detectedSport) : [];
-      
-      if (learnedContext) systemPrompt += `\n\n${learnedContext}`;
-      if (sportTerminology.length > 0) {
-        systemPrompt += `\n\nSPORT TERMINOLOGY: ${sportTerminology.slice(0, 10).join(', ')}`;
-      }
-    } catch { /* ignore */ }
-
-    // Add favorite teams context for personalized responses
-    if (favoriteTeamsContext) {
-      systemPrompt += `\n\n${favoriteTeamsContext}`;
-    }
-    
-    // Add language instruction
-    if (translation.needsTranslation && originalLanguage !== 'en') {
-      const langNames: Record<string, string> = {
-        'sr': 'Serbian/Croatian', 'es': 'Spanish', 'de': 'German', 'fr': 'French', 'unknown': 'the user\'s language'
-      };
-      systemPrompt += `\n\nIMPORTANT: Respond in ${langNames[originalLanguage] || langNames['unknown']}, not English.`;
-    }
-
-    // Build messages
-    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-      { role: 'system', content: systemPrompt },
-    ];
-
-    // Add history
-    for (const msg of history.slice(-10)) {
-      messages.push({ role: msg.role, content: msg.content });
-    }
-
-    // Add user message with context
-    let userContent = message;
-    const hasContext = perplexityContext || dataLayerContext;
-    
-    if (hasContext) {
-      userContent = `USER QUESTION: ${message}`;
-      
-      if (dataLayerContext) {
-        userContent += `\n\nSTRUCTURED STATS (verified data):\n${dataLayerContext}`;
-      }
-      
-      if (perplexityContext) {
-        userContent += `\n\nREAL-TIME NEWS & INFO:\n${perplexityContext}`;
-      }
-      
-      userContent += '\n\nUse BOTH the structured stats AND real-time info to give a complete answer. Be sharp and specific.';
-    }
-    messages.push({ role: 'user', content: userContent });
-
-    // Step 3: Create streaming response
-    const stream = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages,
-      max_tokens: 800,
-      temperature: 0.7,
-      stream: true,
-    });
-
-    // Create ReadableStream for SSE
+    // Create streaming response early so we can send status updates
     const encoder = new TextEncoder();
     let fullResponse = '';
+    let streamController: ReadableStreamDefaultController | null = null;
     
-    // Generate quick follow-ups initially (will be replaced by smart ones after response)
-    const quickFollowUps = generateQuickFollowUps(message, queryCategory, detectedSport);
+    // Helper to send status updates
+    const sendStatus = (status: string) => {
+      if (streamController) {
+        streamController.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status })}\n\n`));
+      }
+    };
     
     const readable = new ReadableStream({
       async start(controller) {
+        streamController = controller;
+        
         try {
-          // Send metadata first with quick follow-ups
+          // Step 1: Perplexity search if needed
+          if (shouldSearch) {
+            const perplexity = getPerplexityClient();
+            
+            if (perplexity.isConfigured()) {
+              // Send status: searching
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: 'Searching real-time data...' })}\n\n`));
+              console.log('[AI-Chat-Stream] Fetching real-time context...');
+              
+              const searchResult = await perplexity.search(searchMessage, {
+                recency: 'week',
+                model: 'sonar-pro',
+                maxTokens: 1000,
+              });
+
+              if (searchResult.success && searchResult.content) {
+                perplexityContext = searchResult.content;
+                citations = searchResult.citations || [];
+              }
+            }
+          }
+
+          // Step 1.5: DataLayer stats if needed (form, H2H, season stats)
+          let dataLayerContext = '';
+          if (needsDataLayerStats(searchMessage, queryCategory)) {
+            const teams = extractTeamNames(searchMessage);
+            if (teams.homeTeam) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: 'Fetching team stats...' })}\n\n`));
+              console.log('[AI-Chat-Stream] Fetching DataLayer stats for:', teams);
+              dataLayerContext = await fetchDataLayerContext(teams, detectedSport);
+              if (dataLayerContext) {
+                console.log('[AI-Chat-Stream] DataLayer context added');
+              }
+            }
+          }
+
+          // Send status: generating
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: 'Generating response...' })}\n\n`));
+
+          // Step 2: Build system prompt
+          const brainMode: BrainMode = 
+            (queryCategory === 'BETTING_ADVICE' || queryCategory === 'PLAYER_PROP') 
+              ? 'betting' 
+              : detectChatMode(message);
+          
+          let systemPrompt = buildSystemPrompt(brainMode, {
+            hasRealTimeData: !!perplexityContext,
+          });
+          
+          // Enhance system prompt when DataLayer stats are available
+          if (dataLayerContext) {
+            systemPrompt += `\n\nYou have access to VERIFIED STRUCTURED DATA including team form, head-to-head records, and season statistics. Prioritize this data for factual claims about records and stats.`;
+          }
+
+          // Add learned context (using detectedSport defined earlier)
+          try {
+            const learnedContext = await buildLearnedContext(message, detectedSport);
+            const sportTerminology = detectedSport ? getTerminologyForSport(detectedSport) : [];
+            
+            if (learnedContext) systemPrompt += `\n\n${learnedContext}`;
+            if (sportTerminology.length > 0) {
+              systemPrompt += `\n\nSPORT TERMINOLOGY: ${sportTerminology.slice(0, 10).join(', ')}`;
+            }
+          } catch { /* ignore */ }
+
+          // Add favorite teams context for personalized responses
+          if (favoriteTeamsContext) {
+            systemPrompt += `\n\n${favoriteTeamsContext}`;
+          }
+          
+          // Add language instruction
+          if (translation.needsTranslation && originalLanguage !== 'en') {
+            const langNames: Record<string, string> = {
+              'sr': 'Serbian/Croatian', 'es': 'Spanish', 'de': 'German', 'fr': 'French', 'unknown': 'the user\'s language'
+            };
+            systemPrompt += `\n\nIMPORTANT: Respond in ${langNames[originalLanguage] || langNames['unknown']}, not English.`;
+          }
+
+          // Build messages
+          const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+            { role: 'system', content: systemPrompt },
+          ];
+
+          // Add history
+          for (const msg of history.slice(-10)) {
+            messages.push({ role: msg.role, content: msg.content });
+          }
+
+          // Add user message with context
+          let userContent = message;
+          const hasContext = perplexityContext || dataLayerContext;
+          
+          if (hasContext) {
+            userContent = `USER QUESTION: ${message}`;
+            
+            if (dataLayerContext) {
+              userContent += `\n\nSTRUCTURED STATS (verified data):\n${dataLayerContext}`;
+            }
+            
+            if (perplexityContext) {
+              userContent += `\n\nREAL-TIME NEWS & INFO:\n${perplexityContext}`;
+            }
+            
+            userContent += '\n\nUse BOTH the structured stats AND real-time info to give a complete answer. Be sharp and specific.';
+          }
+          messages.push({ role: 'user', content: userContent });
+
+          // Step 3: Create streaming response
+          const stream = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages,
+            max_tokens: 800,
+            temperature: 0.7,
+            stream: true,
+          });
+          
+          // Generate quick follow-ups initially (will be replaced by smart ones after response)
+          const quickFollowUps = generateQuickFollowUps(message, queryCategory, detectedSport);
+          
+          // Send metadata
           const metadata = {
             type: 'metadata',
             citations,
