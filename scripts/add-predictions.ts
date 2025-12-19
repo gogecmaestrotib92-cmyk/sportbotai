@@ -1,5 +1,5 @@
 /**
- * Script to add recent analyses to PredictionOutcome table
+ * Script to add recent analyses to Prediction table
  * Run with: npx ts-node scripts/add-predictions.ts
  */
 
@@ -18,6 +18,7 @@ async function addRecentAnalysesToPredictions() {
       homeTeam: true,
       awayTeam: true,
       league: true,
+      sport: true,
       matchDate: true,
       bestValueSide: true,
       createdAt: true,
@@ -34,8 +35,8 @@ async function addRecentAnalysesToPredictions() {
     const favored = analysis.bestValueSide || 'draw';
     
     // Check if prediction exists
-    const existing = await prisma.predictionOutcome.findFirst({
-      where: { matchRef },
+    const existing = await prisma.prediction.findFirst({
+      where: { matchName: matchRef },
     });
     
     if (existing) {
@@ -45,20 +46,24 @@ async function addRecentAnalysesToPredictions() {
     }
     
     const predictedScenario = favored === 'home' 
-      ? `${analysis.homeTeam} win` 
+      ? `Home Win - ${analysis.homeTeam}` 
       : favored === 'away' 
-        ? `${analysis.awayTeam} win` 
+        ? `Away Win - ${analysis.awayTeam}` 
         : 'Draw';
     
-    await prisma.predictionOutcome.create({
+    await prisma.prediction.create({
       data: {
-        matchRef,
+        matchId: matchRef.replace(/\s+/g, '_').toLowerCase(),
+        matchName: matchRef,
+        sport: analysis.sport || 'soccer',
         league: analysis.league,
-        matchDate: analysis.matchDate || new Date(),
-        narrativeAngle: 'Match Analysis prediction',
-        predictedScenario,
-        confidenceLevel: 65,
+        kickoff: analysis.matchDate || new Date(),
+        type: 'MATCH_RESULT',
+        prediction: predictedScenario,
+        reasoning: 'Match Analysis prediction',
+        conviction: 6,
         source: 'MATCH_ANALYSIS',
+        outcome: 'PENDING',
       },
     });
     console.log(`✅ Created: ${matchRef} -> ${predictedScenario}`);
