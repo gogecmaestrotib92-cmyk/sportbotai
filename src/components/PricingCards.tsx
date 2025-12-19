@@ -171,14 +171,19 @@ export default function PricingCards() {
     <div className="relative">
       {/* Horizontal scroll container on mobile */}
       <div className="flex xl:grid xl:grid-cols-5 gap-3 sm:gap-4 xl:gap-5 max-w-7xl mx-auto overflow-x-auto pb-4 xl:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 xl:mx-0 xl:px-0">
-        {plans.map((plan) => (
+        {plans.map((plan) => {
+          const isPremium = plan.id.includes('premium');
+          
+          return (
           <div
             key={plan.id}
             id={plan.id}
-            className={`flex-shrink-0 w-[80vw] xs:w-[70vw] sm:w-[280px] lg:w-auto snap-center bg-bg-card rounded-card p-4 sm:p-5 relative ${
+            className={`flex-shrink-0 w-[80vw] xs:w-[70vw] sm:w-[280px] lg:w-auto snap-center rounded-card p-4 sm:p-5 relative ${
               plan.highlighted
-                ? 'border-2 border-primary shadow-glow-primary lg:scale-105'
-                : 'border border-divider'
+                ? 'bg-bg-card border-2 border-primary shadow-glow-primary lg:scale-105'
+                : isPremium
+                ? 'bg-gradient-to-b from-slate-800/50 to-slate-900/50 border-2 border-slate-400/30 shadow-[0_0_20px_rgba(148,163,184,0.15)]'
+                : 'bg-bg-card border border-divider'
             }`}
           >
             {/* Popular badge */}
@@ -187,17 +192,26 @@ export default function PricingCards() {
                 MOST POPULAR
               </div>
             )}
+            
+            {/* Premium badge */}
+            {isPremium && !plan.highlighted && (
+              <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-slate-300 to-slate-400 text-slate-900 text-xs sm:text-sm font-bold px-3 sm:px-4 py-1 rounded-full whitespace-nowrap">
+                {plan.id === 'premium-yearly' ? 'BEST VALUE' : 'PREMIUM'}
+              </div>
+            )}
 
             {/* Plan header */}
             <div className="text-center mb-5 sm:mb-6 pt-2 sm:pt-0">
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-2">{plan.name}</h3>
+              <h3 className={`text-lg sm:text-xl font-bold mb-2 ${isPremium ? 'text-slate-200' : 'text-white'}`}>{plan.name}</h3>
               <div className="mb-2">
-                <span className={`text-3xl sm:text-4xl font-bold ${plan.highlighted ? 'text-primary' : 'text-white'}`}>
+                <span className={`text-3xl sm:text-4xl font-bold ${
+                  plan.highlighted ? 'text-primary' : isPremium ? 'text-slate-200' : 'text-white'
+                }`}>
                   {plan.price}
                 </span>
-                <span className="text-gray-400 text-sm">{plan.id.includes('yearly') ? '/year' : plan.id === 'free' ? '' : '/month'}</span>
+                <span className={`text-sm ${isPremium ? 'text-slate-400' : 'text-gray-400'}`}>{plan.id.includes('yearly') ? '/year' : plan.id === 'free' ? '' : '/month'}</span>
               </div>
-              <p className="text-gray-400 text-xs sm:text-sm">{plan.description}</p>
+              <p className={`text-xs sm:text-sm ${isPremium ? 'text-slate-400' : 'text-gray-400'}`}>{plan.description}</p>
             </div>
 
             {/* Features list */}
@@ -205,7 +219,9 @@ export default function PricingCards() {
               {plan.features.map((feature, index) => (
                 <li key={index} className="flex items-start gap-2.5 sm:gap-3">
                   <svg
-                    className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 ${plan.highlighted ? 'text-primary' : 'text-accent'}`}
+                    className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 ${
+                      plan.highlighted ? 'text-primary' : isPremium ? 'text-slate-300' : 'text-accent'
+                    }`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -215,7 +231,7 @@ export default function PricingCards() {
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="text-gray-300 text-xs sm:text-sm">{feature}</span>
+                  <span className={`text-xs sm:text-sm ${isPremium ? 'text-slate-300' : 'text-gray-300'}`}>{feature}</span>
                 </li>
               ))}
             </ul>
@@ -227,6 +243,8 @@ export default function PricingCards() {
               className={`w-full py-3.5 sm:py-3 px-6 rounded-btn font-semibold transition-all duration-200 touch-manipulation active:scale-[0.98] min-h-[48px] ${
                 plan.highlighted
                   ? 'bg-primary text-white hover:bg-primary/80'
+                  : isPremium
+                  ? 'bg-gradient-to-r from-slate-300 to-slate-400 text-slate-900 hover:from-slate-200 hover:to-slate-300'
                   : 'bg-bg-elevated text-white hover:bg-bg-elevated/80 border border-divider'
               } ${loading === plan.id ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
@@ -255,7 +273,7 @@ export default function PricingCards() {
             )}
           </button>
         </div>
-      ))}
+      )})}
       </div>
 
       {/* Error message */}
