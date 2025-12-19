@@ -17,7 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions, canUserAnalyze, incrementAnalysisCount } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee, getMatchFixtureInfo } from '@/lib/football-api';
+import { getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee, getMatchFixtureInfo } from '@/lib/football-api';
 import { getEnrichedMatchDataV2, normalizeSport } from '@/lib/data-layer/bridge';
 import { normalizeToUniversalSignals, formatSignalsForAI, getSignalSummary, type RawMatchInput } from '@/lib/universal-signals';
 import { analyzeMarket, type MarketIntel, type OddsData } from '@/lib/value-detection';
@@ -171,10 +171,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       console.log(`[Match-Preview] Skipping cache - match starts in ${Math.round(minutesUntilKickoff)} min`);
     }
 
-    // Determine if this is a non-soccer sport
-    const isNonSoccer = ['basketball', 'basketball_nba', 'basketball_euroleague', 'euroleague', 'nba', 'americanfootball', 'americanfootball_nfl', 'nfl', 'icehockey', 'icehockey_nhl', 'nhl', 'hockey', 'baseball', 'mlb', 'mma', 'ufc']
-      .includes(matchInfo.sport.toLowerCase());
-
     // Fetch enriched data based on sport type
     let enrichedData;
     let injuries: { home: any[]; away: any[] } = { home: [], away: [] };
@@ -183,47 +179,46 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     let referee: any = null;
     let fixtureInfo: { venue: string | null } = { venue: null };
 
-    if (isNonSoccer) {
-      // Use DataLayer for basketball, NFL, hockey, etc.
-      const normalizedSport = normalizeSport(matchInfo.sport);
-      console.log(`[Match-Preview] Using DataLayer for ${matchInfo.sport} (normalized: ${normalizedSport})`);
+    // Check if this is a soccer match
+    const isSoccer = !['basketball', 'basketball_nba', 'basketball_euroleague', 'euroleague', 'nba', 'americanfootball', 'americanfootball_nfl', 'nfl', 'icehockey', 'icehockey_nhl', 'nhl', 'hockey', 'baseball', 'mlb', 'mma', 'ufc']
+      .includes(matchInfo.sport.toLowerCase());
+
+    // ALL sports now use DataLayer for core data (form, H2H, stats)
+    const normalizedSport = normalizeSport(matchInfo.sport);
+    console.log(`[Match-Preview] Using DataLayer for ${matchInfo.sport} (normalized: ${normalizedSport})`);
+    
+    try {
+      enrichedData = await getEnrichedMatchDataV2(
+        matchInfo.homeTeam,
+        matchInfo.awayTeam,
+        matchInfo.sport,
+        matchInfo.league
+      );
+      console.log(`[Match-Preview] ${matchInfo.sport} data fetched in ${Date.now() - startTime}ms:`, {
+        dataSource: enrichedData.dataSource,
+        homeFormGames: enrichedData.homeForm?.length || 0,
+        awayFormGames: enrichedData.awayForm?.length || 0,
+        h2hGames: enrichedData.headToHead?.length || 0,
+      });
+    } catch (sportError) {
+      console.error(`[Match-Preview] Sport API error for ${matchInfo.sport}:`, sportError);
+      enrichedData = {
+        sport: matchInfo.sport,
+        homeForm: null,
+        awayForm: null,
+        headToHead: null,
+        h2hSummary: null,
+        homeStats: null,
+        awayStats: null,
+        dataSource: 'UNAVAILABLE',
+      };
+    }
+
+    // Soccer-specific: fetch extra data (injuries, goal timing, key players, referee)
+    if (isSoccer) {
+      console.log(`[Match-Preview] Fetching soccer-specific extras...`);
       try {
-        // Pass original sport string to preserve league info (e.g., 'basketball_euroleague')
-        enrichedData = await getEnrichedMatchDataV2(
-          matchInfo.homeTeam,
-          matchInfo.awayTeam,
-          matchInfo.sport, // Use original sport, not normalizedSport - bridge needs this for league detection
-          matchInfo.league
-        );
-        console.log(`[Match-Preview] ${matchInfo.sport} data fetched in ${Date.now() - startTime}ms:`, {
-          dataSource: enrichedData.dataSource,
-          homeFormGames: enrichedData.homeForm?.length || 0,
-          awayFormGames: enrichedData.awayForm?.length || 0,
-          h2hGames: enrichedData.headToHead?.length || 0,
-        });
-      } catch (sportError) {
-        console.error(`[Match-Preview] Sport API error for ${matchInfo.sport}:`, sportError);
-        // Use fallback empty data
-        enrichedData = {
-          sport: matchInfo.sport,
-          homeForm: null,
-          awayForm: null,
-          headToHead: null,
-          h2hSummary: null,
-          homeStats: null,
-          awayStats: null,
-          dataSource: 'UNAVAILABLE',
-        };
-      }
-    } else {
-      // Use football API for soccer
-      try {
-        [enrichedData, injuries, goalTimingData, keyPlayers, referee, fixtureInfo] = await Promise.all([
-          getEnrichedMatchData(
-            matchInfo.homeTeam,
-            matchInfo.awayTeam,
-            matchInfo.league
-          ),
+        [injuries, goalTimingData, keyPlayers, referee, fixtureInfo] = await Promise.all([
           getMatchInjuries(
             matchInfo.homeTeam,
             matchInfo.awayTeam,
@@ -250,25 +245,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             matchInfo.league
           ),
         ]);
-        console.log(`[Match-Preview] Soccer data fetched in ${Date.now() - startTime}ms:`, {
-          dataSource: enrichedData?.dataSource,
-          homeFormGames: enrichedData?.homeForm?.length || 0,
-          awayFormGames: enrichedData?.awayForm?.length || 0,
-          h2hGames: enrichedData?.headToHead?.length || 0,
-        });
-      } catch (soccerError) {
-        console.error(`[Match-Preview] Soccer API error:`, soccerError);
-        // Use fallback empty data - same as non-soccer path
-        enrichedData = {
-          sport: matchInfo.sport,
-          homeForm: null,
-          awayForm: null,
-          headToHead: null,
-          h2hSummary: null,
-          homeStats: null,
-          awayStats: null,
-          dataSource: 'UNAVAILABLE',
-        };
+        console.log(`[Match-Preview] Soccer extras fetched in ${Date.now() - startTime}ms`);
+      } catch (soccerExtrasError) {
+        console.error(`[Match-Preview] Soccer extras error (non-fatal):`, soccerExtrasError);
+        // Continue with empty extras - core data from DataLayer is more important
       }
     }
 
