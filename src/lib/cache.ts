@@ -88,7 +88,7 @@ export const CACHE_TTL = {
   // AI Analysis
   ANALYSIS: 60 * 60,        // 1 hour (same inputs = same analysis)
   MATCH_PREVIEW: 60 * 60,   // 1 hour (match preview page)
-  PRE_ANALYZED: 6 * 60 * 60, // 6 hours (pre-analyzed by cron - longer TTL)
+  PRE_ANALYZED: 24 * 60 * 60, // 24 hours (until next pre-analyze cron run)
   
   // Chat responses (category-based TTL)
   CHAT_STANDINGS: 5 * 60,   // 5 minutes (standings change after matches)
