@@ -34,6 +34,10 @@
     {
       "path": "/api/cron/poll-odds",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/pre-analyze",
+      "schedule": "0 14 * * *"
     }
   ]
 }
