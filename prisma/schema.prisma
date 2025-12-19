@@ -469,13 +469,18 @@ model OddsSnapshot {
   awayOdds      Float
   drawOdds      Float?
   
-  // Previous odds (for comparison)
+  // Opening odds (set once on first snapshot - for steam move detection)
+  openingHomeOdds  Float?
+  openingAwayOdds  Float?
+  openingDrawOdds  Float?
+  
+  // Previous odds (for comparison - last poll)
   prevHomeOdds  Float?
   prevAwayOdds  Float?
   prevDrawOdds  Float?
   
-  // Movement detection
-  homeChange    Float?   // Percentage change
+  // Movement from OPENING (this is what triggers steam moves)
+  homeChange    Float?   // Percentage change from opening
   awayChange    Float?
   drawChange    Float?
   

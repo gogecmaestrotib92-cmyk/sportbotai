@@ -259,7 +259,7 @@ export async function GET(request: NextRequest) {
           const matchRef = `${event.home_team} vs ${event.away_team}`;
           const matchDate = new Date(event.commence_time);
           
-          // Get previous snapshot
+          // Get existing snapshot (if any)
           const prevSnapshot = await prisma.oddsSnapshot.findUnique({
             where: {
               matchRef_sport_bookmaker: {
@@ -270,14 +270,20 @@ export async function GET(request: NextRequest) {
             },
           });
           
-          // Calculate changes
-          const homeChange = calculateOddsChange(consensus.home, prevSnapshot?.homeOdds ?? null);
-          const awayChange = calculateOddsChange(consensus.away, prevSnapshot?.awayOdds ?? null);
-          const drawChange = consensus.draw && prevSnapshot?.drawOdds
-            ? calculateOddsChange(consensus.draw, prevSnapshot.drawOdds)
+          // Determine opening odds - use existing opening or current (if first time)
+          const openingHomeOdds = prevSnapshot?.openingHomeOdds ?? consensus.home;
+          const openingAwayOdds = prevSnapshot?.openingAwayOdds ?? consensus.away;
+          const openingDrawOdds = prevSnapshot?.openingDrawOdds ?? consensus.draw;
+          
+          // Calculate changes FROM OPENING (not from last poll)
+          // This is what actually triggers steam moves - significant movement since opening
+          const homeChange = calculateOddsChange(consensus.home, openingHomeOdds);
+          const awayChange = calculateOddsChange(consensus.away, openingAwayOdds);
+          const drawChange = consensus.draw && openingDrawOdds
+            ? calculateOddsChange(consensus.draw, openingDrawOdds)
             : undefined;
           
-          // Detect steam moves
+          // Detect steam moves (based on movement from opening)
           const steam = detectSteamMove(homeChange, awayChange);
           
           // Calculate model probabilities and edges
@@ -320,8 +326,8 @@ export async function GET(request: NextRequest) {
           // Get alert level
           const alertLevel = getAlertLevel(steam.hasSteam, bestEdge.edge);
           
-          // Upsert snapshot
-          const snapshotData = {
+          // Base snapshot data (for both create and update)
+          const baseData = {
             matchRef,
             sport: sport.key,
             league: sport.league,
@@ -331,9 +337,11 @@ export async function GET(request: NextRequest) {
             homeOdds: consensus.home,
             awayOdds: consensus.away,
             drawOdds: consensus.draw ?? null,
+            // Previous = what we stored last time (for short-term tracking)
             prevHomeOdds: prevSnapshot?.homeOdds ?? null,
             prevAwayOdds: prevSnapshot?.awayOdds ?? null,
             prevDrawOdds: prevSnapshot?.drawOdds ?? null,
+            // Change from OPENING (for steam move detection)
             homeChange: homeChange ?? null,
             awayChange: awayChange ?? null,
             drawChange: drawChange ?? null,
@@ -358,8 +366,15 @@ export async function GET(request: NextRequest) {
                 bookmaker: 'consensus',
               },
             },
-            update: snapshotData,
-            create: snapshotData,
+            // On update: preserve opening odds, update everything else
+            update: baseData,
+            // On create: set opening odds to current (first snapshot)
+            create: {
+              ...baseData,
+              openingHomeOdds: consensus.home,
+              openingAwayOdds: consensus.away,
+              openingDrawOdds: consensus.draw ?? null,
+            },
           });
           
           if (prevSnapshot) {
