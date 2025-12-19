@@ -18,8 +18,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { USAGE_UPDATED_EVENT } from '@/components/auth/UserMenu';
-import { useUsage } from '@/lib/UsageContext';
+import { useToast } from '@/components/ui';
 import {
   PremiumMatchHeader,
   ShareCard,
@@ -155,7 +154,7 @@ interface UsageLimitData {
 
 export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps) {
   const { data: session } = useSession();
-  const { refreshUsage } = useUsage();
+  const { showToast } = useToast();
   const [data, setData] = useState<MatchPreviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -187,10 +186,6 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
         // Handle 429 (usage limit reached) specifically
         if (response.status === 429 && result.usageLimitReached) {
           setUsageLimit(result as UsageLimitData);
-          // Refresh usage via context (more reliable than events)
-          console.log('[MatchPreview] Refreshing usage via context (429)');
-          refreshUsage();
-          window.dispatchEvent(new Event(USAGE_UPDATED_EVENT));
           return;
         }
         
@@ -198,10 +193,10 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
           throw new Error(result.error || 'Failed to load match preview');
         }
         
-        // Successful analysis - refresh usage via context
-        console.log('[MatchPreview] Refreshing usage via context (success)');
-        refreshUsage();
-        window.dispatchEvent(new Event(USAGE_UPDATED_EVENT));
+        // Successful analysis - show toast for FREE users
+        if (result.creditUsed) {
+          showToast('Analysis credit used. Upgrade to Pro for more!', 'info');
+        }
         
         setData(result);
       } catch (err) {

@@ -251,6 +251,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         return NextResponse.json({
           ...responseData,
           fromCache: true,
+          creditUsed: creditUsedEarly, // Tell client if credit was used
         }, {
           headers: {
             'Cache-Control': 'private, max-age=1800', // 30 min browser cache
@@ -858,7 +859,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     console.log(`[Match-Preview] Completed in ${Date.now() - startTime}ms`);
-    return NextResponse.json(response);
+    return NextResponse.json({
+      ...response,
+      creditUsed: creditUsedEarly || !creditUsedEarly, // Always true for fresh analysis
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : '';
