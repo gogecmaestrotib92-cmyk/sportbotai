@@ -124,11 +124,14 @@ async function getMatchResult(homeTeam: string, awayTeam: string, matchDate: Dat
   const searchAway = awayTeam.toLowerCase();
   
   // Detect sport from league or team names
-  const isNBA = league?.includes('NBA') || 
+  const isNBA = league?.toLowerCase().includes('nba') || 
     ['lakers', 'celtics', 'bulls', 'heat', 'warriors', 'nuggets', 'suns', 'bucks', 'nets', 'knicks', 'clippers', 'mavs', 'mavericks', 'rockets', 'spurs', 'jazz', 'thunder', 'grizzlies', 'pelicans', 'timberwolves', 'blazers', 'kings', 'magic', 'hawks', 'hornets', 'pistons', 'pacers', 'cavaliers', '76ers', 'raptors', 'wizards'].some(t => searchHome.includes(t) || searchAway.includes(t));
   
-  const isNHL = league?.includes('NHL') || 
+  const isNHL = league?.toLowerCase().includes('nhl') || 
     ['bruins', 'rangers', 'penguins', 'capitals', 'flyers', 'devils', 'islanders', 'canadiens', 'senators', 'maple leafs', 'lightning', 'panthers', 'hurricanes', 'predators', 'blue jackets', 'red wings', 'blackhawks', 'wild', 'blues', 'jets', 'avalanche', 'stars', 'coyotes', 'ducks', 'kings', 'sharks', 'kraken', 'golden knights', 'flames', 'oilers', 'canucks'].some(t => searchHome.includes(t) || searchAway.includes(t));
+
+  const isNFL = league?.toLowerCase().includes('nfl') || 
+    ['chiefs', 'bills', 'ravens', 'bengals', 'dolphins', 'patriots', 'jets', 'steelers', 'browns', 'titans', 'colts', 'jaguars', 'texans', 'broncos', 'raiders', 'chargers', 'eagles', 'cowboys', 'giants', 'commanders', 'lions', 'packers', 'vikings', 'bears', 'buccaneers', 'saints', 'falcons', 'panthers', 'seahawks', '49ers', 'cardinals', 'rams'].some(t => searchHome.includes(t) || searchAway.includes(t));
 
   try {
     // Try NBA API
@@ -141,6 +144,12 @@ async function getMatchResult(homeTeam: string, awayTeam: string, matchDate: Dat
     if (isNHL) {
       const nhlResult = await fetchSportResult('hockey', 57, dateStr, searchHome, searchAway, apiKey);
       if (nhlResult) return nhlResult;
+    }
+    
+    // Try NFL API
+    if (isNFL) {
+      const nflResult = await fetchNFLResult(dateStr, searchHome, searchAway, apiKey);
+      if (nflResult) return nflResult;
     }
     
     // Try Football API (default)
@@ -242,6 +251,60 @@ async function fetchSportResult(
     return null;
   } catch (error) {
     console.error(`[Track-Predictions] Failed to fetch ${sport} result:`, error);
+    return null;
+  }
+}
+
+/**
+ * Fetch NFL result from API-Sports American Football API
+ */
+async function fetchNFLResult(
+  dateStr: string,
+  searchHome: string,
+  searchAway: string,
+  apiKey: string
+): Promise<MatchResult | null> {
+  try {
+    const response = await fetch(
+      `https://v1.american-football.api-sports.io/games?date=${dateStr}&league=1&season=2024`,
+      {
+        headers: {
+          'x-rapidapi-key': apiKey,
+          'x-rapidapi-host': 'v1.american-football.api-sports.io',
+        },
+      }
+    );
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const games = data.response || [];
+
+    for (const game of games) {
+      const home = game.teams?.home?.name?.toLowerCase() || '';
+      const away = game.teams?.away?.name?.toLowerCase() || '';
+      const status = game.game?.status?.short || '';
+
+      // Only count finished games
+      if (!['FT', 'AOT', 'AP', 'POST'].includes(status)) continue;
+
+      if (
+        (home.includes(searchHome) || searchHome.includes(home)) &&
+        (away.includes(searchAway) || searchAway.includes(away))
+      ) {
+        return {
+          homeTeam: game.teams.home.name,
+          awayTeam: game.teams.away.name,
+          homeScore: game.scores?.home?.total ?? 0,
+          awayScore: game.scores?.away?.total ?? 0,
+          completed: true,
+        };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('[Track-Predictions] Failed to fetch NFL result:', error);
     return null;
   }
 }
