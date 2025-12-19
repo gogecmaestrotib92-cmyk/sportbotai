@@ -271,37 +271,38 @@ async function runQuickAnalysis(
     const hasDraw = !!odds.draw;
     const favoredOptions = hasDraw ? '"home" | "away" | "draw"' : '"home" | "away"';
     
-    // Build AI prompt - focused on explaining VALUE EDGE reasoning
-    const prompt = `Analyze this ${league} match: ${homeTeam} vs ${awayTeam}
+    // Build AIXBT-style prompt - sharp, opinionated, data-backed
+    const prompt = `${homeTeam} vs ${awayTeam} | ${league}
 
-ODDS: Home ${odds.home} | Away ${odds.away}${odds.draw ? ` | Draw ${odds.draw}` : ''}
-
-FORM: ${homeTeam}: ${homeFormStr} | ${awayTeam}: ${awayFormStr}
-
+MARKET: ${odds.home} / ${odds.away}${odds.draw ? ` / ${odds.draw}` : ''}
+FORM: ${homeTeam} ${homeFormStr} | ${awayTeam} ${awayFormStr}
 SIGNALS: ${signalsSummary}
 
-Generate JSON matching this exact structure:
+Be AIXBT. Sharp takes. Back them with numbers.
+
+JSON output:
 {
   "probabilities": { "home": 0.XX, "away": 0.XX${hasDraw ? ', "draw": 0.XX' : ''} },
   "favored": ${favoredOptions},
   "confidence": "high" | "medium" | "low",
   "snapshot": [
-    "WHY WE FAVOR [team]: Primary statistical reason (e.g., '${homeTeam}'s 4W-1L form + strong home record')",
-    "VALUE EDGE: What the market might miss (e.g., 'Opponents avg just 0.8 goals vs them')",
-    "SUPPORTING: H2H or momentum evidence (e.g., '3 wins in last 4 meetings')",
-    "RISK: Honest caveat (e.g., 'Away side improving, 2W in last 3')"
+    "THE EDGE: [team] because [stat]. Not close.",
+    "MARKET MISS: [what odds undervalue]. The data screams [X].",
+    "THE PATTERN: [H2H/streak with numbers]. This isn't random.",
+    "THE RISK: [caveat]. Don't ignore this."
   ],
-  "gameFlow": "2-3 sentences about expected game dynamics with scoring rate references",
-  "riskFactors": ["Primary risk", "Secondary risk (optional)"]
+  "gameFlow": "Sharp take on how this plays out. Cite the numbers.",
+  "riskFactors": ["Primary risk", "Secondary if relevant"]
 }
 
-SNAPSHOT RULES:
-1. First bullet: WHO you favor + the PRIMARY reason with a stat
-2. Second bullet: The VALUE EDGE - what data suggests vs what odds imply
-3. Third bullet: Supporting evidence (H2H, streaks, momentum)
-4. Fourth bullet: Honest risk acknowledgment
-- Every bullet needs at least one number
-${!hasDraw ? '- This sport has NO DRAWS - pick home or away.' : ''}`;
+SNAPSHOT VIBE:
+- First bullet: State your pick. Be confident. Give the stat.
+- Second bullet: What's the market sleeping on? Find the gap.
+- Third bullet: Pattern recognition. H2H, streaks, momentum.
+- Fourth bullet: What could wreck this thesis? Be honest.
+
+NO GENERIC TAKES. If you can't find an edge, say so.
+${!hasDraw ? 'NO DRAWS in this sport. Pick a winner.' : ''}`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',

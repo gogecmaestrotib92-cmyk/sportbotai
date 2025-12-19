@@ -1315,42 +1315,39 @@ ALWAYS:
 - Short, punchy observations - no walls of text
 - If confidence is low, state WHY clearly`;
 
-  const userPrompt = `MATCH: ${data.homeTeam} vs ${data.awayTeam}
-COMPETITION: ${data.league}
+  const userPrompt = `${data.homeTeam} vs ${data.awayTeam} | ${data.league}
 
-SIGNALS:
-${getSignalSummary(universalSignals)}
+SIGNALS: ${getSignalSummary(universalSignals)}
+CLARITY: ${universalSignals.clarity_score}% | CONFIDENCE: ${universalSignals.confidence.toUpperCase()}
 
-Confidence Level: ${universalSignals.confidence.toUpperCase()} (${universalSignals.clarity_score}% clarity)
+Be AIXBT. Sharp takes. Back them with numbers. Find the edge.
 
-Generate JSON:
-
+JSON:
 {
   "analysis": {
     "favored": ${favoredOptions},
     "confidence": "${universalSignals.confidence}",
     "snapshot": [
-      "WHY WE FAVOR [team]: The core reason with a stat (e.g., 'Arsenal's 8W-2L form + 2.4 goals/game at home')",
-      "EDGE SOURCE: What the market might be missing (e.g., 'Opponents averaging just 0.9 goals vs their defense')",
-      "SUPPORTING FACTOR: H2H or momentum stat (e.g., '5 wins in last 6 H2H, outscoring 14-3')",
-      "RISK DISCLOSURE: Why this isn't a certainty (e.g., 'Away side won 3 of last 4 league games')"
+      "THE EDGE: [team] because [stat]. Not close.",
+      "MARKET MISS: [what odds undervalue]. The data screams [X].",
+      "THE PATTERN: [H2H/streak]. This isn't random.",
+      "THE RISK: [caveat]. Don't ignore this."
     ],
-    "gameFlow": "2-3 sentences describing expected game dynamics. Reference scoring rates and defensive records.",
-    "riskFactors": ["Key risk with context", "Secondary risk (optional)"]
+    "gameFlow": "Sharp take on how this unfolds. Cite the numbers.",
+    "riskFactors": ["Primary risk", "Secondary if relevant"]
   },
-  "headline": "One analytical line with a stat (e.g., 'Arsenal's 2.4 goals/game meets Chelsea's leaky defense')"
+  "headline": "One punchy line with a stat. Make it quotable."
 }
 
-SNAPSHOT RULES:
-1. First bullet: State WHO you favor and the PRIMARY statistical reason
-2. Second bullet: Explain the VALUE EDGE - what does the data show that odds might not reflect?
-3. Third bullet: Add supporting evidence (H2H, streaks, home/away splits)
-4. Fourth bullet: Be honest about risks - what could go wrong?
+SNAPSHOT VIBE:
+- First bullet: State your pick. Be confident. Give the stat that matters.
+- Second bullet: What's the market sleeping on? Find the gap.
+- Third bullet: Pattern recognition. H2H, streaks, momentum. Numbers.
+- Fourth bullet: What could wreck this thesis? Be honest.
 
-- EVERY bullet must contain at least one specific number
-- gameFlow must reference actual scoring/conceding rates
-- If no detailed stats available, be honest: "Limited data available"
-- ${!sportConfig.hasDraw ? 'This sport has NO DRAWS - pick a winner.' : 'Draw is possible.'}`;
+NO GENERIC TAKES. "Clinical finishing" = banned. "Capitalize on weaknesses" = banned.
+If you can't find an edge, say "No clear edge here."
+${!sportConfig.hasDraw ? 'NO DRAWS in this sport. Pick a winner.' : 'Draw is valid if form + H2H support it.'}`;
 
   try {
     const completion = await openai.chat.completions.create({
