@@ -306,53 +306,56 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
             kickoff={parsedMatch.kickoff}
           />
 
-          {/* Too far away message */}
-          <div className="mt-8 p-6 bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 rounded-2xl">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                <svg className="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          {/* Too far away message - matches app card style */}
+          <div className="mt-8 p-5 rounded-xl bg-[#0a0a0b] border border-white/[0.04]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-white/[0.03] flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  Analysis Available Soon
+              <div>
+                <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Coming Soon</span>
+                <h3 className="text-base font-medium text-white">
+                  Analysis Available in {matchTiming.daysUntilKickoff} Days
                 </h3>
-                <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-                  This match is <span className="text-amber-400 font-medium">{matchTiming.daysUntilKickoff} days away</span>. 
-                  Our AI analysis becomes available <span className="text-white font-medium">48 hours before kickoff</span> when 
-                  we have the most accurate team news, form data, and market intelligence.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex items-center gap-2 text-zinc-500 text-sm">
-                    <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span>Available: {new Date(matchTiming.kickoffDate.getTime() - 48 * 60 * 60 * 1000).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                  </div>
-                </div>
               </div>
+            </div>
+            
+            <p className="text-zinc-500 text-sm leading-relaxed mb-4">
+              Our AI analysis becomes available <span className="text-zinc-300">48 hours before kickoff</span> when 
+              we have the most accurate data.
+            </p>
+            
+            <div className="flex items-center gap-2 text-zinc-500 text-xs">
+              <svg className="w-3.5 h-3.5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>Available: {new Date(matchTiming.kickoffDate.getTime() - 48 * 60 * 60 * 1000).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
             </div>
           </div>
 
           {/* Why we wait explanation */}
-          <div className="mt-6 p-5 bg-white/[0.02] border border-white/5 rounded-xl">
-            <h4 className="text-sm font-medium text-zinc-300 mb-3">Why do we wait?</h4>
-            <ul className="space-y-2 text-sm text-zinc-500">
-              <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-0.5">✓</span>
-                <span>Latest injury & lineup updates closer to match day</span>
+          <div className="mt-4 p-4 rounded-xl bg-[#0a0a0b] border border-white/[0.04]">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-sm">💡</span>
+              <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Why We Wait</span>
+            </div>
+            <ul className="space-y-2 text-xs text-zinc-500">
+              <li className="flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-zinc-600" />
+                <span>Latest injury & lineup updates</span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-0.5">✓</span>
+              <li className="flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-zinc-600" />
                 <span>Most recent form from mid-week fixtures</span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-0.5">✓</span>
-                <span>Accurate market odds & sharp money movements</span>
+              <li className="flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-zinc-600" />
+                <span>Accurate market odds & movements</span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-0.5">✓</span>
+              <li className="flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-zinc-600" />
                 <span>Manager press conference insights</span>
               </li>
             </ul>
@@ -362,7 +365,7 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
           <div className="mt-6 text-center">
             <Link 
               href="/matches"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-medium text-white transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] rounded-lg text-sm text-zinc-300 hover:text-white transition-colors"
             >
               <span>Browse matches happening soon</span>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
