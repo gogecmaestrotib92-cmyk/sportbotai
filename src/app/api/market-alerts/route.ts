@@ -355,10 +355,42 @@ function detectSteamMove(
 }
 
 // ============================================
+// BATCH HELPERS FOR PERFORMANCE
+// ============================================
+
+interface ProcessedEvent {
+  event: OddsApiEvent;
+  sport: typeof ALERT_SPORTS[number];
+  consensus: { home: number; away: number; draw?: number };
+  matchRef: string;
+  matchDate: string;
+  cacheKey: string;
+}
+
+/**
+ * Batch fetch cached analyses using mget (Redis) or parallel gets
+ */
+async function batchGetCachedAnalyses(cacheKeys: string[]): Promise<Map<string, unknown>> {
+  const results = new Map<string, unknown>();
+  if (cacheKeys.length === 0) return results;
+  
+  // Parallel fetch all cache keys (Redis handles this efficiently)
+  const promises = cacheKeys.map(async key => {
+    const data = await cacheGet(key);
+    if (data) results.set(key, data);
+  });
+  await Promise.all(promises);
+  
+  return results;
+}
+
+// ============================================
 // MAIN HANDLER
 // ============================================
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
     // Check authentication
     const session = await getServerSession(authOptions);
@@ -396,237 +428,358 @@ export async function GET(request: NextRequest) {
       } as MarketAlertsResponse, { status: 500 });
     }
     
-    const allAlerts: MarketAlert[] = [];
+    // ============================================
+    // STEP 1: PARALLEL FETCH ALL SPORTS ODDS
+    // ============================================
+    console.log(`[Market Alerts] Fetching ${ALERT_SPORTS.length} sports in parallel...`);
+    
+    const oddsPromises = ALERT_SPORTS.map(sport => 
+      theOddsClient.getOddsForSport(sport.key, {
+        regions: ['eu', 'us'],
+        markets: ['h2h'],
+      }).then(response => ({ sport, response }))
+        .catch(error => {
+          console.error(`[Market Alerts] Error fetching ${sport.key}:`, error);
+          return { sport, response: { data: [] } };
+        })
+    );
+    
+    const oddsResults = await Promise.all(oddsPromises);
+    console.log(`[Market Alerts] Odds fetched in ${Date.now() - startTime}ms`);
+    
+    // ============================================
+    // STEP 2: COLLECT ALL EVENTS & BUILD LOOKUP KEYS
+    // ============================================
+    const now = new Date();
+    const cutoff = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    const processedEvents: ProcessedEvent[] = [];
     let totalMatches = 0;
     
-    // Fetch odds for ALL supported sports
-    for (const sport of ALERT_SPORTS) {
-      try {
-        const oddsResponse = await theOddsClient.getOddsForSport(sport.key, {
-          regions: ['eu', 'us'],
-          markets: ['h2h'],
+    for (const { sport, response } of oddsResults) {
+      if (!response.data || response.data.length === 0) continue;
+      
+      const upcomingEvents = response.data.filter(event => {
+        const matchDate = new Date(event.commence_time);
+        return matchDate >= now && matchDate <= cutoff;
+      });
+      
+      totalMatches += upcomingEvents.length;
+      
+      for (const event of upcomingEvents) {
+        const consensus = getConsensusOdds(event);
+        if (!consensus) continue;
+        
+        const matchRef = `${event.home_team} vs ${event.away_team}`;
+        const matchDate = new Date(event.commence_time).toISOString().split('T')[0];
+        const cacheKey = CACHE_KEYS.matchPreview(event.home_team, event.away_team, sport.key, matchDate);
+        
+        processedEvents.push({
+          event,
+          sport,
+          consensus,
+          matchRef,
+          matchDate,
+          cacheKey,
         });
-        
-        if (!oddsResponse.data || oddsResponse.data.length === 0) continue;
-        
-        // Filter to next 48 hours
-        const now = new Date();
-        const cutoff = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-        
-        const upcomingEvents = oddsResponse.data.filter(event => {
-          const matchDate = new Date(event.commence_time);
-          return matchDate >= now && matchDate <= cutoff;
-        });
-        
-        totalMatches += upcomingEvents.length;
-        
-        for (const event of upcomingEvents) {
-          const consensus = getConsensusOdds(event);
-          if (!consensus) continue;
-          
-          // Get previous snapshot from database
-          const matchRef = `${event.home_team} vs ${event.away_team}`;
-          const prevSnapshot = await prisma.oddsSnapshot.findUnique({
-            where: {
-              matchRef_sport_bookmaker: {
-                matchRef,
-                sport: sport.key,
-                bookmaker: 'consensus',
-              },
-            },
-          });
-          
-          // Calculate changes
-          const homeChange = calculateOddsChange(consensus.home, prevSnapshot?.homeOdds ?? null);
-          const awayChange = calculateOddsChange(consensus.away, prevSnapshot?.awayOdds ?? null);
-          const drawChange = consensus.draw && prevSnapshot?.drawOdds 
-            ? calculateOddsChange(consensus.draw, prevSnapshot.drawOdds)
-            : undefined;
-          
-          // Detect steam moves (pass odds for pattern detection when no previous data)
-          const steam = detectSteamMove(
-            homeChange, 
-            awayChange, 
-            consensus.home, 
-            consensus.away, 
-            !!prevSnapshot
-          );
-          
-          // Try to get cached AI analysis (pre-analyzed daily)
-          const matchDate = new Date(event.commence_time).toISOString().split('T')[0];
-          const cacheKey = CACHE_KEYS.matchPreview(event.home_team, event.away_team, sport.key, matchDate);
-          const cachedAnalysis = await cacheGet<{
-            marketIntel?: {
-              modelProbability?: { home: number; away: number; draw?: number };
-              valueEdge?: { outcome: string; edgePercent: number; label: string; strength: string };
-            };
-          }>(cacheKey);
-          
-          // Use cached AI edges if available, otherwise fall back to quick model
-          let modelHomeProb: number;
-          let modelAwayProb: number;
-          let modelDrawProb: number | undefined;
-          let homeEdge: number;
-          let awayEdge: number;
-          let drawEdge: number | undefined;
-          let valueEdgeLabel: string | undefined;
-          
-          if (cachedAnalysis?.marketIntel?.modelProbability) {
-            // Use AI model probabilities from cache
-            const aiProbs = cachedAnalysis.marketIntel.modelProbability;
-            modelHomeProb = aiProbs.home;
-            modelAwayProb = aiProbs.away;
-            modelDrawProb = aiProbs.draw;
-            
-            // Calculate edges using AI probabilities
-            const homeImplied = oddsToImpliedProb(consensus.home);
-            const awayImplied = oddsToImpliedProb(consensus.away);
-            const drawImplied = consensus.draw ? oddsToImpliedProb(consensus.draw) : 0;
-            
-            homeEdge = modelHomeProb - homeImplied;
-            awayEdge = modelAwayProb - awayImplied;
-            drawEdge = modelDrawProb ? modelDrawProb - drawImplied : undefined;
-            
-            // Use cached value edge label if available
-            valueEdgeLabel = cachedAnalysis.marketIntel.valueEdge?.label;
-            
-            console.log(`[Market Alerts] Using cached AI for ${event.home_team} vs ${event.away_team}: ${cachedAnalysis.marketIntel.valueEdge?.edgePercent || 0}%`);
-          } else {
-            // Fallback to quick model (should rarely happen if pre-analyze runs daily)
-            const modelProb = calculateQuickModelProbability(consensus, prevSnapshot, sport.hasDraw);
-            modelHomeProb = modelProb.home;
-            modelAwayProb = modelProb.away;
-            modelDrawProb = modelProb.draw;
-            
-            const homeImplied = oddsToImpliedProb(consensus.home);
-            const awayImplied = oddsToImpliedProb(consensus.away);
-            const drawImplied = consensus.draw ? oddsToImpliedProb(consensus.draw) : 0;
-            
-            homeEdge = modelHomeProb - homeImplied;
-            awayEdge = modelAwayProb - awayImplied;
-            drawEdge = modelDrawProb ? modelDrawProb - drawImplied : undefined;
-            
-            console.log(`[Market Alerts] No cache for ${event.home_team} vs ${event.away_team}, using quick model`);
-          }
-          
-          // Determine best edge
-          const edges: Array<{ outcome: 'home' | 'away' | 'draw'; percent: number }> = [
-            { outcome: 'home', percent: homeEdge },
-            { outcome: 'away', percent: awayEdge },
-          ];
-          if (drawEdge !== undefined) {
-            edges.push({ outcome: 'draw', percent: drawEdge });
-          }
-          
-          const bestEdge = edges.reduce((best, curr) => 
-            curr.percent > best.percent ? curr : best
-          , edges[0]);
-          
-          const hasValueEdge = bestEdge.percent >= 5; // 5%+ edge
-          const alertLevel = bestEdge.percent >= 10 ? 'HIGH' : 
-                            bestEdge.percent >= 5 ? 'MEDIUM' : 
-                            steam.hasSteam ? 'LOW' : null;
-          
-          const alert: MarketAlert = {
-            id: event.id,
-            matchRef,
-            sport: sport.key,
-            sportTitle: sport.title,
-            league: sport.title,
-            homeTeam: event.home_team,
-            awayTeam: event.away_team,
-            matchDate: event.commence_time,
-            
-            homeOdds: consensus.home,
-            awayOdds: consensus.away,
-            drawOdds: consensus.draw,
-            
-            homeChange,
-            awayChange,
-            drawChange,
-            changeDirection: steam.direction as 'toward_home' | 'toward_away' | 'stable',
-            
-            modelHomeProb,
-            modelAwayProb,
-            modelDrawProb,
-            homeEdge,
-            awayEdge,
-            drawEdge,
-            bestEdge: {
-              outcome: bestEdge.outcome,
-              percent: Math.round(bestEdge.percent * 10) / 10,
-              label: valueEdgeLabel || `${bestEdge.outcome.charAt(0).toUpperCase() + bestEdge.outcome.slice(1)} +${bestEdge.percent.toFixed(1)}%`,
-            },
-            
-            hasSteamMove: steam.hasSteam,
-            hasValueEdge,
-            alertLevel,
-            alertNote: steam.note || (hasValueEdge ? `Model sees ${bestEdge.percent.toFixed(1)}% edge on ${bestEdge.outcome}` : undefined),
-          };
-          
-          allAlerts.push(alert);
-          
-          // Update snapshot in database with current odds (for steam move tracking)
-          // Note: We now read AI edges from cache, so just update odds tracking here
-          await prisma.oddsSnapshot.upsert({
-            where: {
-              matchRef_sport_bookmaker: {
-                matchRef,
-                sport: sport.key,
-                bookmaker: 'consensus',
-              },
-            },
-            create: {
-              matchRef,
-              sport: sport.key,
-              league: sport.title,
-              homeTeam: event.home_team,
-              awayTeam: event.away_team,
-              matchDate: new Date(event.commence_time),
-              homeOdds: consensus.home,
-              awayOdds: consensus.away,
-              drawOdds: consensus.draw,
-              modelHomeProb: modelHomeProb,
-              modelAwayProb: modelAwayProb,
-              modelDrawProb: modelDrawProb,
-              homeEdge,
-              awayEdge,
-              drawEdge,
-              hasSteamMove: steam.hasSteam,
-              hasValueEdge,
-              alertLevel,
-              alertNote: valueEdgeLabel || alert.alertNote,
-              bookmaker: 'consensus',
-            },
-            update: {
-              prevHomeOdds: prevSnapshot?.homeOdds,
-              prevAwayOdds: prevSnapshot?.awayOdds,
-              prevDrawOdds: prevSnapshot?.drawOdds,
-              homeOdds: consensus.home,
-              awayOdds: consensus.away,
-              drawOdds: consensus.draw,
-              homeChange,
-              awayChange,
-              drawChange,
-              modelHomeProb: modelHomeProb,
-              modelAwayProb: modelAwayProb,
-              modelDrawProb: modelDrawProb,
-              homeEdge,
-              awayEdge,
-              drawEdge,
-              hasValueEdge,
-              alertLevel,
-              alertNote: valueEdgeLabel || alert.alertNote,
-              hasSteamMove: steam.hasSteam,
-              updatedAt: new Date(),
-            },
-          });
-        }
-      } catch (sportError) {
-        console.error(`[Market Alerts] Error fetching ${sport.key}:`, sportError);
-        // Continue with other sports
       }
     }
+    
+    console.log(`[Market Alerts] Processing ${processedEvents.length} events from ${totalMatches} total`);
+    
+    // ============================================
+    // STEP 3: BATCH FETCH ALL PREVIOUS SNAPSHOTS
+    // ============================================
+    const snapshotKeys = processedEvents.map(e => ({
+      matchRef: e.matchRef,
+      sport: e.sport.key,
+      bookmaker: 'consensus' as const,
+    }));
+    
+    // Use findMany with OR for batch lookup (much faster than individual queries)
+    const existingSnapshots = await prisma.oddsSnapshot.findMany({
+      where: {
+        OR: snapshotKeys.map(k => ({
+          matchRef: k.matchRef,
+          sport: k.sport,
+          bookmaker: k.bookmaker,
+        })),
+      },
+    });
+    
+    // Build lookup map for O(1) access
+    const snapshotMap = new Map<string, typeof existingSnapshots[0]>();
+    for (const snap of existingSnapshots) {
+      snapshotMap.set(`${snap.matchRef}|${snap.sport}|${snap.bookmaker}`, snap);
+    }
+    
+    console.log(`[Market Alerts] Snapshots loaded in ${Date.now() - startTime}ms`);
+    
+    // ============================================
+    // STEP 4: BATCH FETCH ALL CACHED AI ANALYSES
+    // ============================================
+    const cacheKeys = processedEvents.map(e => e.cacheKey);
+    const cachedAnalyses = await batchGetCachedAnalyses(cacheKeys);
+    
+    console.log(`[Market Alerts] Cache loaded: ${cachedAnalyses.size}/${cacheKeys.length} hits in ${Date.now() - startTime}ms`);
+    
+    // ============================================
+    // STEP 5: PROCESS ALL EVENTS (CPU-bound, no I/O)
+    // ============================================
+    const allAlerts: MarketAlert[] = [];
+    const upsertData: Array<{
+      matchRef: string;
+      sport: string;
+      league: string;
+      homeTeam: string;
+      awayTeam: string;
+      matchDate: Date;
+      homeOdds: number;
+      awayOdds: number;
+      drawOdds?: number;
+      prevHomeOdds?: number;
+      prevAwayOdds?: number;
+      prevDrawOdds?: number;
+      homeChange?: number;
+      awayChange?: number;
+      drawChange?: number;
+      modelHomeProb: number;
+      modelAwayProb: number;
+      modelDrawProb?: number;
+      homeEdge: number;
+      awayEdge: number;
+      drawEdge?: number;
+      hasSteamMove: boolean;
+      hasValueEdge: boolean;
+      alertLevel: string | null;
+      alertNote?: string;
+    }> = [];
+    
+    for (const processed of processedEvents) {
+      const { event, sport, consensus, matchRef, cacheKey } = processed;
+      
+      // Get previous snapshot from map (O(1))
+      const prevSnapshot = snapshotMap.get(`${matchRef}|${sport.key}|consensus`);
+      
+      // Calculate changes
+      const homeChange = calculateOddsChange(consensus.home, prevSnapshot?.homeOdds ?? null);
+      const awayChange = calculateOddsChange(consensus.away, prevSnapshot?.awayOdds ?? null);
+      const drawChange = consensus.draw && prevSnapshot?.drawOdds 
+        ? calculateOddsChange(consensus.draw, prevSnapshot.drawOdds)
+        : undefined;
+      
+      // Detect steam moves
+      const steam = detectSteamMove(
+        homeChange, 
+        awayChange, 
+        consensus.home, 
+        consensus.away, 
+        !!prevSnapshot
+      );
+      
+      // Get cached AI analysis (O(1) from map)
+      const cachedAnalysis = cachedAnalyses.get(cacheKey) as {
+        marketIntel?: {
+          modelProbability?: { home: number; away: number; draw?: number };
+          valueEdge?: { outcome: string; edgePercent: number; label: string; strength: string };
+        };
+      } | undefined;
+      
+      // Calculate edges
+      let modelHomeProb: number;
+      let modelAwayProb: number;
+      let modelDrawProb: number | undefined;
+      let homeEdge: number;
+      let awayEdge: number;
+      let drawEdge: number | undefined;
+      let valueEdgeLabel: string | undefined;
+      
+      if (cachedAnalysis?.marketIntel?.modelProbability) {
+        const aiProbs = cachedAnalysis.marketIntel.modelProbability;
+        modelHomeProb = aiProbs.home;
+        modelAwayProb = aiProbs.away;
+        modelDrawProb = aiProbs.draw;
+        
+        const homeImplied = oddsToImpliedProb(consensus.home);
+        const awayImplied = oddsToImpliedProb(consensus.away);
+        const drawImplied = consensus.draw ? oddsToImpliedProb(consensus.draw) : 0;
+        
+        homeEdge = modelHomeProb - homeImplied;
+        awayEdge = modelAwayProb - awayImplied;
+        drawEdge = modelDrawProb ? modelDrawProb - drawImplied : undefined;
+        valueEdgeLabel = cachedAnalysis.marketIntel.valueEdge?.label;
+      } else {
+        const modelProb = calculateQuickModelProbability(consensus, prevSnapshot ?? null, sport.hasDraw);
+        modelHomeProb = modelProb.home;
+        modelAwayProb = modelProb.away;
+        modelDrawProb = modelProb.draw;
+        
+        const homeImplied = oddsToImpliedProb(consensus.home);
+        const awayImplied = oddsToImpliedProb(consensus.away);
+        const drawImplied = consensus.draw ? oddsToImpliedProb(consensus.draw) : 0;
+        
+        homeEdge = modelHomeProb - homeImplied;
+        awayEdge = modelAwayProb - awayImplied;
+        drawEdge = modelDrawProb ? modelDrawProb - drawImplied : undefined;
+      }
+      
+      // Determine best edge
+      const edges: Array<{ outcome: 'home' | 'away' | 'draw'; percent: number }> = [
+        { outcome: 'home', percent: homeEdge },
+        { outcome: 'away', percent: awayEdge },
+      ];
+      if (drawEdge !== undefined) {
+        edges.push({ outcome: 'draw', percent: drawEdge });
+      }
+      
+      const bestEdge = edges.reduce((best, curr) => 
+        curr.percent > best.percent ? curr : best
+      , edges[0]);
+      
+      const hasValueEdge = bestEdge.percent >= 5; // 5%+ edge
+      const alertLevel = bestEdge.percent >= 10 ? 'HIGH' : 
+                        bestEdge.percent >= 5 ? 'MEDIUM' : 
+                        steam.hasSteam ? 'LOW' : null;
+      
+      const alert: MarketAlert = {
+        id: event.id,
+        matchRef,
+        sport: sport.key,
+        sportTitle: sport.title,
+        league: sport.title,
+        homeTeam: event.home_team,
+        awayTeam: event.away_team,
+        matchDate: event.commence_time,
+        
+        homeOdds: consensus.home,
+        awayOdds: consensus.away,
+        drawOdds: consensus.draw,
+        
+        homeChange,
+        awayChange,
+        drawChange,
+        changeDirection: steam.direction as 'toward_home' | 'toward_away' | 'stable',
+        
+        modelHomeProb,
+        modelAwayProb,
+        modelDrawProb,
+        homeEdge,
+        awayEdge,
+        drawEdge,
+        bestEdge: {
+          outcome: bestEdge.outcome,
+          percent: Math.round(bestEdge.percent * 10) / 10,
+          label: valueEdgeLabel || `${bestEdge.outcome.charAt(0).toUpperCase() + bestEdge.outcome.slice(1)} +${bestEdge.percent.toFixed(1)}%`,
+        },
+        
+        hasSteamMove: steam.hasSteam,
+        hasValueEdge,
+        alertLevel,
+        alertNote: steam.note || (hasValueEdge ? `Model sees ${bestEdge.percent.toFixed(1)}% edge on ${bestEdge.outcome}` : undefined),
+      };
+      
+      allAlerts.push(alert);
+      
+      // Collect data for batch upsert
+      upsertData.push({
+        matchRef,
+        sport: sport.key,
+        league: sport.title,
+        homeTeam: event.home_team,
+        awayTeam: event.away_team,
+        matchDate: new Date(event.commence_time),
+        homeOdds: consensus.home,
+        awayOdds: consensus.away,
+        drawOdds: consensus.draw,
+        prevHomeOdds: prevSnapshot?.homeOdds,
+        prevAwayOdds: prevSnapshot?.awayOdds,
+        prevDrawOdds: prevSnapshot?.drawOdds ?? undefined,
+        homeChange,
+        awayChange,
+        drawChange,
+        modelHomeProb,
+        modelAwayProb,
+        modelDrawProb,
+        homeEdge,
+        awayEdge,
+        drawEdge,
+        hasSteamMove: steam.hasSteam,
+        hasValueEdge,
+        alertLevel,
+        alertNote: valueEdgeLabel || alert.alertNote,
+      });
+    }
+    
+    console.log(`[Market Alerts] Processing complete in ${Date.now() - startTime}ms`);
+    
+    // ============================================
+    // STEP 6: BATCH UPSERT SNAPSHOTS (background, don't await)
+    // ============================================
+    // Fire and forget - we don't need to wait for DB writes to return response
+    (async () => {
+      try {
+        // Use transaction for batch upserts
+        await prisma.$transaction(
+          upsertData.map(data => 
+            prisma.oddsSnapshot.upsert({
+              where: {
+                matchRef_sport_bookmaker: {
+                  matchRef: data.matchRef,
+                  sport: data.sport,
+                  bookmaker: 'consensus',
+                },
+              },
+              create: {
+                matchRef: data.matchRef,
+                sport: data.sport,
+                league: data.league,
+                homeTeam: data.homeTeam,
+                awayTeam: data.awayTeam,
+                matchDate: data.matchDate,
+                homeOdds: data.homeOdds,
+                awayOdds: data.awayOdds,
+                drawOdds: data.drawOdds,
+                modelHomeProb: data.modelHomeProb,
+                modelAwayProb: data.modelAwayProb,
+                modelDrawProb: data.modelDrawProb,
+                homeEdge: data.homeEdge,
+                awayEdge: data.awayEdge,
+                drawEdge: data.drawEdge,
+                hasSteamMove: data.hasSteamMove,
+                hasValueEdge: data.hasValueEdge,
+                alertLevel: data.alertLevel,
+                alertNote: data.alertNote,
+                bookmaker: 'consensus',
+              },
+              update: {
+                prevHomeOdds: data.prevHomeOdds,
+                prevAwayOdds: data.prevAwayOdds,
+                prevDrawOdds: data.prevDrawOdds,
+                homeOdds: data.homeOdds,
+                awayOdds: data.awayOdds,
+                drawOdds: data.drawOdds,
+                homeChange: data.homeChange,
+                awayChange: data.awayChange,
+                drawChange: data.drawChange,
+                modelHomeProb: data.modelHomeProb,
+                modelAwayProb: data.modelAwayProb,
+                modelDrawProb: data.modelDrawProb,
+                homeEdge: data.homeEdge,
+                awayEdge: data.awayEdge,
+                drawEdge: data.drawEdge,
+                hasValueEdge: data.hasValueEdge,
+                alertLevel: data.alertLevel,
+                alertNote: data.alertNote,
+                hasSteamMove: data.hasSteamMove,
+                updatedAt: new Date(),
+              },
+            })
+          )
+        );
+        console.log(`[Market Alerts] Batch upsert complete: ${upsertData.length} snapshots`);
+      } catch (err) {
+        console.error('[Market Alerts] Batch upsert error:', err);
+      }
+    })();
     
     // Sort ALL alerts by edge (highest to lowest)
     const allEdgesSorted = [...allAlerts]
@@ -682,6 +835,9 @@ export async function GET(request: NextRequest) {
       })
       .sort((a, b) => b.steamScore - a.steamScore);
     
+    const totalTime = Date.now() - startTime;
+    console.log(`[Market Alerts] Response ready in ${totalTime}ms`);
+    
     return NextResponse.json({
       success: true,
       data: {
@@ -693,6 +849,7 @@ export async function GET(request: NextRequest) {
           lastFetch: new Date().toISOString(),
           matchesScanned: totalMatches,
           alertsGenerated: allAlerts.filter(a => a.alertLevel !== null).length,
+          responseTimeMs: totalTime,
         },
       },
       isPremium: true,
