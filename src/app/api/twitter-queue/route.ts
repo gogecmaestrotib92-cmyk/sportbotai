@@ -71,10 +71,30 @@ function formatForTwitter(post: {
     }
   }
   
-  // Truncate if needed (leave room for hashtags)
+  // Truncate if needed (leave room for hashtags) - but at sentence/word boundary
   const maxContentLength = 280 - hashtag.length - 2; // 2 for \n\n
   if (tweet.length > maxContentLength) {
-    tweet = tweet.substring(0, maxContentLength - 3) + '...';
+    // Try to cut at sentence end first (. ! ?)
+    let cutPoint = tweet.lastIndexOf('. ', maxContentLength - 1);
+    if (cutPoint === -1) cutPoint = tweet.lastIndexOf('! ', maxContentLength - 1);
+    if (cutPoint === -1) cutPoint = tweet.lastIndexOf('? ', maxContentLength - 1);
+    
+    // If no sentence break, try to cut at word boundary
+    if (cutPoint === -1 || cutPoint < maxContentLength / 2) {
+      cutPoint = tweet.lastIndexOf(' ', maxContentLength - 1);
+    }
+    
+    // If still no good break, just cut at limit
+    if (cutPoint === -1 || cutPoint < maxContentLength / 2) {
+      cutPoint = maxContentLength - 1;
+    }
+    
+    tweet = tweet.substring(0, cutPoint + 1).trim();
+    
+    // Only add period if we didn't end on sentence punctuation
+    if (!/[.!?]$/.test(tweet)) {
+      tweet = tweet + '.';
+    }
   }
   
   return `${tweet}\n\n${hashtag}`;
