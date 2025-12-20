@@ -15,7 +15,7 @@ import Features from '@/components/Features';
 import PricingTeaser from '@/components/PricingTeaser';
 import ResponsibleGamblingBlock from '@/components/ResponsibleGamblingBlock';
 import { StatsStrip, TestimonialsSection, TrustBadges } from '@/components/SocialProof';
-import { getOrganizationSchema, getWebsiteSchema, getMatchAnalyzerSchema, getAIDeskSchema, getFAQSchema } from '@/lib/seo';
+import { getOrganizationSchema, getWebsiteSchema, getMatchAnalyzerSchema, getAIDeskSchema, getHomepageFAQSchema } from '@/lib/seo';
 
 export default function HomePage() {
   // Structured data for rich search results
@@ -23,7 +23,7 @@ export default function HomePage() {
   const websiteSchema = getWebsiteSchema();
   const analyzerSchema = getMatchAnalyzerSchema();
   const aiDeskSchema = getAIDeskSchema();
-  const faqSchema = getFAQSchema();
+  const faqSchema = getHomepageFAQSchema();
   
   return (
     <>

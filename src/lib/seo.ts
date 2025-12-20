@@ -429,10 +429,10 @@ export function getPricingSchema() {
 }
 
 // ==============================================
-// FAQ SCHEMA (Optimized for AI Search / ChatGPT)
+// HOMEPAGE FAQ SCHEMA (Optimized for AI Search / ChatGPT)
 // ==============================================
 
-export function getFAQSchema() {
+export function getHomepageFAQSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
