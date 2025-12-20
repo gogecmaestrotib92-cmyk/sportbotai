@@ -142,6 +142,7 @@ export async function getEnrichedMatchDataV2(
           opponent,
           score: `${teamScore || 0}-${oppScore || 0}`,
           date: toISOString(game.date),
+          home: isHome,
         };
       }) || null,
       
@@ -162,6 +163,7 @@ export async function getEnrichedMatchDataV2(
           opponent,
           score: `${teamScore || 0}-${oppScore || 0}`,
           date: toISOString(game.date),
+          home: isHome,
         };
       }) || null,
       

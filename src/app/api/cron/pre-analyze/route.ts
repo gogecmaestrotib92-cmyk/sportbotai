@@ -238,6 +238,95 @@ async function getInjuryInfo(
 // ============================================
 
 /**
+ * Calculate home/away split statistics from form data
+ * Returns formatted string showing performance at home vs away
+ */
+function getHomeAwaySplits(
+  homeTeam: string,
+  awayTeam: string,
+  homeForm: any[] | null,
+  awayForm: any[] | null
+): string | null {
+  if (!homeForm?.length || !awayForm?.length) return null;
+  
+  // Calculate home team's home record
+  const homeAtHome = homeForm.filter((m: any) => m.home === true);
+  const homeAtHomeWins = homeAtHome.filter((m: any) => m.result === 'W').length;
+  const homeAtHomePct = homeAtHome.length > 0 ? Math.round((homeAtHomeWins / homeAtHome.length) * 100) : null;
+  
+  // Calculate away team's away record  
+  const awayOnRoad = awayForm.filter((m: any) => m.home === false);
+  const awayOnRoadWins = awayOnRoad.filter((m: any) => m.result === 'W').length;
+  const awayOnRoadPct = awayOnRoad.length > 0 ? Math.round((awayOnRoadWins / awayOnRoad.length) * 100) : null;
+  
+  const parts: string[] = [];
+  
+  if (homeAtHomePct !== null && homeAtHome.length >= 2) {
+    parts.push(`${homeTeam} home: ${homeAtHomeWins}/${homeAtHome.length} (${homeAtHomePct}%)`);
+  }
+  
+  if (awayOnRoadPct !== null && awayOnRoad.length >= 2) {
+    parts.push(`${awayTeam} away: ${awayOnRoadWins}/${awayOnRoad.length} (${awayOnRoadPct}%)`);
+  }
+  
+  return parts.length > 0 ? parts.join(' | ') : null;
+}
+
+/**
+ * Format H2H (head-to-head) context for AI prompt
+ */
+function getH2HContext(
+  homeTeam: string,
+  awayTeam: string,
+  h2hSummary: { totalMatches: number; homeWins: number; awayWins: number; draws: number } | null
+): string | null {
+  if (!h2hSummary || h2hSummary.totalMatches === 0) return null;
+  
+  const { totalMatches, homeWins, awayWins, draws } = h2hSummary;
+  
+  // Short format: "H2H (last 5): Arsenal 3-1-1 Chelsea"
+  const parts = [`H2H (last ${totalMatches}):`];
+  parts.push(`${homeTeam} ${homeWins}-${draws}-${awayWins} ${awayTeam}`);
+  
+  // Add narrative if one side dominates
+  if (homeWins >= 3 && awayWins <= 1) {
+    parts.push(`(${homeTeam} dominates)`);
+  } else if (awayWins >= 3 && homeWins <= 1) {
+    parts.push(`(${awayTeam} dominates)`);
+  }
+  
+  return parts.join(' ');
+}
+
+/**
+ * Fetch referee stats for soccer matches
+ */
+async function getRefereeContext(
+  homeTeam: string,
+  awayTeam: string,
+  sport: string,
+  league: string
+): Promise<string | null> {
+  try {
+    // Only soccer has referee data
+    if (!sport.startsWith('soccer_')) {
+      return null;
+    }
+    
+    const fixtureInfo = await getMatchFixtureInfo(homeTeam, awayTeam, league);
+    
+    if (!fixtureInfo?.referee) {
+      return null;
+    }
+    
+    return `Referee: ${fixtureInfo.referee}`;
+  } catch (error) {
+    console.warn(`[Pre-Analyze] Failed to fetch referee for ${homeTeam} vs ${awayTeam}:`, error);
+    return null;
+  }
+}
+
+/**
  * Get consensus odds from bookmakers
  */
 function getConsensusOdds(event: OddsApiEvent): { home: number; away: number; draw?: number } | null {
@@ -398,12 +487,13 @@ async function runQuickAnalysis(
     // Determine if soccer or other sport
     const isNonSoccer = !sport.startsWith('soccer_');
     
-    // Get enriched match data and injuries in parallel
-    const [enrichedDataRaw, injuryInfo] = await Promise.all([
+    // Get enriched match data, injuries, and referee in parallel
+    const [enrichedDataRaw, injuryInfo, refereeContext] = await Promise.all([
       isNonSoccer 
         ? getEnrichedMatchDataV2(homeTeam, awayTeam, sport, league)
         : getEnrichedMatchData(homeTeam, awayTeam, league),
       getInjuryInfo(homeTeam, awayTeam, sport, league),
+      getRefereeContext(homeTeam, awayTeam, sport, league),
     ]);
     
     // Cast to any for cross-sport compatibility (different data shapes)
@@ -473,13 +563,28 @@ async function runQuickAnalysis(
       awayTeam
     );
     
+    // Build home/away split context
+    const splitsContext = getHomeAwaySplits(
+      homeTeam,
+      awayTeam,
+      enrichedData.homeForm,
+      enrichedData.awayForm
+    );
+    
+    // Build H2H context
+    const h2hContext = getH2HContext(
+      homeTeam,
+      awayTeam,
+      enrichedData.h2hSummary || enrichedData.h2h
+    );
+    
     // Build AIXBT-style prompt - sharp, opinionated, data-backed
     const prompt = `${homeTeam} vs ${awayTeam} | ${league}
 
 MARKET: ${odds.home} / ${odds.away}${odds.draw ? ` / ${odds.draw}` : ''}
-FORM: ${homeTeam} ${homeFormStr} | ${awayTeam} ${awayFormStr}
+FORM: ${homeTeam} ${homeFormStr} | ${awayTeam} ${awayFormStr}${splitsContext ? `\nSPLITS: ${splitsContext}` : ''}${h2hContext ? `\n${h2hContext}` : ''}
 SIGNALS: ${signalsSummary}
-${injuryContext}${restContext ? `\nREST FACTOR: ${restContext}` : ''}
+${injuryContext}${restContext ? `\nREST FACTOR: ${restContext}` : ''}${refereeContext ? `\n${refereeContext}` : ''}
 ${leagueHint ? `\n${leagueHint}\n` : ''}
 Be AIXBT. Sharp takes. Back them with numbers FROM THE DATA ABOVE ONLY.
 
