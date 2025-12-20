@@ -17,6 +17,7 @@ import { ToastProvider } from '@/components/ui';
 import { KeyboardShortcutsProvider } from '@/components/CommandPalette';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import UTMTracker from '@/components/UTMTracker';
+import ReferralSync from '@/components/ReferralSync';
 import { SITE_CONFIG, META, OG_DEFAULTS, getOrganizationSchema, getWebsiteSchema } from '@/lib/seo';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import CookieConsent from '@/components/CookieConsent';
@@ -198,6 +199,9 @@ export default function RootLayout({
                 <Suspense fallback={null}>
                   <UTMTracker />
                 </Suspense>
+                
+                {/* Sync referral source for OAuth users */}
+                <ReferralSync />
                 
                 {/* PWA Install Prompt */}
                 <PWAInstallPrompt />
