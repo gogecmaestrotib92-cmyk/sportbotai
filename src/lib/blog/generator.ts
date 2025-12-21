@@ -182,9 +182,27 @@ export async function generateBlogPost(config: BlogGenerationConfig): Promise<Bl
   }
 }
 
-// Get next keyword to generate (round-robin from active keywords)
+// Get next keyword to generate (prioritize PENDING, then round-robin ACTIVE)
 export async function getNextKeyword(): Promise<string | null> {
-  // First, try to get a keyword that hasn't been used recently
+  // FIRST: Try to get a PENDING keyword (never used - from bulk import)
+  const pendingKeyword = await prisma.blogKeyword.findFirst({
+    where: {
+      status: 'PENDING',
+    },
+    orderBy: { createdAt: 'asc' }, // Oldest first (FIFO)
+  });
+
+  if (pendingKeyword) {
+    // Activate it so it enters the rotation
+    await prisma.blogKeyword.update({
+      where: { id: pendingKeyword.id },
+      data: { status: 'ACTIVE' },
+    });
+    console.log(`[Blog Generator] Using PENDING keyword: "${pendingKeyword.keyword}"`);
+    return pendingKeyword.keyword;
+  }
+
+  // SECOND: Try to get an ACTIVE keyword that hasn't been used recently
   const keyword = await prisma.blogKeyword.findFirst({
     where: {
       status: 'ACTIVE',
@@ -207,7 +225,7 @@ export async function getNextKeyword(): Promise<string | null> {
     return keyword.keyword;
   }
 
-  // If all keywords are recent, pick the oldest one
+  // THIRD: If all keywords are recent, pick the oldest one
   const oldestKeyword = await prisma.blogKeyword.findFirst({
     where: { status: 'ACTIVE' },
     orderBy: { lastGeneratedAt: 'asc' },
