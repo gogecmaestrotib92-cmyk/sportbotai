@@ -15,6 +15,7 @@ import {
   SIGNATURE_CATCHPHRASES,
   type ConvictionLevel,
   CONVICTION_LEVELS,
+  type NarrativeAngle,
 } from '@/lib/sportbot-brain';
 
 // ============================================
@@ -425,6 +426,127 @@ export function sanitizeAgentPost(post: string): { safe: boolean; post: string; 
 }
 
 // ============================================
+// COMPUTED ANALYSIS PROMPT BUILDER
+// ============================================
+
+export interface ComputedAnalysis {
+  probabilities: {
+    home: number;
+    away: number;
+    draw?: number;
+  };
+  favored: 'home' | 'away' | 'draw' | 'even';
+  confidence: 'high' | 'medium' | 'low';
+  dataQuality: 'HIGH' | 'MEDIUM' | 'LOW' | 'INSUFFICIENT';
+  volatility: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
+  narrativeAngle: NarrativeAngle;
+  catchphrase: string;
+  motif: string;
+}
+
+/**
+ * Build agent post prompt with computed analysis from accuracy-core
+ * This ensures LLM gets READ-ONLY computed values and proper narrative angle
+ */
+export function buildAgentPostPromptWithAnalysis(
+  category: PostCategory,
+  matchContext: string,
+  analysis: ComputedAnalysis,
+  homeTeam: string,
+  awayTeam: string,
+  additionalContext?: string
+): string {
+  const config = POST_CATEGORIES[category];
+  
+  // Map confidence to conviction level
+  const conviction: ConvictionLevel = 
+    analysis.confidence === 'high' ? 4 :
+    analysis.confidence === 'low' ? 2 : 3;
+  
+  const convictionInfo = CONVICTION_LEVELS[conviction];
+  
+  // Get angle-specific guidance
+  const angleGuidance = getAngleGuidanceForPost(analysis.narrativeAngle);
+  
+  return `${POST_PERSONALITY}
+
+TASK: Generate a SportBot Agent post for category: ${config.name}
+
+=== COMPUTED ANALYSIS (READ-ONLY) ===
+These values are FINAL. Do NOT contradict them.
+
+${analysis.favored === 'home' ? `VERDICT: ${homeTeam} is favored` :
+  analysis.favored === 'away' ? `VERDICT: ${awayTeam} is favored` :
+  analysis.favored === 'draw' ? `VERDICT: Draw is most likely` :
+  `VERDICT: Match is evenly balanced`}
+
+MARKET PROBABILITIES (vig removed):
+- ${homeTeam}: ${(analysis.probabilities.home * 100).toFixed(1)}%
+- ${awayTeam}: ${(analysis.probabilities.away * 100).toFixed(1)}%
+${analysis.probabilities.draw !== undefined ? `- Draw: ${(analysis.probabilities.draw * 100).toFixed(1)}%` : ''}
+
+DATA QUALITY: ${analysis.dataQuality}
+VOLATILITY: ${analysis.volatility}
+CONFIDENCE: ${analysis.confidence.toUpperCase()}
+
+=== NARRATIVE ANGLE: ${analysis.narrativeAngle} ===
+${angleGuidance}
+
+TONE HOOK (use naturally): "${analysis.catchphrase}"
+STYLE MOTIF: "${analysis.motif}"
+
+CONVICTION: ${convictionInfo.display} (${convictionInfo.descriptor})
+
+CATEGORY GUIDELINES:
+${config.promptTemplate}
+
+EXAMPLE POSTS FOR THIS CATEGORY:
+${config.examplePosts.map(p => `- "${p}"`).join('\n')}
+
+MATCH CONTEXT:
+${matchContext}
+
+${additionalContext ? `ADDITIONAL CONTEXT:\n${additionalContext}` : ''}
+
+RULES:
+1. Keep it to 1-3 sentences MAX
+2. Lead with the insight
+3. Use the computed analysis - never contradict it
+4. Inject the TONE HOOK naturally
+5. NO betting advice, recommendations, or implied actions
+6. Pure observation and analysis
+7. No emojis. No markdown formatting.
+8. Be quotable and sharp
+
+Return ONLY the post text. No quotes, no formatting, no explanation.
+If there's nothing interesting to post, return exactly: NO_POST`;
+}
+
+/**
+ * Get angle-specific guidance for posts
+ */
+function getAngleGuidanceForPost(angle: NarrativeAngle): string {
+  switch (angle) {
+    case 'CHAOS':
+      return `HIGH CHAOS - Acknowledge uncertainty. "This match refuses to be simple."
+Don't force a verdict. The noise IS the signal.`;
+    case 'TRAP_SPOT':
+      return `TRAP SPOT - Popular narrative may be wrong.
+Challenge the market with evidence. "The setup looks clean. Too clean."`;
+    case 'BLOWOUT_POTENTIAL':
+      return `BLOWOUT POTENTIAL - Large gap between teams.
+Be confident. "When the data is this loud, you listen."`;
+    case 'CONTROL':
+      return `CONTROL - Clear favorite, stable setup.
+Be direct. "This isn't complicated."`;
+    case 'MIRROR_MATCH':
+    default:
+      return `MIRROR MATCH - Evenly balanced contest.
+Acknowledge the balance. "On paper: close. In reality: could go either way."`;
+  }
+}
+
+// ============================================
 // EXPORTS
 // ============================================
 
@@ -434,6 +556,7 @@ export default {
   POST_CATEGORIES,
   TRIGGER_CONDITIONS,
   buildAgentPostPrompt,
+  buildAgentPostPromptWithAnalysis,
   buildThreadPrompt,
   sanitizeAgentPost,
   ensureCompleteSentence,

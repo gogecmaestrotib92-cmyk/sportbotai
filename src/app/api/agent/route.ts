@@ -13,9 +13,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { 
   POST_CATEGORIES, 
-  buildAgentPostPrompt, 
+  buildAgentPostPromptWithAnalysis, 
   sanitizeAgentPost,
-  type PostCategory 
+  type PostCategory,
+  type ComputedAnalysis,
 } from '@/lib/config/sportBotAgent';
 import { 
   getPerplexityClient, 
@@ -23,6 +24,7 @@ import {
   type SearchCategory,
   type ResearchResult 
 } from '@/lib/perplexity';
+import { runQuickAnalysis, type MinimalMatchData } from '@/lib/accuracy-core/live-intel-adapter';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -97,7 +99,26 @@ export async function POST(request: NextRequest) {
     }
 
     // ============================================
-    // STEP 1: Real-time research via Perplexity
+    // STEP 1: Run accuracy-core quick analysis
+    // ============================================
+    const analysisInput: MinimalMatchData = {
+      homeTeam: matchContext.homeTeam,
+      awayTeam: matchContext.awayTeam,
+      league: matchContext.league,
+      sport: matchContext.sport,
+      kickoff: matchContext.kickoff,
+      odds: matchContext.odds ? {
+        home: matchContext.odds.home || 2.0,
+        away: matchContext.odds.away || 2.0,
+        draw: matchContext.odds.draw,
+      } : undefined,
+    };
+    
+    const quickAnalysis = runQuickAnalysis(analysisInput);
+    console.log(`[SportBot Agent] Analysis: ${quickAnalysis.narrativeAngle}, favored: ${quickAnalysis.favored}`);
+    
+    // ============================================
+    // STEP 2: Real-time research via Perplexity
     // ============================================
     let realTimeContext = '';
     let citations: string[] = [];
@@ -130,38 +151,49 @@ export async function POST(request: NextRequest) {
     }
 
     // ============================================
-    // STEP 2: Build context with real-time data
+    // STEP 3: Build computed analysis for Data-3 layer
     // ============================================
+    const computedAnalysis: ComputedAnalysis = {
+      probabilities: quickAnalysis.probabilities,
+      favored: quickAnalysis.favored,
+      confidence: quickAnalysis.confidence,
+      dataQuality: quickAnalysis.dataQuality,
+      volatility: quickAnalysis.volatility,
+      narrativeAngle: quickAnalysis.narrativeAngle,
+      catchphrase: quickAnalysis.catchphrase,
+      motif: quickAnalysis.motif,
+    };
+    
+    // Build context with real-time data
     const contextString = `
 Match: ${matchContext.homeTeam} vs ${matchContext.awayTeam}
 League: ${matchContext.league}
 Sport: ${matchContext.sport}
 ${matchContext.kickoff ? `Kickoff: ${matchContext.kickoff}` : ''}
-${matchContext.odds ? `Odds: Home ${matchContext.odds.home} | Draw ${matchContext.odds.draw} | Away ${matchContext.odds.away}` : ''}
 ${trigger ? `Trigger: ${trigger}` : ''}
 ${realTimeContext}
     `.trim();
 
-    // Calculate conviction level based on data quality
-    const convictionLevel = usedRealTimeData ? 4 : 3; // Higher conviction with real data
-
-    // Build prompt with conviction scoring
-    const prompt = buildAgentPostPrompt(category, contextString, additionalContext, {
-      conviction: convictionLevel as 1 | 2 | 3 | 4 | 5,
-      includeOpener: category === 'AI_INSIGHT' || category === 'VOLATILITY_ALERT',
-      forceContrarian: category === 'FORM_ANALYSIS' && Math.random() > 0.7, // 30% chance contrarian
-    });
+    // Build prompt with accuracy-core computed analysis
+    const prompt = buildAgentPostPromptWithAnalysis(
+      category,
+      contextString,
+      computedAnalysis,
+      matchContext.homeTeam,
+      matchContext.awayTeam,
+      additionalContext
+    );
 
     // ============================================
-    // STEP 3: Generate post via OpenAI
+    // STEP 4: Generate post via OpenAI (Data-3 layer)
     // ============================================
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         { role: 'user', content: prompt }
       ],
-      max_tokens: 180, // Slightly more for real-time data posts
-      temperature: 0.8, // Slightly creative for personality
+      max_tokens: 180,
+      temperature: 0.7, // Slightly creative for AIXBT personality
     });
 
     const generatedContent = completion.choices[0]?.message?.content?.trim() || '';
@@ -177,7 +209,7 @@ ${realTimeContext}
       );
     }
 
-    // Build response
+    // Build response with pipeline-derived confidence
     const categoryConfig = POST_CATEGORIES[category];
     const post: AgentPost = {
       id: `post_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -189,9 +221,9 @@ ${realTimeContext}
       sport: matchContext.sport,
       league: matchContext.league,
       timestamp: new Date().toISOString(),
-      confidence: determineConfidence(category, additionalContext, usedRealTimeData),
+      confidence: mapPipelineConfidence(quickAnalysis.confidence, usedRealTimeData),
       realTimeData: usedRealTimeData,
-      citations: citations.length > 0 ? citations.slice(0, 3) : undefined, // Max 3 citations
+      citations: citations.length > 0 ? citations.slice(0, 3) : undefined,
     };
 
     return NextResponse.json({ success: true, post });
@@ -347,6 +379,25 @@ async function handleResearchRequest(searchParams: URLSearchParams) {
 // HELPERS
 // ============================================
 
+/**
+ * Map pipeline confidence to API confidence level
+ * Uses accuracy-core derived confidence with real-time data boost
+ */
+function mapPipelineConfidence(
+  pipelineConfidence: 'high' | 'medium' | 'low',
+  hasRealTimeData: boolean
+): 'LOW' | 'MEDIUM' | 'HIGH' {
+  // Real-time data can boost confidence by one level
+  if (hasRealTimeData) {
+    if (pipelineConfidence === 'low') return 'MEDIUM';
+    return 'HIGH'; // medium or high with real data → HIGH
+  }
+  
+  // Map pipeline confidence directly
+  return pipelineConfidence.toUpperCase() as 'LOW' | 'MEDIUM' | 'HIGH';
+}
+
+// Legacy function kept for backward compatibility
 function determineConfidence(category: PostCategory, context?: string, hasRealTimeData?: boolean): 'LOW' | 'MEDIUM' | 'HIGH' {
   // Real-time data boosts confidence
   if (hasRealTimeData) {

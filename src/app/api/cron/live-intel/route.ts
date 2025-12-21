@@ -3,14 +3,26 @@
  * 
  * Automatically generates SportBot Agent posts for the Live Intel Feed.
  * Runs every 30 minutes to keep the feed fresh with new content.
+ * 
+ * LAYER COMPLIANCE:
+ * - Uses accuracy-core pipeline for computed probabilities
+ * - LLM receives READ-ONLY values with narrative angle
+ * - AIXBT personality injected via sportbot-brain
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { prisma } from '@/lib/prisma';
-import { POST_CATEGORIES, buildAgentPostPrompt, sanitizeAgentPost, type PostCategory } from '@/lib/config/sportBotAgent';
+import { 
+  POST_CATEGORIES, 
+  buildAgentPostPromptWithAnalysis, 
+  sanitizeAgentPost, 
+  type PostCategory,
+  type ComputedAnalysis,
+} from '@/lib/config/sportBotAgent';
 import { quickMatchResearch } from '@/lib/perplexity';
 import { getTwitterClient, formatForTwitter } from '@/lib/twitter-client';
+import { runQuickAnalysis, type MinimalMatchData } from '@/lib/accuracy-core/live-intel-adapter';
 
 export const maxDuration = 60;
 
@@ -36,6 +48,12 @@ interface UpcomingMatch {
   league: string;
   sport: string;
   kickoff: string;
+  // Odds for accuracy-core pipeline
+  odds?: {
+    home: number;
+    away: number;
+    draw?: number;
+  };
 }
 
 // Sports to fetch matches from
@@ -170,7 +188,21 @@ async function generatePost(match: UpcomingMatch, category: PostCategory): Promi
   citations: string[];
 } | null> {
   try {
-    // Get real-time research
+    // Step 1: Run accuracy-core quick analysis
+    // This gives us calibrated probabilities and narrative angle
+    const analysisInput: MinimalMatchData = {
+      homeTeam: match.homeTeam,
+      awayTeam: match.awayTeam,
+      league: match.league,
+      sport: match.sport,
+      kickoff: match.kickoff,
+      odds: match.odds, // Will use defaults if not provided
+    };
+    
+    const quickAnalysis = runQuickAnalysis(analysisInput);
+    console.log(`[Live-Intel-Cron] Quick analysis: ${quickAnalysis.narrativeAngle}, favored: ${quickAnalysis.favored}`);
+    
+    // Step 2: Get real-time research from Perplexity
     let researchContext = '';
     let citations: string[] = [];
     let realTimeData = false;
@@ -191,18 +223,35 @@ async function generatePost(match: UpcomingMatch, category: PostCategory): Promi
       console.log('[Live-Intel-Cron] Research unavailable, continuing without');
     }
     
-    // Build match context string
+    // Step 3: Build computed analysis for prompt
+    const computedAnalysis: ComputedAnalysis = {
+      probabilities: quickAnalysis.probabilities,
+      favored: quickAnalysis.favored,
+      confidence: quickAnalysis.confidence,
+      dataQuality: quickAnalysis.dataQuality,
+      volatility: quickAnalysis.volatility,
+      narrativeAngle: quickAnalysis.narrativeAngle,
+      catchphrase: quickAnalysis.catchphrase,
+      motif: quickAnalysis.motif,
+    };
+    
+    // Step 4: Build prompt with computed analysis (Data-3 layer)
     const matchContext = `${match.homeTeam} vs ${match.awayTeam} | ${match.league} | ${match.sport}`;
+    const prompt = buildAgentPostPromptWithAnalysis(
+      category,
+      matchContext,
+      computedAnalysis,
+      match.homeTeam,
+      match.awayTeam,
+      researchContext
+    );
     
-    // Build prompt with correct function signature
-    const prompt = buildAgentPostPrompt(category, matchContext, researchContext);
-    
-    // Generate with OpenAI
+    // Step 5: Generate with OpenAI (LLM only interprets, never computes)
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 400,
-      temperature: 0.8,
+      temperature: 0.7, // Slightly higher for personality
     });
     
     const rawContent = completion.choices[0]?.message?.content?.trim();
@@ -217,12 +266,16 @@ async function generatePost(match: UpcomingMatch, category: PostCategory): Promi
     const sanitized = sanitizeAgentPost(rawContent);
     const content = sanitized.safe ? sanitized.post : rawContent;
     
-    // Determine confidence based on data availability (1-10 scale)
-    let confidence = 6; // Default medium
-    if (realTimeData && citations.length >= 2) {
-      confidence = 8; // High confidence with multiple sources
-    } else if (!realTimeData) {
-      confidence = 4; // Lower without real-time data
+    // Step 6: Map pipeline confidence to 1-10 scale
+    let confidence = 5; // Default
+    if (quickAnalysis.confidence === 'high' && realTimeData) {
+      confidence = 8;
+    } else if (quickAnalysis.confidence === 'high') {
+      confidence = 7;
+    } else if (quickAnalysis.confidence === 'medium' && realTimeData) {
+      confidence = 6;
+    } else if (quickAnalysis.confidence === 'low') {
+      confidence = 4;
     }
     
     return { content, confidence, realTimeData, citations };
