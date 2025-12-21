@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import UserManagement from './UserManagement';
 
 interface Stats {
@@ -105,9 +106,17 @@ export default function AdminDashboard({
     <div className="min-h-screen bg-bg-primary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-text-primary">Admin Dashboard</h1>
-          <p className="text-text-secondary mt-1">SportBot AI analytics and management</p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-text-primary">Admin Dashboard</h1>
+            <p className="text-text-secondary mt-1">SportBot AI analytics and management</p>
+          </div>
+          <Link 
+            href="/admin/blog"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/80 rounded-lg text-white font-medium transition-colors"
+          >
+            📝 Blog Admin
+          </Link>
         </div>
 
         {/* Main Stats Grid */}

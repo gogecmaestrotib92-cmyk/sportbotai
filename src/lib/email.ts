@@ -404,3 +404,52 @@ export async function sendRegistrationWelcomeEmail(
     html,
   });
 }
+
+// ============================================
+// ADMIN NOTIFICATION EMAILS
+// ============================================
+
+// Admin emails to notify on purchases
+const ADMIN_NOTIFICATION_EMAILS = [
+  'stefanmitrovic93@gmail.com',
+  'gogecmaestrotib92@gmail.com',
+];
+
+/**
+ * Notify admins when a new purchase is made
+ */
+export async function sendAdminPurchaseNotification(
+  customerEmail: string,
+  planName: string,
+  amount?: string
+): Promise<boolean> {
+  const html = emailWrapper(`
+    <h2 style="color: #10B981;">🎉 New Purchase!</h2>
+    
+    <div style="background: #1e293b; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <p style="margin: 0;"><strong>Customer:</strong> ${customerEmail}</p>
+      <p style="margin: 10px 0 0 0;"><strong>Plan:</strong> ${planName}</p>
+      ${amount ? `<p style="margin: 10px 0 0 0;"><strong>Amount:</strong> ${amount}</p>` : ''}
+      <p style="margin: 10px 0 0 0;"><strong>Time:</strong> ${new Date().toLocaleString('en-US', { timeZone: 'Europe/Belgrade' })}</p>
+    </div>
+    
+    <div style="text-align: center;">
+      <a href="https://${SITE_CONFIG.domain}/admin" style="${buttonStyle}">
+        View Admin Dashboard →
+      </a>
+    </div>
+  `);
+
+  // Send to all admin emails
+  const results = await Promise.all(
+    ADMIN_NOTIFICATION_EMAILS.map((adminEmail) =>
+      sendEmail({
+        to: adminEmail,
+        subject: `💰 New ${planName} Subscription - ${customerEmail}`,
+        html,
+      })
+    )
+  );
+
+  return results.every((r) => r);
+}

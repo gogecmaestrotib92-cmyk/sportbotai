@@ -11,7 +11,8 @@ import {
   sendWelcomeEmail, 
   sendPaymentFailedEmail, 
   sendCancellationEmail,
-  sendRenewalEmail 
+  sendRenewalEmail,
+  sendAdminPurchaseNotification 
 } from '@/lib/email';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -123,8 +124,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     
     console.log(`[Stripe Webhook] User ${customerEmail} upgraded to ${planName}`);
     
-    // Send welcome email
+    // Send welcome email to customer
     await sendWelcomeEmail(customerEmail, planName);
+    
+    // Notify admins about the new purchase
+    const amount = session.amount_total 
+      ? `$${(session.amount_total / 100).toFixed(2)} ${session.currency?.toUpperCase() || 'USD'}`
+      : undefined;
+    await sendAdminPurchaseNotification(customerEmail, planName, amount);
   } catch (error) {
     console.error('[Stripe Webhook] Error updating user:', error);
   }

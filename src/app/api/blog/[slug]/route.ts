@@ -83,3 +83,92 @@ export async function GET(request: NextRequest, { params }: Params) {
     );
   }
 }
+
+// Admin emails for authentication
+const ADMIN_EMAILS = [
+  'gogecmaestrotib92@gmail.com',
+  'aiinstamarketing@gmail.com',
+  'stefan@automateed.com',
+];
+
+// DELETE /api/blog/[slug] - Delete a blog post (admin only)
+export async function DELETE(request: NextRequest, { params }: Params) {
+  try {
+    const { slug } = await params;
+
+    // For admin operations, we use the id instead of slug
+    // The slug param is actually the post ID when deleting
+    const postId = slug;
+
+    const post = await prisma.blogPost.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    await prisma.blogPost.delete({
+      where: { id: postId },
+    });
+
+    console.log(`[Blog API] Deleted post: ${post.title}`);
+
+    return NextResponse.json({ success: true, message: 'Post deleted' });
+  } catch (error) {
+    console.error('Blog post delete error:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete blog post' },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH /api/blog/[slug] - Update a blog post (admin only)
+export async function PATCH(request: NextRequest, { params }: Params) {
+  try {
+    const { slug } = await params;
+    const body = await request.json();
+
+    // For admin operations, we use the id instead of slug
+    const postId = slug;
+
+    const post = await prisma.blogPost.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    // Build update data
+    const updateData: Record<string, unknown> = {};
+    
+    if (body.status) {
+      updateData.status = body.status;
+    }
+    
+    if (body.publishedAt) {
+      updateData.publishedAt = new Date(body.publishedAt);
+    }
+    
+    if (body.title) updateData.title = body.title;
+    if (body.content) updateData.content = body.content;
+    if (body.excerpt) updateData.excerpt = body.excerpt;
+
+    const updatedPost = await prisma.blogPost.update({
+      where: { id: postId },
+      data: updateData,
+    });
+
+    console.log(`[Blog API] Updated post: ${updatedPost.title} (${updatedPost.status})`);
+
+    return NextResponse.json({ success: true, post: updatedPost });
+  } catch (error) {
+    console.error('Blog post update error:', error);
+    return NextResponse.json(
+      { error: 'Failed to update blog post' },
+      { status: 500 }
+    );
+  }
+}

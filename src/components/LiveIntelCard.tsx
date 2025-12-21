@@ -235,9 +235,17 @@ export default function LiveIntelCard() {
               <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white/[0.03] text-zinc-500 text-[8px] sm:text-[9px] font-medium rounded border border-white/[0.06]">
                 ⚡ Real-Time
               </span>
-              <span className="hidden xs:inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white/[0.03] text-zinc-500 text-[8px] sm:text-[9px] font-medium rounded border border-white/[0.06]">
-                🔄 30s
-              </span>
+              <a 
+                href="https://x.com/sportbotai" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white/[0.03] hover:bg-white/[0.06] text-zinc-500 hover:text-zinc-300 text-[8px] sm:text-[9px] font-medium rounded border border-white/[0.06] transition-colors flex items-center gap-1"
+              >
+                <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+                <span className="hidden xs:inline">Follow</span>
+              </a>
             </div>
             <span className="text-zinc-600 text-[8px] sm:text-[9px]">
               {formatTime(lastUpdate.toISOString())}
