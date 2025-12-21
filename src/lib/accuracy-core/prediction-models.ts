@@ -69,8 +69,32 @@ function factorial(n: number): number {
 }
 
 /**
+ * Regression to Mean Factor
+ * 
+ * Small sample sizes are noisy - regress extreme values toward the mean.
+ * Formula: weight = sampleSize / (sampleSize + regressionConstant)
+ * 
+ * Example with constant=5:
+ * - 5 games: weight = 5/(5+5) = 0.50 (50% toward mean)
+ * - 10 games: weight = 10/(10+5) = 0.67 (33% toward mean)
+ * - 20 games: weight = 20/(20+5) = 0.80 (20% toward mean)
+ * 
+ * This prevents overconfidence on small samples (hot/cold streaks often mean-revert).
+ */
+function regressionToMean(
+  observedValue: number,
+  meanValue: number,
+  sampleSize: number,
+  regressionConstant: number = 5
+): number {
+  const weight = sampleSize / (sampleSize + regressionConstant);
+  return weight * observedValue + (1 - weight) * meanValue;
+}
+
+/**
  * Calculate form points from form string
  * W=3, D=1, L=0 (weighted by recency)
+ * NOW WITH REGRESSION TO MEAN
  */
 function calculateFormStrength(form: string, hasDraw: boolean = true): number {
   if (!form || form.length === 0) return 0.5; // Neutral
@@ -93,11 +117,23 @@ function calculateFormStrength(form: string, hasDraw: boolean = true): number {
     }
   }
   
-  return maxPossible > 0 ? points / maxPossible : 0.5;
+  const rawFormStrength = maxPossible > 0 ? points / maxPossible : 0.5;
+  
+  // Apply regression to mean based on sample size
+  // Average form = 0.5, regress more with fewer games
+  const regressedFormStrength = regressionToMean(
+    rawFormStrength,
+    0.5, // Mean form strength
+    form.length,
+    3 // Regression constant for form (more aggressive since form is noisy)
+  );
+  
+  return regressedFormStrength;
 }
 
 /**
  * Calculate team strength ratings from stats
+ * NOW WITH REGRESSION TO MEAN for small sample sizes
  */
 function calculateTeamStrength(
   stats: ModelInput['homeStats'],
@@ -111,11 +147,16 @@ function calculateTeamStrength(
   const avgScored = stats.scored / stats.played;
   const avgConceded = stats.conceded / stats.played;
   
-  // Attack strength relative to league average
-  const attack = leagueAvgScored > 0 ? avgScored / leagueAvgScored : 1.0;
+  // Raw attack strength relative to league average
+  const rawAttack = leagueAvgScored > 0 ? avgScored / leagueAvgScored : 1.0;
   
-  // Defense strength (inverted - lower conceded = higher strength)
-  const defense = leagueAvgConceded > 0 ? leagueAvgConceded / avgConceded : 1.0;
+  // Raw defense strength (inverted - lower conceded = higher strength)
+  const rawDefense = leagueAvgConceded > 0 ? leagueAvgConceded / avgConceded : 1.0;
+  
+  // Apply regression to mean based on games played
+  // Mean attack/defense = 1.0 (league average)
+  const attack = regressionToMean(rawAttack, 1.0, stats.played, 10);
+  const defense = regressionToMean(rawDefense, 1.0, stats.played, 10);
   
   // Clamp to reasonable ranges
   const clampedAttack = Math.max(0.5, Math.min(2.0, attack));

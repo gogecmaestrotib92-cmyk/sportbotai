@@ -42,6 +42,10 @@
     {
       "path": "/api/cron/pre-analyze",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/fetch-clv",
+      "schedule": "0 * * * *"
     }
   ]
 }

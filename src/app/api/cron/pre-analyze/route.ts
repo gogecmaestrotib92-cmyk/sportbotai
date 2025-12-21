@@ -1121,11 +1121,16 @@ export async function GET(request: NextRequest) {
                   impliedProb: storedImpliedProb * 100,
                   source: 'PRE_ANALYZE',
                   outcome: 'PENDING',
+                  // CLV Tracking: Store opening odds at prediction time
+                  openingOdds: predictedOdds,
+                  clvFetched: false,
                 },
                 update: {
                   conviction,
                   odds: predictedOdds,
                   reasoning: analysis.story?.narrative || 'AI model analysis',
+                  // Update opening odds if this is a fresh prediction
+                  openingOdds: predictedOdds,
                 },
               });
               

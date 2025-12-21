@@ -89,6 +89,99 @@ export function americanToDecimal(american: number): number {
   }
 }
 
+// ============================================
+// BOOKMAKER QUALITY WEIGHTING
+// ============================================
+
+/**
+ * Bookmaker sharpness ratings (0-1 scale)
+ * 
+ * Sharp bookmakers (1.0): Professional money, efficient markets, lowest margins
+ * - Their odds are the closest to "true" probabilities
+ * - Use as primary reference for value detection
+ * 
+ * Mid-tier (0.7-0.9): Good efficiency but not as sharp
+ * - May have slight inefficiencies we can exploit
+ * 
+ * Soft books (0.5-0.7): Recreational focus, higher margins
+ * - More prone to pricing errors (both over and under)
+ * - Good for finding value but less reliable for calibration
+ * 
+ * This affects how much we trust their implied probabilities.
+ */
+export const BOOKMAKER_QUALITY: Record<string, number> = {
+  // Sharp books (professional, efficient markets) - highest trust
+  'pinnacle': 1.0,
+  'betfair_ex_eu': 0.98,  // Betfair Exchange (pure market)
+  'betfair_ex_uk': 0.98,
+  'betfair': 0.95,        // Betfair Sportsbook
+  'matchbook': 0.92,
+  
+  // Mid-sharp (low margin, professional-friendly)
+  'betonlineag': 0.85,
+  'bovada': 0.82,
+  'mybookieag': 0.80,
+  'williamhill': 0.80,
+  'williamhill_us': 0.80,
+  
+  // Mid-tier (mainstream, decent efficiency)
+  'bet365': 0.78,
+  'unibet': 0.75,
+  'unibet_eu': 0.75,
+  'unibet_uk': 0.75,
+  'draftkings': 0.75,
+  'fanduel': 0.75,
+  'betmgm': 0.72,
+  'caesars': 0.72,
+  'pointsbetus': 0.70,
+  'wynnbet': 0.70,
+  
+  // Soft books (recreational, higher margins) - value opportunities
+  'betrivers': 0.68,
+  'superbook': 0.65,
+  'twinspires': 0.65,
+  'barstool': 0.62,
+  'lowvig': 0.60,
+  'betus': 0.55,
+};
+
+/**
+ * Get quality rating for a bookmaker
+ * Default to 0.7 for unknown bookmakers (conservative)
+ */
+export function getBookmakerQuality(bookmaker: string | undefined): number {
+  if (!bookmaker) return 0.7;
+  const normalized = bookmaker.toLowerCase().replace(/[^a-z0-9_]/g, '');
+  return BOOKMAKER_QUALITY[normalized] ?? 0.7;
+}
+
+/**
+ * Adjust implied probability based on bookmaker quality
+ * 
+ * Sharp bookmakers' odds are trusted more (less adjustment).
+ * Soft bookmakers' odds are regressed toward the prior (more adjustment).
+ * 
+ * Formula: adjustedProb = (quality * impliedProb) + ((1 - quality) * prior)
+ * Where prior is a neutral 33% for 3-way or 50% for 2-way
+ */
+export function adjustForBookmakerQuality(
+  impliedProb: number,
+  bookmaker: string | undefined,
+  hasDraw: boolean = true
+): number {
+  const quality = getBookmakerQuality(bookmaker);
+  
+  // Prior probability (baseline to regress toward)
+  // For 3-way markets: 33.3%, for 2-way: 50%
+  const prior = hasDraw ? 33.3 : 50;
+  
+  // Blend implied prob with prior based on quality
+  // Quality 1.0 = 100% trust in implied, Quality 0.5 = 50% implied, 50% prior
+  const adjusted = (quality * impliedProb) + ((1 - quality) * prior);
+  
+  return Math.round(adjusted * 10) / 10;
+}
+
 /**
  * Calculate bookmaker margin from odds
  */
@@ -199,15 +292,27 @@ export function calculateModelProbability(
 
 /**
  * Detect value by comparing model probability to implied odds
+ * 
+ * Now includes bookmaker quality weighting:
+ * - Sharp bookmakers (Pinnacle, Betfair) = more trusted implied probs
+ * - Soft bookmakers = implied probs regressed toward prior
  */
 export function detectValue(
   modelProb: ModelProbability,
-  odds: OddsData
+  odds: OddsData,
+  hasDraw: boolean = true
 ): ValueEdge {
   // Calculate implied probabilities from odds
-  const impliedHome = oddsToImpliedProb(odds.homeOdds);
-  const impliedAway = oddsToImpliedProb(odds.awayOdds);
-  const impliedDraw = odds.drawOdds ? oddsToImpliedProb(odds.drawOdds) : null;
+  const rawImpliedHome = oddsToImpliedProb(odds.homeOdds);
+  const rawImpliedAway = oddsToImpliedProb(odds.awayOdds);
+  const rawImpliedDraw = odds.drawOdds ? oddsToImpliedProb(odds.drawOdds) : null;
+  
+  // Adjust for bookmaker quality (sharp books trusted more)
+  const impliedHome = adjustForBookmakerQuality(rawImpliedHome, odds.bookmaker, hasDraw);
+  const impliedAway = adjustForBookmakerQuality(rawImpliedAway, odds.bookmaker, hasDraw);
+  const impliedDraw = rawImpliedDraw 
+    ? adjustForBookmakerQuality(rawImpliedDraw, odds.bookmaker, hasDraw)
+    : null;
   
   // Calculate edge for each outcome (model - implied = positive means value)
   const homeEdge = modelProb.home - impliedHome;
@@ -270,14 +375,14 @@ export function analyzeMarket(
   // Calculate model probability
   const modelProb = calculateModelProbability(signals, hasDraw);
   
-  // Calculate implied probabilities
+  // Calculate implied probabilities (raw, before quality adjustment)
   const impliedHome = oddsToImpliedProb(odds.homeOdds);
   const impliedAway = oddsToImpliedProb(odds.awayOdds);
   const impliedDraw = odds.drawOdds ? oddsToImpliedProb(odds.drawOdds) : undefined;
   const margin = calculateMargin(odds.homeOdds, odds.awayOdds, odds.drawOdds);
   
-  // Detect value
-  const valueEdge = detectValue(modelProb, odds);
+  // Detect value (uses bookmaker quality weighting internally)
+  const valueEdge = detectValue(modelProb, odds, hasDraw);
   
   // Analyze line movement if we have previous odds
   let lineMovement: LineMovement | undefined;

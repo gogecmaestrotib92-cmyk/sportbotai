@@ -333,6 +333,12 @@ model Prediction {
   updatedAt         DateTime         @updatedAt
   actualScore       String?
   source            PredictionSource @default(PRE_ANALYZE)
+  
+  // CLV Tracking - Closing Line Value
+  openingOdds       Float?           // Odds when prediction was made
+  closingOdds       Float?           // Odds at kickoff (fetched before match)
+  clvPercentage     Float?           // (closingProb - openingProb) / openingProb * 100
+  clvFetched        Boolean          @default(false) // Whether closing odds were fetched
 
   @@index([matchId])
   @@index([outcome])
@@ -340,6 +346,7 @@ model Prediction {
   @@index([source])
   @@index([createdAt])
   @@index([conviction])
+  @@index([clvFetched])
 }
 
 model ScheduledPost {
