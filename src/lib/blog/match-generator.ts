@@ -362,16 +362,65 @@ interface MatchAnalysisData {
 // Internal API secret for blog generator (server-side only)
 const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET || 'sportbot-internal-blog-generator-2024';
 
+/**
+ * Normalize team name for matching (handles variations like "FC St. Pauli" vs "St. Pauli")
+ */
+function normalizeTeamName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/^fc\s+/i, '')
+    .replace(/\s+fc$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisData | null> {
   try {
     // First, check if we have a cached prediction from pre-analyze
-    const existingPrediction = await prisma.prediction.findFirst({
+    // Try by matchId first (exact match)
+    let existingPrediction = await prisma.prediction.findFirst({
       where: {
         matchId: match.matchId,
         outcome: 'PENDING',
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    // If not found by matchId, try by matchName (more stable)
+    if (!existingPrediction) {
+      const matchName = `${match.homeTeam} vs ${match.awayTeam}`;
+      existingPrediction = await prisma.prediction.findFirst({
+        where: {
+          matchName: matchName,
+          outcome: 'PENDING',
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      
+      // Also try with normalized team names for partial matches
+      if (!existingPrediction) {
+        const homeNorm = normalizeTeamName(match.homeTeam);
+        const awayNorm = normalizeTeamName(match.awayTeam);
+        
+        existingPrediction = await prisma.prediction.findFirst({
+          where: {
+            outcome: 'PENDING',
+            OR: [
+              { matchName: { contains: homeNorm, mode: 'insensitive' } },
+            ],
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+        
+        // Verify it's actually the right match (both teams present)
+        if (existingPrediction) {
+          const predMatchName = existingPrediction.matchName.toLowerCase();
+          if (!predMatchName.includes(homeNorm) || !predMatchName.includes(awayNorm)) {
+            existingPrediction = null; // False match, ignore
+          }
+        }
+      }
+    }
 
     if (existingPrediction) {
       console.log(`[Match Analysis] Using cached prediction for ${match.homeTeam} vs ${match.awayTeam}`);
