@@ -598,38 +598,154 @@ Recent News: ${JSON.stringify(research.recentNews)}
 Key Players: ${JSON.stringify(research.keyPlayers)}
 ${internalLinksInfo}
 
+=== CRITICAL: USE THESE HTML ELEMENTS FOR BETTER FORMATTING ===
+
+1. MATCH INFO BOX (at the start, after intro):
+<div class="match-info-box" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #334155;">
+  <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; text-align: center;">
+    <div>
+      <p style="font-size: 24px; font-weight: bold; color: #fff;">${match.homeTeam}</p>
+      <p style="color: #10b981; font-size: 14px;">HOME</p>
+    </div>
+    <div style="font-size: 28px; color: #64748b;">VS</div>
+    <div>
+      <p style="font-size: 24px; font-weight: bold; color: #fff;">${match.awayTeam}</p>
+      <p style="color: #ef4444; font-size: 14px;">AWAY</p>
+    </div>
+  </div>
+  <div style="border-top: 1px solid #334155; margin-top: 16px; padding-top: 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
+    <div><p style="color: #94a3b8; font-size: 12px;">📅 Date</p><p style="color: #fff; font-weight: 500;">${dateStr.split(',')[0]}, ${dateStr.split(',')[1]}</p></div>
+    <div><p style="color: #94a3b8; font-size: 12px;">⏰ Kick-off</p><p style="color: #fff; font-weight: 500;">${timeStr}</p></div>
+    <div><p style="color: #94a3b8; font-size: 12px;">🏆 Competition</p><p style="color: #fff; font-weight: 500;">${match.league}</p></div>
+  </div>
+</div>
+
+2. FORM COMPARISON TABLE (in form analysis section):
+<table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #1e293b; border-radius: 8px; overflow: hidden;">
+  <thead>
+    <tr style="background: #334155;">
+      <th style="padding: 12px; text-align: left; color: #fff;">Team</th>
+      <th style="padding: 12px; text-align: center; color: #10b981;">W</th>
+      <th style="padding: 12px; text-align: center; color: #fbbf24;">D</th>
+      <th style="padding: 12px; text-align: center; color: #ef4444;">L</th>
+      <th style="padding: 12px; text-align: left; color: #fff;">Form</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid #334155;">
+      <td style="padding: 12px; color: #fff;">${match.homeTeam}</td>
+      <td style="padding: 12px; text-align: center; color: #10b981;">[WINS]</td>
+      <td style="padding: 12px; text-align: center; color: #fbbf24;">[DRAWS]</td>
+      <td style="padding: 12px; text-align: center; color: #ef4444;">[LOSSES]</td>
+      <td style="padding: 12px;"><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span><span style="color: #fbbf24;">●</span><span style="color: #ef4444;">●</span><span style="color: #10b981;">●</span></td>
+    </tr>
+    <tr>
+      <td style="padding: 12px; color: #fff;">${match.awayTeam}</td>
+      <td style="padding: 12px; text-align: center; color: #10b981;">[WINS]</td>
+      <td style="padding: 12px; text-align: center; color: #fbbf24;">[DRAWS]</td>
+      <td style="padding: 12px; text-align: center; color: #ef4444;">[LOSSES]</td>
+      <td style="padding: 12px;"><span style="color: #10b981;">●</span><span style="color: #ef4444;">●</span><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span><span style="color: #fbbf24;">●</span></td>
+    </tr>
+  </tbody>
+</table>
+
+3. HEAD-TO-HEAD BOX (in H2H section):
+<div style="background: #1e293b; border-radius: 8px; padding: 20px; margin: 20px 0;">
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center;">
+    <div style="background: #10b981/20; padding: 16px; border-radius: 8px;">
+      <p style="font-size: 32px; font-weight: bold; color: #10b981;">[HOME_WINS]</p>
+      <p style="color: #94a3b8; font-size: 14px;">${match.homeTeam} Wins</p>
+    </div>
+    <div style="background: #64748b/20; padding: 16px; border-radius: 8px;">
+      <p style="font-size: 32px; font-weight: bold; color: #64748b;">[DRAWS]</p>
+      <p style="color: #94a3b8; font-size: 14px;">Draws</p>
+    </div>
+    <div style="background: #ef4444/20; padding: 16px; border-radius: 8px;">
+      <p style="font-size: 32px; font-weight: bold; color: #ef4444;">[AWAY_WINS]</p>
+      <p style="color: #94a3b8; font-size: 14px;">${match.awayTeam} Wins</p>
+    </div>
+  </div>
+</div>
+
+4. PREDICTION BOX (in prediction section):
+<div style="background: linear-gradient(135deg, #10b981/10 0%, #0f172a 100%); border: 2px solid #10b981/30; border-radius: 12px; padding: 24px; margin: 24px 0;">
+  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+    <span style="font-size: 24px;">🎯</span>
+    <h3 style="color: #10b981; font-size: 18px; font-weight: bold; margin: 0;">SportBot AI Prediction</h3>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center; margin-bottom: 16px;">
+    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">${match.homeTeam}</p>
+      <p style="font-size: 24px; font-weight: bold; color: #fff;">[HOME_%]%</p>
+    </div>
+    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Draw</p>
+      <p style="font-size: 24px; font-weight: bold; color: #fff;">[DRAW_%]%</p>
+    </div>
+    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">${match.awayTeam}</p>
+      <p style="font-size: 24px; font-weight: bold; color: #fff;">[AWAY_%]%</p>
+    </div>
+  </div>
+  <p style="color: #94a3b8; font-size: 14px; text-align: center;">Based on historical data, current form, and AI analysis. For educational purposes only.</p>
+</div>
+
+5. KEY PLAYERS BOXES (in key players section):
+<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 20px 0;">
+  <div style="background: #1e293b; border-radius: 8px; padding: 16px; border-left: 4px solid #10b981;">
+    <h4 style="color: #10b981; margin: 0 0 12px 0;">${match.homeTeam} Key Players</h4>
+    <ul style="list-style: none; padding: 0; margin: 0;">
+      <li style="color: #fff; padding: 8px 0; border-bottom: 1px solid #334155;">⭐ [Player 1] - [Position/Role]</li>
+      <li style="color: #fff; padding: 8px 0; border-bottom: 1px solid #334155;">⭐ [Player 2] - [Position/Role]</li>
+      <li style="color: #fff; padding: 8px 0;">⭐ [Player 3] - [Position/Role]</li>
+    </ul>
+  </div>
+  <div style="background: #1e293b; border-radius: 8px; padding: 16px; border-left: 4px solid #ef4444;">
+    <h4 style="color: #ef4444; margin: 0 0 12px 0;">${match.awayTeam} Key Players</h4>
+    <ul style="list-style: none; padding: 0; margin: 0;">
+      <li style="color: #fff; padding: 8px 0; border-bottom: 1px solid #334155;">⭐ [Player 1] - [Position/Role]</li>
+      <li style="color: #fff; padding: 8px 0; border-bottom: 1px solid #334155;">⭐ [Player 2] - [Position/Role]</li>
+      <li style="color: #fff; padding: 8px 0;">⭐ [Player 3] - [Position/Role]</li>
+    </ul>
+  </div>
+</div>
+
+=== END HTML ELEMENTS ===
+
 REQUIREMENTS:
 1. SEO-optimized title including team names AND the word "prediction" or "preview" (50-60 chars)
 2. Engaging intro paragraph with match context, include primary keyword
 3. Sections to include (use H2 headings):
-   - Match Overview (when, where, stakes)
-   - ${match.homeTeam} Form Analysis (use form data above if available)
-   - ${match.awayTeam} Form Analysis (use form data above if available)
-   - Head-to-Head Record (use H2H data above if available)
-   - Key Players to Watch (use injury data above if available)
+   - Match Overview (use the MATCH INFO BOX above after intro paragraph)
+   - ${match.homeTeam} Form Analysis 
+   - ${match.awayTeam} Form Analysis
+   - Form Comparison (use FORM COMPARISON TABLE)
+   - Head-to-Head Record (use HEAD-TO-HEAD BOX)
+   - Key Players to Watch (use KEY PLAYERS BOXES)
    - Tactical Analysis
-   - SportBot AI Prediction (use probability data above if available, present as "our AI analysis suggests...")
-   - Value Assessment (discuss if odds represent good value based on analysis)
-   - Responsible Gambling Notice (MANDATORY - full paragraph about betting responsibly)
+   - SportBot AI Prediction (use PREDICTION BOX with actual percentages)
+   - Value Assessment
+   - Responsible Gambling Notice (MANDATORY)
 4. Target 1800-2200 words for better SEO
-5. Use HTML formatting (h2, h3, p, ul, li, strong, em)
+5. Use HTML formatting (h2, h3, p, ul, li, strong, em) PLUS the styled boxes above
 6. Include 2-3 internal links to related blog posts naturally within content
-7. End with a compelling conclusion summarizing the key points
+7. Replace all [PLACEHOLDER] values with actual data from the analysis
 
 CRITICAL RULES:
 - This is EDUCATIONAL ANALYSIS, not betting tips
 - Use phrases like "our AI estimates", "probability suggests", "data indicates", "the numbers show"
 - NEVER guarantee outcomes or encourage gambling
 - Present probabilities as estimates, not certainties
-- Include responsible gambling disclaimer with link to responsible-gambling resources
+- Include responsible gambling disclaimer with link to /responsible-gambling
 - Naturally weave in the SEO keywords without keyword stuffing
+- MUST use the styled HTML boxes provided above for visual appeal
 
 Return JSON:
 {
   "title": "SEO title with team names + prediction/preview (50-60 chars)",
   "slug": "url-friendly-slug-with-keywords",
   "excerpt": "Compelling 150-160 char excerpt including primary keyword",
-  "content": "Full HTML content with all sections",
+  "content": "Full HTML content with all sections AND styled boxes",
   "metaTitle": "SEO meta title (50-60 chars)",
   "metaDescription": "Meta description (150-160 chars) with primary keyword",
   "focusKeyword": "${keywords.primary}",

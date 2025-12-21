@@ -13,6 +13,7 @@ interface BlogPost {
   createdAt: Date;
   publishedAt: Date | null;
   featuredImage: string | null;
+  postType?: string;
 }
 
 interface BlogAdminPanelProps {
@@ -26,15 +27,134 @@ interface BlogAdminPanelProps {
   };
 }
 
+const SPORTS_OPTIONS = [
+  { value: 'soccer_spain_la_liga', label: '⚽ La Liga (Spain)' },
+  { value: 'soccer_epl', label: '⚽ Premier League' },
+  { value: 'soccer_germany_bundesliga', label: '⚽ Bundesliga' },
+  { value: 'soccer_italy_serie_a', label: '⚽ Serie A' },
+  { value: 'soccer_france_ligue_one', label: '⚽ Ligue 1' },
+  { value: 'soccer_uefa_champs_league', label: '⚽ Champions League' },
+  { value: 'basketball_nba', label: '🏀 NBA' },
+  { value: 'americanfootball_nfl', label: '🏈 NFL' },
+  { value: 'icehockey_nhl', label: '🏒 NHL' },
+  { value: 'mma_mixed_martial_arts', label: '🥊 UFC/MMA' },
+];
+
 export default function BlogAdminPanel({ posts, stats }: BlogAdminPanelProps) {
   const [filter, setFilter] = useState<'all' | 'PUBLISHED' | 'DRAFT' | 'SCHEDULED'>('all');
   const [generating, setGenerating] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // Match Preview State
+  const [selectedSport, setSelectedSport] = useState('soccer_spain_la_liga');
+  const [matchGenerating, setMatchGenerating] = useState(false);
+  const [upcomingMatches, setUpcomingMatches] = useState<Array<{
+    matchId: string;
+    homeTeam: string;
+    awayTeam: string;
+    commenceTime: string;
+    league: string;
+  }>>([]);
+  const [loadingMatches, setLoadingMatches] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState<string | null>(null);
 
   const filteredPosts = filter === 'all' 
     ? posts 
     : posts.filter((p) => p.status === filter);
+
+  // Fetch upcoming matches for selected sport
+  const handleFetchMatches = async () => {
+    setLoadingMatches(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/match-data?sportKey=${selectedSport}`);
+      const data = await res.json();
+      if (data.events && Array.isArray(data.events)) {
+        setUpcomingMatches(data.events.slice(0, 10)); // Limit to 10 matches
+        if (data.events.length === 0) {
+          setMessage({ type: 'error', text: 'No upcoming matches found for this sport' });
+        }
+      } else {
+        setMessage({ type: 'error', text: 'Failed to fetch matches' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Network error fetching matches' });
+    } finally {
+      setLoadingMatches(false);
+    }
+  };
+
+  // Generate match preview blog post
+  const handleGenerateMatchPreview = async () => {
+    const match = upcomingMatches.find(m => m.matchId === selectedMatch);
+    if (!match) {
+      setMessage({ type: 'error', text: 'Please select a match' });
+      return;
+    }
+
+    setMatchGenerating(true);
+    setMessage(null);
+
+    try {
+      const sportLabel = SPORTS_OPTIONS.find(s => s.value === selectedSport)?.label || selectedSport;
+      const res = await fetch('/api/blog/match-preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          matchId: match.matchId,
+          homeTeam: match.homeTeam,
+          awayTeam: match.awayTeam,
+          sport: sportLabel.split(' ')[1] || 'soccer',
+          sportKey: selectedSport,
+          league: match.league,
+          commenceTime: match.commenceTime,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setMessage({ 
+          type: 'success', 
+          text: `✅ Match preview created! View: /blog/${data.slug}` 
+        });
+        setSelectedMatch(null);
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to generate match preview' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Network error' });
+    } finally {
+      setMatchGenerating(false);
+    }
+  };
+
+  // Generate batch match previews
+  const handleGenerateBatch = async () => {
+    setMatchGenerating(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/blog/match-preview?sportKey=${selectedSport}`);
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setMessage({ 
+          type: 'success', 
+          text: `✅ Generated ${data.generated} posts, skipped ${data.skipped} existing` 
+        });
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to generate batch' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Network error' });
+    } finally {
+      setMatchGenerating(false);
+    }
+  };
 
   const handleGeneratePost = async () => {
     if (!keyword.trim()) {
@@ -167,7 +287,7 @@ export default function BlogAdminPanel({ posts, stats }: BlogAdminPanelProps) {
 
         {/* Generate New Post */}
         <div className="bg-bg-secondary rounded-xl p-6 border border-white/10 mb-8">
-          <h2 className="text-lg font-semibold text-white mb-4">Generate New Post</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">Generate New Post (Keyword)</h2>
           <div className="flex flex-col sm:flex-row gap-4">
             <input
               type="text"
@@ -188,6 +308,133 @@ export default function BlogAdminPanel({ posts, stats }: BlogAdminPanelProps) {
           <p className="text-text-muted text-sm mt-2">
             AI will research the topic, generate content, and create a featured image. This takes ~30-60 seconds.
           </p>
+        </div>
+
+        {/* Generate Match Preview */}
+        <div className="bg-gradient-to-r from-accent/10 to-purple-500/10 rounded-xl p-6 border border-accent/30 mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-2xl">⚽</span>
+            <h2 className="text-lg font-semibold text-white">Generate Match Preview</h2>
+            <span className="px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">NEW</span>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Left: Select Sport & Fetch */}
+            <div>
+              <label className="block text-sm text-text-muted mb-2">Select Sport/League</label>
+              <div className="flex gap-2">
+                <select
+                  value={selectedSport}
+                  onChange={(e) => {
+                    setSelectedSport(e.target.value);
+                    setUpcomingMatches([]);
+                    setSelectedMatch(null);
+                  }}
+                  className="flex-1 bg-bg-primary border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent"
+                  disabled={matchGenerating}
+                >
+                  {SPORTS_OPTIONS.map((sport) => (
+                    <option key={sport.value} value={sport.value}>
+                      {sport.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleFetchMatches}
+                  disabled={loadingMatches || matchGenerating}
+                  className="px-4 py-3 bg-white/10 hover:bg-white/20 disabled:opacity-50 rounded-lg text-white transition-colors"
+                >
+                  {loadingMatches ? '...' : '🔄'}
+                </button>
+              </div>
+              
+              {/* Match List */}
+              {upcomingMatches.length > 0 && (
+                <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
+                  <label className="block text-sm text-text-muted mb-2">Select Match</label>
+                  {upcomingMatches.map((match) => (
+                    <label
+                      key={match.matchId}
+                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                        selectedMatch === match.matchId
+                          ? 'bg-accent/20 border border-accent'
+                          : 'bg-bg-primary/50 border border-white/5 hover:border-white/20'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="match"
+                        value={match.matchId}
+                        checked={selectedMatch === match.matchId}
+                        onChange={(e) => setSelectedMatch(e.target.value)}
+                        className="sr-only"
+                      />
+                      <div className="flex-1">
+                        <p className="text-white font-medium text-sm">
+                          {match.homeTeam} vs {match.awayTeam}
+                        </p>
+                        <p className="text-text-muted text-xs">
+                          {new Date(match.commenceTime).toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                      {selectedMatch === match.matchId && (
+                        <span className="text-accent">✓</span>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex flex-col justify-between">
+              <div>
+                <p className="text-text-muted text-sm mb-4">
+                  Generate AI-powered match preview with team analysis, head-to-head stats, 
+                  key players, tactical breakdown, and prediction. Includes team logos!
+                </p>
+                <div className="flex items-center gap-2 text-xs text-text-muted mb-4">
+                  <span className="px-2 py-1 bg-white/5 rounded">📊 Stats Tables</span>
+                  <span className="px-2 py-1 bg-white/5 rounded">⚡ AI Analysis</span>
+                  <span className="px-2 py-1 bg-white/5 rounded">🖼️ Team Logos</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={handleGenerateMatchPreview}
+                  disabled={matchGenerating || !selectedMatch}
+                  className="w-full px-6 py-3 bg-accent hover:bg-accent/80 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-semibold text-white transition-colors flex items-center justify-center gap-2"
+                >
+                  {matchGenerating ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      Generating (~30s)...
+                    </>
+                  ) : (
+                    <>
+                      <span>🎯</span>
+                      Generate Selected Match
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleGenerateBatch}
+                  disabled={matchGenerating}
+                  className="w-full px-6 py-3 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 disabled:opacity-50 rounded-lg font-medium text-purple-300 transition-colors flex items-center justify-center gap-2"
+                >
+                  <span>📦</span>
+                  Generate All Upcoming ({SPORTS_OPTIONS.find(s => s.value === selectedSport)?.label.split(' ')[1]})
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Filter Tabs */}
