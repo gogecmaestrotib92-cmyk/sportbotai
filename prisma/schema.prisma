@@ -456,6 +456,7 @@ enum Plan {
   FREE
   PRO
   PREMIUM
+  ADMIN
 }
 
 enum KeywordStatus {

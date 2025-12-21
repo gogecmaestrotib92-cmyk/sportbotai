@@ -35,7 +35,7 @@ interface User {
   name: string | null;
   email: string | null;
   image: string | null;
-  plan: 'FREE' | 'PRO' | 'PREMIUM';
+  plan: 'FREE' | 'PRO' | 'PREMIUM' | 'ADMIN';
   analysisCount: number;
   bonusCredits: number;
   lastActiveAt: string | null;
@@ -58,6 +58,7 @@ const planColors = {
   FREE: 'bg-gray-500/20 text-gray-400',
   PRO: 'bg-blue-500/20 text-blue-400',
   PREMIUM: 'bg-purple-500/20 text-purple-400',
+  ADMIN: 'bg-yellow-500/20 text-yellow-400',
 };
 
 const providerIcons: Record<string, string> = {
@@ -66,12 +67,15 @@ const providerIcons: Record<string, string> = {
   credentials: '🔑',
 };
 
+const ITEMS_PER_PAGE = 20;
+
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [planFilter, setPlanFilter] = useState<string>('');
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [actionModal, setActionModal] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -79,8 +83,10 @@ export default function UserManagement() {
 
   // Form states for actions
   const [creditsAmount, setCreditsAmount] = useState(10);
-  const [newPlan, setNewPlan] = useState<'FREE' | 'PRO' | 'PREMIUM'>('PRO');
+  const [newPlan, setNewPlan] = useState<'FREE' | 'PRO' | 'PREMIUM' | 'ADMIN'>('PRO');
   const [banReason, setBanReason] = useState('');
+
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -88,7 +94,8 @@ export default function UserManagement() {
       const params = new URLSearchParams();
       if (search) params.set('search', search);
       if (planFilter) params.set('plan', planFilter);
-      params.set('limit', '50');
+      params.set('limit', String(ITEMS_PER_PAGE));
+      params.set('offset', String((page - 1) * ITEMS_PER_PAGE));
 
       const response = await fetch(`/api/admin/users?${params}`);
       const data = await response.json();
@@ -102,7 +109,7 @@ export default function UserManagement() {
     } finally {
       setLoading(false);
     }
-  }, [search, planFilter]);
+  }, [search, planFilter, page]);
 
   useEffect(() => {
     const debounce = setTimeout(fetchUsers, 300);
@@ -183,13 +190,14 @@ export default function UserManagement() {
         <div className="flex gap-2">
           <select
             value={planFilter}
-            onChange={(e) => setPlanFilter(e.target.value)}
+            onChange={(e) => { setPlanFilter(e.target.value); setPage(1); }}
             className="px-3 py-2 bg-bg-tertiary border border-white/10 rounded-lg text-sm focus:outline-none focus:border-accent"
           >
             <option value="">All Plans</option>
             <option value="FREE">Free</option>
             <option value="PRO">Pro</option>
             <option value="PREMIUM">Premium</option>
+            <option value="ADMIN">Admin</option>
           </select>
           
           <button
@@ -203,8 +211,8 @@ export default function UserManagement() {
       </div>
 
       {/* Stats */}
-      <div className="text-sm text-text-muted">
-        Showing {users.length} of {total} users
+      <div className="flex items-center justify-between text-sm text-text-muted">
+        <span>Showing {users.length} of {total} users (Page {page} of {totalPages || 1})</span>
       </div>
 
       {/* Users Table */}
@@ -389,6 +397,70 @@ export default function UserManagement() {
         )}
       </div>
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <button
+            onClick={() => setPage(1)}
+            disabled={page === 1 || loading}
+            className="px-3 py-2 bg-bg-tertiary border border-white/10 rounded-lg text-sm hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ⟪ First
+          </button>
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1 || loading}
+            className="px-3 py-2 bg-bg-tertiary border border-white/10 rounded-lg text-sm hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ← Prev
+          </button>
+          
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (page <= 3) {
+                pageNum = i + 1;
+              } else if (page >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = page - 2 + i;
+              }
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setPage(pageNum)}
+                  disabled={loading}
+                  className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                    page === pageNum
+                      ? 'bg-accent text-white'
+                      : 'bg-bg-tertiary border border-white/10 hover:bg-white/5'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+          
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages || loading}
+            className="px-3 py-2 bg-bg-tertiary border border-white/10 rounded-lg text-sm hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next →
+          </button>
+          <button
+            onClick={() => setPage(totalPages)}
+            disabled={page === totalPages || loading}
+            className="px-3 py-2 bg-bg-tertiary border border-white/10 rounded-lg text-sm hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Last ⟫
+          </button>
+        </div>
+      )}
+
       {/* Action Modals */}
       {actionModal && selectedUser && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -448,6 +520,7 @@ export default function UserManagement() {
                   <option value="FREE">Free</option>
                   <option value="PRO">Pro</option>
                   <option value="PREMIUM">Premium</option>
+                  <option value="ADMIN">Admin (Full Access)</option>
                 </select>
                 <div className="flex gap-2">
                   <button

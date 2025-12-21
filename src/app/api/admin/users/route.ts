@@ -15,6 +15,9 @@ import { Plan } from '@prisma/client';
 const ADMIN_EMAILS = [
   'gogecmaestrotib92@gmail.com',
   'aiinstamarketing@gmail.com',
+  'gogani92@gmail.com',
+  'stefan@automateed.com',
+  'streamentor@gmail.com',
 ];
 
 async function isAdmin(request: NextRequest): Promise<boolean> {
@@ -163,7 +166,7 @@ export async function POST(request: NextRequest) {
 
       case 'changePlan': {
         const newPlan = data?.plan as Plan;
-        if (!['FREE', 'PRO', 'PREMIUM'].includes(newPlan)) {
+        if (!['FREE', 'PRO', 'PREMIUM', 'ADMIN'].includes(newPlan)) {
           return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
         }
         
