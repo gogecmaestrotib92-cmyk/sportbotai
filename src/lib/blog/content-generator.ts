@@ -1,11 +1,27 @@
 // OpenAI-powered content generation for blog posts
 
 import OpenAI from 'openai';
+import { prisma } from '@/lib/prisma';
 import { ResearchResult, BlogOutline, GeneratedContent, BlogCategory, BLOG_CATEGORIES } from './types';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Get existing blog posts for internal linking
+async function getExistingBlogSlugs(): Promise<{ slug: string; title: string }[]> {
+  try {
+    const posts = await prisma.blogPost.findMany({
+      where: { status: 'PUBLISHED' },
+      select: { slug: true, title: true },
+      orderBy: { publishedAt: 'desc' },
+      take: 50,
+    });
+    return posts;
+  } catch {
+    return [];
+  }
+}
 
 // Generate a blog outline from research
 export async function generateOutline(
@@ -29,11 +45,12 @@ Recent News: ${JSON.stringify(research.recentNews)}
 REQUIREMENTS:
 - SEO-optimized title (include keyword naturally)
 - Meta description (150-160 chars)
-- 5-7 sections with clear H2 headings
-- Each section should have 2-3 subheadings (H3)
-- Include key points for each section
-- Target 1500-2000 words total
-- Include a "Responsible Gambling" or "Final Thoughts" section
+- 6-8 sections with clear H2 headings
+- Each section should have 2-4 subheadings (H3)
+- Each subheading needs 2-3 key points that will become full paragraphs
+- Target 2000-2500 words total
+- Include a "Responsible Gambling" section before the conclusion
+- Final section should be a strong conclusion
 
 Return JSON:
 {
@@ -42,11 +59,11 @@ Return JSON:
   "sections": [
     {
       "heading": "H2 heading",
-      "subheadings": ["H3 sub 1", "H3 sub 2"],
-      "keyPoints": ["point 1", "point 2", "point 3"]
+      "subheadings": ["H3 sub 1", "H3 sub 2", "H3 sub 3"],
+      "keyPoints": ["detailed point 1", "detailed point 2", "detailed point 3"]
     }
   ],
-  "estimatedWordCount": 1800
+  "estimatedWordCount": 2200
 }`;
 
   const response = await openai.chat.completions.create({
@@ -70,7 +87,14 @@ export async function generateContent(
   outline: BlogOutline,
   research: ResearchResult
 ): Promise<GeneratedContent> {
-  const prompt = `Write a complete blog post for SportBot AI following this outline.
+  // Get existing posts for internal linking
+  const existingPosts = await getExistingBlogSlugs();
+  const internalLinksInfo = existingPosts.length > 0
+    ? `\n\nEXISTING BLOG POSTS FOR INTERNAL LINKING (use 3-5 of these):
+${existingPosts.slice(0, 15).map(p => `- "/blog/${p.slug}" - ${p.title}`).join('\n')}`
+    : '';
+
+  const prompt = `Write a complete, engaging blog post for SportBot AI following this outline.
 
 KEYWORD: "${keyword}"
 TITLE: "${outline.title}"
@@ -86,30 +110,59 @@ RESEARCH TO INCORPORATE:
 - Facts: ${research.facts.join(' | ')}
 - Statistics: ${research.statistics.join(' | ')}
 - Recent developments: ${research.recentNews.join(' | ')}
+${internalLinksInfo}
 
-WRITING GUIDELINES:
-1. Write in a professional but accessible tone
-2. Use HTML formatting (h2, h3, p, ul, li, strong, em)
-3. Include the keyword naturally 3-5 times
-4. Add internal link placeholders: <a href="/blog/[related-topic]">anchor text</a>
-5. Include at least one data table if relevant
-6. Add a responsible gambling note
-7. End with a clear conclusion
-8. Target ${outline.estimatedWordCount} words
+CRITICAL WRITING GUIDELINES:
 
-SPORTBOT AI BRAND VOICE:
-- Educational, not promotional
-- Data-driven and analytical
-- Professional but friendly
-- Emphasizes understanding, not "winning systems"
-- Always mentions responsible gambling
+1. CONTENT STRUCTURE - THIS IS CRUCIAL:
+   - Under each H2 heading, write 2-3 substantial paragraphs BEFORE any H3
+   - Under each H3, write 2-4 paragraphs (not just one!)
+   - Each paragraph should be 3-5 sentences
+   - Total article: 2000-2500 words minimum
+   - Use transitional sentences between sections
+
+2. WRITING STYLE:
+   - Write like a knowledgeable friend explaining concepts
+   - Mix short punchy sentences with longer explanatory ones
+   - Use rhetorical questions to engage readers
+   - Include real examples and scenarios
+   - Avoid bullet-point-only sections - write actual paragraphs
+
+3. HTML FORMATTING:
+   - Use: <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>, <blockquote>
+   - Add <figure> with <img> placeholders for 2-3 inline images: 
+     <figure><img src="[IMAGE:description of what image should show]" alt="descriptive alt text" /><figcaption>Caption here</figcaption></figure>
+   - One image after intro, one mid-article, one before conclusion
+
+4. INTERNAL LINKING:
+   - Add 3-5 internal links using ONLY the existing blog URLs provided above
+   - Use natural anchor text within sentences
+   - Example: <a href="/blog/understanding-expected-goals-xg-football">learn more about xG</a>
+   - DO NOT make up URLs - only use exact slugs from the list above
+   - If no relevant existing posts, link to: /blog, /matches, /pricing, /ai-desk
+
+5. TABLES:
+   - Include at least one data table if the topic allows
+   - Use proper <table>, <thead>, <tbody>, <tr>, <th>, <td> tags
+
+6. SPORTBOT AI BRAND VOICE:
+   - Educational and analytical, not salesy
+   - Data-driven with real statistics when possible
+   - Professional yet approachable
+   - Emphasizes understanding sports, not "beating bookmakers"
+   - Always acknowledges uncertainty in predictions
+
+7. RESPONSIBLE GAMBLING:
+   - Include a dedicated section with practical tips
+   - Mention setting limits, recognizing problem gambling signs
+   - Link to gambling help resources
 
 Return JSON:
 {
   "title": "Final title",
   "slug": "url-friendly-slug",
-  "excerpt": "2-3 sentence excerpt for previews",
-  "content": "<article>Full HTML content here</article>",
+  "excerpt": "Compelling 2-3 sentence excerpt that makes readers want to click",
+  "content": "<article>Full HTML content with multiple paragraphs per section</article>",
   "metaTitle": "SEO title (60 chars max)",
   "metaDescription": "Meta description (160 chars max)",
   "focusKeyword": "main keyword",
@@ -120,8 +173,8 @@ Return JSON:
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [{ role: 'user', content: prompt }],
-    temperature: 0.7,
-    max_tokens: 4000,
+    temperature: 0.75,
+    max_tokens: 6000,
     response_format: { type: 'json_object' },
   });
 

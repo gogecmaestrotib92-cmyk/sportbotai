@@ -12,8 +12,8 @@
 export const SITE_CONFIG = {
   name: 'SportBot AI',
   tagline: 'AI-Powered Sports Analytics',
-  domain: 'sportbotai.com',
-  url: 'https://sportbotai.com',
+  domain: 'www.sportbotai.com',
+  url: 'https://www.sportbotai.com',
   email: 'contact@sportbotai.com',
   
   // Brand colors for social sharing

@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 
-const BASE_URL = 'https://sportbotai.com';
+const BASE_URL = 'https://www.sportbotai.com';
 
 // Static pages with their priorities and change frequencies
 const STATIC_PAGES = [
@@ -19,6 +19,10 @@ const STATIC_PAGES = [
   { path: '/responsible-gambling', priority: 0.5, changeFreq: 'monthly' as const },
   { path: '/terms', priority: 0.3, changeFreq: 'yearly' as const },
   { path: '/privacy', priority: 0.3, changeFreq: 'yearly' as const },
+  
+  // AI/LLM Discovery Files
+  { path: '/llms.txt', priority: 0.4, changeFreq: 'monthly' as const },
+  { path: '/llms-full.txt', priority: 0.4, changeFreq: 'monthly' as const },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

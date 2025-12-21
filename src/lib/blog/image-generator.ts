@@ -1,7 +1,9 @@
 // Replicate API client for AI image generation
 // Uses Flux or SDXL for blog featured images
+// Uses GPT-4.1 nano for high-quality image prompts
 
 import Replicate from 'replicate';
+import OpenAI from 'openai';
 import { put } from '@vercel/blob';
 import { ImageGenerationResult } from './types';
 
@@ -9,71 +11,101 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Generate an optimized image prompt using GPT-4.1 nano
+async function generateImagePrompt(
+  title: string,
+  keyword: string,
+  category: string,
+  imageDescription?: string
+): Promise<string> {
+  const context = imageDescription || `blog header for article about ${keyword}`;
+  
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4.1-nano',
+    messages: [{
+      role: 'system',
+      content: `You are an expert at creating prompts for AI image generation. Create visually striking, modern prompts for Flux image model.
+
+STYLE REQUIREMENTS:
+- Modern, sleek, professional aesthetic
+- Tech/data visualization theme with sports elements
+- Blue (#1e40af), green (#10B981), dark backgrounds
+- Abstract, conceptual - NOT realistic photos
+- No text, no logos, no people faces
+- Cinematic lighting, high production value
+- 4K, detailed, visually impressive`
+    }, {
+      role: 'user',
+      content: `Create an image generation prompt for: ${context}
+
+Article title: "${title}"
+Keyword: "${keyword}"  
+Category: "${category}"
+
+Return ONLY the prompt text, nothing else. Keep it under 200 words.`
+    }],
+    temperature: 0.8,
+    max_tokens: 300,
+  });
+
+  return response.choices[0]?.message?.content || createFallbackPrompt(keyword, category);
+}
+
+// Fallback prompt if GPT fails
+function createFallbackPrompt(keyword: string, category: string): string {
+  const baseStyle = "modern, clean, professional digital illustration, minimalist design, tech aesthetic, blue and green color scheme, dark background";
+  
+  const categoryPrompts: Record<string, string> = {
+    "Betting Fundamentals": "abstract data visualization, flowing charts and graphs, mathematical symbols, probability waves",
+    "Sports Analysis": "dynamic sports stadium silhouette, data streams overlaying athletic motion, holographic dashboard",
+    "Statistics & Data": "big data visualization, glowing numbers flowing through space, statistical charts, neon infographic",
+    "Risk Management": "abstract balance visualization, risk meter with glowing indicators, shield with data patterns",
+    "Market Insights": "futuristic trading display, odds flowing like stock tickers, trend visualization",
+    "Educational Guides": "glowing book with data emanating, knowledge visualization, step pathway with data points",
+  };
+
+  const categoryContext = categoryPrompts[category] || categoryPrompts["Educational Guides"];
+  return `${baseStyle}, ${categoryContext}, representing "${keyword}", no text, no logos, no faces, 4k quality`;
+}
+
 // Generate a featured image for a blog post
 export async function generateFeaturedImage(
   title: string,
   keyword: string,
   category: string
 ): Promise<ImageGenerationResult> {
-  // Create an image prompt based on the blog content
-  const prompt = createImagePrompt(title, keyword, category);
-
+  console.log('[Image Generator] Generating smart prompt with GPT-4.1 nano...');
+  const prompt = await generateImagePrompt(title, keyword, category);
+  
   console.log('[Image Generator] Starting image generation for:', keyword);
-  console.log('[Image Generator] Prompt:', prompt);
+  console.log('[Image Generator] Prompt:', prompt.substring(0, 150) + '...');
 
   try {
-    // Use Flux Schnell for fast, quality images
     const output = await replicate.run(
       "black-forest-labs/flux-schnell",
       {
         input: {
           prompt: prompt,
           num_outputs: 1,
-          aspect_ratio: "16:9", // Good for blog headers
+          aspect_ratio: "16:9",
           output_format: "webp",
           output_quality: 90,
         }
       }
     );
 
-    console.log('[Image Generator] Replicate output type:', typeof output);
-    console.log('[Image Generator] Replicate output:', JSON.stringify(output).substring(0, 200));
-
-    // Handle different output formats from Replicate
-    let imageUrl: string | null = null;
-    
-    if (Array.isArray(output) && output.length > 0) {
-      const firstItem = output[0];
-      // Could be a string URL or a FileOutput object
-      if (typeof firstItem === 'string') {
-        imageUrl = firstItem;
-      } else if (firstItem && typeof firstItem === 'object') {
-        // FileOutput object has url() method or direct url property
-        if ('url' in firstItem && typeof firstItem.url === 'function') {
-          imageUrl = await firstItem.url();
-        } else if ('url' in firstItem && typeof firstItem.url === 'string') {
-          imageUrl = firstItem.url;
-        } else if (firstItem.toString && firstItem.toString() !== '[object Object]') {
-          imageUrl = firstItem.toString();
-        }
-      }
-    } else if (typeof output === 'string') {
-      imageUrl = output;
-    } else if (output && typeof output === 'object' && 'url' in output) {
-      imageUrl = typeof output.url === 'function' ? await output.url() : output.url as string;
-    }
-    
+    const imageUrl = await extractImageUrl(output);
     if (!imageUrl) {
-      console.error('[Image Generator] Could not extract URL from output:', output);
       throw new Error('No image URL returned from Replicate');
     }
 
     console.log('[Image Generator] Image URL:', imageUrl);
-
-    // Download and upload to Vercel Blob for permanent storage
     const blobUrl = await uploadToBlob(imageUrl, keyword);
-    console.log('[Image Generator] Blob URL:', blobUrl);
-
+    
     return {
       url: blobUrl,
       alt: `${title} - SportBot AI`,
@@ -86,33 +118,76 @@ export async function generateFeaturedImage(
   }
 }
 
-// Create an optimized prompt for sports analytics imagery
-function createImagePrompt(title: string, keyword: string, category: string): string {
-  const baseStyle = "modern, clean, professional digital illustration, minimalist design, tech aesthetic, blue and green color scheme";
+// Generate an inline content image
+export async function generateContentImage(
+  imageDescription: string,
+  keyword: string,
+  category: string,
+  index: number
+): Promise<ImageGenerationResult> {
+  console.log(`[Image Generator] Generating content image ${index + 1}: ${imageDescription.substring(0, 50)}...`);
   
-  // Category-specific imagery
-  const categoryPrompts: Record<string, string> = {
-    "Betting Fundamentals": "abstract data visualization, charts and graphs, mathematical symbols, probability concepts",
-    "Sports Analysis": "sports stadium, athletic motion, data overlay, analytical dashboard",
-    "Statistics & Data": "big data visualization, numbers flowing, statistical charts, infographic style",
-    "Risk Management": "balance scale, risk meter, shield icons, financial graphs",
-    "Market Insights": "stock market style display, odds boards, trend lines, market analysis",
-    "Educational Guides": "open book with data, learning icons, step by step visual, tutorial style",
-  };
-
-  const categoryContext = categoryPrompts[category] || categoryPrompts["Educational Guides"];
-
-  // Extract key visual elements from title/keyword
-  const sportKeywords = ["football", "basketball", "tennis", "soccer", "baseball", "hockey"];
-  const hasSport = sportKeywords.some(sport => 
-    keyword.toLowerCase().includes(sport) || title.toLowerCase().includes(sport)
+  const prompt = await generateImagePrompt(
+    imageDescription,
+    keyword,
+    category,
+    imageDescription
   );
 
-  const sportContext = hasSport 
-    ? "subtle sports equipment silhouettes in background, " 
-    : "";
+  try {
+    const output = await replicate.run(
+      "black-forest-labs/flux-schnell",
+      {
+        input: {
+          prompt: prompt,
+          num_outputs: 1,
+          aspect_ratio: "16:9",
+          output_format: "webp",
+          output_quality: 85,
+        }
+      }
+    );
 
-  return `${baseStyle}, ${sportContext}${categoryContext}, representing the concept of "${keyword}", no text, no logos, 4k quality, suitable for blog header`;
+    const imageUrl = await extractImageUrl(output);
+    if (!imageUrl) {
+      throw new Error('No image URL returned');
+    }
+
+    const blobUrl = await uploadToBlob(imageUrl, `${keyword}-inline-${index}`);
+    
+    return {
+      url: blobUrl,
+      alt: imageDescription,
+      prompt: prompt,
+    };
+  } catch (error) {
+    console.error(`[Image Generator] Content image ${index + 1} failed:`, error);
+    throw error;
+  }
+}
+
+// Extract URL from various Replicate output formats
+async function extractImageUrl(output: unknown): Promise<string | null> {
+  if (Array.isArray(output) && output.length > 0) {
+    const firstItem = output[0];
+    if (typeof firstItem === 'string') {
+      return firstItem;
+    } else if (firstItem && typeof firstItem === 'object') {
+      if ('url' in firstItem && typeof firstItem.url === 'function') {
+        return await firstItem.url();
+      } else if ('url' in firstItem && typeof firstItem.url === 'string') {
+        return firstItem.url;
+      } else if (firstItem.toString && firstItem.toString() !== '[object Object]') {
+        return firstItem.toString();
+      }
+    }
+  } else if (typeof output === 'string') {
+    return output;
+  } else if (output && typeof output === 'object' && 'url' in output) {
+    const obj = output as { url: string | (() => Promise<string>) };
+    return typeof obj.url === 'function' ? await obj.url() : obj.url;
+  }
+  return null;
 }
 
 // Upload image from URL to Vercel Blob

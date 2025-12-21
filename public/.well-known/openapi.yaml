@@ -1,0 +1,75 @@
+openapi: 3.0.0
+info:
+  title: SportBot AI
+  description: |
+    SportBot AI - AI-Powered Sports Analytics Platform
+    
+    This is an educational sports analytics platform that provides AI-driven match analysis 
+    with probability estimates, value detection, and risk assessment.
+    
+    Note: Public API access is not currently available. 
+    All analytics are accessible through our web platform at https://www.sportbotai.com
+  version: 2.0.0
+  contact:
+    name: SportBot AI Support
+    email: contact@sportbotai.com
+    url: https://www.sportbotai.com/contact
+  termsOfService: https://www.sportbotai.com/terms
+
+servers:
+  - url: https://www.sportbotai.com
+    description: Production server
+
+paths:
+  /:
+    get:
+      operationId: getHomePage
+      summary: Home page with live match analysis
+      description: Access the main SportBot AI platform with live matches and analysis tools
+      responses:
+        '200':
+          description: HTML page
+
+  /analyzer:
+    get:
+      operationId: getAnalyzer
+      summary: Match analysis tool
+      description: Free AI-powered match analysis tool for any sport
+      responses:
+        '200':
+          description: HTML page with analyzer interface
+
+  /matches:
+    get:
+      operationId: getMatches
+      summary: Browse upcoming matches
+      description: View all upcoming matches across supported sports
+      responses:
+        '200':
+          description: HTML page with match listings
+
+  /blog:
+    get:
+      operationId: getBlog
+      summary: Sports analytics blog
+      description: Articles about sports analytics, match previews, and betting education
+      responses:
+        '200':
+          description: HTML page with blog listings
+
+  /pricing:
+    get:
+      operationId: getPricing
+      summary: Subscription plans
+      description: View available subscription tiers (Free, Pro, Premium)
+      responses:
+        '200':
+          description: HTML page with pricing information
+
+tags:
+  - name: Platform
+    description: Main platform pages
+
+externalDocs:
+  description: Full documentation for LLMs
+  url: https://www.sportbotai.com/llms-full.txt

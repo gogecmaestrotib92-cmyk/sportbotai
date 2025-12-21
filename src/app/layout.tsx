@@ -158,6 +158,12 @@ export default function RootLayout({
       <head>
         {/* Google Analytics */}
         <GoogleAnalytics />
+        
+        {/* AI/LLM Discovery Links */}
+        <link rel="llms" href="/llms.txt" />
+        <link rel="llms-full" href="/llms-full.txt" />
+        <link rel="humans" href="/humans.txt" />
+        
         {/* JSON-LD Structured Data */}
         <script
           type="application/ld+json"

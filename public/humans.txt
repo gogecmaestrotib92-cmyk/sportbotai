@@ -1,0 +1,30 @@
+/* HUMANS.TXT */
+
+/* TEAM */
+Creator: Goran
+Contact: contact@sportbotai.com
+Twitter: @sportbotai
+Location: Remote
+
+/* SITE */
+Site: SportBot AI
+URL: https://www.sportbotai.com
+Description: AI-Powered Sports Analytics Platform
+Language: English
+Launch: 2024
+
+/* TECHNOLOGY */
+Framework: Next.js 14
+Language: TypeScript
+Styling: Tailwind CSS
+AI: OpenAI GPT-4, Perplexity
+Database: PostgreSQL, Prisma
+Hosting: Vercel
+Payments: Stripe
+
+/* MISSION */
+"Understand any match in 60 seconds"
+We sell understanding, not winning.
+
+/* ACKNOWLEDGMENTS */
+Thanks to all our users and contributors!

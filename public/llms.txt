@@ -1,0 +1,81 @@
+# SportBot AI
+
+> AI-Powered Sports Analytics Platform - Understand any match in 60 seconds
+
+SportBot AI is an educational sports analytics platform that provides AI-driven match analysis with probability estimates, value detection, and risk assessment. We help users understand sports matches better through data-driven insights.
+
+## About
+
+SportBot AI analyzes sports matches using artificial intelligence to provide:
+- Match probability estimates
+- Value detection and odds analysis
+- Risk assessment
+- Team form analysis
+- Head-to-head statistics
+- Key player impact analysis
+- Weather and venue considerations
+
+We cover multiple sports including Soccer, Basketball (NBA), American Football (NFL), Tennis, Ice Hockey (NHL), Baseball (MLB), and more.
+
+**Important**: This is an educational/analytical tool for understanding sports matches. We sell understanding, not predictions.
+
+## Main Pages
+
+- [Home](https://www.sportbotai.com/): Main landing page with live match analysis
+- [Analyzer](https://www.sportbotai.com/analyzer): Free AI-powered match analysis tool
+- [Matches](https://www.sportbotai.com/matches): Browse upcoming matches across all sports
+- [Blog](https://www.sportbotai.com/blog): Sports analytics articles and insights
+- [Pricing](https://www.sportbotai.com/pricing): Subscription plans (Free, Pro, Premium)
+
+## Features
+
+### Free Tier
+- 3 match analyses per day
+- Basic probability estimates
+- Team form analysis
+- H2H statistics
+
+### Pro Tier ($9.99/month)
+- 15 analyses per day
+- Advanced analytics
+- Value detection
+- Prediction history
+
+### Premium Tier ($19.99/month)
+- Unlimited analyses
+- AI Sports Desk chat
+- Market alerts
+- Priority support
+
+## Sports Covered
+
+- ⚽ Soccer (Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League, MLS)
+- 🏀 Basketball (NBA, EuroLeague, NCAA)
+- 🏈 American Football (NFL, NCAA)
+- 🎾 Tennis (ATP, WTA, Grand Slams)
+- 🏒 Ice Hockey (NHL)
+- ⚾ Baseball (MLB)
+- 🏉 Rugby
+- 🏏 Cricket
+
+## API Access
+
+SportBot AI does not currently offer public API access. All analytics are available through our web platform.
+
+## Contact
+
+- Website: https://www.sportbotai.com
+- Email: contact@sportbotai.com
+- Twitter: @sportbotai
+
+## Legal
+
+- [Terms of Service](https://www.sportbotai.com/terms)
+- [Privacy Policy](https://www.sportbotai.com/privacy)
+- [Responsible Gambling](https://www.sportbotai.com/responsible-gambling)
+
+This platform is for users 18+ only. Please gamble responsibly.
+
+---
+
+© 2024-2025 SportBot AI. All rights reserved.

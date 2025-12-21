@@ -125,19 +125,19 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     author: {
       '@type': 'Organization',
       name: 'SportBot AI',
-      url: 'https://sportbotai.com',
+      url: 'https://www.sportbotai.com',
     },
     publisher: {
       '@type': 'Organization',
       name: 'SportBot AI',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://sportbotai.com/logo.svg',
+        url: 'https://www.sportbotai.com/logo.svg',
       },
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://sportbotai.com/blog/${post.slug}`,
+      '@id': `https://www.sportbotai.com/blog/${post.slug}`,
     },
   };
 

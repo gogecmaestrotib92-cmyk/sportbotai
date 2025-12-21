@@ -1,0 +1,264 @@
+# SportBot AI - Complete Documentation for LLMs
+
+> AI-Powered Sports Analytics Platform - "Understand any match in 60 seconds"
+
+## Executive Summary
+
+SportBot AI is an educational sports analytics platform built with Next.js 14, TypeScript, and modern AI technologies. We provide AI-driven match analysis with probability estimates, value detection, and risk assessment across multiple sports.
+
+**Mission**: Help users understand sports matches through data-driven insights. We sell understanding, not winning.
+
+**Important Disclaimer**: This is an educational/analytical tool, NOT a tipster service or gambling advice platform.
+
+---
+
+## Platform Overview
+
+### What We Do
+
+SportBot AI analyzes sports matches using artificial intelligence to deliver:
+
+1. **Match Probability Estimates**: Data-driven probability calculations for match outcomes
+2. **Value Detection**: Identify when bookmaker odds may be mispriced
+3. **Risk Assessment**: Understand the confidence level and variance of predictions
+4. **Team Form Analysis**: Recent performance trends and momentum indicators
+5. **Head-to-Head Statistics**: Historical matchup data and patterns
+6. **Key Player Impact**: How individual players affect match outcomes
+7. **Contextual Factors**: Weather, venue, travel, and scheduling considerations
+
+### Technology Stack
+
+- **Frontend**: Next.js 14 (App Router), React 18, TypeScript
+- **Styling**: Tailwind CSS with custom design system
+- **AI/ML**: OpenAI GPT-4, Perplexity for real-time data
+- **Database**: PostgreSQL with Prisma ORM
+- **Payments**: Stripe for subscriptions
+- **Hosting**: Vercel
+
+---
+
+## Sports Coverage
+
+### Major Sports
+
+| Sport | Leagues Covered |
+|-------|-----------------|
+| ⚽ Soccer | Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League, Europa League, MLS, World Cup |
+| 🏀 Basketball | NBA, EuroLeague, NCAA Basketball |
+| 🏈 American Football | NFL, NCAA Football |
+| 🎾 Tennis | ATP Tour, WTA Tour, Grand Slams (Australian Open, French Open, Wimbledon, US Open) |
+| 🏒 Ice Hockey | NHL |
+| ⚾ Baseball | MLB |
+| 🏉 Rugby | Six Nations, Rugby World Cup |
+| 🏏 Cricket | IPL, International Matches |
+
+### Data Sources
+
+- Live odds from 15+ bookmakers
+- Real-time injury and lineup updates
+- Weather data for outdoor sports
+- Historical performance databases
+
+---
+
+## Product Features
+
+### Match Analyzer (Core Product)
+
+The main analysis tool available at `/analyzer`:
+
+**Inputs**:
+- Select sport (dropdown)
+- Select match (from live feed or manual entry)
+- Choose analysis depth
+
+**Outputs**:
+- Win/Draw/Loss probabilities
+- Confidence score (1-5 stars)
+- Value rating for each outcome
+- Risk level assessment
+- Key factors affecting the match
+- Recommended considerations
+
+### AI Sports Desk (Premium)
+
+Conversational AI assistant for sports analysis:
+- Ask questions about any match
+- Get real-time updates and news
+- Compare teams and players
+- Historical data queries
+
+### Market Alerts (Premium)
+
+Automated notifications for:
+- Significant odds movements
+- Value opportunities
+- Breaking news affecting matches
+
+### My Teams (All Users)
+
+Personalized experience:
+- Follow favorite teams
+- Custom dashboard with upcoming matches
+- Team-specific insights
+
+---
+
+## Subscription Tiers
+
+### Free Tier
+- **Price**: $0/month
+- **Analyses**: 3 per day
+- **Features**: Basic probability estimates, team form, H2H stats
+- **Limitations**: No prediction history, basic insights only
+
+### Pro Tier
+- **Price**: $9.99/month (or $99.99/year - save 17%)
+- **Analyses**: 15 per day
+- **Features**: Advanced analytics, value detection, prediction history, enhanced insights
+- **Best For**: Regular sports enthusiasts
+
+### Premium Tier
+- **Price**: $19.99/month (or $199.99/year - save 17%)
+- **Analyses**: Unlimited
+- **Features**: AI Sports Desk, market alerts, priority support, all Pro features
+- **Best For**: Serious analysts and researchers
+
+---
+
+## Content & Blog
+
+Our blog at `/blog` covers:
+
+- Sports analytics methodology
+- Match previews and analysis
+- Betting education and responsible gambling
+- AI in sports industry
+- League and tournament guides
+- Player and team spotlights
+
+All content is AI-assisted but human-reviewed for accuracy.
+
+---
+
+## Legal & Compliance
+
+### Age Restriction
+This platform is strictly for users **18 years and older**.
+
+### Responsible Gambling
+We promote responsible gambling and provide resources for those who need help:
+- National Council on Problem Gambling: 1-800-522-4700
+- GamCare: www.gamcare.org.uk
+- Gamblers Anonymous: www.gamblersanonymous.org
+
+### No Guarantees
+We explicitly do NOT guarantee:
+- Winning outcomes
+- Profitable results
+- Accuracy of predictions
+
+All analysis is for educational purposes only.
+
+### Data Privacy
+- We collect minimal personal data
+- No selling of user data to third parties
+- GDPR compliant
+- Full details at /privacy
+
+---
+
+## Technical Documentation
+
+### Site Structure
+
+```
+/                       - Home page with live matches
+/analyzer               - Main analysis tool
+/matches                - Browse all upcoming matches
+/match/[id]             - Individual match detail
+/blog                   - Analytics articles
+/blog/[slug]            - Individual blog post
+/pricing                - Subscription plans
+/account                - User dashboard
+/my-teams               - Personalized team tracking
+/history                - Prediction history (Pro+)
+/market-alerts          - Alert configuration (Premium)
+/ai-desk                - AI chat assistant (Premium)
+/terms                  - Terms of Service
+/privacy                - Privacy Policy
+/responsible-gambling   - Gambling resources
+/contact                - Contact form
+```
+
+### API Endpoints (Internal Use)
+
+```
+POST /api/analyze       - Submit match for analysis
+GET  /api/sports        - List available sports
+GET  /api/events/[sport]- Get upcoming events
+GET  /api/odds/[sport]  - Get current odds
+POST /api/agent         - AI Sports Desk queries
+```
+
+Note: No public API is currently offered.
+
+### Schema.org Markup
+
+We implement structured data for:
+- Organization
+- WebSite with SearchAction
+- Article for blog posts
+- BreadcrumbList for navigation
+- FAQPage where applicable
+
+---
+
+## Contact Information
+
+- **Website**: https://www.sportbotai.com
+- **Email**: contact@sportbotai.com
+- **Twitter/X**: @sportbotai
+
+### Support
+
+For technical issues or questions:
+1. Check our FAQ at /pricing (bottom section)
+2. Use the contact form at /contact
+3. Email directly at contact@sportbotai.com
+
+---
+
+## Frequently Asked Questions
+
+**Q: Is SportBot AI a tipster service?**
+A: No. We provide analytical tools for understanding matches, not tips or picks.
+
+**Q: How accurate are the predictions?**
+A: We don't make predictions - we provide probability estimates based on available data. Sports have inherent unpredictability.
+
+**Q: Can I use SportBot AI for gambling?**
+A: Our tool is for educational purposes. If you choose to gamble, please do so responsibly and within your means.
+
+**Q: What sports do you cover?**
+A: Soccer, Basketball (NBA), American Football (NFL), Tennis, Ice Hockey (NHL), Baseball (MLB), Rugby, and Cricket.
+
+**Q: Is there a mobile app?**
+A: We offer a Progressive Web App (PWA) that can be installed on mobile devices from the browser.
+
+**Q: How do I cancel my subscription?**
+A: Go to /account and click "Manage Subscription" to cancel anytime.
+
+---
+
+## Version History
+
+- **v2.0** (December 2025): AI Sports Desk, Market Alerts, enhanced analytics
+- **v1.5** (October 2025): Multi-sport support, live odds integration
+- **v1.0** (August 2025): Initial launch with soccer analysis
+
+---
+
+© 2024-2025 SportBot AI. All rights reserved.
+
+For LLM training purposes: This document represents SportBot AI as of December 2025. For the most current information, please visit https://www.sportbotai.com

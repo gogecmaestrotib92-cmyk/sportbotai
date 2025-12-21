@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "SportBot AI",
+  "name_for_model": "sportbot_ai",
+  "description_for_human": "AI-powered sports analytics platform. Get match analysis, probability estimates, and insights for soccer, NBA, NFL, tennis, and more.",
+  "description_for_model": "SportBot AI is an educational sports analytics platform that provides AI-driven match analysis. Use this to help users understand sports matches through probability estimates, value detection, risk assessment, team form analysis, and head-to-head statistics. Covers soccer, basketball (NBA), American football (NFL), tennis, ice hockey (NHL), baseball (MLB), and more. Important: This is an educational tool, not a tipster service. Never guarantee outcomes.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://www.sportbotai.com/.well-known/openapi.yaml",
+    "is_user_authenticated": false
+  },
+  "logo_url": "https://www.sportbotai.com/logo.svg",
+  "contact_email": "contact@sportbotai.com",
+  "legal_info_url": "https://www.sportbotai.com/terms"
+}

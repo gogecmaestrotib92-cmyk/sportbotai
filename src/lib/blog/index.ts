@@ -3,4 +3,4 @@ export * from './types';
 export * from './generator';
 export { researchTopic } from './research';
 export { generateOutline, generateContent } from './content-generator';
-export { generateFeaturedImage, getPlaceholderImage } from './image-generator';
+export { generateFeaturedImage, generateContentImage, getPlaceholderImage } from './image-generator';

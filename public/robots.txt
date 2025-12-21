@@ -1,21 +1,143 @@
+# SportBot AI - Robots Configuration
+# https://www.sportbotai.com
+
+# ==============================================
+# STANDARD WEB CRAWLERS
+# ==============================================
+
 User-agent: *
 Allow: /
 
 # Disallow admin/API routes
 Disallow: /api/
+Disallow: /admin/
 Disallow: /login
 Disallow: /register
+Disallow: /account
 
 # Allow important pages
 Allow: /
 Allow: /analyzer
+Allow: /matches
+Allow: /match/
+Allow: /blog
 Allow: /pricing
 Allow: /terms
 Allow: /privacy
 Allow: /responsible-gambling
-
-# Sitemap location
-Sitemap: https://sportbotai.com/sitemap.xml
+Allow: /contact
+Allow: /team/
 
 # Crawl delay (be nice to bots)
 Crawl-delay: 1
+
+# ==============================================
+# AI/LLM CRAWLERS - ALLOWED
+# ==============================================
+
+# OpenAI GPTBot
+User-agent: GPTBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /blog
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account
+Crawl-delay: 2
+
+# Google Bard / Gemini
+User-agent: Google-Extended
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /blog
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account
+Crawl-delay: 2
+
+# Anthropic Claude
+User-agent: anthropic-ai
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /blog
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account
+Crawl-delay: 2
+
+User-agent: Claude-Web
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /blog
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account
+Crawl-delay: 2
+
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /blog
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account
+Crawl-delay: 2
+
+# Cohere
+User-agent: cohere-ai
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /blog
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account
+Crawl-delay: 2
+
+# Meta AI
+User-agent: FacebookBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account
+
+User-agent: meta-externalagent
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account
+
+# Microsoft/Bing AI (Copilot)
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# You.com AI
+User-agent: YouBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account
+
+# ==============================================
+# SITEMAP & LLM FILES
+# ==============================================
+
+Sitemap: https://www.sportbotai.com/sitemap.xml
+
+# LLM-specific files for AI crawlers
+# llms.txt: https://www.sportbotai.com/llms.txt
+# llms-full.txt: https://www.sportbotai.com/llms-full.txt
+# ai-plugin.json: https://www.sportbotai.com/.well-known/ai-plugin.json

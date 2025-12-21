@@ -1,0 +1,23 @@
+# SportBot AI Security Policy
+
+Contact: mailto:contact@sportbotai.com
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: en, sr
+
+# Security
+
+If you discover a security vulnerability, please report it to contact@sportbotai.com
+
+We take security seriously and will respond to verified vulnerabilities promptly.
+
+# Scope
+
+This security policy applies to:
+- www.sportbotai.com
+- All subdomains of sportbotai.com
+
+# Out of Scope
+
+- Social engineering attacks
+- Denial of service attacks
+- Physical attacks
