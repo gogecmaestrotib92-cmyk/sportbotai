@@ -236,6 +236,25 @@ function deriveNarrativeAngle(prediction: PredictionWithEdge): NarrativeAngle {
 }
 
 /**
+ * Map NarrativeAngle to catchphrase category
+ */
+function getCatchphraseCategory(angle: NarrativeAngle): 'openers' | 'highConviction' | 'contrarian' | 'chaos' | 'postMatch' | 'signoffs' {
+  switch (angle) {
+    case 'CHAOS':
+      return 'chaos';
+    case 'BLOWOUT_POTENTIAL':
+    case 'CONTROL':
+      return 'highConviction';
+    case 'TRAP_SPOT':
+      return 'contrarian';
+    case 'MIRROR_MATCH':
+      return 'openers';
+    default:
+      return 'openers';
+  }
+}
+
+/**
  * Generate a post from a high-conviction prediction
  * Uses real prediction data for quality content
  */
@@ -287,7 +306,7 @@ async function generatePostFromPrediction(prediction: PredictionWithEdge, catego
       dataQuality: 'HIGH', // Pre-analyzed predictions have full data
       volatility: prediction.conviction >= 4 ? 'LOW' : 'MEDIUM',
       narrativeAngle,
-      catchphrase: getCatchphrase(narrativeAngle),
+      catchphrase: getCatchphrase(getCatchphraseCategory(narrativeAngle)),
       motif: prediction.reasoning.substring(0, 50) + '...', // Use actual reasoning as motif
     };
     
