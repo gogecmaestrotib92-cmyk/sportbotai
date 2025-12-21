@@ -779,7 +779,7 @@ ${internalLinksInfo}
 <div style="background: linear-gradient(135deg, #10b981/20 0%, #0ea5e9/20 100%); border: 1px solid #10b981/50; border-radius: 12px; padding: 20px; margin: 24px 0; text-align: center;">
   <p style="color: #10b981; font-size: 16px; font-weight: 600; margin: 0 0 8px 0;">🤖 Want Real-Time AI Analysis?</p>
   <p style="color: #94a3b8; font-size: 14px; margin: 0 0 16px 0;">Get live probability updates, injury alerts, and deeper insights with SportBot AI</p>
-  <a href="/match/${match.matchId}" style="display: inline-block; background: #10b981; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">View Live Analysis →</a>
+  <a href="/register" style="display: inline-block; background: #10b981; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Get Started Free →</a>
 </div>
 
 7. CTA BOX - AFTER H2H SECTION:
@@ -789,21 +789,21 @@ ${internalLinksInfo}
     <p style="color: #fff; font-size: 16px; font-weight: 600; margin: 0;">Unlock Advanced Stats</p>
   </div>
   <p style="color: #94a3b8; font-size: 14px; margin: 0 0 16px 0;">Our AI analyzes 50+ data points including xG, defensive pressure, set-piece efficiency, and more.</p>
-  <a href="/match/${match.matchId}" style="color: #0ea5e9; text-decoration: none; font-weight: 500;">Explore full analysis →</a>
+  <a href="/pricing" style="color: #0ea5e9; text-decoration: none; font-weight: 500;">See Pro Features →</a>
 </div>
 
 8. CTA BOX - AFTER TACTICAL ANALYSIS:
 <div style="background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%); border-radius: 12px; padding: 24px; margin: 24px 0; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 200px;">
     <p style="color: #fff; font-size: 18px; font-weight: 600; margin: 0 0 8px 0;">🎯 Get Match-Specific Insights</p>
-    <p style="color: #94a3b8; font-size: 14px; margin: 0;">Ask our AI any question about this match - lineups, injuries, or tactical matchups.</p>
+    <p style="color: #94a3b8; font-size: 14px; margin: 0;">Ask our AI any question about any match - lineups, injuries, or tactical matchups.</p>
   </div>
-  <a href="/" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%); color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; white-space: nowrap;">Try SportBot AI Free →</a>
+  <a href="/register" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%); color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; white-space: nowrap;">Try SportBot AI Free →</a>
 </div>
 
 9. CTA BOX - MINI (sprinkle 1-2 throughout):
 <p style="background: #10b981/10; border-radius: 8px; padding: 12px 16px; margin: 16px 0; font-size: 14px; color: #94a3b8;">
-  💡 <strong style="color: #10b981;">Pro tip:</strong> <a href="/match/${match.matchId}" style="color: #10b981; text-decoration: none;">View our live analysis</a> for real-time probability updates as the match approaches.
+  💡 <strong style="color: #10b981;">Pro tip:</strong> <a href="/matches" style="color: #10b981; text-decoration: none;">Browse all matches</a> with real-time probability updates as kickoff approaches.
 </p>
 
 10. CTA BOX - END OF ARTICLE:
@@ -811,7 +811,7 @@ ${internalLinksInfo}
   <h3 style="color: #fff; font-size: 24px; font-weight: bold; margin: 0 0 12px 0;">Ready for Deeper Analysis?</h3>
   <p style="color: #fff/90; font-size: 16px; margin: 0 0 20px 0; max-width: 500px; margin-left: auto; margin-right: auto;">Join thousands of sports fans using AI-powered insights to understand matches better.</p>
   <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-    <a href="/match/${match.matchId}" style="display: inline-block; background: #fff; color: #10b981; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">Analyze This Match</a>
+    <a href="/register" style="display: inline-block; background: #fff; color: #10b981; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">Start Free Trial</a>
     <a href="/pricing" style="display: inline-block; background: transparent; color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; border: 2px solid #fff;">View Plans</a>
   </div>
 </div>
