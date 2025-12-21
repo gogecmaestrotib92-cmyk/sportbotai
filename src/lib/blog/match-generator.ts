@@ -877,14 +877,45 @@ Return JSON:
     model: AI_MODEL,
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.7,
-    max_tokens: 4500,
+    max_tokens: 8000,
     response_format: { type: 'json_object' },
   });
 
   const content = response.choices[0]?.message?.content;
   if (!content) throw new Error('No content generated');
 
-  return JSON.parse(content) as GeneratedMatchContent;
+  // Try to parse JSON, with fallback for truncated responses
+  try {
+    return JSON.parse(content) as GeneratedMatchContent;
+  } catch (parseError) {
+    console.error('[Match Preview] JSON parse error, attempting to fix truncated response');
+    
+    // Try to fix common truncation issues
+    let fixedContent = content;
+    
+    // If it ends mid-string, try to close it
+    if (!fixedContent.endsWith('}')) {
+      // Find last complete property
+      const lastQuoteIndex = fixedContent.lastIndexOf('"');
+      if (lastQuoteIndex > 0) {
+        // Check if we're in the middle of a value
+        const afterLastQuote = fixedContent.substring(lastQuoteIndex + 1);
+        if (!afterLastQuote.includes('}')) {
+          // We're truncated, try to close the JSON
+          fixedContent = fixedContent.substring(0, lastQuoteIndex + 1) + '}';
+        }
+      }
+    }
+    
+    try {
+      return JSON.parse(fixedContent) as GeneratedMatchContent;
+    } catch {
+      // If still failing, throw original error with context
+      console.error('[Match Preview] Content length:', content.length);
+      console.error('[Match Preview] Content end:', content.substring(content.length - 200));
+      throw new Error(`Failed to parse generated content: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+    }
+  }
 }
 
 // ============================================
