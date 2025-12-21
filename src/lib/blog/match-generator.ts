@@ -1203,7 +1203,7 @@ export async function generatePreviewsForUpcomingMatches(
   let skipped = 0;
   let failed = 0;
 
-  console.log(`[Batch Preview] Starting batch generation - sportKey: ${sportKey || 'soccer_epl'}, limit: ${limit}`);
+  console.log(`[Batch Preview] Starting batch generation - sportKey: ${sportKey || 'soccer_epl'}, limit: ${limit} (will generate up to ${limit} NEW posts)`);
 
   try {
     // Fetch upcoming matches from our API
@@ -1222,12 +1222,19 @@ export async function generatePreviewsForUpcomingMatches(
       throw new Error('Failed to fetch matches');
     }
 
-    const matches = data.events.slice(0, limit);
-    console.log(`[Batch Preview] Found ${data.events.length} matches, processing ${matches.length}`);
+    // Process ALL matches, but stop after generating 'limit' new posts
+    const allMatches = data.events;
+    console.log(`[Batch Preview] Found ${allMatches.length} matches, will generate up to ${limit} new posts`);
 
-    for (let i = 0; i < matches.length; i++) {
-      const match = matches[i];
-      console.log(`[Batch Preview] Processing ${i + 1}/${matches.length}: ${match.homeTeam} vs ${match.awayTeam}`);
+    for (let i = 0; i < allMatches.length; i++) {
+      // Stop if we've generated enough new posts
+      if (generated >= limit) {
+        console.log(`[Batch Preview] Reached limit of ${limit} new posts, stopping`);
+        break;
+      }
+
+      const match = allMatches[i];
+      console.log(`[Batch Preview] Checking ${i + 1}/${allMatches.length}: ${match.homeTeam} vs ${match.awayTeam}`);
 
       // Check if post already exists
       const existing = await prisma.blogPost.findFirst({
@@ -1247,7 +1254,7 @@ export async function generatePreviewsForUpcomingMatches(
       }
 
       // Generate preview
-      console.log(`[Batch Preview] 🔄 Generating: ${match.homeTeam} vs ${match.awayTeam}...`);
+      console.log(`[Batch Preview] 🔄 Generating (${generated + 1}/${limit}): ${match.homeTeam} vs ${match.awayTeam}...`);
       const result = await generateMatchPreview({
         matchId: match.matchId,
         homeTeam: match.homeTeam,
@@ -1272,9 +1279,9 @@ export async function generatePreviewsForUpcomingMatches(
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
-    console.log(`[Batch Preview] Complete: ${generated} generated, ${skipped} skipped, ${failed} failed`);
+    console.log(`[Batch Preview] Complete: ${generated} generated, ${skipped} skipped, ${failed} failed (checked ${allMatches.length} total)`);
     return {
-      total: matches.length,
+      total: allMatches.length,
       generated,
       skipped,
       failed,
