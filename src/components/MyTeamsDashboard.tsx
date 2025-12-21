@@ -386,7 +386,7 @@ export default function MyTeamsDashboard() {
               </div>
               <div>
                 <p className="text-sm font-medium text-text-primary">Save Teams</p>
-                <p className="text-xs text-text-muted">Click the heart icon on any match page</p>
+                <p className="text-xs text-text-muted">Click the ❤️ on any team&apos;s logo in match pages</p>
               </div>
             </div>
             <div className="flex gap-3">

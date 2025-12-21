@@ -3,6 +3,7 @@
  * 
  * Shows teams, time, league, and LIVE SCORE when match is in progress.
  * Works identically for all sports.
+ * Includes heart icons to favorite individual teams.
  */
 
 'use client';
@@ -10,6 +11,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import TeamLogo from '@/components/ui/TeamLogo';
 import LeagueLogo from '@/components/ui/LeagueLogo';
+import FavoriteButton from '@/components/FavoriteButton';
 
 interface LiveScoreData {
   homeScore: number;
@@ -224,6 +226,16 @@ export default function PremiumMatchHeader({
           <div className="flex flex-col items-center text-center flex-1 max-w-[140px] sm:max-w-[180px]">
             <div className="w-16 h-16 sm:w-20 sm:h-20 mb-3 relative">
               <TeamLogo teamName={homeTeam} sport={sport} league={league} size="xl" className="object-contain" />
+              {/* Favorite button - positioned at top right of logo */}
+              <div className="absolute -top-1 -right-1">
+                <FavoriteButton 
+                  teamName={homeTeam}
+                  sport={sport}
+                  league={league}
+                  sportKey={sport}
+                  size="sm"
+                />
+              </div>
             </div>
             <h2 className="text-base sm:text-lg font-semibold text-white leading-tight">
               {homeTeam}
@@ -265,6 +277,16 @@ export default function PremiumMatchHeader({
           <div className="flex flex-col items-center text-center flex-1 max-w-[140px] sm:max-w-[180px]">
             <div className="w-16 h-16 sm:w-20 sm:h-20 mb-3 relative">
               <TeamLogo teamName={awayTeam} sport={sport} league={league} size="xl" className="object-contain" />
+              {/* Favorite button - positioned at top right of logo */}
+              <div className="absolute -top-1 -right-1">
+                <FavoriteButton 
+                  teamName={awayTeam}
+                  sport={sport}
+                  league={league}
+                  sportKey={sport}
+                  size="sm"
+                />
+              </div>
             </div>
             <h2 className="text-base sm:text-lg font-semibold text-white leading-tight">
               {awayTeam}
