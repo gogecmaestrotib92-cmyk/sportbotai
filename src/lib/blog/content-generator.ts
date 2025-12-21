@@ -43,14 +43,37 @@ First, determine what the user ACTUALLY wants when searching this:
 Structure the outline to directly address these needs.
 
 ═══════════════════════════════════════════════════════════════
-📌 BRAND CONTEXT
+📌 ABOUT SPORTBOT AI (https://www.sportbotai.com)
 ═══════════════════════════════════════════════════════════════
 
-- SportBot AI is an AI-powered sports betting ANALYTICS platform
-- We provide educational content about sports analysis, NOT betting tips
-- Focus: probability analysis, value detection, risk assessment
+SportBot AI is an AI-powered sports analytics platform. Our mission:
+"Understand any match in 60 seconds" — we sell UNDERSTANDING, not winning.
+
+WHAT WE DO:
+- Pre-match intelligence: headlines, form, H2H history & AI insights
+- AI-powered probability analysis and value detection
+- Educational content about sports analysis (NOT betting tips)
+
+OUR FEATURES (mention naturally when relevant):
+1. 🌍 Multi-Sport Coverage — Soccer, NBA, NFL, NHL, MMA/UFC in one platform
+2. 📊 Team Intelligence — Deep team profiles, form trends, injury reports
+3. ⚡ Value Detection — Compare AI probabilities with bookmaker odds
+4. 💬 AI Sports Desk — Chat with AI about any match, team, or player
+5. 🔔 Market Alerts — Notifications when odds shift or value edges appear
+6. 📁 Analysis History — Access past analyses, track research decisions
+
+KEY PAGES TO LINK:
+- /matches — Browse upcoming matches with AI analysis
+- /ai-desk — Chat with our AI Sports Desk assistant
+- /pricing — View subscription plans
+- /blog — More educational articles
+
+IMPORTANT:
+- NEVER recommend competitor tools/platforms (no tipster sites, no other analytics platforms)
+- When suggesting "tools" or "platforms," suggest SportBot AI features instead
+- We focus on EDUCATION and UNDERSTANDING, not "beating bookmakers"
 - Always include responsible gambling messaging
-- Target: Sports enthusiasts interested in data-driven analysis
+- Target audience: Sports enthusiasts interested in data-driven analysis
 
 ═══════════════════════════════════════════════════════════════
 📊 RESEARCH DATA TO INCORPORATE
@@ -276,15 +299,37 @@ Include a dedicated section with:
 - Emphasis: betting for entertainment, not income
 
 ═══════════════════════════════════════════════════════════════
-🏷️ SPORTBOT AI BRAND VOICE
+🏷️ ABOUT SPORTBOT AI (https://www.sportbotai.com)
 ═══════════════════════════════════════════════════════════════
 
+SportBot AI is an AI-powered sports analytics platform. Our mission:
+"Understand any match in 60 seconds" — we sell UNDERSTANDING, not winning.
+
+WHAT WE DO:
+- Pre-match intelligence: headlines, form, H2H history & AI insights
+- AI-powered probability analysis and value detection
+- Educational content about sports analysis (NOT betting tips)
+
+OUR FEATURES (mention 1-2 naturally when relevant):
+1. 🌍 Multi-Sport Coverage — Soccer, NBA, NFL, NHL, MMA/UFC in one platform
+2. 📊 Team Intelligence — Deep team profiles, form trends, injury reports
+3. ⚡ Value Detection — Compare AI probabilities with bookmaker odds
+4. 💬 AI Sports Desk (/ai-desk) — Chat with AI about any match, team, or player
+5. 🔔 Market Alerts — Notifications when odds shift or value edges appear
+6. 📁 Analysis History — Access past analyses, track research decisions
+
+BRAND VOICE:
 - Educational and analytical, not salesy or hype-driven
 - Data-driven with real statistics and context
 - Professional yet approachable and conversational
 - Emphasizes UNDERSTANDING sports, not "beating bookmakers"
 - Acknowledges uncertainty — no guaranteed outcomes
-- Focus on analysis and education, not gambling tips
+
+CRITICAL RULES:
+- NEVER recommend competitor tools/platforms (no tipster sites, no other analytics tools)
+- When mentioning "tools" or "platforms," suggest SportBot AI features naturally
+- Link to our pages: /matches, /ai-desk, /pricing, /blog
+- Include subtle feature mentions (e.g., "tools like our AI Sports Desk can help...")
 
 ═══════════════════════════════════════════════════════════════
 
