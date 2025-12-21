@@ -1,15 +1,21 @@
 /**
  * Weekly Stats Cron Job
  * 
- * Runs every Sunday at 6 PM UTC to post weekly performance stats to Twitter.
- * Shows hit rate, streak, and conviction breakdown.
+ * Runs every Sunday at 6 PM UTC to calculate weekly performance stats.
+ * 
+ * DISABLED: Twitter posting is temporarily disabled while we improve accuracy.
+ * Stats are still calculated and returned in the response for internal tracking.
  * 
  * Vercel Cron: "0 18 * * 0" (Sunday 6 PM UTC)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getTwitterClient, formatForTwitter } from '@/lib/twitter-client';
+import { formatForTwitter } from '@/lib/twitter-client';
 import { prisma } from '@/lib/prisma';
+
+// Twitter posting disabled - uncomment when accuracy improves
+// import { getTwitterClient } from '@/lib/twitter-client';
+const TWITTER_POSTING_ENABLED = false; // Set to true when ready to post publicly
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
@@ -101,7 +107,21 @@ export async function GET(request: NextRequest) {
       ));
     }
     
-    // Post to Twitter
+    // Post to Twitter (DISABLED - accuracy not ready for public reporting)
+    // const twitter = getTwitterClient();
+    
+    if (!TWITTER_POSTING_ENABLED) {
+      console.log('[Cron] Weekly stats calculated but Twitter posting is disabled');
+      return NextResponse.json({
+        success: true,
+        twitterDisabled: true,
+        message: 'Stats calculated but Twitter posting is disabled until accuracy improves',
+        stats: { total, hits, misses, hitRate, streak, streakType, byConviction },
+        tweets, // Include what would have been posted
+      });
+    }
+    
+    /* Twitter posting disabled - uncomment when ready
     const twitter = getTwitterClient();
     
     if (!twitter.isConfigured()) {
@@ -137,11 +157,12 @@ export async function GET(request: NextRequest) {
     }
     
     console.log('[Cron] Weekly stats posted:', tweetIds);
+    */
     
     return NextResponse.json({
       success: true,
       stats: { total, hits, misses, hitRate, streak, streakType },
-      tweetIds,
+      tweetIds: [],
     });
     
   } catch (error) {
