@@ -226,8 +226,8 @@ export default function PremiumMatchHeader({
           <div className="flex flex-col items-center text-center flex-1 max-w-[140px] sm:max-w-[180px]">
             <div className="w-16 h-16 sm:w-20 sm:h-20 mb-3 relative">
               <TeamLogo teamName={homeTeam} sport={sport} league={league} size="xl" className="object-contain" />
-              {/* Favorite button - positioned at top right of logo */}
-              <div className="absolute -top-1 -right-1">
+              {/* Favorite button - positioned at bottom left of logo */}
+              <div className="absolute -bottom-1 -left-1">
                 <FavoriteButton 
                   teamName={homeTeam}
                   sport={sport}
@@ -277,8 +277,8 @@ export default function PremiumMatchHeader({
           <div className="flex flex-col items-center text-center flex-1 max-w-[140px] sm:max-w-[180px]">
             <div className="w-16 h-16 sm:w-20 sm:h-20 mb-3 relative">
               <TeamLogo teamName={awayTeam} sport={sport} league={league} size="xl" className="object-contain" />
-              {/* Favorite button - positioned at top right of logo */}
-              <div className="absolute -top-1 -right-1">
+              {/* Favorite button - positioned at bottom right of logo */}
+              <div className="absolute -bottom-1 -right-1">
                 <FavoriteButton 
                   teamName={awayTeam}
                   sport={sport}
