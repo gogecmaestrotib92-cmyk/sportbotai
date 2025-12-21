@@ -68,13 +68,17 @@ export async function POST(request: NextRequest) {
   try {
     // Check for admin session OR cron secret
     const session = await getServerSession(authOptions);
+    console.log('[Match Preview API] Session:', session?.user?.email || 'no session');
+    
     const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+    console.log('[Match Preview API] Is Admin:', isAdmin, 'Email:', session?.user?.email);
     
     const authHeader = request.headers.get('Authorization');
     const cronSecret = process.env.CRON_SECRET;
     const hasCronAuth = cronSecret && authHeader === `Bearer ${cronSecret}`;
 
     if (!isAdmin && !hasCronAuth) {
+      console.log('[Match Preview API] Unauthorized - no admin session or cron auth');
       return NextResponse.json(
         { error: 'Unauthorized - Admin access required' },
         { status: 401 }

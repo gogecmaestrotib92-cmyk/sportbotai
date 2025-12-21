@@ -101,6 +101,7 @@ export default function BlogAdminPanel({ posts, stats }: BlogAdminPanelProps) {
       const res = await fetch('/api/blog/match-preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           matchId: match.matchId,
           homeTeam: match.homeTeam,
@@ -137,7 +138,9 @@ export default function BlogAdminPanel({ posts, stats }: BlogAdminPanelProps) {
     setMessage(null);
 
     try {
-      const res = await fetch(`/api/blog/match-preview?sportKey=${selectedSport}`);
+      const res = await fetch(`/api/blog/match-preview?sportKey=${selectedSport}`, {
+        credentials: 'include',
+      });
       const data = await res.json();
 
       if (res.ok && data.success) {
