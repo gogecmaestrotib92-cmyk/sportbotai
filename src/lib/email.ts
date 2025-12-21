@@ -1,7 +1,7 @@
 /**
  * Email Service for SportBot AI
  * 
- * Handles transactional emails using Resend
+ * Handles transactional emails using Brevo (formerly Sendinblue)
  * - Subscription confirmations
  * - Payment failures
  * - Cancellation notices
@@ -10,8 +10,9 @@
 
 import { SITE_CONFIG } from './seo';
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = `SportBot AI <noreply@${SITE_CONFIG.domain}>`;
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const FROM_EMAIL = 'contact@sportbotai.com';
+const FROM_NAME = 'Goran';
 const SUPPORT_EMAIL = SITE_CONFIG.email;
 
 interface SendEmailOptions {
@@ -22,27 +23,31 @@ interface SendEmailOptions {
 }
 
 /**
- * Send an email using Resend API
+ * Send an email using Brevo API
  */
 export async function sendEmail({ to, subject, html, replyTo }: SendEmailOptions): Promise<boolean> {
-  if (!RESEND_API_KEY) {
-    console.log('[Email] RESEND_API_KEY not configured, skipping email');
+  if (!BREVO_API_KEY) {
+    console.log('[Email] BREVO_API_KEY not configured, skipping email');
     return false;
   }
 
   try {
-    const response = await fetch('https://api.resend.com/emails', {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'api-key': BREVO_API_KEY,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [to],
+        sender: {
+          name: FROM_NAME,
+          email: FROM_EMAIL,
+        },
+        to: [{ email: to }],
         subject,
-        html,
-        reply_to: replyTo || SUPPORT_EMAIL,
+        htmlContent: html,
+        replyTo: { email: replyTo || SUPPORT_EMAIL },
       }),
     });
 
@@ -53,7 +58,7 @@ export async function sendEmail({ to, subject, html, replyTo }: SendEmailOptions
     }
 
     const result = await response.json();
-    console.log(`[Email] Sent to ${to}: ${subject} (ID: ${result.id})`);
+    console.log(`[Email] Sent to ${to}: ${subject} (ID: ${result.messageId})`);
     return true;
   } catch (error) {
     console.error('[Email] Error sending email:', error);
@@ -347,6 +352,55 @@ export async function sendTrialEndingEmail(
   return sendEmail({
     to: email,
     subject: `⏰ Your SportBot AI trial ends in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`,
+    html,
+  });
+}
+
+/**
+ * Welcome email for new user registration
+ */
+export async function sendRegistrationWelcomeEmail(
+  email: string,
+  name?: string
+): Promise<boolean> {
+  const displayName = name || 'there';
+  
+  const html = emailWrapper(`
+    <h2 style="color: #10B981;">Welcome to SportBot AI! 🎉</h2>
+    
+    <p>Hey ${displayName},</p>
+    
+    <p>Thanks for creating your account! You're now part of a community of sports enthusiasts who use AI to understand matches better.</p>
+    
+    <h3 style="color: #f8fafc; margin-top: 30px;">What you can do now:</h3>
+    <ul style="color: #cbd5e1; line-height: 1.8;">
+      <li>✅ Get your first AI match analysis for free</li>
+      <li>✅ Chat with our AI about any upcoming match</li>
+      <li>✅ Browse pre-match insights and team stats</li>
+    </ul>
+    
+    <div style="text-align: center;">
+      <a href="https://${SITE_CONFIG.domain}/matches" style="${buttonStyle}">
+        Explore Matches →
+      </a>
+    </div>
+    
+    <div style="background: #1e293b; padding: 20px; border-radius: 8px; margin: 30px 0;">
+      <p style="margin: 0; color: #fbbf24;"><strong>💡 Pro tip:</strong></p>
+      <p style="margin: 10px 0 0 0; color: #cbd5e1;">
+        Upgrade to Pro or Premium to unlock unlimited analyses, AI chat, and advanced insights. 
+        <a href="https://${SITE_CONFIG.domain}/pricing" style="color: #10B981;">See plans →</a>
+      </p>
+    </div>
+    
+    <p style="color: #94a3b8; font-size: 14px;">
+      Questions? Just reply to this email - we're happy to help!
+    </p>
+  `);
+
+  return sendEmail({
+    to: email,
+    subject: `Welcome to SportBot AI! 🎉`,
     html,
   });
 }

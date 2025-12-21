@@ -76,24 +76,16 @@ const plans: PricingPlan[] = [
 export default function PricingCards() {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Billing period toggles - yearly is default (true = yearly)
-  const [proYearly, setProYearly] = useState(true);
-  const [premiumYearly, setPremiumYearly] = useState(true);
+  // Single billing period toggle - yearly is default (true = yearly)
+  const [isYearlyBilling, setIsYearlyBilling] = useState(true);
   const { data: session } = useSession();
   const router = useRouter();
 
-  // Get the toggle state for a plan
-  const isYearly = (planId: string) => {
-    if (planId === 'pro') return proYearly;
-    if (planId === 'premium') return premiumYearly;
-    return true;
-  };
+  // Get the toggle state for any plan
+  const isYearly = () => isYearlyBilling;
 
   // Toggle handler
-  const toggleBilling = (planId: string) => {
-    if (planId === 'pro') setProYearly(!proYearly);
-    if (planId === 'premium') setPremiumYearly(!premiumYearly);
-  };
+  const toggleBilling = () => setIsYearlyBilling(!isYearlyBilling);
 
   // Function for Stripe checkout
   const handleCheckout = async (plan: PricingPlan) => {
@@ -103,7 +95,7 @@ export default function PricingCards() {
       return;
     }
 
-    const yearly = isYearly(plan.id);
+    const yearly = isYearly();
     const priceId = yearly ? plan.yearlyPriceId : plan.monthlyPriceId;
     const checkoutId = `${plan.id}-${yearly ? 'yearly' : 'monthly'}`;
 
@@ -150,6 +142,27 @@ export default function PricingCards() {
 
   return (
     <div className="relative">
+      {/* Single Billing Toggle at Top */}
+      <div className="flex items-center justify-center gap-4 mb-8">
+        <span className={`text-sm font-medium transition-colors ${!isYearlyBilling ? 'text-white' : 'text-gray-500'}`}>Monthly</span>
+        <button
+          onClick={toggleBilling}
+          className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
+            isYearlyBilling ? 'bg-primary' : 'bg-gray-600'
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ${
+              isYearlyBilling ? 'translate-x-7' : 'translate-x-0'
+            }`}
+          />
+        </button>
+        <span className={`text-sm font-medium transition-colors ${isYearlyBilling ? 'text-white' : 'text-gray-500'}`}>
+          Yearly
+          <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Save up to 52%</span>
+        </span>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
         {/* Free Plan Card */}
         <div className="rounded-card p-5 sm:p-6 bg-bg-card border border-divider">
@@ -180,10 +193,10 @@ export default function PricingCards() {
           </button>
         </div>
 
-        {/* Pro and Premium Cards with toggles */}
+        {/* Pro and Premium Cards */}
         {plans.map((plan) => {
           const isPremium = plan.id === 'premium';
-          const yearly = isYearly(plan.id);
+          const yearly = isYearly();
           const checkoutId = `${plan.id}-${yearly ? 'yearly' : 'monthly'}`;
           
           return (
@@ -214,26 +227,6 @@ export default function PricingCards() {
                 <h3 className={`text-xl font-bold mb-3 ${isPremium ? 'text-slate-200' : 'text-white'}`}>
                   {plan.name}
                 </h3>
-
-                {/* Billing Toggle */}
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <span className={`text-sm transition-colors ${!yearly ? 'text-white font-semibold' : 'text-gray-500'}`}>Monthly</span>
-                  <button
-                    onClick={() => toggleBilling(plan.id)}
-                    className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-                      yearly 
-                        ? plan.highlighted ? 'bg-primary' : isPremium ? 'bg-slate-400' : 'bg-accent'
-                        : 'bg-gray-600'
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ${
-                        yearly ? 'translate-x-6' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                  <span className={`text-sm transition-colors ${yearly ? 'text-white font-semibold' : 'text-gray-500'}`}>Yearly</span>
-                </div>
 
                 {/* Price */}
                 <div className="mb-2">

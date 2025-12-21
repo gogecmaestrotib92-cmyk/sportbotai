@@ -66,26 +66,18 @@ const plans: PricingPlan[] = [
 ];
 
 export default function PricingTeaser() {
-  // Billing period toggles - yearly is default (true = yearly)
-  const [proYearly, setProYearly] = useState(true);
-  const [premiumYearly, setPremiumYearly] = useState(true);
+  // Single billing period toggle - yearly is default (true = yearly)
+  const [isYearlyBilling, setIsYearlyBilling] = useState(true);
 
-  // Get the toggle state for a plan
-  const isYearly = (planId: string) => {
-    if (planId === 'pro') return proYearly;
-    if (planId === 'premium') return premiumYearly;
-    return true;
-  };
+  // Get the toggle state
+  const isYearly = () => isYearlyBilling;
 
   // Toggle handler
-  const toggleBilling = (planId: string) => {
-    if (planId === 'pro') setProYearly(!proYearly);
-    if (planId === 'premium') setPremiumYearly(!premiumYearly);
-  };
+  const toggleBilling = () => setIsYearlyBilling(!isYearlyBilling);
 
   return (
     <section className="bg-bg-primary section-container">
-      <div className="text-center mb-14">
+      <div className="text-center mb-8">
         <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-3">Pricing</p>
         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
           Simple, transparent pricing
@@ -93,6 +85,27 @@ export default function PricingTeaser() {
         <p className="text-lg text-gray-400 max-w-2xl mx-auto">
           Start free, upgrade when you need more. No hidden fees.
         </p>
+      </div>
+
+      {/* Single Billing Toggle at Top */}
+      <div className="flex items-center justify-center gap-4 mb-8">
+        <span className={`text-sm font-medium transition-colors ${!isYearlyBilling ? 'text-white' : 'text-gray-500'}`}>Monthly</span>
+        <button
+          onClick={toggleBilling}
+          className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
+            isYearlyBilling ? 'bg-primary' : 'bg-gray-600'
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ${
+              isYearlyBilling ? 'translate-x-7' : 'translate-x-0'
+            }`}
+          />
+        </button>
+        <span className={`text-sm font-medium transition-colors ${isYearlyBilling ? 'text-white' : 'text-gray-500'}`}>
+          Yearly
+          <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Save up to 52%</span>
+        </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
@@ -125,10 +138,10 @@ export default function PricingTeaser() {
           </Link>
         </div>
 
-        {/* Pro and Premium Cards with toggles */}
+        {/* Pro and Premium Cards */}
         {plans.map((plan) => {
           const isPremium = plan.id === 'premium';
-          const yearly = isYearly(plan.id);
+          const yearly = isYearly();
           
           return (
             <div
@@ -158,26 +171,6 @@ export default function PricingTeaser() {
                 <h3 className={`text-xl font-bold mb-3 ${isPremium ? 'text-slate-200' : 'text-white'}`}>
                   {plan.name}
                 </h3>
-
-                {/* Billing Toggle */}
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <span className={`text-sm transition-colors ${!yearly ? 'text-white font-semibold' : 'text-gray-500'}`}>Monthly</span>
-                  <button
-                    onClick={() => toggleBilling(plan.id)}
-                    className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-                      yearly 
-                        ? plan.highlighted ? 'bg-primary' : isPremium ? 'bg-slate-400' : 'bg-accent'
-                        : 'bg-gray-600'
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ${
-                        yearly ? 'translate-x-6' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                  <span className={`text-sm transition-colors ${yearly ? 'text-white font-semibold' : 'text-gray-500'}`}>Yearly</span>
-                </div>
 
                 {/* Price */}
                 <div className="mb-2">

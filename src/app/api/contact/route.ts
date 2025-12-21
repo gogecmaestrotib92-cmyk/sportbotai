@@ -97,23 +97,30 @@ export async function POST(request: NextRequest) {
       message: sanitize(message.trim()),
     };
 
-    // Try to send via Resend if API key is configured
-    const resendApiKey = process.env.RESEND_API_KEY;
+    // Try to send via Brevo if API key is configured
+    const brevoApiKey = process.env.BREVO_API_KEY;
     
-    if (resendApiKey) {
+    if (brevoApiKey) {
       try {
-        const resendResponse = await fetch('https://api.resend.com/emails', {
+        const brevoResponse = await fetch('https://api.brevo.com/v3/smtp/email', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${resendApiKey}`,
+            'api-key': brevoApiKey,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
           body: JSON.stringify({
-            from: 'SportBot AI <noreply@sportbotai.com>',
-            to: ['contact@sportbotai.com', 'stefanmitrovic93@gmail.com'],
-            reply_to: sanitizedData.email,
+            sender: {
+              name: 'SportBot AI Contact Form',
+              email: 'contact@sportbotai.com',
+            },
+            to: [
+              { email: 'contact@sportbotai.com' },
+              { email: 'stefanmitrovic93@gmail.com' }
+            ],
+            replyTo: { email: sanitizedData.email },
             subject: `[SportBot AI] ${sanitizedData.subject} from ${sanitizedData.name}`,
-            html: `
+            htmlContent: `
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #10B981;">New Contact Form Submission</h2>
                 <hr style="border: 1px solid #e5e7eb; margin: 20px 0;" />
@@ -141,13 +148,13 @@ export async function POST(request: NextRequest) {
           }),
         });
 
-        if (!resendResponse.ok) {
-          const errorData = await resendResponse.json();
-          console.error('[Contact] Resend error:', errorData);
+        if (!brevoResponse.ok) {
+          const errorData = await brevoResponse.json();
+          console.error('[Contact] Brevo error:', errorData);
           throw new Error('Failed to send email');
         }
 
-        console.log('[Contact] Email sent via Resend:', {
+        console.log('[Contact] Email sent via Brevo:', {
           from: sanitizedData.email,
           subject: sanitizedData.subject,
         });
@@ -156,13 +163,13 @@ export async function POST(request: NextRequest) {
           success: true,
           message: 'Your message has been sent successfully!',
         });
-      } catch (resendError) {
-        console.error('[Contact] Resend failed:', resendError);
+      } catch (brevoError) {
+        console.error('[Contact] Brevo failed:', brevoError);
         // Fall through to logging
       }
     }
 
-    // Fallback: Log the message (for development or if Resend not configured)
+    // Fallback: Log the message (for development or if Brevo not configured)
     console.log('[Contact] New contact form submission:', {
       timestamp: new Date().toISOString(),
       ip,
