@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
           },
           body: JSON.stringify({
             from: 'SportBot AI <noreply@sportbotai.com>',
-            to: ['contact@sportbotai.com'],
+            to: ['contact@sportbotai.com', 'stefanmitrovic93@gmail.com'],
             reply_to: sanitizedData.email,
             subject: `[SportBot AI] ${sanitizedData.subject} from ${sanitizedData.name}`,
             html: `

@@ -11,6 +11,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { signOut } from 'next-auth/react';
 import ProBadge from '@/components/ProBadge';
+import FeedbackModal from '@/components/FeedbackModal';
 
 interface UserData {
   id: string;
@@ -47,6 +48,10 @@ const PLAN_COLORS: Record<string, { bg: string; text: string; border: string }> 
 export default function AccountDashboard({ user }: Props) {
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
   const [usageData, setUsageData] = useState<{ used: number; limit: number; remaining: number } | null>(null);
+  const [feedbackModal, setFeedbackModal] = useState<{ isOpen: boolean; type: 'feature' | 'problem' }>({
+    isOpen: false,
+    type: 'feature',
+  });
 
   // Fetch real-time usage on mount
   useEffect(() => {
@@ -274,6 +279,51 @@ export default function AccountDashboard({ user }: Props) {
           </Link>
         </div>
 
+        {/* Feedback Section */}
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-white mb-4">Help Us Improve</h2>
+          
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* Suggest a Feature */}
+            <button
+              onClick={() => setFeedbackModal({ isOpen: true, type: 'feature' })}
+              className="flex items-center gap-4 p-4 bg-bg-card rounded-xl border border-divider hover:border-primary/30 transition-colors group text-left"
+            >
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-medium group-hover:text-primary transition-colors">Suggest a Feature</p>
+                <p className="text-text-muted text-sm">Share your ideas to improve SportBot</p>
+              </div>
+              <svg className="w-5 h-5 text-text-muted group-hover:text-primary transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            {/* Report a Problem */}
+            <button
+              onClick={() => setFeedbackModal({ isOpen: true, type: 'problem' })}
+              className="flex items-center gap-4 p-4 bg-bg-card rounded-xl border border-divider hover:border-danger/30 transition-colors group text-left"
+            >
+              <div className="w-10 h-10 rounded-lg bg-danger/10 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-medium group-hover:text-danger transition-colors">Report a Problem</p>
+                <p className="text-text-muted text-sm">Let us know if something isn&apos;t working</p>
+              </div>
+              <svg className="w-5 h-5 text-text-muted group-hover:text-danger transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
         {/* Account Settings */}
         <div className="mt-8">
           <h2 className="text-lg font-semibold text-white mb-4">Account Settings</h2>
@@ -343,6 +393,15 @@ export default function AccountDashboard({ user }: Props) {
           </div>
         </div>
       </section>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={feedbackModal.isOpen}
+        onClose={() => setFeedbackModal(prev => ({ ...prev, isOpen: false }))}
+        type={feedbackModal.type}
+        userEmail={user.email}
+        userName={user.name}
+      />
     </div>
   );
 }
