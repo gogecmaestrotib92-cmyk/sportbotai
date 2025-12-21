@@ -640,31 +640,48 @@ Return ONLY the JSON object defined in the schema. No other text.`;
 export async function POST(request: NextRequest) {
   try {
     // ========================================
-    // RATE LIMITING CHECK
+    // INTERNAL API KEY CHECK (for blog generator, cron jobs)
     // ========================================
-    const clientIp = getClientIp(request);
-    const rateLimit = await checkRateLimit('analyze', clientIp);
+    const internalKey = request.headers.get('X-Internal-Key');
+    const expectedKey = process.env.INTERNAL_API_SECRET || 'sportbot-internal-blog-generator-2024';
+    const isInternalCall = internalKey && internalKey === expectedKey;
     
-    if (!rateLimit.success) {
-      return rateLimitResponse(rateLimit.reset);
+    // ========================================
+    // RATE LIMITING CHECK (skip for internal calls)
+    // ========================================
+    if (!isInternalCall) {
+      const clientIp = getClientIp(request);
+      const rateLimit = await checkRateLimit('analyze', clientIp);
+      
+      if (!rateLimit.success) {
+        return rateLimitResponse(rateLimit.reset);
+      }
     }
 
     // ========================================
-    // AUTHENTICATION CHECK
+    // AUTHENTICATION CHECK (skip for internal calls)
     // ========================================
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    let userId: string;
+    
+    if (isInternalCall) {
+      // Internal calls use a system user ID
+      userId = 'system-blog-generator';
+      console.log('[Analyze] Internal API call from blog generator');
+    } else {
+      const token = await getToken({
+        req: request,
+        secret: process.env.NEXTAUTH_SECRET,
+      });
 
-    if (!token || !token.id) {
-      return NextResponse.json(
-        createErrorResponse('Authentication required. Please sign in to use the analyzer.'),
-        { status: 401 }
-      );
+      if (!token || !token.id) {
+        return NextResponse.json(
+          createErrorResponse('Authentication required. Please sign in to use the analyzer.'),
+          { status: 401 }
+        );
+      }
+      
+      userId = token.id as string;
     }
-
-    const userId = token.id as string;
 
     // ========================================
     // PARSE AND VALIDATE REQUEST FIRST
@@ -724,9 +741,16 @@ export async function POST(request: NextRequest) {
     }
 
     // ========================================
-    // USAGE LIMIT CHECK
+    // USAGE LIMIT CHECK (skip for internal calls)
     // ========================================
-    const usageCheck = await canUserAnalyze(userId);
+    let usageCheck: { allowed: boolean; plan: string; limit: number; remaining: number };
+    
+    if (isInternalCall) {
+      // Internal calls have unlimited usage
+      usageCheck = { allowed: true, plan: 'INTERNAL', limit: -1, remaining: -1 };
+    } else {
+      usageCheck = await canUserAnalyze(userId);
+    }
     
     if (!usageCheck.allowed) {
       // If limit is -1 (error checking), return error

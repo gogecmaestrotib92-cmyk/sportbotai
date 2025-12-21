@@ -5,6 +5,7 @@ import OpenAI from 'openai';
 import { prisma } from '@/lib/prisma';
 import { researchTopic } from './research';
 import { put } from '@vercel/blob';
+import { getTeamLogo, getLeagueLogo } from '@/lib/logos';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -73,19 +74,38 @@ interface GeneratedMatchContent {
 // FEATURED IMAGE GENERATION (Team Logos)
 // ============================================
 
+/**
+ * Fetch image as base64 data URI for embedding in SVG
+ */
+async function fetchImageAsBase64(url: string): Promise<string | null> {
+  try {
+    // Skip data URIs (fallback logos)
+    if (url.startsWith('data:')) {
+      return url;
+    }
+    
+    const response = await fetch(url, { 
+      headers: { 'Accept': 'image/*' },
+      signal: AbortSignal.timeout(5000) // 5s timeout
+    });
+    
+    if (!response.ok) return null;
+    
+    const buffer = await response.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString('base64');
+    const contentType = response.headers.get('content-type') || 'image/png';
+    
+    return `data:${contentType};base64,${base64}`;
+  } catch (error) {
+    console.warn('[Match Image] Failed to fetch logo:', url, error);
+    return null;
+  }
+}
+
 async function generateMatchFeaturedImage(
   match: MatchInfo,
   title: string
 ): Promise<{ url: string; alt: string }> {
-  // If we have team logos, create a composite image using canvas-style approach
-  // For now, we'll use a smart placeholder with team names that looks professional
-  
-  const homeLogoUrl = match.homeTeamLogo || '';
-  const awayLogoUrl = match.awayTeamLogo || '';
-  const leagueLogoUrl = match.leagueLogo || '';
-  
-  // Create an OG-style image URL with team info
-  // This uses a dynamic image generation service pattern
   const matchDate = new Date(match.commenceTime);
   const dateStr = matchDate.toLocaleDateString('en-US', { 
     weekday: 'short',
@@ -93,80 +113,153 @@ async function generateMatchFeaturedImage(
     day: 'numeric'
   });
   
-  // If we have logos, upload a generated HTML image to blob storage
-  if (homeLogoUrl && awayLogoUrl) {
-    try {
-      // Generate SVG-based image with team logos
-      const svgContent = `
-        <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#0f172a"/>
-              <stop offset="50%" style="stop-color:#1e293b"/>
-              <stop offset="100%" style="stop-color:#0f172a"/>
-            </linearGradient>
-            <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style="stop-color:#10b981"/>
-              <stop offset="100%" style="stop-color:#059669"/>
-            </linearGradient>
-          </defs>
-          
-          <!-- Background -->
-          <rect width="1200" height="630" fill="url(#bg)"/>
-          
-          <!-- Accent line -->
-          <rect x="0" y="610" width="1200" height="20" fill="url(#accent)"/>
-          
-          <!-- League badge at top -->
-          <text x="600" y="80" text-anchor="middle" fill="#94a3b8" font-family="system-ui" font-size="24" font-weight="500">${match.league}</text>
-          
-          <!-- VS Section -->
-          <text x="600" y="340" text-anchor="middle" fill="#475569" font-family="system-ui" font-size="48" font-weight="bold">VS</text>
-          
-          <!-- Home Team -->
-          <text x="250" y="280" text-anchor="middle" fill="#ffffff" font-family="system-ui" font-size="36" font-weight="bold">${match.homeTeam.substring(0, 15)}</text>
-          <text x="250" y="320" text-anchor="middle" fill="#10b981" font-family="system-ui" font-size="20">HOME</text>
-          
-          <!-- Away Team -->
-          <text x="950" y="280" text-anchor="middle" fill="#ffffff" font-family="system-ui" font-size="36" font-weight="bold">${match.awayTeam.substring(0, 15)}</text>
-          <text x="950" y="320" text-anchor="middle" fill="#ef4444" font-family="system-ui" font-size="20">AWAY</text>
-          
-          <!-- Match Date -->
-          <text x="600" y="450" text-anchor="middle" fill="#64748b" font-family="system-ui" font-size="28">${dateStr}</text>
-          
-          <!-- SportBot AI Branding -->
-          <text x="600" y="550" text-anchor="middle" fill="#10b981" font-family="system-ui" font-size="22" font-weight="600">SportBot AI Analysis</text>
-          <text x="600" y="580" text-anchor="middle" fill="#475569" font-family="system-ui" font-size="16">AI-Powered Match Preview</text>
-        </svg>
-      `;
-      
-      // Upload SVG to blob storage
-      const blob = await put(
-        `blog/match-previews/${match.matchId}.svg`,
-        svgContent,
-        {
-          access: 'public',
-          contentType: 'image/svg+xml',
-        }
-      );
-      
-      return {
-        url: blob.url,
-        alt: `${match.homeTeam} vs ${match.awayTeam} - ${match.league} Match Preview`,
-      };
-    } catch (error) {
-      console.warn('[Match Image] SVG generation failed:', error);
-    }
+  // Truncate team names for SVG display (max 18 chars)
+  const homeTeamDisplay = match.homeTeam.length > 18 
+    ? match.homeTeam.substring(0, 16) + '...' 
+    : match.homeTeam;
+  const awayTeamDisplay = match.awayTeam.length > 18 
+    ? match.awayTeam.substring(0, 16) + '...' 
+    : match.awayTeam;
+  
+  // Escape special characters for SVG
+  const escapeXml = (str: string) => str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+  // Get team logo URLs from our logos library
+  const homeLogoUrl = getTeamLogo(match.homeTeam, match.sport, match.league);
+  const awayLogoUrl = getTeamLogo(match.awayTeam, match.sport, match.league);
+  const leagueLogoUrl = getLeagueLogo(match.league, match.sport);
+  
+  console.log('[Match Image] Fetching logos:', { homeLogoUrl, awayLogoUrl, leagueLogoUrl });
+
+  try {
+    // Fetch logos as base64 in parallel (with fallbacks)
+    const [homeLogoData, awayLogoData, leagueLogoData] = await Promise.all([
+      fetchImageAsBase64(homeLogoUrl),
+      fetchImageAsBase64(awayLogoUrl),
+      fetchImageAsBase64(leagueLogoUrl),
+    ]);
+    
+    // Build logo elements for SVG
+    const homeLogoElement = homeLogoData 
+      ? `<image x="200" y="260" width="150" height="150" href="${homeLogoData}" preserveAspectRatio="xMidYMid meet"/>`
+      : `<circle cx="275" cy="335" r="60" fill="#334155"/>
+         <text x="275" y="350" text-anchor="middle" fill="#10b981" font-family="Arial, sans-serif" font-size="36" font-weight="700">${escapeXml(match.homeTeam.substring(0, 2).toUpperCase())}</text>`;
+    
+    const awayLogoElement = awayLogoData
+      ? `<image x="850" y="260" width="150" height="150" href="${awayLogoData}" preserveAspectRatio="xMidYMid meet"/>`
+      : `<circle cx="925" cy="335" r="60" fill="#334155"/>
+         <text x="925" y="350" text-anchor="middle" fill="#ef4444" font-family="Arial, sans-serif" font-size="36" font-weight="700">${escapeXml(match.awayTeam.substring(0, 2).toUpperCase())}</text>`;
+    
+    const leagueLogoElement = leagueLogoData && !leagueLogoData.startsWith('data:image/svg')
+      ? `<image x="565" y="35" width="70" height="70" href="${leagueLogoData}" preserveAspectRatio="xMidYMid meet"/>`
+      : '';
+
+    // Generate professional SVG-based OG image with team logos
+    const svgContent = `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="50%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#10b981"/>
+      <stop offset="100%" style="stop-color:#059669"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+    <clipPath id="logoClip">
+      <circle r="60"/>
+    </clipPath>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Subtle pattern -->
+  <g opacity="0.05">
+    <circle cx="100" cy="100" r="200" fill="#10b981"/>
+    <circle cx="1100" cy="530" r="200" fill="#10b981"/>
+  </g>
+  
+  <!-- Accent line at bottom -->
+  <rect x="0" y="610" width="1200" height="20" fill="url(#accent)"/>
+  
+  <!-- League badge at top -->
+  ${leagueLogoElement || `<rect x="400" y="40" width="400" height="50" rx="25" fill="#1e293b" stroke="#334155" stroke-width="1"/>`}
+  <text x="600" y="${leagueLogoElement ? '130' : '73'}" text-anchor="middle" fill="#94a3b8" font-family="Arial, sans-serif" font-size="18" font-weight="500">${escapeXml(match.league)}</text>
+  
+  <!-- Home Team Section -->
+  <rect x="50" y="170" width="450" height="300" rx="16" fill="#1e293b" filter="url(#shadow)"/>
+  <rect x="50" y="170" width="450" height="50" rx="16" fill="#10b981"/>
+  <rect x="50" y="204" width="450" height="16" fill="#1e293b"/>
+  <text x="275" y="203" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="18" font-weight="600">HOME</text>
+  
+  <!-- Home Team Logo -->
+  ${homeLogoElement}
+  
+  <!-- Home Team Name -->
+  <text x="275" y="450" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="26" font-weight="700">${escapeXml(homeTeamDisplay)}</text>
+  
+  <!-- VS Circle -->
+  <circle cx="600" cy="320" r="55" fill="#334155" stroke="#475569" stroke-width="2"/>
+  <text x="600" y="337" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="36" font-weight="700">VS</text>
+  
+  <!-- Away Team Section -->
+  <rect x="700" y="170" width="450" height="300" rx="16" fill="#1e293b" filter="url(#shadow)"/>
+  <rect x="700" y="170" width="450" height="50" rx="16" fill="#ef4444"/>
+  <rect x="700" y="204" width="450" height="16" fill="#1e293b"/>
+  <text x="925" y="203" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="18" font-weight="600">AWAY</text>
+  
+  <!-- Away Team Logo -->
+  ${awayLogoElement}
+  
+  <!-- Away Team Name -->
+  <text x="925" y="450" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="26" font-weight="700">${escapeXml(awayTeamDisplay)}</text>
+  
+  <!-- Match Date -->
+  <rect x="450" y="500" width="300" height="45" rx="22" fill="#334155"/>
+  <text x="600" y="530" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="20" font-weight="500">${escapeXml(dateStr)}</text>
+  
+  <!-- SportBot AI Branding -->
+  <text x="600" y="575" text-anchor="middle" fill="#10b981" font-family="Arial, sans-serif" font-size="20" font-weight="600">SportBot AI</text>
+  <text x="600" y="598" text-anchor="middle" fill="#64748b" font-family="Arial, sans-serif" font-size="12">AI-Powered Match Preview &amp; Prediction</text>
+</svg>`;
+    
+    // Upload SVG to Vercel Blob storage
+    const blob = await put(
+      `blog/match-previews/${match.matchId}.svg`,
+      svgContent,
+      {
+        access: 'public',
+        contentType: 'image/svg+xml',
+      }
+    );
+    
+    console.log('[Match Image] Generated SVG with logos:', blob.url);
+    
+    return {
+      url: blob.url,
+      alt: `${match.homeTeam} vs ${match.awayTeam} - ${match.league} Match Preview`,
+    };
+  } catch (error) {
+    console.warn('[Match Image] SVG generation failed:', error);
+    
+    // Fallback: Use a placeholder with match info
+    const placeholderText = encodeURIComponent(`${match.homeTeam} vs ${match.awayTeam}`);
+    const placeholderSubtext = encodeURIComponent(`${match.league} | ${dateStr}`);
+    
+    return {
+      url: `https://placehold.co/1200x630/1e293b/10b981?text=${placeholderText}%0A${placeholderSubtext}`,
+      alt: `${match.homeTeam} vs ${match.awayTeam} - Match Preview`,
+    };
   }
-  
-  // Fallback: Use a placeholder with match info
-  const placeholderText = encodeURIComponent(`${match.homeTeam} vs ${match.awayTeam}`);
-  const placeholderSubtext = encodeURIComponent(`${match.league} | ${dateStr}`);
-  
-  return {
-    url: `https://placehold.co/1200x630/1e293b/10b981?text=${placeholderText}%0A${placeholderSubtext}`,
-    alt: `${match.homeTeam} vs ${match.awayTeam} - Match Preview`,
-  };
 }
 
 // ============================================
@@ -266,6 +359,9 @@ interface MatchAnalysisData {
   marketInsights: string[];
 }
 
+// Internal API secret for blog generator (server-side only)
+const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET || 'sportbot-internal-blog-generator-2024';
+
 async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisData | null> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -281,7 +377,6 @@ async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisData |
       oddsHome: match.odds?.home || 0,
       oddsDraw: match.odds?.draw || null,
       oddsAway: match.odds?.away || 0,
-      // Skip auth for internal calls (blog generator runs as system)
     };
 
     console.log(`[Match Analysis] Fetching analysis for ${match.homeTeam} vs ${match.awayTeam}`);
@@ -290,8 +385,8 @@ async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisData |
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // Use internal API key for blog generator
-        'X-Internal-Key': process.env.CRON_SECRET || '',
+        // Use internal API key for blog generator (bypasses auth)
+        'X-Internal-Key': INTERNAL_API_SECRET,
       },
       body: JSON.stringify(analyzePayload),
     });
