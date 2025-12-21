@@ -96,6 +96,12 @@ import {
   type RawMatchInput,
   type UniversalSignals,
 } from '@/lib/universal-signals';
+import {
+  computeNarrativeAngle,
+  SIGNATURE_CATCHPHRASES,
+  RECURRING_MOTIFS,
+  type NarrativeAngle,
+} from '@/lib/sportbot-brain';
 
 // ============================================
 // OPENAI CLIENT (LAZY INIT)
@@ -130,6 +136,82 @@ interface ComputedProbabilities {
   marketIntel: MarketIntel | null;
   confidence: 'high' | 'medium' | 'low';
   dataQuality: 'HIGH' | 'MEDIUM' | 'LOW';
+  narrativeAngle: NarrativeAngle;
+}
+
+/**
+ * Derive narrative angle from signals for AIXBT personality
+ */
+function deriveNarrativeAngleFromSignals(signals: UniversalSignals): NarrativeAngle {
+  // Volatility: based on clarity score (lower clarity = higher volatility)
+  const volatilityScore = signals.clarity_score < 50 ? 80 : 
+                          signals.clarity_score < 70 ? 50 : 20;
+  
+  // Power gap: based on edge percentage
+  const edgePct = signals.display.edge.percentage;
+  const powerGap = edgePct > 15 ? 50 : edgePct > 8 ? 30 : 10;
+  
+  // Form weirdness: based on form trends
+  const formTrend = signals.display.form.trend;
+  const formWeirdness = formTrend === 'balanced' ? 30 : 
+                        (signals.display.form.home === 'weak' && signals.display.form.away === 'weak') ? 70 :
+                        40;
+  
+  return computeNarrativeAngle(volatilityScore, powerGap, formWeirdness);
+}
+
+/**
+ * Map narrative angle to AIXBT catchphrase category
+ */
+function mapAngleToCategory(angle: NarrativeAngle): keyof typeof SIGNATURE_CATCHPHRASES {
+  switch (angle) {
+    case 'CHAOS':
+      return 'chaos';
+    case 'BLOWOUT_POTENTIAL':
+      return 'highConviction';
+    case 'TRAP_SPOT':
+      return 'contrarian';
+    case 'CONTROL':
+    case 'MIRROR_MATCH':
+    default:
+      return 'openers';
+  }
+}
+
+/**
+ * Get AIXBT personality catchphrase for the narrative angle
+ */
+function getAIXBTCatchphrase(angle: NarrativeAngle): string {
+  const category = mapAngleToCategory(angle);
+  const phrases = SIGNATURE_CATCHPHRASES[category];
+  return phrases[Math.floor(Math.random() * phrases.length)];
+}
+
+/**
+ * Get AIXBT recurring motif
+ */
+function getAIXBTMotif(): string {
+  const motifs = RECURRING_MOTIFS;
+  return motifs[Math.floor(Math.random() * motifs.length)];
+}
+
+/**
+ * Get angle-specific writing guidance
+ */
+function getAngleGuidance(angle: NarrativeAngle): string {
+  switch (angle) {
+    case 'CHAOS':
+      return 'Embrace the chaos. Mock the unpredictability. Sound amused by the madness.';
+    case 'BLOWOUT_POTENTIAL':
+      return 'Be confident but not arrogant. The data is clear. Express mild boredom at the predictability.';
+    case 'TRAP_SPOT':
+      return 'Warning tone. Highlight the hidden dangers. Sound like you\'ve seen this movie before.';
+    case 'MIRROR_MATCH':
+      return 'The story matters more than pure stats here. This is evenly matched - focus on small edges.';
+    case 'CONTROL':
+    default:
+      return 'Controlled, analytical, slight superiority. The numbers speak. You interpret.';
+  }
 }
 
 /**
@@ -270,11 +352,15 @@ function computeProbabilities(
     hasFormData && hasH2H ? 'HIGH' :
     hasFormData ? 'MEDIUM' : 'LOW';
 
+  // Derive AIXBT narrative angle from signals
+  const narrativeAngle = deriveNarrativeAngleFromSignals(signals);
+
   console.log('[Pipeline] Computed probabilities:', { 
     homeProb, drawProb, awayProb, 
     dataQuality, 
     confidence: signals.confidence,
     edge: strengthEdge,
+    narrativeAngle,
   });
 
   return {
@@ -285,6 +371,7 @@ function computeProbabilities(
     marketIntel,
     confidence: signals.confidence,
     dataQuality,
+    narrativeAngle,
   };
 }
 
@@ -1463,10 +1550,13 @@ async function callOpenAI(
     }
   }
 
-  // CRITICAL: Inject computed probabilities as READ-ONLY values
+  // CRITICAL: Inject computed probabilities and AIXBT personality as READ-ONLY values
   // This ensures LLM uses our mathematically computed probabilities
   // instead of guessing its own
   if (computedProbs) {
+    const catchphrase = getAIXBTCatchphrase(computedProbs.narrativeAngle);
+    const motif = getAIXBTMotif();
+    
     userPrompt += `
 
 === PRE-COMPUTED PROBABILITIES (READ-ONLY - USE THESE EXACT VALUES) ===
@@ -1485,12 +1575,24 @@ ${computedProbs.marketIntel ? `VALUE ANALYSIS: ${computedProbs.marketIntel.summa
 
 IMPORTANT: Copy these exact probability values to your probabilities object.
 Do NOT recalculate or adjust them. They are based on comprehensive data analysis.
+
+=== AIXBT PERSONALITY INJECTION ===
+NARRATIVE ANGLE: ${computedProbs.narrativeAngle}
+SIGNATURE CATCHPHRASE TO USE: "${catchphrase}"
+RECURRING MOTIF: "${motif}"
+
+Write your analysis in this specific narrative angle:
+${getAngleGuidance(computedProbs.narrativeAngle)}
+
+Include the catchphrase naturally in your headline or verdict. Work the motif into your narrative.
 `;
-    console.log('[OpenAI] Injected computed probabilities:', {
+    console.log('[OpenAI] Injected computed probabilities and AIXBT personality:', {
       home: computedProbs.homeWin,
       draw: computedProbs.draw,
       away: computedProbs.awayWin,
       edge: computedProbs.strengthEdge,
+      narrativeAngle: computedProbs.narrativeAngle,
+      catchphrase,
     });
   }
 
