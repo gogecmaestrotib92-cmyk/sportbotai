@@ -33,7 +33,7 @@ export function LiveStatsCounter({ className = '' }: LiveStatsCounterProps) {
         const res = await fetch('/api/stats');
         const data = await res.json();
         if (data.success && data.stats) {
-          setCount(data.stats.analysesToday);
+          setCount(data.stats.totalAnalyses);
         }
       } catch (error) {
         console.error('Failed to fetch stats:', error);
@@ -60,7 +60,7 @@ export function LiveStatsCounter({ className = '' }: LiveStatsCounterProps) {
           <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
         </span>
         <span className="text-white/60 text-sm">
-          <span className="text-white font-semibold tabular-nums">–</span> analyses today
+          <span className="text-white font-semibold tabular-nums">–</span> analyses completed
         </span>
       </div>
     );
@@ -75,7 +75,7 @@ export function LiveStatsCounter({ className = '' }: LiveStatsCounterProps) {
       <span className="text-white/60 text-sm">
         <span className="text-white font-semibold tabular-nums">
           {isLoading ? '–' : (count ?? 0).toLocaleString()}
-        </span> analyses today
+        </span> analyses completed
       </span>
     </div>
   );
