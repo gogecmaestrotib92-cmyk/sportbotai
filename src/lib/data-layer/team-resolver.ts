@@ -767,6 +767,8 @@ const SOCCER_MAPPINGS: Record<string, string> = {
   'rcd espanyol': 'Espanyol',
   'alaves': 'Alaves',
   'deportivo alaves': 'Alaves',
+  'elche': 'Elche',
+  'elche cf': 'Elche',
   
   // Serie A
   'ac milan': 'AC Milan',

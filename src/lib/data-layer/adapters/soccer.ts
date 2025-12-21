@@ -42,6 +42,10 @@ const LEAGUE_MAPPINGS: Record<string, number> = {
   'laliga': LEAGUE_IDS.LA_LIGA,
   'spanish league': LEAGUE_IDS.LA_LIGA,
   'soccer_spain_la_liga': LEAGUE_IDS.LA_LIGA,
+  'la liga 2': LEAGUE_IDS.LA_LIGA_2,
+  'segunda': LEAGUE_IDS.LA_LIGA_2,
+  'segunda division': LEAGUE_IDS.LA_LIGA_2,
+  'soccer_spain_segunda_division': LEAGUE_IDS.LA_LIGA_2,
   'bundesliga': LEAGUE_IDS.BUNDESLIGA,
   'german league': LEAGUE_IDS.BUNDESLIGA,
   'soccer_germany_bundesliga': LEAGUE_IDS.BUNDESLIGA,
@@ -114,13 +118,20 @@ export class SoccerAdapter extends BaseSportAdapter {
     const leagueId = this.resolveLeagueId(query.league);
     
     // Major leagues to try if no league specified (ordered by popularity)
+    // Includes second-tier leagues for promoted/relegated teams
     const majorLeagues = [
       LEAGUE_IDS.PREMIER_LEAGUE,    // 39 - EPL
       LEAGUE_IDS.LA_LIGA,           // 140 - Spain
       LEAGUE_IDS.BUNDESLIGA,        // 78 - Germany
       LEAGUE_IDS.SERIE_A,           // 135 - Italy
       LEAGUE_IDS.LIGUE_1,           // 61 - France
+      LEAGUE_IDS.CHAMPIONSHIP,      // 40 - England 2nd
+      LEAGUE_IDS.LA_LIGA_2,         // 141 - Spain 2nd
+      LEAGUE_IDS.BUNDESLIGA_2,      // 79 - Germany 2nd
+      LEAGUE_IDS.SERIE_B,           // 136 - Italy 2nd
+      LEAGUE_IDS.LIGUE_2,           // 62 - France 2nd
       LEAGUE_IDS.CHAMPIONS_LEAGUE,  // 2 - UCL
+      LEAGUE_IDS.EUROPA_LEAGUE,     // 3 - UEL
       LEAGUE_IDS.MLS,               // 253 - USA
     ];
     
@@ -188,7 +199,8 @@ export class SoccerAdapter extends BaseSportAdapter {
         }
         
         // Only try first league variation if we found nothing - avoid too many API calls
-        if (!leagueId && leaguesToTry.indexOf(tryLeague) >= 2) {
+        // Increased to 6 to cover top + second tier of major leagues
+        if (!leagueId && leaguesToTry.indexOf(tryLeague) >= 6) {
           console.log(`[Soccer] Stopping league search after checking ${leaguesToTry.indexOf(tryLeague) + 1} leagues`);
           break;
         }

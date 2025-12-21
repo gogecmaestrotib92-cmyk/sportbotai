@@ -21,7 +21,7 @@ export const API_SPORTS_URLS = {
 
 // League IDs
 export const LEAGUE_IDS = {
-  // Soccer
+  // Soccer - Top Divisions
   PREMIER_LEAGUE: 39,
   LA_LIGA: 140,
   BUNDESLIGA: 78,
@@ -29,6 +29,13 @@ export const LEAGUE_IDS = {
   LIGUE_1: 61,
   MLS: 253,
   CHAMPIONS_LEAGUE: 2,
+  EUROPA_LEAGUE: 3,
+  // Soccer - Second Divisions
+  CHAMPIONSHIP: 40,      // England
+  LA_LIGA_2: 141,        // Spain Segunda
+  BUNDESLIGA_2: 79,      // Germany
+  SERIE_B: 136,          // Italy
+  LIGUE_2: 62,           // France
   
   // Basketball
   NBA: 12,

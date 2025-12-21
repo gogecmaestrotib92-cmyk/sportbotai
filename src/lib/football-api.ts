@@ -255,6 +255,8 @@ const TEAM_NAME_MAPPINGS: Record<string, { id?: number; leagueId?: number; searc
   'CD Leganés': { id: 745, leagueId: 140 },
   'Valladolid': { id: 720, leagueId: 140 },
   'Real Valladolid': { id: 720, leagueId: 140 },
+  'Elche': { id: 797, leagueId: 140 },
+  'Elche CF': { id: 797, leagueId: 140 },
   // Recently relegated
   'Almeria': { id: 723, leagueId: 141 },
   'Cadiz': { id: 724, leagueId: 141 },
