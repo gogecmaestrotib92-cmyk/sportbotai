@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getBlogPostBreadcrumb } from '@/lib/seo';
+import ViewTracker from '@/components/ViewTracker';
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -28,11 +29,8 @@ async function getPost(slug: string) {
     return null;
   }
 
-  // Increment views
-  await prisma.blogPost.update({
-    where: { id: post.id },
-    data: { views: { increment: 1 } },
-  }).catch(() => {});
+  // NOTE: Views are tracked client-side via ViewTracker component
+  // This prevents double-counting from generateMetadata + page render
 
   // Get related posts
   const relatedPosts: RelatedPost[] = await prisma.blogPost.findMany({
@@ -149,6 +147,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   return (
     <>
+      <ViewTracker postId={post.id} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
