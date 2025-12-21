@@ -656,6 +656,37 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     console.log(`[Match-Preview] Parallel fetch complete in ${Date.now() - startTime}ms - AI: ${aiAnalysis?.story?.favored || 'unknown'}, Odds: ${odds ? 'yes' : 'no'}`);
 
+    // Try to fetch opening odds from existing prediction for steam/RLM detection
+    let previousOdds: OddsData | undefined;
+    try {
+      const matchRef = `${matchInfo.homeTeam} vs ${matchInfo.awayTeam}`;
+      const existingPred = await prisma.prediction.findFirst({
+        where: {
+          matchName: matchRef,
+          openingOdds: { not: null },
+        },
+        select: { openingOdds: true },
+      });
+      
+      if (existingPred?.openingOdds && odds) {
+        // Parse opening odds (stored as decimal, e.g., 2.10)
+        const openingDecimal = parseFloat(existingPred.openingOdds.toString());
+        if (openingDecimal && openingDecimal !== odds.homeOdds) {
+          // Estimate draw/away from home odds change ratio
+          const ratio = openingDecimal / odds.homeOdds;
+          previousOdds = {
+            homeOdds: openingDecimal,
+            awayOdds: odds.awayOdds * (1 / ratio),  // Inverse movement
+            drawOdds: odds.drawOdds,
+          };
+          console.log(`[Match-Preview] Using opening odds for steam detection: ${openingDecimal} → ${odds.homeOdds}`);
+        }
+      }
+    } catch (predError) {
+      // Non-critical - proceed without steam detection
+      console.log('[Match-Preview] Could not fetch opening odds for steam detection');
+    }
+
     // Calculate market intel using AI signals + odds (only if we have both)
     let marketIntel: MarketIntel | null = null;
     if (odds && aiAnalysis?.universalSignals) {
@@ -667,10 +698,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           aiAnalysis.universalSignals,
           odds,
           sportConfig.hasDraw,
-          undefined,
+          previousOdds,  // Now passing previous odds for steam/RLM detection!
           leagueKey
         );
-        console.log(`[Match-Preview] Market intel: ${marketIntel.recommendation}, edge: ${marketIntel.valueEdge?.edgePercent || 0}%`);
+        console.log(`[Match-Preview] Market intel: ${marketIntel.recommendation}, edge: ${marketIntel.valueEdge?.edgePercent || 0}%${marketIntel.lineMovement?.isSteamMove ? ' [STEAM MOVE DETECTED]' : ''}`);
       } catch (miError) {
         console.error('[Match-Preview] Market intel calculation failed:', miError);
       }
