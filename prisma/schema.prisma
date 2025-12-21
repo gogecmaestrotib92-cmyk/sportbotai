@@ -51,15 +51,15 @@ model User {
   stripeCurrentPeriodEnd DateTime?
   analysisCount          Int            @default(0)
   lastAnalysisDate       DateTime?
-  lastActiveAt           DateTime?      // Last time user was active
-  bonusCredits           Int            @default(0) // Extra analyses given by admin
-  isBanned               Boolean        @default(false) // Account suspended
-  bannedReason           String?        // Why account was banned
-  referralSource         String?        // UTM source, e.g. "google", "twitter", "reddit"
-  referralMedium         String?        // UTM medium, e.g. "cpc", "organic", "social"
-  referralCampaign       String?        // UTM campaign name
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
+  referralCampaign       String?
+  referralMedium         String?
+  referralSource         String?
+  bannedReason           String?
+  bonusCredits           Int            @default(0)
+  isBanned               Boolean        @default(false)
+  lastActiveAt           DateTime?
   accounts               Account[]
   analyses               Analysis[]
   favoriteTeams          FavoriteTeam[]
@@ -114,32 +114,45 @@ model BlogKeyword {
 }
 
 model BlogPost {
-  id              String       @id @default(cuid())
-  title           String
-  slug            String       @unique
-  excerpt         String
-  content         String
-  metaTitle       String?
-  metaDescription String?
-  focusKeyword    String?
-  featuredImage   String?
-  imageAlt        String?
-  category        String?
-  tags            String[]
-  status          PostStatus   @default(DRAFT)
-  publishedAt     DateTime?
-  keywordId       String?
-  aiModel         String?
-  generationCost  Float?
-  views           Int          @default(0)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  keyword         BlogKeyword? @relation(fields: [keywordId], references: [id])
+  id                 String       @id @default(cuid())
+  title              String
+  slug               String       @unique
+  excerpt            String
+  content            String
+  metaTitle          String?
+  metaDescription    String?
+  focusKeyword       String?
+  featuredImage      String?
+  imageAlt           String?
+  category           String?
+  tags               String[]
+  status             PostStatus   @default(DRAFT)
+  publishedAt        DateTime?
+  keywordId          String?
+  aiModel            String?
+  generationCost     Float?
+  views              Int          @default(0)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  awayTeam           String?
+  finalScore         String?
+  homeTeam           String?
+  league             String?
+  matchDate          DateTime?
+  matchId            String?
+  postMatchContent   String?
+  postMatchUpdatedAt DateTime?
+  postType           PostType     @default(GENERAL)
+  sport              String?
+  keyword            BlogKeyword? @relation(fields: [keywordId], references: [id])
 
   @@index([slug])
   @@index([status])
   @@index([publishedAt])
   @@index([keywordId])
+  @@index([matchId])
+  @@index([matchDate])
+  @@index([postType])
 }
 
 model FavoriteTeam {
@@ -213,7 +226,7 @@ model ChatFeedback {
   queryHash          String
   query              String
   response           String
-  rating             Int      // 1 = thumbs down, 5 = thumbs up
+  rating             Int
   feedback           String?
   sport              String?
   category           String?
@@ -252,8 +265,6 @@ model AgentPost {
   impressions    Int      @default(0)
   engagement     Int      @default(0)
   createdAt      DateTime @default(now())
-  
-  // Link to prediction (unified model)
   predictionId   String?
 
   @@index([category])
@@ -313,15 +324,15 @@ model Prediction {
   conviction        Int
   odds              Float?
   impliedProb       Float?
-  source            PredictionSource @default(PRE_ANALYZE)
   tweetId           String?
   validationTweetId String?
   outcome           CallOutcome      @default(PENDING)
   actualResult      String?
-  actualScore       String?
   validatedAt       DateTime?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
+  actualScore       String?
+  source            PredictionSource @default(PRE_ANALYZE)
 
   @@index([matchId])
   @@index([outcome])
@@ -399,6 +410,48 @@ model DailyStats {
   @@index([date])
 }
 
+model OddsSnapshot {
+  id              String   @id @default(cuid())
+  matchRef        String
+  sport           String
+  league          String
+  homeTeam        String
+  awayTeam        String
+  matchDate       DateTime
+  homeOdds        Float
+  awayOdds        Float
+  drawOdds        Float?
+  prevHomeOdds    Float?
+  prevAwayOdds    Float?
+  prevDrawOdds    Float?
+  homeChange      Float?
+  awayChange      Float?
+  drawChange      Float?
+  modelHomeProb   Float?
+  modelAwayProb   Float?
+  modelDrawProb   Float?
+  homeEdge        Float?
+  awayEdge        Float?
+  drawEdge        Float?
+  hasSteamMove    Boolean  @default(false)
+  hasValueEdge    Boolean  @default(false)
+  alertLevel      String?
+  alertNote       String?
+  bookmaker       String?  @default("consensus")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  openingAwayOdds Float?
+  openingDrawOdds Float?
+  openingHomeOdds Float?
+
+  @@unique([matchRef, sport, bookmaker])
+  @@index([sport])
+  @@index([matchDate])
+  @@index([hasSteamMove])
+  @@index([hasValueEdge])
+  @@index([matchRef])
+}
+
 enum Plan {
   FREE
   PRO
@@ -417,6 +470,13 @@ enum PostStatus {
   PUBLISHED
   SCHEDULED
   ARCHIVED
+}
+
+enum PostType {
+  GENERAL
+  MATCH_PREVIEW
+  MATCH_RECAP
+  MATCH_COMBINED
 }
 
 enum CallType {
@@ -450,70 +510,11 @@ enum PostCategory {
   MORNING_BRIEFING
   MATCH_PREVIEW
   LIVE_UPDATE
-  LIVE_INTEL
   POST_MATCH
   CALL_VALIDATION
   HOT_TAKE
   TRENDING
   WEEKLY_STATS
   THREAD
-}
-
-// ============================================
-// MARKET ALERTS - Odds Tracking System
-// ============================================
-
-model OddsSnapshot {
-  id            String   @id @default(cuid())
-  matchRef      String   // "Team A vs Team B"
-  sport         String   // "basketball_nba", "soccer_epl"
-  league        String
-  homeTeam      String
-  awayTeam      String
-  matchDate     DateTime
-  
-  // Current odds
-  homeOdds      Float
-  awayOdds      Float
-  drawOdds      Float?
-  
-  // Opening odds (set once on first snapshot - for steam move detection)
-  openingHomeOdds  Float?
-  openingAwayOdds  Float?
-  openingDrawOdds  Float?
-  
-  // Previous odds (for comparison - last poll)
-  prevHomeOdds  Float?
-  prevAwayOdds  Float?
-  prevDrawOdds  Float?
-  
-  // Movement from OPENING (this is what triggers steam moves)
-  homeChange    Float?   // Percentage change from opening
-  awayChange    Float?
-  drawChange    Float?
-  
-  // Model edge (our probability vs market implied)
-  modelHomeProb Float?
-  modelAwayProb Float?
-  modelDrawProb Float?
-  homeEdge      Float?   // Positive = value on home
-  awayEdge      Float?
-  drawEdge      Float?
-  
-  // Alert flags
-  hasSteamMove  Boolean  @default(false)
-  hasValueEdge  Boolean  @default(false)
-  alertLevel    String?  // "LOW", "MEDIUM", "HIGH"
-  alertNote     String?  // "Sharp money detected on home"
-  
-  bookmaker     String?  @default("consensus")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([sport])
-  @@index([matchDate])
-  @@index([hasSteamMove])
-  @@index([hasValueEdge])
-  @@index([matchRef])
-  @@unique([matchRef, sport, bookmaker])
+  LIVE_INTEL
 }

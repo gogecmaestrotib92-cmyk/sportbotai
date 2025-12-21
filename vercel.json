@@ -8,6 +8,10 @@
       "schedule": "0 */2 * * *"
     },
     {
+      "path": "/api/blog/match-preview",
+      "schedule": "0 6,12,18 * * *"
+    },
+    {
       "path": "/api/cron/morning-briefing",
       "schedule": "0 7 * * *"
     },

@@ -4,3 +4,9 @@ export * from './generator';
 export { researchTopic } from './research';
 export { generateOutline, generateContent } from './content-generator';
 export { generateFeaturedImage, generateContentImage, getPlaceholderImage } from './image-generator';
+export { 
+  generateMatchPreview, 
+  updateWithMatchRecap, 
+  generatePreviewsForUpcomingMatches,
+  getMatchesNeedingRecap 
+} from './match-generator';
