@@ -485,6 +485,7 @@ enum PostType {
   MATCH_PREVIEW
   MATCH_RECAP
   MATCH_COMBINED
+  NEWS
 }
 
 enum CallType {
