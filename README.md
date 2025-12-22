@@ -2,6 +2,8 @@
 
 AI-powered sports analytics platform. Understand any match in 60 seconds.
 
+<!-- Last updated: December 2025 -->
+
 > ⚠️ **Disclaimer**: SportBot AI is NOT a tipster service. We do not provide guaranteed tips or financial advice. Sports betting carries the risk of losing money. Bet responsibly. 18+ only.
 
 ## 🚀 Quick Start
