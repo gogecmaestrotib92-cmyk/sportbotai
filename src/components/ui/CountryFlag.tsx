@@ -164,7 +164,7 @@ export default function CountryFlag({
         <div className="absolute inset-0 bg-white/10 animate-pulse rounded" />
       )}
       <img
-        src={flagUrl}
+        src={flagUrl || undefined}
         alt={`${country} flag`}
         className={`w-full h-full object-cover transition-opacity duration-200 ${
           isLoaded ? 'opacity-100' : 'opacity-0'
