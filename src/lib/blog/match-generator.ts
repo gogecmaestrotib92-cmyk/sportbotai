@@ -1256,47 +1256,48 @@ export async function generateMatchPreview(match: MatchInfo): Promise<MatchPrevi
       },
     });
 
+    // NEWS GENERATION DISABLED - creates duplicates, re-enable when ready
     // Also create NEWS entry for Google News (news-style content, different URL)
-    console.log('[Match Preview] Generating news-style content for Google News...');
-    const newsContent = await generateNewsStyleContent(match, content);
-    
-    const newsSlug = `${match.homeTeam}-vs-${match.awayTeam}`
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-    
-    try {
-      await prisma.blogPost.create({
-        data: {
-          title: newsContent.title,
-          slug: `${newsSlug}-${Date.now()}`,
-          excerpt: newsContent.excerpt,
-          content: newsContent.content,
-          metaTitle: newsContent.title,
-          metaDescription: newsContent.excerpt,
-          focusKeyword: `${match.homeTeam} vs ${match.awayTeam}`,
-          featuredImage,
-          imageAlt,
-          category: 'Sports News',
-          tags: [match.sport, match.league, match.homeTeam, match.awayTeam],
-          status: 'PUBLISHED',
-          publishedAt: new Date(),
-          aiModel: AI_MODEL,
-          generationCost: 0.005, // Small cost for news generation
-          matchId: match.matchId,
-          matchDate: new Date(match.commenceTime),
-          homeTeam: match.homeTeam,
-          awayTeam: match.awayTeam,
-          sport: match.sport,
-          league: match.league,
-          postType: 'NEWS', // This goes to /news/ section for Google News
-        },
-      });
-      console.log(`[Match Preview] ✅ Also created NEWS entry: "${newsContent.title}"`);
-    } catch (newsError) {
-      console.warn('[Match Preview] Could not create NEWS entry:', newsError);
-    }
+    // console.log('[Match Preview] Generating news-style content for Google News...');
+    // const newsContent = await generateNewsStyleContent(match, content);
+    // 
+    // const newsSlug = `${match.homeTeam}-vs-${match.awayTeam}`
+    //   .toLowerCase()
+    //   .replace(/[^a-z0-9]+/g, '-')
+    //   .replace(/-+/g, '-')
+    //   .replace(/^-|-$/g, '');
+    // 
+    // try {
+    //   await prisma.blogPost.create({
+    //     data: {
+    //       title: newsContent.title,
+    //       slug: `${newsSlug}-${Date.now()}`,
+    //       excerpt: newsContent.excerpt,
+    //       content: newsContent.content,
+    //       metaTitle: newsContent.title,
+    //       metaDescription: newsContent.excerpt,
+    //       focusKeyword: `${match.homeTeam} vs ${match.awayTeam}`,
+    //       featuredImage,
+    //       imageAlt,
+    //       category: 'Sports News',
+    //       tags: [match.sport, match.league, match.homeTeam, match.awayTeam],
+    //       status: 'PUBLISHED',
+    //       publishedAt: new Date(),
+    //       aiModel: AI_MODEL,
+    //       generationCost: 0.005, // Small cost for news generation
+    //       matchId: match.matchId,
+    //       matchDate: new Date(match.commenceTime),
+    //       homeTeam: match.homeTeam,
+    //       awayTeam: match.awayTeam,
+    //       sport: match.sport,
+    //       league: match.league,
+    //       postType: 'NEWS', // This goes to /news/ section for Google News
+    //     },
+    //   });
+    //   console.log(`[Match Preview] ✅ Also created NEWS entry: "${newsContent.title}"`);
+    // } catch (newsError) {
+    //   console.warn('[Match Preview] Could not create NEWS entry:', newsError);
+    // }
 
     const duration = Date.now() - startTime;
     console.log(`[Match Preview] ✅ Complete! Post ID: ${post.id}, Duration: ${duration}ms`);
