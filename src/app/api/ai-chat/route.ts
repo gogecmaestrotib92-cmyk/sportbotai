@@ -1362,14 +1362,14 @@ function extractSearchQuery(message: string): { query: string; category: QueryCa
       const statsSeason = getCurrentSeasonForSport(statsSport);
       // Sport-specific stat keywords (what matters for each sport)
       const statsTermsMap: Record<string, string> = {
-        basketball: 'PPG RPG APG points rebounds assists',
-        nba: 'PPG RPG APG points rebounds assists',
-        football: 'goals assists appearances',
-        soccer: 'goals assists appearances',
-        hockey: 'goals assists points',
-        nhl: 'goals assists points',
-        american_football: 'passing yards touchdowns',
-        nfl: 'passing yards touchdowns',
+        basketball: 'PPG RPG APG season averages',
+        nba: 'PPG RPG APG season averages',
+        football: 'goals assists this season',
+        soccer: 'goals assists this season',
+        hockey: 'goals assists points this season',
+        nhl: 'goals assists points this season',
+        american_football: 'passing yards touchdowns this season',
+        nfl: 'passing yards touchdowns this season',
         tennis: 'wins losses ranking',
         mma: 'wins losses record',
         ufc: 'wins losses record',
@@ -1385,12 +1385,13 @@ function extractSearchQuery(message: string): { query: string; category: QueryCa
       const statsPlayerMatch = query.match(/([A-Z][a-zćčšžđ]+(?:\s+[A-Z][a-zćčšžđ]+)+)|Filip\s+\w+|(\b[A-Z][a-z]{2,}\s+[A-Z][a-z]{2,}\b)/i);
       if (statsPlayerMatch) {
         const playerName = statsPlayerMatch[0];
-        // Clean, focused query: "Player Name" season stats
-        query = `"${playerName}" ${statsSeason} season ${statsTerms}`;
+        // Add current month to force recent results
+        query = `"${playerName}" ${statsSeason} ${statsTerms} ${currentMonth}`;
       } else {
-        query += ` ${statsSeason} season stats`;
+        query += ` ${statsSeason} season stats ${currentMonth}`;
       }
-      recency = 'week';
+      // Use 'day' recency to get the most current stats
+      recency = 'day';
       break;
       
     case 'INJURY':
