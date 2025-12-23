@@ -73,7 +73,24 @@ export interface ResearchResult {
 // SPORTBOT AGENT SYSTEM PROMPT FOR PERPLEXITY
 // ============================================
 
-const RESEARCH_SYSTEM_PROMPT = `You are a real-time sports data assistant. Your job is to find and report EXACT, VERIFIED data.
+function getResearchSystemPrompt(): string {
+  const now = new Date();
+  const currentDate = now.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  // NBA/NHL season: Oct-Jun spans two years
+  const seasonStartYear = (month >= 0 && month <= 5) ? year - 1 : year;
+  const currentSeason = `${seasonStartYear}-${String(seasonStartYear + 1).slice(-2)}`;
+
+  return `You are a real-time sports data assistant. Your job is to find and report EXACT, VERIFIED data.
+
+TODAY'S DATE: ${currentDate}
+CURRENT NBA/NHL/FOOTBALL SEASON: ${currentSeason}
 
 CRITICAL RULES:
 1. ONLY report data you find from sources - NEVER guess or estimate
@@ -110,13 +127,7 @@ EXAMPLES OF BAD RESPONSES:
 ✗ Making up numbers when data isn't found
 
 Be precise. Include sources. Never invent data.`;
-- Only report confirmed information, not rumors
-- No betting advice or recommendations
-- No predictions or opinions
-- Just facts, clearly stated
-- If no recent news found, say "No significant recent updates found"
-
-Be precise. Be factual. Be useful.`;
+}
 
 // ============================================
 // SEARCH QUERY TEMPLATES BY CATEGORY
@@ -205,7 +216,7 @@ class PerplexityClient {
         body: JSON.stringify({
           model,
           messages: [
-            { role: 'system', content: RESEARCH_SYSTEM_PROMPT },
+            { role: 'system', content: getResearchSystemPrompt() },
             { role: 'user', content: query },
           ],
           max_tokens: options?.maxTokens || 500,
