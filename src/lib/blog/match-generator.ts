@@ -561,31 +561,78 @@ async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisData |
       }
     }
 
-    if (existingPrediction) {
-      console.log(`[Match Analysis] Using cached prediction for ${match.homeTeam} vs ${match.awayTeam}`);
+    // Always call the analyze API to get full data (form, H2H, injuries, trends, etc.)
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://www.sportbotai.com');
+    
+    // Build analyze request
+    const analyzePayload = {
+      homeTeam: match.homeTeam,
+      awayTeam: match.awayTeam,
+      sport: match.sport,
+      sportKey: match.sportKey,
+      league: match.league,
+      matchDate: match.commenceTime,
+      oddsHome: match.odds?.home || 0,
+      oddsDraw: match.odds?.draw || null,
+      oddsAway: match.odds?.away || 0,
+    };
+
+    console.log(`[Match Analysis] Fetching full analysis for ${match.homeTeam} vs ${match.awayTeam}${existingPrediction ? ' (has cached prediction for probabilities)' : ''}`);
+    
+    const response = await fetch(`${baseUrl}/api/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Use internal API key for blog generator (bypasses auth)
+        'X-Internal-Key': INTERNAL_API_SECRET,
+      },
+      body: JSON.stringify(analyzePayload),
+    });
+
+    if (!response.ok) {
+      console.warn(`[Match Analysis] API returned ${response.status}, falling back to enriched data only`);
       
-      // Fetch enriched data (form + H2H) separately - predictions don't store this
-      let enrichedData = null;
-      try {
-        enrichedData = await getMultiSportEnrichedData(
-          match.homeTeam,
-          match.awayTeam,
-          match.sport,
-          match.league
-        );
-        console.log(`[Match Analysis] Enriched data fetched: H2H=${enrichedData.headToHead?.length || 0}, homeForm=${enrichedData.homeForm?.length || 0}`);
-      } catch (error) {
-        console.warn('[Match Analysis] Failed to fetch enriched data:', error);
+      // Fall back to enriched data if API call fails and we have a prediction
+      if (existingPrediction) {
+        return await fetchEnrichedDataFallback(match, existingPrediction);
       }
+      return null;
+    }
+
+    const data = await response.json();
+    
+    if (!data.success || !data.data) {
+      console.warn('[Match Analysis] No analysis data returned');
+      if (existingPrediction) {
+        return await fetchEnrichedDataFallback(match, existingPrediction);
+      }
+      return null;
+    }
+
+    const analysis = data.data;
+    
+    // If we have a cached prediction, use its probabilities (they've already been computed)
+    let probabilities = {
+      homeWin: analysis.probabilityEstimates?.homeWin || 0,
+      draw: analysis.probabilityEstimates?.draw ?? null,
+      awayWin: analysis.probabilityEstimates?.awayWin || 0,
+    };
+    
+    let recommendation = analysis.recommendation || '';
+    let confidenceLevel = analysis.meta?.confidenceLevel || 'MEDIUM';
+    
+    if (existingPrediction) {
+      console.log(`[Match Analysis] Using cached prediction probabilities for ${match.homeTeam} vs ${match.awayTeam}`);
       
-      // Parse prediction to determine probabilities
+      // Parse prediction to determine probabilities from cached prediction
       const isHomeWin = existingPrediction.prediction.includes('Home Win');
       const isAwayWin = existingPrediction.prediction.includes('Away Win');
       const isDraw = existingPrediction.prediction.includes('Draw');
       
       // Calculate estimated probabilities based on conviction
       const baseProb = 33.33;
-      const convictionBoost = existingPrediction.conviction * 3; // 1-5 conviction = 3-15% boost
+      const convictionBoost = existingPrediction.conviction * 3;
       
       let homeProb = baseProb;
       let drawProb = baseProb;
@@ -605,109 +652,21 @@ async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisData |
         awayProb = (100 - drawProb) / 2;
       }
       
-      // Calculate H2H from enriched data if available
-      const h2hMatches = enrichedData?.headToHead || [];
-      const h2hHomeWins = h2hMatches.filter(m => m.homeScore > m.awayScore).length;
-      const h2hAwayWins = h2hMatches.filter(m => m.awayScore > m.homeScore).length;
-      const h2hDraws = h2hMatches.filter(m => m.homeScore === m.awayScore).length;
-      
-      // Extract form from enriched data
-      const homeForm = enrichedData?.homeForm || [];
-      const awayForm = enrichedData?.awayForm || [];
-      
-      return {
-        probabilities: {
-          homeWin: homeProb,
-          draw: drawProb,
-          awayWin: awayProb,
-        },
-        recommendation: existingPrediction.prediction,
-        confidenceLevel: existingPrediction.conviction >= 4 ? 'HIGH' : existingPrediction.conviction >= 3 ? 'MEDIUM' : 'LOW',
-        keyFactors: [existingPrediction.reasoning],
-        riskLevel: existingPrediction.conviction <= 2 ? 'HIGH' : existingPrediction.conviction <= 3 ? 'MEDIUM' : 'LOW',
-        valueAssessment: existingPrediction.odds 
-          ? `Odds of ${existingPrediction.odds.toFixed(2)} offer potential value based on our analysis.`
-          : 'Value assessment pending odds data.',
-        homeForm: { 
-          wins: homeForm.filter(m => m.result === 'W').length, 
-          draws: homeForm.filter(m => m.result === 'D').length, 
-          losses: homeForm.filter(m => m.result === 'L').length, 
-          trend: 'stable' as const 
-        },
-        awayForm: { 
-          wins: awayForm.filter(m => m.result === 'W').length, 
-          draws: awayForm.filter(m => m.result === 'D').length, 
-          losses: awayForm.filter(m => m.result === 'L').length, 
-          trend: 'stable' as const 
-        },
-        headToHead: { 
-          homeWins: h2hHomeWins, 
-          draws: h2hDraws, 
-          awayWins: h2hAwayWins, 
-          summary: h2hMatches.length > 0 
-            ? `Last ${h2hMatches.length} meetings: ${h2hHomeWins} home wins, ${h2hDraws} draws, ${h2hAwayWins} away wins`
-            : 'No historical data available' 
-        },
-        injuries: { home: [], away: [] },
-        narrative: existingPrediction.reasoning,
-        marketInsights: existingPrediction.odds 
-          ? [`Current odds: ${existingPrediction.odds.toFixed(2)}`, `Implied probability: ${(existingPrediction.impliedProb || 0).toFixed(1)}%`]
-          : [],
+      probabilities = {
+        homeWin: homeProb,
+        draw: drawProb,
+        awayWin: awayProb,
       };
+      
+      recommendation = existingPrediction.prediction;
+      confidenceLevel = existingPrediction.conviction >= 4 ? 'HIGH' : existingPrediction.conviction >= 3 ? 'MEDIUM' : 'LOW';
     }
-
-    // No cached prediction - fall back to API call
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://www.sportbotai.com');
-    
-    // Build analyze request
-    const analyzePayload = {
-      homeTeam: match.homeTeam,
-      awayTeam: match.awayTeam,
-      sport: match.sport,
-      sportKey: match.sportKey,
-      league: match.league,
-      matchDate: match.commenceTime,
-      oddsHome: match.odds?.home || 0,
-      oddsDraw: match.odds?.draw || null,
-      oddsAway: match.odds?.away || 0,
-    };
-
-    console.log(`[Match Analysis] Fetching analysis for ${match.homeTeam} vs ${match.awayTeam}`);
-    
-    const response = await fetch(`${baseUrl}/api/analyze`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Use internal API key for blog generator (bypasses auth)
-        'X-Internal-Key': INTERNAL_API_SECRET,
-      },
-      body: JSON.stringify(analyzePayload),
-    });
-
-    if (!response.ok) {
-      console.warn(`[Match Analysis] API returned ${response.status}, falling back to basic research`);
-      return null;
-    }
-
-    const data = await response.json();
-    
-    if (!data.success || !data.data) {
-      console.warn('[Match Analysis] No analysis data returned');
-      return null;
-    }
-
-    const analysis = data.data;
     
     // Extract structured data from analysis response
     return {
-      probabilities: {
-        homeWin: analysis.probabilityEstimates?.homeWin || 0,
-        draw: analysis.probabilityEstimates?.draw ?? null,
-        awayWin: analysis.probabilityEstimates?.awayWin || 0,
-      },
-      recommendation: analysis.recommendation || '',
-      confidenceLevel: analysis.meta?.confidenceLevel || 'MEDIUM',
+      probabilities,
+      recommendation,
+      confidenceLevel,
       keyFactors: analysis.keyFactors?.map((f: { factor: string; impact: string }) => 
         `${f.factor}: ${f.impact}`
       ) || [],
@@ -735,13 +694,124 @@ async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisData |
         home: analysis.injuries?.home?.map((i: { name: string }) => i.name) || [],
         away: analysis.injuries?.away?.map((i: { name: string }) => i.name) || [],
       },
-      narrative: analysis.narrative || analysis.summary || '',
+      narrative: existingPrediction?.reasoning || analysis.narrative || analysis.summary || '',
       marketInsights: analysis.marketInsights?.map((m: { insight: string }) => m.insight) || [],
     };
   } catch (error) {
     console.error('[Match Analysis] Failed to fetch analysis:', error);
     return null;
   }
+}
+
+// Fallback function when API call fails but we have a cached prediction
+async function fetchEnrichedDataFallback(match: MatchInfo, prediction: {
+  prediction: string;
+  conviction: number;
+  reasoning: string;
+  odds: number | null;
+  impliedProb: number | null;
+}): Promise<MatchAnalysisData | null> {
+  console.log(`[Match Analysis] Using enriched data fallback for ${match.homeTeam} vs ${match.awayTeam}`);
+  
+  // Fetch enriched data (form + H2H) separately
+  let enrichedData = null;
+  try {
+    enrichedData = await getMultiSportEnrichedData(
+      match.homeTeam,
+      match.awayTeam,
+      match.sport,
+      match.league
+    );
+    console.log(`[Match Analysis] Enriched data fetched: H2H=${enrichedData.headToHead?.length || 0}, homeForm=${enrichedData.homeForm?.length || 0}`);
+  } catch (error) {
+    console.warn('[Match Analysis] Failed to fetch enriched data:', error);
+  }
+  
+  // Parse prediction to determine probabilities
+  const isHomeWin = prediction.prediction.includes('Home Win');
+  const isAwayWin = prediction.prediction.includes('Away Win');
+  const isDraw = prediction.prediction.includes('Draw');
+  
+  const baseProb = 33.33;
+  const convictionBoost = prediction.conviction * 3;
+  
+  let homeProb = baseProb;
+  let drawProb = baseProb;
+  let awayProb = baseProb;
+  
+  if (isHomeWin) {
+    homeProb = Math.min(75, baseProb + convictionBoost);
+    drawProb = (100 - homeProb) * 0.35;
+    awayProb = 100 - homeProb - drawProb;
+  } else if (isAwayWin) {
+    awayProb = Math.min(75, baseProb + convictionBoost);
+    drawProb = (100 - awayProb) * 0.35;
+    homeProb = 100 - awayProb - drawProb;
+  } else if (isDraw) {
+    drawProb = Math.min(45, baseProb + convictionBoost);
+    homeProb = (100 - drawProb) / 2;
+    awayProb = (100 - drawProb) / 2;
+  }
+  
+  // Calculate H2H from enriched data if available
+  const h2hMatches = enrichedData?.headToHead || [];
+  const h2hHomeWins = h2hMatches.filter(m => m.homeScore > m.awayScore).length;
+  const h2hAwayWins = h2hMatches.filter(m => m.awayScore > m.homeScore).length;
+  const h2hDraws = h2hMatches.filter(m => m.homeScore === m.awayScore).length;
+  
+  // Extract form from enriched data
+  const homeForm = enrichedData?.homeForm || [];
+  const awayForm = enrichedData?.awayForm || [];
+  
+  // Calculate trend from form
+  const calculateTrend = (form: typeof homeForm): 'improving' | 'declining' | 'stable' => {
+    if (form.length < 3) return 'stable';
+    const recentWins = form.slice(0, 3).filter(m => m.result === 'W').length;
+    const olderWins = form.slice(3, 6).filter(m => m.result === 'W').length;
+    if (recentWins > olderWins) return 'improving';
+    if (recentWins < olderWins) return 'declining';
+    return 'stable';
+  };
+  
+  return {
+    probabilities: {
+      homeWin: homeProb,
+      draw: drawProb,
+      awayWin: awayProb,
+    },
+    recommendation: prediction.prediction,
+    confidenceLevel: prediction.conviction >= 4 ? 'HIGH' : prediction.conviction >= 3 ? 'MEDIUM' : 'LOW',
+    keyFactors: [prediction.reasoning],
+    riskLevel: prediction.conviction <= 2 ? 'HIGH' : prediction.conviction <= 3 ? 'MEDIUM' : 'LOW',
+    valueAssessment: prediction.odds 
+      ? `Odds of ${prediction.odds.toFixed(2)} offer potential value based on our analysis.`
+      : 'Value assessment pending odds data.',
+    homeForm: { 
+      wins: homeForm.filter(m => m.result === 'W').length, 
+      draws: homeForm.filter(m => m.result === 'D').length, 
+      losses: homeForm.filter(m => m.result === 'L').length, 
+      trend: calculateTrend(homeForm),
+    },
+    awayForm: { 
+      wins: awayForm.filter(m => m.result === 'W').length, 
+      draws: awayForm.filter(m => m.result === 'D').length, 
+      losses: awayForm.filter(m => m.result === 'L').length, 
+      trend: calculateTrend(awayForm),
+    },
+    headToHead: { 
+      homeWins: h2hHomeWins, 
+      draws: h2hDraws, 
+      awayWins: h2hAwayWins, 
+      summary: h2hMatches.length > 0 
+        ? `Last ${h2hMatches.length} meetings: ${h2hHomeWins} home wins, ${h2hDraws} draws, ${h2hAwayWins} away wins`
+        : 'No historical data available' 
+    },
+    injuries: { home: [], away: [] },
+    narrative: prediction.reasoning,
+    marketInsights: prediction.odds 
+      ? [`Current odds: ${prediction.odds.toFixed(2)}`, `Implied probability: ${(prediction.impliedProb || 0).toFixed(1)}%`]
+      : [],
+  };
 }
 
 async function researchMatch(match: MatchInfo): Promise<MatchResearch> {
