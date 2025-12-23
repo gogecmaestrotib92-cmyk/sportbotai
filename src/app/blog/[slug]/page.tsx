@@ -8,6 +8,12 @@ import { prisma } from '@/lib/prisma';
 import { getBlogPostBreadcrumb } from '@/lib/seo';
 import ViewTracker from '@/components/ViewTracker';
 
+// Allow dynamic rendering for new blog posts not in generateStaticParams
+export const dynamicParams = true;
+
+// Revalidate every 60 seconds for ISR
+export const revalidate = 60;
+
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
 }
