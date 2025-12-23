@@ -1797,10 +1797,6 @@ FORBIDDEN:
 - Citing your training data for current stats
 - Saying different numbers than what's in the real-time data`;
       } else {
-- Start with the CURRENT SEASON stat: "In the 2025-26 season, [Player] is averaging..."
-- Then add recent performance context
-- Keep it factual and concise`;
-      } else {
         userContent = `USER QUESTION: ${message}
 
 REAL-TIME SPORTS DATA (from web search, use this for your answer):
