@@ -187,7 +187,27 @@ function extractPlayerFromMessage(message: string): SoccerPlayerMapping | null {
     }
   }
   
-  return bestMatch?.mapping || null;
+  if (bestMatch) {
+    console.log(`[VerifiedSoccerStats] Matched: "${bestMatch.variation}" -> ${bestMatch.mapping.displayName}`);
+    return bestMatch.mapping;
+  }
+  
+  // Try to extract unknown player name (Firstname Lastname pattern)
+  // Also handle single-name players (Neymar, Ronaldinho, etc.)
+  const nameMatch = message.match(/([A-Z][a-zćčšžđáéíóúñü']+(?:\s+[A-Z][a-zćčšžđáéíóúñü'-]+)*)/);
+  if (nameMatch) {
+    const fullName = nameMatch[1];
+    const parts = fullName.split(/\s+/);
+    const searchName = parts[parts.length - 1].toLowerCase();
+    console.log(`[VerifiedSoccerStats] Unknown player: "${fullName}" (search: ${searchName})`);
+    return {
+      searchName: searchName,
+      displayName: fullName,
+      variations: [fullName.toLowerCase()],
+    };
+  }
+  
+  return null;
 }
 
 // ============================================================================

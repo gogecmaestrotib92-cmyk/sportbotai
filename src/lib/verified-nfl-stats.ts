@@ -191,7 +191,27 @@ function extractPlayerFromMessage(message: string): NFLPlayerMapping | null {
     }
   }
   
-  return bestMatch?.mapping || null;
+  if (bestMatch) {
+    console.log(`[VerifiedNFLStats] Matched: "${bestMatch.variation}" -> ${bestMatch.mapping.displayName}`);
+    return bestMatch.mapping;
+  }
+  
+  // Try to extract unknown player name (Firstname Lastname pattern)
+  const nameMatch = message.match(/([A-Z][a-zćčšžđ']+(?:\s+[A-Z][a-zćčšžđ'-]+)+)/);
+  if (nameMatch) {
+    const fullName = nameMatch[1];
+    const parts = fullName.split(/\s+/);
+    const lastName = parts[parts.length - 1].toLowerCase();
+    console.log(`[VerifiedNFLStats] Unknown player: "${fullName}" (search: ${lastName})`);
+    return {
+      searchName: lastName,
+      displayName: fullName,
+      variations: [fullName.toLowerCase()],
+      position: 'unknown',
+    };
+  }
+  
+  return null;
 }
 
 // ============================================================================
