@@ -1,5 +1,6 @@
 // Cron endpoint for automated blog generation
 // Called by Vercel Cron or external scheduler
+// NEWS entries are automatically created when match previews are generated (in match-generator.ts)
 
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
@@ -53,35 +54,30 @@ export async function GET(request: NextRequest) {
     
     // Verify cron secret OR Vercel's internal cron header
     const authHeader = request.headers.get('Authorization');
-    const vercelCron = request.headers.get('x-vercel-cron'); // Vercel sends this for cron jobs
+    const vercelCron = request.headers.get('x-vercel-cron');
     const cronSecret = process.env.CRON_SECRET;
 
-    // Allow if: Vercel cron header present, OR auth matches secret, OR no secret configured
     const isVercelCron = vercelCron === '1' || vercelCron === 'true';
     const isAuthorized = !cronSecret || authHeader === `Bearer ${cronSecret}`;
     
     if (!isVercelCron && !isAuthorized) {
       console.log('[Blog Cron] Unauthorized request - no valid auth');
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     console.log(`[Blog Cron] Starting generation... (vercelCron: ${isVercelCron}, authorized: ${isAuthorized})`);
 
     // Check if we have keywords
     const nextKeyword = await getNextKeyword();
-    
     console.log(`[Blog Cron] Next keyword: ${nextKeyword || 'none'}`);
     
     if (!nextKeyword) {
-      // Seed keywords if none exist
       console.log('[Blog Cron] No keywords found, seeding...');
       await seedKeywords();
     }
 
     // Generate 1 post per cron run (to stay within limits)
+    // NEWS entries are automatically created when match previews are generated
     console.log('[Blog Cron] Starting batch generation...');
     const results = await generateBatch(1);
 
@@ -93,7 +89,7 @@ export async function GET(request: NextRequest) {
       console.error('[Blog Cron] Failures:', failed.map(f => f.error));
     }
 
-    // Revalidate blog pages so new posts appear immediately
+    // Revalidate blog pages
     if (successful > 0) {
       revalidatePath('/blog');
       console.log('[Blog Cron] Revalidated /blog cache');
@@ -128,18 +124,15 @@ export async function POST(request: NextRequest) {
     const cronSecret = process.env.CRON_SECRET;
 
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json().catch(() => ({}));
-    const count = Math.min(body.count || 1, 5); // Max 5 at a time
+    const count = Math.min(body.count || 1, 5);
 
     const results = await generateBatch(count);
 
-    // Revalidate blog pages so new posts appear immediately
+    // Revalidate blog pages
     const successful = results.filter(r => r.success).length;
     if (successful > 0) {
       revalidatePath('/blog');
@@ -153,9 +146,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Manual blog generation error:', error);
-    return NextResponse.json(
-      { error: 'Generation failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Generation failed' }, { status: 500 });
   }
 }

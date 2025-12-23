@@ -127,86 +127,6 @@ function replacePlaceholders(
 }
 
 // ============================================
-// NEWS-STYLE CONTENT GENERATOR (for Google News)
-// ============================================
-
-interface NewsContent {
-  title: string;
-  excerpt: string;
-  content: string;
-}
-
-/**
- * Transform match data into Google News-style content
- * Requirements:
- * - Time-bound: what, when, who
- * - Journalistic style: factual, objective, timely
- * - Clean headline: no clickbait, 50-70 chars
- * - Short content: 300-500 words max
- */
-async function generateNewsStyleContent(
-  match: MatchInfo,
-  blogContent: GeneratedMatchContent
-): Promise<NewsContent> {
-  const matchDate = new Date(match.commenceTime);
-  const dayName = matchDate.toLocaleDateString('en-US', { weekday: 'long' });
-  const dateStr = matchDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-  
-  const prompt = `You are a sports news journalist. Convert this match preview into a NEWS ARTICLE for Google News.
-
-MATCH: ${match.homeTeam} vs ${match.awayTeam}
-LEAGUE: ${match.league}
-DATE: ${dayName}, ${dateStr}
-${match.odds ? `ODDS: ${match.homeTeam} ${match.odds.home.toFixed(2)} | Draw ${match.odds.draw?.toFixed(2) || 'N/A'} | ${match.awayTeam} ${match.odds.away.toFixed(2)}` : ''}
-
-ORIGINAL CONTENT (for context):
-${blogContent.excerpt}
-
-GOOGLE NEWS REQUIREMENTS:
-1. HEADLINE: 50-70 chars, newsworthy, time-bound (e.g. "Liverpool Host Wolves in Boxing Day Clash")
-   - NO: "Complete Guide", "Everything You Need", "Ultimate Preview"
-   - YES: "[Team] Face [Team] in [League] Showdown", "[Team] Eye Victory Against [Opponent]"
-2. EXCERPT: 120-150 chars, factual summary
-3. CONTENT: 300-400 words MAX
-   - Lead paragraph: WHO, WHAT, WHEN, WHERE
-   - 2-3 short paragraphs with key facts
-   - Quote market odds naturally
-   - End with match time/broadcast info if known
-   - HTML: <p>, <strong> only. NO <h2>, <h3>, <ul>
-
-Respond in JSON:
-{
-  "title": "news headline here",
-  "excerpt": "short factual summary",
-  "content": "<p>Lead paragraph...</p><p>Second paragraph...</p>"
-}`;
-
-  try {
-    const response = await openai.chat.completions.create({
-      model: AI_MODEL,
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-      temperature: 0.6,
-    });
-
-    const result = JSON.parse(response.choices[0].message.content || '{}');
-    return {
-      title: result.title || `${match.homeTeam} vs ${match.awayTeam}: ${match.league} Match`,
-      excerpt: result.excerpt || `${match.homeTeam} face ${match.awayTeam} in ${match.league} action.`,
-      content: result.content || `<p>${match.homeTeam} will take on ${match.awayTeam} in ${match.league}.</p>`,
-    };
-  } catch (error) {
-    console.warn('[News Content] AI generation failed, using fallback:', error);
-    // Fallback: Create simple news-style content
-    return {
-      title: `${match.homeTeam} Face ${match.awayTeam} in ${match.league}`,
-      excerpt: `${match.homeTeam} host ${match.awayTeam} on ${dayName} in a key ${match.league} fixture.`,
-      content: `<p><strong>${match.homeTeam}</strong> will face <strong>${match.awayTeam}</strong> on ${dayName}, ${dateStr} in ${match.league} action.</p><p>The match promises to be an exciting encounter as both sides look to secure vital points.</p>`,
-    };
-  }
-}
-
-// ============================================
 // FEATURED IMAGE GENERATION (Team Logos)
 // ============================================
 
@@ -1371,49 +1291,6 @@ export async function generateMatchPreview(match: MatchInfo): Promise<MatchPrevi
         postType: 'MATCH_PREVIEW',
       },
     });
-
-    // NEWS GENERATION DISABLED - creates duplicates, re-enable when ready
-    // Also create NEWS entry for Google News (news-style content, different URL)
-    // console.log('[Match Preview] Generating news-style content for Google News...');
-    // const newsContent = await generateNewsStyleContent(match, content);
-    // 
-    // const newsSlug = `${match.homeTeam}-vs-${match.awayTeam}`
-    //   .toLowerCase()
-    //   .replace(/[^a-z0-9]+/g, '-')
-    //   .replace(/-+/g, '-')
-    //   .replace(/^-|-$/g, '');
-    // 
-    // try {
-    //   await prisma.blogPost.create({
-    //     data: {
-    //       title: newsContent.title,
-    //       slug: `${newsSlug}-${Date.now()}`,
-    //       excerpt: newsContent.excerpt,
-    //       content: newsContent.content,
-    //       metaTitle: newsContent.title,
-    //       metaDescription: newsContent.excerpt,
-    //       focusKeyword: `${match.homeTeam} vs ${match.awayTeam}`,
-    //       featuredImage,
-    //       imageAlt,
-    //       category: 'Sports News',
-    //       tags: [match.sport, match.league, match.homeTeam, match.awayTeam],
-    //       status: 'PUBLISHED',
-    //       publishedAt: new Date(),
-    //       aiModel: AI_MODEL,
-    //       generationCost: 0.005, // Small cost for news generation
-    //       matchId: match.matchId,
-    //       matchDate: new Date(match.commenceTime),
-    //       homeTeam: match.homeTeam,
-    //       awayTeam: match.awayTeam,
-    //       sport: match.sport,
-    //       league: match.league,
-    //       postType: 'NEWS', // This goes to /news/ section for Google News
-    //     },
-    //   });
-    //   console.log(`[Match Preview] ✅ Also created NEWS entry: "${newsContent.title}"`);
-    // } catch (newsError) {
-    //   console.warn('[Match Preview] Could not create NEWS entry:', newsError);
-    // }
 
     const duration = Date.now() - startTime;
     console.log(`[Match Preview] ✅ Complete! Post ID: ${post.id}, Duration: ${duration}ms`);
