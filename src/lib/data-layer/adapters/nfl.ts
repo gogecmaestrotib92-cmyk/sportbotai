@@ -533,7 +533,7 @@ export class NFLAdapter extends BaseSportAdapter {
     });
     
     if (!result.success || !result.data) {
-      return this.error(result.error || 'Failed to fetch team roster');
+      return this.error('ROSTER_FETCH_FAILED', result.error || 'Failed to fetch team roster');
     }
     
     const players = result.data
