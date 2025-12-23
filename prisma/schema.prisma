@@ -319,20 +319,27 @@ model Prediction {
   league            String
   kickoff           DateTime
   type              CallType
-  prediction        String
+  prediction        String           // Winner prediction: "Home Win - Team A"
   reasoning         String
-  conviction        Int
-  odds              Float?
-  impliedProb       Float?
+  conviction        Int              // 1-10 based on probability confidence
+  odds              Float?           // Odds for the predicted winner
+  impliedProb       Float?           // AI probability for predicted winner
   tweetId           String?
   validationTweetId String?
-  outcome           CallOutcome      @default(PENDING)
+  outcome           CallOutcome      @default(PENDING)  // HIT/MISS for winner prediction
   actualResult      String?
   validatedAt       DateTime?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   actualScore       String?
   source            PredictionSource @default(PRE_ANALYZE)
+  
+  // VALUE BET TRACKING (separate from winner prediction)
+  valueBetSide      String?          // "HOME", "AWAY", "DRAW" - best value pick
+  valueBetOdds      Float?           // Odds for value bet
+  valueBetEdge      Float?           // Edge percentage (AI prob - market prob)
+  valueBetOutcome   CallOutcome?     // HIT/MISS for value bet (can differ from winner)
+  valueBetProfit    Float?           // Profit/loss from 1 unit bet
   
   // CLV Tracking - Closing Line Value
   openingOdds       Float?           // Odds when prediction was made
@@ -347,6 +354,7 @@ model Prediction {
   @@index([createdAt])
   @@index([conviction])
   @@index([clvFetched])
+  @@index([valueBetOutcome])
 }
 
 model ScheduledPost {

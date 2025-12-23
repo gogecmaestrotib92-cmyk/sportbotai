@@ -1032,88 +1032,108 @@ export async function GET(request: NextRequest) {
               draw: consensus.draw ? 1 / consensus.draw : null,
             };
             
-            // Calculate edges for each outcome
+            // Calculate edges for each outcome (for value bet tracking)
             const edges = {
               home: (normProbs.home - impliedProbs.home) * 100,
               away: (normProbs.away - impliedProbs.away) * 100,
               draw: normProbs.draw && impliedProbs.draw ? (normProbs.draw - impliedProbs.draw) * 100 : -999,
             };
             
-            // Find the outcome with the highest edge (not just highest probability)
-            let predictedOutcome: 'home' | 'away' | 'draw';
-            let predictedProb: number;
-            let predictedOdds: number;
-            let edge: number;
+            // === WINNER PREDICTION ===
+            // Pick the most likely winner based on AI probabilities
+            // This is for accuracy tracking: "Did we predict the winner correctly?"
+            let winnerOutcome: 'home' | 'away' | 'draw';
+            let winnerProb: number;
+            let winnerOdds: number;
             
-            const maxEdge = Math.max(edges.home, edges.away, edges.draw);
-            
-            if (edges.draw === maxEdge && normProbs.draw) {
-              predictedOutcome = 'draw';
-              predictedProb = normProbs.draw;
-              predictedOdds = consensus.draw || 0;
-              edge = edges.draw;
-            } else if (edges.away >= edges.home) {
-              predictedOutcome = 'away';
-              predictedProb = normProbs.away;
-              predictedOdds = consensus.away;
-              edge = edges.away;
+            if (normProbs.draw && normProbs.draw > normProbs.home && normProbs.draw > normProbs.away) {
+              winnerOutcome = 'draw';
+              winnerProb = normProbs.draw;
+              winnerOdds = consensus.draw || 0;
+            } else if (normProbs.away > normProbs.home) {
+              winnerOutcome = 'away';
+              winnerProb = normProbs.away;
+              winnerOdds = consensus.away;
             } else {
-              predictedOutcome = 'home';
-              predictedProb = normProbs.home;
-              predictedOdds = consensus.home;
-              edge = edges.home;
+              winnerOutcome = 'home';
+              winnerProb = normProbs.home;
+              winnerOdds = consensus.home;
             }
             
-            // Conviction: 1-10 scale based on edge magnitude
-            // 1-3: Slight edge (0-3% edge)
-            // 4-6: Moderate edge (3-7% edge)
-            // 7-10: Strong edge (7%+ edge)
-            const conviction = Math.min(10, Math.max(1, Math.round(2 + edge * 1.2)));
+            // === VALUE BET ===
+            // Pick the outcome with the highest edge (best value)
+            // This is for ROI tracking: "Did our value picks make profit?"
+            const maxEdge = Math.max(edges.home, edges.away, edges.draw);
+            let valueBetSide: 'HOME' | 'AWAY' | 'DRAW';
+            let valueBetOdds: number;
+            let valueBetEdge: number;
+            
+            if (edges.draw === maxEdge && normProbs.draw) {
+              valueBetSide = 'DRAW';
+              valueBetOdds = consensus.draw || 0;
+              valueBetEdge = edges.draw;
+            } else if (edges.away >= edges.home) {
+              valueBetSide = 'AWAY';
+              valueBetOdds = consensus.away;
+              valueBetEdge = edges.away;
+            } else {
+              valueBetSide = 'HOME';
+              valueBetOdds = consensus.home;
+              valueBetEdge = edges.home;
+            }
+            
+            // Conviction: 1-10 scale based on probability confidence (higher prob = higher conviction)
+            const conviction = Math.min(10, Math.max(1, Math.round(winnerProb * 12)));
             
             // Data quality check - require minimum form data
             const homeFormLength = homeFormStr.replace(/-/g, '').length;
             const awayFormLength = awayFormStr.replace(/-/g, '').length;
             const hasMinimumFormData = homeFormLength >= 3 && awayFormLength >= 3;
             
-            // Minimum edge threshold based on league performance
-            // Underperforming leagues need higher edge to compensate
-            const LEAGUE_EDGE_THRESHOLDS: Record<string, number> = {
-              'La Liga': 6,        // 0% accuracy - need very high edge
-              'Bundesliga': 5,     // 33% accuracy - need higher edge
-              'Serie A': 4,        // 50% accuracy - slightly higher
-              'Premier League': 3, // 64% accuracy - standard
-              'NBA': 3,            // 63% accuracy - standard
-              'NHL': 4,            // 50% accuracy - slightly higher
-              'NFL': 3,            // Good sample pending
-              'Ligue 1': 4,        // No data yet - cautious
+            // Minimum probability threshold to make a prediction
+            // Only predict when we have a clear favorite (>50% for winner, or >3% edge for value)
+            const LEAGUE_PROB_THRESHOLDS: Record<string, number> = {
+              'La Liga': 0.55,     // Need higher confidence
+              'Bundesliga': 0.55,  // Need higher confidence
+              'Serie A': 0.50,     // Standard
+              'Premier League': 0.50, // Standard
+              'NBA': 0.55,         // No draws, need clear winner
+              'NHL': 0.55,         // No draws, need clear winner
+              'NFL': 0.55,         // No draws, need clear winner
+              'Ligue 1': 0.50,     // Standard
             };
-            const minEdgeThreshold = LEAGUE_EDGE_THRESHOLDS[sport.league] || 5; // Default 5% for unknown leagues
+            const minProbThreshold = LEAGUE_PROB_THRESHOLDS[sport.league] || 0.50;
+            const hasMinEdge = valueBetEdge > 3; // At least 3% edge for value bet
             
             // Only create predictions when:
             // 1. We have minimum form data (quality gate)
-            // 2. Edge exceeds league-specific threshold
+            // 2. Winner has sufficient probability OR value bet has sufficient edge
             if (!hasMinimumFormData) {
               console.log(`[Pre-Analyze] Skipped: ${matchRef} (insufficient form data: ${homeFormLength}/${awayFormLength})`);
-            } else if (edge > minEdgeThreshold) {
+            } else if (winnerProb >= minProbThreshold || hasMinEdge) {
               // Use deterministic ID to prevent duplicates (based on event + date, not timestamp)
               const matchDateStr = matchDate.toISOString().split('T')[0];
               const predictionId = `pre_${sport.key}_${event.id}_${matchDateStr}`;
               
-              // Store prediction as "Home Win", "Away Win", or "Draw" for validation compatibility
-              const predictionText = predictedOutcome === 'home' ? `Home Win - ${event.home_team}` :
-                                     predictedOutcome === 'away' ? `Away Win - ${event.away_team}` : 'Draw';
+              // Store WINNER prediction (most likely to win)
+              const predictionText = winnerOutcome === 'home' ? `Home Win - ${event.home_team}` :
+                                     winnerOutcome === 'away' ? `Away Win - ${event.away_team}` : 'Draw';
               
-              // Get the implied prob for the predicted outcome
-              const storedImpliedProb = predictedOutcome === 'home' ? impliedProbs.home :
-                                        predictedOutcome === 'away' ? impliedProbs.away :
+              // Get the implied prob for the predicted winner
+              const storedImpliedProb = winnerOutcome === 'home' ? impliedProbs.home :
+                                        winnerOutcome === 'away' ? impliedProbs.away :
                                         impliedProbs.draw || 0;
               
-              // Build value-focused reasoning that explains the edge, not just the match narrative
-              const pickedTeam = predictedOutcome === 'home' ? event.home_team : 
-                                 predictedOutcome === 'away' ? event.away_team : 'Draw';
-              const aiProb = (predictedProb * 100).toFixed(0);
-              const marketProb = (storedImpliedProb * 100).toFixed(0);
-              const valueReasoning = `VALUE PICK: ${pickedTeam} (${aiProb}% AI vs ${marketProb}% market = +${edge.toFixed(1)}% edge). ${analysis.story?.narrative || 'AI model analysis'}`;
+              // Build reasoning that shows both winner prediction and value angle
+              const winnerTeam = winnerOutcome === 'home' ? event.home_team : 
+                                 winnerOutcome === 'away' ? event.away_team : 'Draw';
+              const valueTeam = valueBetSide === 'HOME' ? event.home_team : 
+                                valueBetSide === 'AWAY' ? event.away_team : 'Draw';
+              const aiProb = (winnerProb * 100).toFixed(0);
+              
+              const reasoning = valueBetSide !== winnerOutcome.toUpperCase()
+                ? `PREDICTION: ${winnerTeam} to win (${aiProb}% AI probability). VALUE BET: ${valueTeam} at ${valueBetOdds.toFixed(2)} odds (+${valueBetEdge.toFixed(1)}% edge). ${analysis.story?.narrative || ''}`
+                : `PREDICTION: ${winnerTeam} to win (${aiProb}% AI probability, +${valueBetEdge.toFixed(1)}% edge). ${analysis.story?.narrative || ''}`;
               
               await prisma.prediction.upsert({
                 where: { id: predictionId },
@@ -1126,27 +1146,37 @@ export async function GET(request: NextRequest) {
                   kickoff: matchDate,
                   type: 'MATCH_RESULT',
                   prediction: predictionText,
-                  reasoning: valueReasoning,
+                  reasoning,
                   conviction,
-                  odds: predictedOdds,
+                  odds: winnerOdds,
                   impliedProb: storedImpliedProb * 100,
                   source: 'PRE_ANALYZE',
                   outcome: 'PENDING',
+                  // Value bet tracking (separate from winner prediction)
+                  valueBetSide,
+                  valueBetOdds,
+                  valueBetEdge,
+                  valueBetOutcome: 'PENDING',
                   // CLV Tracking: Store opening odds at prediction time
-                  openingOdds: predictedOdds,
+                  openingOdds: winnerOdds,
                   clvFetched: false,
                 },
                 update: {
                   conviction,
-                  odds: predictedOdds,
-                  reasoning: valueReasoning,
+                  odds: winnerOdds,
+                  reasoning,
+                  valueBetSide,
+                  valueBetOdds,
+                  valueBetEdge,
                   // Update opening odds if this is a fresh prediction
-                  openingOdds: predictedOdds,
+                  openingOdds: winnerOdds,
                 },
               });
               
               stats.predictionsCreated++;
-              console.log(`[Pre-Analyze] Prediction: ${matchRef} → ${predictionText} (edge: ${edge.toFixed(1)}%, conv: ${conviction})`);
+              const winnerTeamLog = winnerOutcome === 'home' ? event.home_team : winnerOutcome === 'away' ? event.away_team : 'Draw';
+              const valueTeamLog = valueBetSide === 'HOME' ? event.home_team : valueBetSide === 'AWAY' ? event.away_team : 'Draw';
+              console.log(`[Pre-Analyze] Prediction: ${matchRef} → Winner: ${winnerTeamLog} (${(winnerProb*100).toFixed(0)}%), Value: ${valueTeamLog} (+${valueBetEdge.toFixed(1)}% edge)`);
               
               // Generate blog post for this match (async, don't await to not slow down cron)
               generateMatchPreview({
