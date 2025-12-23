@@ -1295,6 +1295,160 @@ function detectSport(message: string): string | undefined {
 }
 
 /**
+ * Detect specific league from message
+ */
+function detectLeague(message: string): string | undefined {
+  const lower = message.toLowerCase();
+  
+  // Basketball leagues
+  if (/\bnba\b|lakers|celtics|warriors|nets|76ers|sixers|bucks|heat|knicks|bulls|suns|mavericks|nuggets|clippers|spurs|rockets|embiid|lebron|curry|giannis|jokic|dončić|doncic|tatum|durant/i.test(lower)) {
+    return 'nba';
+  }
+  if (/euroleague|eurobasket|partizan|crvena zvezda|olympiacos|panathinaikos|fenerbahce|real madrid basket|barcelona basket|anadolu efes|maccabi/i.test(lower)) {
+    return 'euroleague';
+  }
+  if (/ncaa basketball|college basketball|march madness|duke basketball|kentucky basketball|kansas basketball/i.test(lower)) {
+    return 'ncaa_basketball';
+  }
+  
+  // Football/Soccer leagues
+  if (/premier league|epl|manchester (united|city)|liverpool|arsenal|chelsea|tottenham|newcastle|west ham|aston villa|brighton/i.test(lower)) {
+    return 'premier_league';
+  }
+  if (/la liga|real madrid|barcelona|atletico madrid|sevilla|villarreal|real sociedad|athletic bilbao/i.test(lower) && !/basket/i.test(lower)) {
+    return 'la_liga';
+  }
+  if (/serie a|juventus|inter milan|ac milan|napoli|roma|lazio|atalanta|fiorentina/i.test(lower)) {
+    return 'serie_a';
+  }
+  if (/bundesliga|bayern munich|borussia dortmund|rb leipzig|bayer leverkusen|frankfurt/i.test(lower)) {
+    return 'bundesliga';
+  }
+  if (/ligue 1|psg|paris saint.germain|marseille|lyon|monaco|lille/i.test(lower)) {
+    return 'ligue_1';
+  }
+  if (/champions league|ucl|europa league|conference league/i.test(lower)) {
+    return 'champions_league';
+  }
+  if (/mls|inter miami|lafc|la galaxy|atlanta united|seattle sounders/i.test(lower)) {
+    return 'mls';
+  }
+  
+  // American Football
+  if (/\bnfl\b|chiefs|eagles|cowboys|patriots|bills|dolphins|ravens|49ers|bengals|lions|packers|jets|giants|raiders|broncos|chargers|steelers|saints|buccaneers|seahawks|vikings|commanders|bears|panthers|falcons|cardinals|titans|colts|jaguars|texans|browns|mahomes|allen|burrow|hurts|herbert/i.test(lower)) {
+    return 'nfl';
+  }
+  if (/college football|cfb|ncaa football|alabama football|ohio state football|georgia football|michigan football/i.test(lower)) {
+    return 'ncaa_football';
+  }
+  
+  // Hockey
+  if (/\bnhl\b|rangers|bruins|maple leafs|canadiens|oilers|avalanche|lightning|panthers|penguins|capitals|flyers|devils|islanders|hurricanes|wild|jets|blues|predators|stars|flames|canucks|kraken|golden knights|blackhawks|red wings|senators|ducks|kings|sharks|coyotes|mcdavid|crosby|ovechkin|draisaitl|mackinnon/i.test(lower)) {
+    return 'nhl';
+  }
+  if (/khl|kontinental hockey|ska|cska moscow|ak bars|metallurg/i.test(lower)) {
+    return 'khl';
+  }
+  
+  // Baseball
+  if (/\bmlb\b|yankees|dodgers|mets|phillies|braves|astros|red sox|cubs|cardinals|giants|padres|rangers|mariners|guardians|orioles|rays|blue jays|twins|brewers|diamondbacks|rockies|marlins|reds|pirates|nationals|royals|tigers|white sox|angels|athletics/i.test(lower)) {
+    return 'mlb';
+  }
+  
+  // Tennis
+  if (/atp|wta|grand slam|wimbledon|us open tennis|french open|roland garros|australian open/i.test(lower)) {
+    return 'tennis';
+  }
+  
+  // MMA/UFC
+  if (/\bufc\b|bellator|pfl|one championship/i.test(lower)) {
+    return 'ufc';
+  }
+  
+  // F1
+  if (/formula.?1|\bf1\b|red bull racing|ferrari f1|mercedes f1|mclaren f1/i.test(lower)) {
+    return 'f1';
+  }
+  
+  // Cricket
+  if (/\bipl\b|indian premier league|mumbai indians|chennai super kings|royal challengers|kolkata knight|delhi capitals|rajasthan royals|sunrisers/i.test(lower)) {
+    return 'ipl';
+  }
+  if (/test cricket|ashes|test match|county cricket/i.test(lower)) {
+    return 'test_cricket';
+  }
+  
+  return undefined;
+}
+
+/**
+ * Get authoritative sources for a league
+ */
+function getLeagueSources(league: string | undefined, sport: string): string | undefined {
+  const sourcesMap: Record<string, string> = {
+    // Basketball
+    nba: 'site:espn.com OR site:nba.com OR site:basketball-reference.com',
+    euroleague: 'site:euroleaguebasketball.net OR site:eurohoops.net OR site:basketnews.com',
+    ncaa_basketball: 'site:espn.com OR site:sports-reference.com/cbb',
+    
+    // Football/Soccer
+    premier_league: 'site:premierleague.com OR site:transfermarkt.com OR site:fbref.com',
+    la_liga: 'site:laliga.com OR site:transfermarkt.com OR site:fbref.com',
+    serie_a: 'site:legaseriea.it OR site:transfermarkt.com OR site:fbref.com',
+    bundesliga: 'site:bundesliga.com OR site:transfermarkt.com OR site:fbref.com',
+    ligue_1: 'site:ligue1.com OR site:transfermarkt.com OR site:fbref.com',
+    champions_league: 'site:uefa.com OR site:transfermarkt.com OR site:fbref.com',
+    mls: 'site:mlssoccer.com OR site:transfermarkt.com',
+    
+    // American Football
+    nfl: 'site:espn.com OR site:nfl.com OR site:pro-football-reference.com',
+    ncaa_football: 'site:espn.com OR site:sports-reference.com/cfb',
+    
+    // Hockey
+    nhl: 'site:espn.com OR site:nhl.com OR site:hockey-reference.com',
+    khl: 'site:khl.ru OR site:eliteprospects.com',
+    
+    // Baseball
+    mlb: 'site:espn.com OR site:mlb.com OR site:baseball-reference.com',
+    
+    // Tennis
+    tennis: 'site:atptour.com OR site:wtatennis.com OR site:tennisabstract.com',
+    
+    // MMA
+    ufc: 'site:ufc.com OR site:espn.com/mma OR site:sherdog.com',
+    
+    // F1
+    f1: 'site:formula1.com OR site:motorsport.com OR site:espn.com/f1',
+    
+    // Cricket
+    ipl: 'site:iplt20.com OR site:espncricinfo.com OR site:cricbuzz.com',
+    test_cricket: 'site:espncricinfo.com OR site:cricbuzz.com',
+  };
+  
+  // If we detected a specific league, use that
+  if (league && sourcesMap[league]) {
+    return sourcesMap[league];
+  }
+  
+  // Fallback to sport-level sources
+  const sportSourcesMap: Record<string, string> = {
+    basketball: 'site:espn.com OR site:basketball-reference.com',
+    football: 'site:transfermarkt.com OR site:fbref.com',
+    soccer: 'site:transfermarkt.com OR site:fbref.com',
+    american_football: 'site:espn.com OR site:pro-football-reference.com',
+    hockey: 'site:espn.com OR site:hockey-reference.com',
+    baseball: 'site:espn.com OR site:baseball-reference.com',
+    tennis: 'site:atptour.com OR site:wtatennis.com',
+    mma: 'site:ufc.com OR site:espn.com/mma',
+    f1: 'site:formula1.com OR site:motorsport.com',
+    golf: 'site:pgatour.com OR site:espn.com/golf',
+    cricket: 'site:espncricinfo.com OR site:cricbuzz.com',
+  };
+  
+  return sportSourcesMap[sport];
+}
+
+/**
  * Build optimized search query based on question category
  */
 function extractSearchQuery(message: string): { query: string; category: QueryCategory; recency: 'hour' | 'day' | 'week' | 'month' } {
@@ -1361,23 +1515,28 @@ function extractSearchQuery(message: string): { query: string; category: QueryCa
       const statsSport = detectSport(query) || 'football';
       const statsSeason = getCurrentSeasonForSport(statsSport);
       
+      // Detect specific league for authoritative sources
+      const statsLeague = detectLeague(query);
+      const statsSources = getLeagueSources(statsLeague, statsSport);
+      
       // Extract player name if mentioned
       const statsPlayerMatch = query.match(/([A-Z][a-zćčšžđ]+(?:\s+[A-Z][a-zćčšžđ]+)+)|Filip\s+\w+|(\b[A-Z][a-z]{2,}\s+[A-Z][a-z]{2,}\b)/i);
       
-      // Only use authoritative sources for NBA/basketball - they have accurate live stats
-      const isNBA = statsSport === 'basketball' || statsSport === 'nba';
-      
       if (statsPlayerMatch) {
         const playerName = statsPlayerMatch[0];
-        if (isNBA) {
-          // Force ESPN/NBA.com for NBA stats - they have accurate current season data
-          query = `"${playerName}" ${statsSeason} season stats PPG RPG APG (site:espn.com OR site:nba.com OR site:basketball-reference.com)`;
+        if (statsSources) {
+          // Use league-specific authoritative sources
+          query = `"${playerName}" ${statsSeason} season stats (${statsSources})`;
         } else {
-          // Other sports - just add season context
+          // No specific sources - just add season context
           query = `"${playerName}" ${statsSeason} season stats`;
         }
       } else {
-        query += ` ${statsSeason} season stats`;
+        if (statsSources) {
+          query += ` ${statsSeason} season stats (${statsSources})`;
+        } else {
+          query += ` ${statsSeason} season stats`;
+        }
       }
       recency = 'day';
       break;
