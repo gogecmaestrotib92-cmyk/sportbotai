@@ -651,7 +651,7 @@ export default function AdminDashboard({
             </div>
 
             {/* Value Bet ROI Stats */}
-            {aiPredictionStats.valueBetStats && aiPredictionStats.valueBetStats.totalBets > 0 && (
+            {aiPredictionStats.valueBetStats && (
               <div>
                 <h3 className="text-lg font-semibold text-text-primary mb-3">💰 Value Bet ROI</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
