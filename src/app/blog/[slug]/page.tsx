@@ -109,8 +109,6 @@ export async function generateStaticParams() {
   }));
 }
 
-export const revalidate = 3600; // Revalidate every hour
-
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
   const data = await getPost(slug);
