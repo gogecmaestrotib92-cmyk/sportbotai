@@ -22,6 +22,14 @@ import { detectChatMode, buildSystemPrompt, type BrainMode } from '@/lib/sportbo
 import { trackQuery } from '@/lib/sportbot-memory';
 import { saveKnowledge, buildLearnedContext, getTerminologyForSport } from '@/lib/sportbot-knowledge';
 import { routeQuery as routeToDataSource } from '@/lib/data-router';
+import { 
+  getVerifiedPlayerStats, 
+  getVerifiedTeamStats, 
+  isStatsQuery, 
+  formatVerifiedPlayerStats,
+  formatVerifiedTeamStats,
+  SeasonNormalizer 
+} from '@/lib/verified-nba-stats';
 
 // ============================================
 // TYPES
@@ -1678,13 +1686,47 @@ export async function POST(request: NextRequest) {
 
     // Step 0: Try DataLayer first for stats/roster queries
     // This gives us accurate API data instead of web search
-    const dataRoute = await routeToDataSource(searchMessage, queryCategory);
-    console.log(`[AI-Chat] Data Router: source=${dataRoute.source}, hasData=${!!dataRoute.data}`);
+    // GUARDRAIL: For ANY numeric stats question, we MUST use API data, NOT LLM memory
     
-    if (dataRoute.source === 'datalayer' && dataRoute.data) {
-      // We have accurate API data - use it instead of Perplexity
-      dataLayerContext = dataRoute.data;
-      console.log(`[AI-Chat] Using DataLayer context: ${dataLayerContext.slice(0, 200)}...`);
+    // Check if this is a verified stats query (NBA player/team stats)
+    if (isStatsQuery(searchMessage)) {
+      console.log('[AI-Chat] Detected stats query - using Verified NBA Stats service');
+      
+      // Extract season from message (handles "this season", "2024-25", etc.)
+      const seasonMatch = searchMessage.match(/(?:this|current|last|previous|\d{4}[-/]\d{2,4})\s*season/i);
+      const seasonInput = seasonMatch ? seasonMatch[0] : undefined;
+      
+      // Try player stats first, then team stats
+      const playerResult = await getVerifiedPlayerStats(searchMessage, seasonInput);
+      
+      if (playerResult.success && playerResult.data) {
+        const stats = playerResult.data;
+        dataLayerContext = formatVerifiedPlayerStats(stats);
+        console.log(`[AI-Chat] ✅ Verified player stats: ${stats.playerFullName} - ${stats.stats.pointsPerGame} PPG (${stats.gamesPlayed} games)`);
+      } else {
+        // Try team stats
+        const teamResult = await getVerifiedTeamStats(searchMessage, seasonInput);
+        
+        if (teamResult.success && teamResult.data) {
+          const stats = teamResult.data;
+          dataLayerContext = formatVerifiedTeamStats(stats);
+          console.log(`[AI-Chat] ✅ Verified team stats: ${stats.teamFullName} - ${stats.stats.pointsPerGame} PPG`);
+        } else {
+          console.log(`[AI-Chat] ⚠️ Could not get verified stats: ${playerResult.error || teamResult.error}`);
+        }
+      }
+    }
+    
+    // Fallback to original data router if verified stats didn't work
+    if (!dataLayerContext) {
+      const dataRoute = await routeToDataSource(searchMessage, queryCategory);
+      console.log(`[AI-Chat] Data Router: source=${dataRoute.source}, hasData=${!!dataRoute.data}`);
+      
+      if (dataRoute.source === 'datalayer' && dataRoute.data) {
+        // We have accurate API data - use it instead of Perplexity
+        dataLayerContext = dataRoute.data;
+        console.log(`[AI-Chat] Using DataLayer context: ${dataLayerContext.slice(0, 200)}...`);
+      }
     }
 
     // Step 1: Use Perplexity for real-time search if needed

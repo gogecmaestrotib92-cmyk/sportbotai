@@ -33,17 +33,40 @@ export interface RouteOptions {
 }
 
 // Known player name patterns for NBA
-const NBA_PLAYER_PATTERNS: Record<string, { variations: string[]; playerId?: string }> = {
-  'joel embiid': { variations: ['embiid', 'joel embiid', 'embiid joel'] },
-  'lebron james': { variations: ['lebron', 'lebron james', 'james lebron'] },
-  'stephen curry': { variations: ['curry', 'steph curry', 'stephen curry'] },
-  'kevin durant': { variations: ['durant', 'kd', 'kevin durant'] },
-  'giannis antetokounmpo': { variations: ['giannis', 'antetokounmpo', 'greek freak'] },
-  'nikola jokic': { variations: ['jokic', 'nikola jokic', 'joker'] },
-  'luka doncic': { variations: ['luka', 'doncic', 'luka doncic'] },
-  'jayson tatum': { variations: ['tatum', 'jayson tatum'] },
-  'anthony davis': { variations: ['ad', 'anthony davis', 'davis'] },
-  'damian lillard': { variations: ['dame', 'lillard', 'damian lillard'] },
+// variations: all ways users might refer to the player
+// searchName: what we use to search the API (usually last name)
+// displayName: the full proper name for display
+const NBA_PLAYER_PATTERNS: Record<string, { variations: string[]; searchName: string; displayName: string }> = {
+  // Top NBA Stars
+  'embiid': { variations: ['embiid', 'joel embiid', 'embiid joel', 'joel', 'the process'], searchName: 'embiid', displayName: 'Joel Embiid' },
+  'lebron': { variations: ['lebron', 'lebron james', 'james', 'king james', 'lbj', 'bron'], searchName: 'james', displayName: 'LeBron James' },
+  'curry': { variations: ['curry', 'steph curry', 'stephen curry', 'steph', 'chef curry'], searchName: 'curry', displayName: 'Stephen Curry' },
+  'durant': { variations: ['durant', 'kevin durant', 'kd', 'easy money sniper'], searchName: 'durant', displayName: 'Kevin Durant' },
+  'giannis': { variations: ['giannis', 'antetokounmpo', 'greek freak', 'giannis antetokounmpo'], searchName: 'antetokounmpo', displayName: 'Giannis Antetokounmpo' },
+  'jokic': { variations: ['jokic', 'nikola jokic', 'joker', 'nikola', 'big honey'], searchName: 'jokic', displayName: 'Nikola Jokic' },
+  'doncic': { variations: ['luka', 'doncic', 'luka doncic', 'luka magic', 'dončić'], searchName: 'doncic', displayName: 'Luka Doncic' },
+  'tatum': { variations: ['tatum', 'jayson tatum', 'jayson', 'jt'], searchName: 'tatum', displayName: 'Jayson Tatum' },
+  'davis': { variations: ['anthony davis', 'ad', 'davis', 'the brow'], searchName: 'davis', displayName: 'Anthony Davis' },
+  'lillard': { variations: ['dame', 'lillard', 'damian lillard', 'dame time', 'damian'], searchName: 'lillard', displayName: 'Damian Lillard' },
+  'morant': { variations: ['ja', 'morant', 'ja morant'], searchName: 'morant', displayName: 'Ja Morant' },
+  'booker': { variations: ['booker', 'devin booker', 'book', 'devin'], searchName: 'booker', displayName: 'Devin Booker' },
+  'brown': { variations: ['jaylen brown', 'jaylen', 'jb'], searchName: 'brown', displayName: 'Jaylen Brown' },
+  'edwards': { variations: ['ant', 'anthony edwards', 'edwards', 'ant-man'], searchName: 'edwards', displayName: 'Anthony Edwards' },
+  'sga': { variations: ['sga', 'shai', 'gilgeous-alexander', 'shai gilgeous-alexander', 'gilgeous'], searchName: 'gilgeous-alexander', displayName: 'Shai Gilgeous-Alexander' },
+  'wembanyama': { variations: ['wemby', 'wembanyama', 'victor wembanyama', 'victor', 'alien'], searchName: 'wembanyama', displayName: 'Victor Wembanyama' },
+  'brunson': { variations: ['brunson', 'jalen brunson', 'jalen'], searchName: 'brunson', displayName: 'Jalen Brunson' },
+  'harden': { variations: ['harden', 'james harden', 'the beard'], searchName: 'harden', displayName: 'James Harden' },
+  'irving': { variations: ['kyrie', 'irving', 'kyrie irving', 'uncle drew'], searchName: 'irving', displayName: 'Kyrie Irving' },
+  'george': { variations: ['pg', 'paul george', 'george', 'pg13'], searchName: 'george', displayName: 'Paul George' },
+  'mitchell': { variations: ['donovan mitchell', 'mitchell', 'spida', 'donovan'], searchName: 'mitchell', displayName: 'Donovan Mitchell' },
+  'fox': { variations: ['fox', 'de\'aaron fox', 'swipa', 'deaaron'], searchName: 'fox', displayName: 'De\'Aaron Fox' },
+  'towns': { variations: ['kat', 'towns', 'karl-anthony towns', 'karl anthony'], searchName: 'towns', displayName: 'Karl-Anthony Towns' },
+  'butler': { variations: ['jimmy', 'butler', 'jimmy butler', 'jimmy buckets'], searchName: 'butler', displayName: 'Jimmy Butler' },
+  'adebayo': { variations: ['bam', 'adebayo', 'bam adebayo'], searchName: 'adebayo', displayName: 'Bam Adebayo' },
+  'maxey': { variations: ['maxey', 'tyrese maxey', 'tyrese'], searchName: 'maxey', displayName: 'Tyrese Maxey' },
+  'young': { variations: ['trae', 'trae young', 'young', 'ice trae'], searchName: 'young', displayName: 'Trae Young' },
+  'ball': { variations: ['lamelo', 'lamelo ball', 'melo'], searchName: 'ball', displayName: 'LaMelo Ball' },
+  'westbrook': { variations: ['westbrook', 'russell westbrook', 'russ', 'brodie'], searchName: 'westbrook', displayName: 'Russell Westbrook' },
 };
 
 /**
@@ -120,23 +143,38 @@ function detectSport(message: string): string | undefined {
 
 /**
  * Extract player name from message
+ * Returns the searchName (usually last name) for API lookup
  */
-function extractPlayerName(message: string): string | undefined {
+function extractPlayerName(message: string): { searchName: string; displayName: string } | undefined {
   const lower = message.toLowerCase();
   
-  // Check known players
-  for (const [name, info] of Object.entries(NBA_PLAYER_PATTERNS)) {
+  // Check known players - match longest variation first for accuracy
+  let bestMatch: { key: string; variation: string; info: { searchName: string; displayName: string } } | null = null;
+  
+  for (const [key, info] of Object.entries(NBA_PLAYER_PATTERNS)) {
     for (const variation of info.variations) {
       if (lower.includes(variation)) {
-        return name;
+        // Prefer longer matches (more specific)
+        if (!bestMatch || variation.length > bestMatch.variation.length) {
+          bestMatch = { key, variation, info };
+        }
       }
     }
   }
   
-  // Try to extract name pattern
+  if (bestMatch) {
+    console.log(`[Router] Matched player: "${bestMatch.variation}" -> ${bestMatch.info.displayName} (search: ${bestMatch.info.searchName})`);
+    return { searchName: bestMatch.info.searchName, displayName: bestMatch.info.displayName };
+  }
+  
+  // Try to extract name pattern (for unknown players)
   const nameMatch = message.match(/([A-Z][a-zćčšžđ]+(?:\s+[A-Z][a-zćčšžđ]+)+)/);
   if (nameMatch) {
-    return nameMatch[1].toLowerCase();
+    const fullName = nameMatch[1];
+    const parts = fullName.split(' ');
+    const lastName = parts[parts.length - 1].toLowerCase();
+    console.log(`[Router] Extracted unknown player: "${fullName}" (search: ${lastName})`);
+    return { searchName: lastName, displayName: fullName };
   }
   
   return undefined;
@@ -151,9 +189,9 @@ export async function routeStatsQuery(
 ): Promise<RouteResult> {
   const dataLayer = new DataLayer({ enableCaching: true });
   const sport = options.sport || detectSport(message) || 'basketball';
-  const playerName = extractPlayerName(message);
+  const playerInfo = extractPlayerName(message);
   
-  if (!playerName) {
+  if (!playerInfo) {
     // No player detected, use Perplexity
     return {
       source: 'perplexity',
@@ -161,7 +199,7 @@ export async function routeStatsQuery(
     };
   }
   
-  console.log(`[Router] Stats query for "${playerName}" in ${sport}`);
+  console.log(`[Router] Stats query for "${playerInfo.displayName}" (search: ${playerInfo.searchName}) in ${sport}`);
   
   // Only basketball is currently supported for player stats
   if (sport !== 'basketball') {
@@ -172,11 +210,11 @@ export async function routeStatsQuery(
   }
   
   try {
-    // Search for player first
-    const searchResult = await dataLayer.searchPlayer('basketball', playerName);
+    // Search for player using the searchName
+    const searchResult = await dataLayer.searchPlayer('basketball', playerInfo.searchName);
     
     if (!searchResult.success || !searchResult.data || searchResult.data.length === 0) {
-      console.log(`[Router] Player "${playerName}" not found in API, falling back to Perplexity`);
+      console.log(`[Router] Player "${playerInfo.displayName}" not found in API, falling back to Perplexity`);
       return {
         source: 'perplexity',
         metadata: { sport },

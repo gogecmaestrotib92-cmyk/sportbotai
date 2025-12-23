@@ -354,9 +354,16 @@ export class BasketballAdapter extends BaseSportAdapter {
     const season = query.season || this.getCurrentSeason();
     const leagueId = this.currentLeagueId;
     
+    // Extract numeric team ID (remove 'basketball-' prefix if present)
+    const numericTeamId = parseInt(query.teamId.replace('basketball-', ''));
+    
+    if (isNaN(numericTeamId)) {
+      return this.error('INVALID_TEAM_ID', `Invalid team ID format: ${query.teamId}`);
+    }
+    
     // First try the /statistics endpoint
     const statsResult = await this.apiProvider.getBasketballTeamStats({
-      team: parseInt(query.teamId),
+      team: numericTeamId,
       league: leagueId,
       season,
     });
@@ -374,7 +381,7 @@ export class BasketballAdapter extends BaseSportAdapter {
     if (standingsResult.success && standingsResult.data) {
       const allStandings = standingsResult.data.flat();
       const teamStanding = allStandings.find(s => 
-        s.team.id === parseInt(query.teamId)
+        s.team.id === numericTeamId
       );
       
       if (teamStanding) {
@@ -852,6 +859,7 @@ export class BasketballAdapter extends BaseSportAdapter {
       'joel embiid': ['76ers', 'philadelphia'],
       'lebron': ['lakers', 'los angeles'],
       'lebron james': ['lakers', 'los angeles'],
+      'james': ['lakers', 'los angeles'], // LeBron James
       'curry': ['warriors', 'golden state'],
       'stephen curry': ['warriors', 'golden state'],
       'durant': ['suns', 'phoenix'],
@@ -867,6 +875,30 @@ export class BasketballAdapter extends BaseSportAdapter {
       'lillard': ['bucks', 'milwaukee'],
       'damian lillard': ['bucks', 'milwaukee'],
       'anthony davis': ['lakers', 'los angeles'],
+      'davis': ['lakers', 'los angeles'], // Anthony Davis
+      'gilgeous-alexander': ['thunder', 'oklahoma'],
+      'sga': ['thunder', 'oklahoma'],
+      'wembanyama': ['spurs', 'san antonio'],
+      'brunson': ['knicks', 'new york'],
+      'maxey': ['76ers', 'philadelphia'],
+      'harden': ['clippers', 'los angeles'],
+      'irving': ['mavericks', 'dallas'],
+      'kyrie': ['mavericks', 'dallas'],
+      'booker': ['suns', 'phoenix'],
+      'edwards': ['timberwolves', 'minnesota'],
+      'morant': ['grizzlies', 'memphis'],
+      'young': ['hawks', 'atlanta'],
+      'trae': ['hawks', 'atlanta'],
+      'mitchell': ['cavaliers', 'cleveland'],
+      'fox': ['kings', 'sacramento'],
+      'towns': ['knicks', 'new york'],
+      'butler': ['heat', 'miami'],
+      'adebayo': ['heat', 'miami'],
+      'ball': ['hornets', 'charlotte'],
+      'brown': ['celtics', 'boston'],
+      'jaylen': ['celtics', 'boston'],
+      'george': ['sixers', 'philadelphia'],
+      'westbrook': ['nuggets', 'denver'],
     };
     
     // Try to find team based on known player mappings
