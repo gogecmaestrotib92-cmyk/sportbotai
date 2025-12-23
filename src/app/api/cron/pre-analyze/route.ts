@@ -24,12 +24,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { theOddsClient, OddsApiEvent } from '@/lib/theOdds';
 import { generateMatchPreview } from '@/lib/blog/match-generator';
-import { cacheSet, CACHE_TTL, CACHE_KEYS } from '@/lib/cache';
+import { cacheSet, cacheGet, CACHE_TTL, CACHE_KEYS } from '@/lib/cache';
 import { analyzeMarket, type MarketIntel, type OddsData, oddsToImpliedProb } from '@/lib/value-detection';
 import { getEnrichedMatchDataV2, normalizeSport } from '@/lib/data-layer/bridge';
 import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee, getMatchFixtureInfo } from '@/lib/football-api';
 import { normalizeToUniversalSignals, formatSignalsForAI, getSignalSummary, type RawMatchInput } from '@/lib/universal-signals';
 import { ANALYSIS_PERSONALITY } from '@/lib/sportbot-brain';
+import { getTeamRosterContext } from '@/lib/perplexity';
 import OpenAI from 'openai';
 
 export const maxDuration = 300; // 5 minute timeout for batch processing
@@ -190,6 +191,45 @@ function getRestDaysContext(
   if (parts.length === 0) return null;
   
   return parts.join(' ');
+}
+
+/**
+ * Get real-time roster/key player context for NBA/NHL/NFL
+ * Uses Perplexity to fetch current season rosters to avoid outdated AI training data
+ * Caches results for 6 hours since rosters don't change mid-game
+ */
+async function getRosterContextCached(
+  homeTeam: string,
+  awayTeam: string,
+  sport: 'basketball' | 'hockey' | 'football',
+  league: string
+): Promise<string | null> {
+  const cacheKey = `roster:${sport}:${homeTeam}:${awayTeam}`;
+  
+  try {
+    // Check cache first (6 hour TTL)
+    const cached = await cacheGet<string>(cacheKey);
+    if (cached) {
+      console.log(`[Pre-Analyze] Roster context cache HIT: ${cacheKey}`);
+      return cached;
+    }
+    
+    console.log(`[Pre-Analyze] Fetching roster context for ${homeTeam} vs ${awayTeam} (${sport})`);
+    
+    // Fetch from Perplexity
+    const rosterContext = await getTeamRosterContext(homeTeam, awayTeam, sport);
+    
+    if (rosterContext) {
+      // Cache for 6 hours
+      await cacheSet(cacheKey, rosterContext, 6 * 60 * 60);
+      console.log(`[Pre-Analyze] Roster context cached: ${cacheKey}`);
+    }
+    
+    return rosterContext;
+  } catch (error) {
+    console.warn(`[Pre-Analyze] Failed to fetch roster context for ${homeTeam} vs ${awayTeam}:`, error);
+    return null;
+  }
 }
 
 /**
@@ -489,13 +529,21 @@ async function runQuickAnalysis(
     // Determine if soccer or other sport
     const isNonSoccer = !sport.startsWith('soccer_');
     
-    // Get enriched match data, injuries, and referee in parallel
-    const [enrichedDataRaw, injuryInfo, refereeContext] = await Promise.all([
+    // Determine sport type for roster lookup
+    const rosterSport = sport.includes('basketball') ? 'basketball' as const
+      : sport.includes('hockey') ? 'hockey' as const
+      : sport.includes('american') ? 'football' as const
+      : null;
+    
+    // Get enriched match data, injuries, referee, and roster context in parallel
+    const [enrichedDataRaw, injuryInfo, refereeContext, rosterContext] = await Promise.all([
       isNonSoccer 
         ? getEnrichedMatchDataV2(homeTeam, awayTeam, sport, league)
         : getEnrichedMatchData(homeTeam, awayTeam, league),
       getInjuryInfo(homeTeam, awayTeam, sport, league),
       getRefereeContext(homeTeam, awayTeam, sport, league),
+      // Fetch real-time roster context for NBA/NHL/NFL to avoid outdated AI training data
+      rosterSport ? getRosterContextCached(homeTeam, awayTeam, rosterSport, league) : Promise.resolve(null),
     ]);
     
     // Cast to any for cross-sport compatibility (different data shapes)
@@ -594,7 +642,7 @@ MARKET: ${odds.home} / ${odds.away}${odds.draw ? ` / ${odds.draw}` : ''}
 FORM: ${homeTeam} ${homeFormStr} | ${awayTeam} ${awayFormStr}${splitsContext ? `\nSPLITS: ${splitsContext}` : ''}${h2hContext ? `\n${h2hContext}` : ''}
 SIGNALS: ${signalsSummary}
 COMPUTED EDGE: ${edgeTeam} ${edgePercentage > 0 ? `+${edgePercentage}%` : '(even)'}
-${injuryContext}${restContext ? `\nREST FACTOR: ${restContext}` : ''}${refereeContext ? `\n${refereeContext}` : ''}
+${injuryContext}${restContext ? `\nREST FACTOR: ${restContext}` : ''}${refereeContext ? `\n${refereeContext}` : ''}${rosterContext ? `\n\n${rosterContext}` : ''}
 ${leagueHint ? `\n${leagueHint}\n` : ''}
 Be AIXBT. Sharp takes. Back them with numbers FROM THE DATA ABOVE ONLY.
 

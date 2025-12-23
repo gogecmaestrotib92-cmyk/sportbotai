@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { researchTopic } from './research';
 import { put } from '@vercel/blob';
 import { getTeamLogo, getLeagueLogo } from '@/lib/logos';
+import { getTeamRosterContext } from '@/lib/perplexity';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -474,6 +475,7 @@ interface MatchResearch {
   recentNews: string[];
   keyPlayers: string[];
   predictions: string[];
+  rosterContext?: string | null; // Real-time roster info for NBA/NHL/NFL
 }
 
 interface MatchAnalysisData {
@@ -703,8 +705,29 @@ async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisData |
 async function researchMatch(match: MatchInfo): Promise<MatchResearch> {
   const searchQuery = `${match.homeTeam} vs ${match.awayTeam} ${match.league} match preview analysis recent form head to head injuries team news`;
   
+  // Determine if this is a non-soccer sport that needs roster lookup
+  const isNonSoccer = match.sportKey?.includes('basketball') || 
+                       match.sportKey?.includes('hockey') || 
+                       match.sportKey?.includes('americanfootball') ||
+                       match.league?.includes('NBA') ||
+                       match.league?.includes('NHL') ||
+                       match.league?.includes('NFL');
+  
+  const rosterSport = match.sportKey?.includes('basketball') || match.league?.includes('NBA') ? 'basketball' as const
+    : match.sportKey?.includes('hockey') || match.league?.includes('NHL') ? 'hockey' as const
+    : match.sportKey?.includes('americanfootball') || match.league?.includes('NFL') ? 'football' as const
+    : null;
+  
   try {
-    const research = await researchTopic(searchQuery);
+    // Fetch research and roster context in parallel
+    const [research, rosterContext] = await Promise.all([
+      researchTopic(searchQuery),
+      rosterSport ? getTeamRosterContext(match.homeTeam, match.awayTeam, rosterSport) : Promise.resolve(null),
+    ]);
+    
+    if (rosterContext) {
+      console.log(`[Match Research] Got roster context for ${match.homeTeam} vs ${match.awayTeam}`);
+    }
     
     // Parse research into structured data
     return {
@@ -726,6 +749,7 @@ async function researchMatch(match: MatchInfo): Promise<MatchResearch> {
         f.toLowerCase().includes('expect') ||
         f.toLowerCase().includes('likely')
       ).slice(0, 3),
+      rosterContext,
     };
   } catch (error) {
     console.warn('[Match Research] Perplexity research failed, using minimal data');
@@ -736,6 +760,7 @@ async function researchMatch(match: MatchInfo): Promise<MatchResearch> {
       recentNews: [],
       keyPlayers: [],
       predictions: [],
+      rosterContext: null,
     };
   }
 }
@@ -846,7 +871,12 @@ Away Team Info: ${JSON.stringify(research.awayTeamInfo)}
 Head to Head: ${JSON.stringify(research.headToHead)}
 Recent News: ${JSON.stringify(research.recentNews)}
 Key Players: ${JSON.stringify(research.keyPlayers)}
-${internalLinksInfo}
+${research.rosterContext ? `
+=== CURRENT ROSTER INFORMATION (2025-26 SEASON - USE THIS!) ===
+${research.rosterContext}
+
+⚠️ CRITICAL: Use ONLY the player names from the roster context above. Do NOT mention players who may have been traded or are no longer on these teams. Your training data may be outdated.
+` : ''}${internalLinksInfo}
 
 === CRITICAL: USE THESE HTML ELEMENTS FOR BETTER FORMATTING ===
 

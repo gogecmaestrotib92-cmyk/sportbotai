@@ -299,7 +299,8 @@ async function generatePostFromPrediction(prediction: PredictionWithEdge, catego
     }
     
     // Step 3: Build computed analysis from REAL prediction data
-    const impliedProb = prediction.impliedProb || 0.5;
+    // NOTE: impliedProb is stored as percentage (80.8) in DB, convert to decimal (0.808)
+    const impliedProb = prediction.impliedProb ? prediction.impliedProb / 100 : 0.5;
     const computedAnalysis: ComputedAnalysis = {
       probabilities: {
         home: prediction.prediction.toLowerCase().includes('home') ? impliedProb : (1 - impliedProb) / 2,

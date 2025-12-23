@@ -447,11 +447,64 @@ export async function deepMatchAnalysis(
   return client.deepMatchAnalysis(homeTeam, awayTeam, league, additionalContext);
 }
 
+/**
+ * Get current roster/key players for NBA, NHL, or NFL teams
+ * Uses Perplexity to fetch real-time roster info to avoid outdated training data
+ * 
+ * @param homeTeam - Home team name
+ * @param awayTeam - Away team name  
+ * @param sport - Sport type: 'basketball' | 'hockey' | 'football'
+ * @param season - Current season string (e.g., "2025-26")
+ * @returns Formatted roster context string for AI prompt
+ */
+export async function getTeamRosterContext(
+  homeTeam: string,
+  awayTeam: string,
+  sport: 'basketball' | 'hockey' | 'football',
+  season?: string
+): Promise<string | null> {
+  const client = getPerplexityClient();
+  
+  if (!client.isConfigured()) {
+    console.warn('[Perplexity] API key not configured, skipping roster lookup');
+    return null;
+  }
+
+  const sportLabel = sport === 'basketball' ? 'NBA' : sport === 'hockey' ? 'NHL' : 'NFL';
+  const currentSeason = season || '2025-26';
+  
+  const query = `${homeTeam} vs ${awayTeam} ${sportLabel} ${currentSeason} season current roster star players key players who plays for each team today`;
+  
+  try {
+    const result = await client.search(query, { 
+      recency: 'week',  // Rosters don't change hourly
+      model: 'sonar',   // Fast model is fine for roster lookup
+      maxTokens: 400,
+    });
+    
+    if (!result.success || !result.content) {
+      console.warn(`[Perplexity] Roster lookup failed for ${homeTeam} vs ${awayTeam}`);
+      return null;
+    }
+    
+    // Format for AI prompt
+    return `CURRENT ROSTER CONTEXT (${currentSeason} season - live data):
+${result.content}
+
+⚠️ IMPORTANT: Use this current roster info. Ignore any player associations from your training data if they conflict with the above.`;
+    
+  } catch (error) {
+    console.error('[Perplexity] Roster lookup error:', error);
+    return null;
+  }
+}
+
 export default {
   getPerplexityClient,
   searchSportsNews,
   researchMatch,
   quickMatchResearch,
   deepMatchAnalysis,
+  getTeamRosterContext,
   SEARCH_TEMPLATES,
 };
