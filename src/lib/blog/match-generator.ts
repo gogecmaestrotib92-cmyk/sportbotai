@@ -3,7 +3,6 @@
 
 import OpenAI from 'openai';
 import { prisma } from '@/lib/prisma';
-import { researchTopic } from './research';
 import { put } from '@vercel/blob';
 import { getTeamLogo, getLeagueLogo } from '@/lib/logos';
 import { getMultiSportEnrichedData } from '@/lib/sports-api';
@@ -566,7 +565,7 @@ async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisData |
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://www.sportbotai.com');
     
-    // Build analyze request
+    // Build analyze request using the expected format
     const analyzePayload = {
       homeTeam: match.homeTeam,
       awayTeam: match.awayTeam,
@@ -574,9 +573,11 @@ async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisData |
       sportKey: match.sportKey,
       league: match.league,
       matchDate: match.commenceTime,
-      oddsHome: match.odds?.home || 0,
-      oddsDraw: match.odds?.draw || null,
-      oddsAway: match.odds?.away || 0,
+      odds: {
+        home: match.odds?.home || 0,
+        draw: match.odds?.draw ?? null,
+        away: match.odds?.away || 0,
+      },
     };
 
     console.log(`[Match Analysis] Fetching full analysis for ${match.homeTeam} vs ${match.awayTeam}${existingPrediction ? ' (has cached prediction for probabilities)' : ''}`);
@@ -816,8 +817,6 @@ async function fetchEnrichedDataFallback(match: MatchInfo, prediction: {
 }
 
 async function researchMatch(match: MatchInfo): Promise<MatchResearch> {
-  const searchQuery = `${match.homeTeam} vs ${match.awayTeam} ${match.league} match preview analysis recent form head to head injuries team news`;
-  
   // Determine sport type for roster lookup using DataLayer
   const rosterSport: Sport | null = 
     match.sportKey?.includes('basketball') || match.league?.includes('NBA') ? 'basketball'
@@ -825,52 +824,31 @@ async function researchMatch(match: MatchInfo): Promise<MatchResearch> {
     : match.sportKey?.includes('americanfootball') || match.league?.includes('NFL') ? 'american_football'
     : null;
   
-  try {
-    // Fetch research and roster context in parallel
-    // Use DataLayer for accurate current season roster data
-    const [research, rosterContext] = await Promise.all([
-      researchTopic(searchQuery),
-      rosterSport ? getMatchRostersV2(match.homeTeam, match.awayTeam, rosterSport) : Promise.resolve(null),
-    ]);
-    
-    if (rosterContext) {
-      console.log(`[Match Research] Got roster context from DataLayer for ${match.homeTeam} vs ${match.awayTeam}`);
+  // Fetch roster context from DataLayer - this is the ONLY source for player data
+  // No more Perplexity dependency - all data comes from DataLayer
+  let rosterContext: string | null = null;
+  if (rosterSport) {
+    try {
+      rosterContext = await getMatchRostersV2(match.homeTeam, match.awayTeam, rosterSport);
+      if (rosterContext) {
+        console.log(`[Match Research] Got roster context from DataLayer for ${match.homeTeam} vs ${match.awayTeam}`);
+      }
+    } catch (rosterError) {
+      console.warn('[Match Research] DataLayer roster lookup failed:', rosterError);
     }
-    
-    // Parse research into structured data
-    return {
-      homeTeamInfo: research.facts.filter(f => 
-        f.toLowerCase().includes(match.homeTeam.toLowerCase())
-      ).slice(0, 3),
-      awayTeamInfo: research.facts.filter(f => 
-        f.toLowerCase().includes(match.awayTeam.toLowerCase())
-      ).slice(0, 3),
-      headToHead: research.statistics.slice(0, 3),
-      recentNews: research.recentNews.slice(0, 3),
-      keyPlayers: research.facts.filter(f => 
-        f.toLowerCase().includes('player') || 
-        f.toLowerCase().includes('scorer') ||
-        f.toLowerCase().includes('injury')
-      ).slice(0, 4),
-      predictions: research.facts.filter(f =>
-        f.toLowerCase().includes('predict') ||
-        f.toLowerCase().includes('expect') ||
-        f.toLowerCase().includes('likely')
-      ).slice(0, 3),
-      rosterContext,
-    };
-  } catch (error) {
-    console.warn('[Match Research] Perplexity research failed, using minimal data');
-    return {
-      homeTeamInfo: [],
-      awayTeamInfo: [],
-      headToHead: [],
-      recentNews: [],
-      keyPlayers: [],
-      predictions: [],
-      rosterContext: null,
-    };
   }
+  
+  // Return structured data - all other context comes from AI analysis via DataLayer
+  // homeTeamInfo, awayTeamInfo, headToHead etc. are populated by fetchMatchAnalysis()
+  return {
+    homeTeamInfo: [],
+    awayTeamInfo: [],
+    headToHead: [],
+    recentNews: [],
+    keyPlayers: [],
+    predictions: [],
+    rosterContext,
+  };
 }
 
 // ============================================
