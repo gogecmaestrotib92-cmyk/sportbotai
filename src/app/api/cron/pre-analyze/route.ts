@@ -26,11 +26,10 @@ import { theOddsClient, OddsApiEvent } from '@/lib/theOdds';
 import { generateMatchPreview } from '@/lib/blog/match-generator';
 import { cacheSet, cacheGet, CACHE_TTL, CACHE_KEYS } from '@/lib/cache';
 import { analyzeMarket, type MarketIntel, type OddsData, oddsToImpliedProb } from '@/lib/value-detection';
-import { getEnrichedMatchDataV2, normalizeSport } from '@/lib/data-layer/bridge';
+import { getEnrichedMatchDataV2, normalizeSport, getMatchRostersV2 } from '@/lib/data-layer/bridge';
 import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee, getMatchFixtureInfo } from '@/lib/football-api';
 import { normalizeToUniversalSignals, formatSignalsForAI, getSignalSummary, type RawMatchInput } from '@/lib/universal-signals';
 import { ANALYSIS_PERSONALITY } from '@/lib/sportbot-brain';
-import { getTeamRosterContext } from '@/lib/perplexity';
 import OpenAI from 'openai';
 
 export const maxDuration = 300; // 5 minute timeout for batch processing
@@ -201,7 +200,7 @@ function getRestDaysContext(
 async function getRosterContextCached(
   homeTeam: string,
   awayTeam: string,
-  sport: 'basketball' | 'hockey' | 'football',
+  sport: 'basketball' | 'hockey' | 'american_football',
   league: string
 ): Promise<string | null> {
   const cacheKey = `roster:${sport}:${homeTeam}:${awayTeam}`;
@@ -214,10 +213,10 @@ async function getRosterContextCached(
       return cached;
     }
     
-    console.log(`[Pre-Analyze] Fetching roster context for ${homeTeam} vs ${awayTeam} (${sport})`);
+    console.log(`[Pre-Analyze] Fetching roster from API for ${homeTeam} vs ${awayTeam} (${sport})`);
     
-    // Fetch from Perplexity
-    const rosterContext = await getTeamRosterContext(homeTeam, awayTeam, sport);
+    // Fetch from API-Sports via DataLayer (structured data, not AI-generated)
+    const rosterContext = await getMatchRostersV2(homeTeam, awayTeam, sport);
     
     if (rosterContext) {
       // Cache for 6 hours
@@ -532,7 +531,7 @@ async function runQuickAnalysis(
     // Determine sport type for roster lookup
     const rosterSport = sport.includes('basketball') ? 'basketball' as const
       : sport.includes('hockey') ? 'hockey' as const
-      : sport.includes('american') ? 'football' as const
+      : sport.includes('american') ? 'american_football' as const
       : null;
     
     // Get enriched match data, injuries, referee, and roster context in parallel

@@ -6,8 +6,9 @@ import { prisma } from '@/lib/prisma';
 import { researchTopic } from './research';
 import { put } from '@vercel/blob';
 import { getTeamLogo, getLeagueLogo } from '@/lib/logos';
-import { getTeamRosterContext } from '@/lib/perplexity';
 import { getMultiSportEnrichedData } from '@/lib/sports-api';
+import { getMatchRostersV2, normalizeSport } from '@/lib/data-layer/bridge';
+import type { Sport } from '@/lib/data-layer/types';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -817,28 +818,23 @@ async function fetchEnrichedDataFallback(match: MatchInfo, prediction: {
 async function researchMatch(match: MatchInfo): Promise<MatchResearch> {
   const searchQuery = `${match.homeTeam} vs ${match.awayTeam} ${match.league} match preview analysis recent form head to head injuries team news`;
   
-  // Determine if this is a non-soccer sport that needs roster lookup
-  const isNonSoccer = match.sportKey?.includes('basketball') || 
-                       match.sportKey?.includes('hockey') || 
-                       match.sportKey?.includes('americanfootball') ||
-                       match.league?.includes('NBA') ||
-                       match.league?.includes('NHL') ||
-                       match.league?.includes('NFL');
-  
-  const rosterSport = match.sportKey?.includes('basketball') || match.league?.includes('NBA') ? 'basketball' as const
-    : match.sportKey?.includes('hockey') || match.league?.includes('NHL') ? 'hockey' as const
-    : match.sportKey?.includes('americanfootball') || match.league?.includes('NFL') ? 'football' as const
+  // Determine sport type for roster lookup using DataLayer
+  const rosterSport: Sport | null = 
+    match.sportKey?.includes('basketball') || match.league?.includes('NBA') ? 'basketball'
+    : match.sportKey?.includes('hockey') || match.league?.includes('NHL') ? 'hockey'
+    : match.sportKey?.includes('americanfootball') || match.league?.includes('NFL') ? 'american_football'
     : null;
   
   try {
     // Fetch research and roster context in parallel
+    // Use DataLayer for accurate current season roster data
     const [research, rosterContext] = await Promise.all([
       researchTopic(searchQuery),
-      rosterSport ? getTeamRosterContext(match.homeTeam, match.awayTeam, rosterSport) : Promise.resolve(null),
+      rosterSport ? getMatchRostersV2(match.homeTeam, match.awayTeam, rosterSport) : Promise.resolve(null),
     ]);
     
     if (rosterContext) {
-      console.log(`[Match Research] Got roster context for ${match.homeTeam} vs ${match.awayTeam}`);
+      console.log(`[Match Research] Got roster context from DataLayer for ${match.homeTeam} vs ${match.awayTeam}`);
     }
     
     // Parse research into structured data

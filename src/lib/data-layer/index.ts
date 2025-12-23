@@ -22,6 +22,7 @@ import {
   NormalizedRecentGames,
   NormalizedInjury,
   NormalizedOdds,
+  NormalizedPlayer,
   EnrichedMatchData,
   TeamQuery,
   MatchQuery,
@@ -386,6 +387,102 @@ export class DataLayer {
     }
     
     return result;
+  }
+  
+  /**
+   * Get team roster/players for current season
+   * Available for basketball, hockey, and american_football
+   */
+  async getTeamRoster(sport: Sport, teamId: string): Promise<DataLayerResponse<NormalizedPlayer[]>> {
+    const cacheKey = this.getCacheKey('getTeamRoster', { sport, teamId });
+    const cached = this.getFromCache<DataLayerResponse<NormalizedPlayer[]>>(cacheKey);
+    if (cached) return cached;
+    
+    this.log('getTeamRoster', { sport, teamId });
+    
+    const adapter = this.getAdapter(sport);
+    if (!adapter) {
+      return {
+        success: false,
+        error: {
+          code: 'SPORT_NOT_SUPPORTED',
+          message: `Sport "${sport}" is not supported`,
+        },
+        metadata: {
+          provider: 'api-sports',
+          cached: false,
+          fetchedAt: new Date(),
+        },
+      };
+    }
+    
+    // Check if adapter has getTeamRoster method
+    if (!('getTeamRoster' in adapter) || typeof (adapter as any).getTeamRoster !== 'function') {
+      return {
+        success: false,
+        error: {
+          code: 'NOT_SUPPORTED',
+          message: `Team roster data is not available for ${sport}`,
+        },
+        metadata: {
+          provider: 'api-sports',
+          cached: false,
+          fetchedAt: new Date(),
+        },
+      };
+    }
+    
+    const result = await (adapter as any).getTeamRoster(teamId);
+    
+    if (result.success) {
+      this.setCache(cacheKey, result);
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Get rosters for both teams in a match
+   * Returns formatted string for AI consumption
+   */
+  async getMatchRosters(
+    sport: Sport,
+    homeTeamId: string,
+    awayTeamId: string
+  ): Promise<string | null> {
+    try {
+      const [homeRoster, awayRoster] = await Promise.all([
+        this.getTeamRoster(sport, homeTeamId),
+        this.getTeamRoster(sport, awayTeamId),
+      ]);
+      
+      if (!homeRoster.success && !awayRoster.success) {
+        return null;
+      }
+      
+      const formatRoster = (players: NormalizedPlayer[]) => {
+        return players
+          .map(p => `- ${p.name} (${p.position})`)
+          .join('\n');
+      };
+      
+      let result = '=== CURRENT TEAM ROSTERS ===\n\n';
+      
+      if (homeRoster.success && homeRoster.data && homeRoster.data.length > 0) {
+        result += `Home Team Roster:\n${formatRoster(homeRoster.data)}\n\n`;
+      }
+      
+      if (awayRoster.success && awayRoster.data && awayRoster.data.length > 0) {
+        result += `Away Team Roster:\n${formatRoster(awayRoster.data)}\n\n`;
+      }
+      
+      result += '⚠️ Use ONLY players from the rosters above. Do NOT mention any player not listed here.';
+      
+      return result;
+    } catch (error) {
+      console.error('[DataLayer] Error getting match rosters:', error);
+      return null;
+    }
   }
   
   /**

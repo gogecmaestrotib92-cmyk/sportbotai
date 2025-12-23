@@ -231,6 +231,14 @@ export class APISportsProvider {
     );
   }
   
+  async getBasketballPlayers(params: { team: number; season: string }) {
+    return this.request<BasketballPlayerResponse[]>(
+      API_SPORTS_URLS.basketball,
+      '/players',
+      params as Record<string, string | number>
+    );
+  }
+  
   // ============================================================================
   // Hockey Endpoints
   // ============================================================================
@@ -273,6 +281,14 @@ export class APISportsProvider {
     );
   }
   
+  async getHockeyPlayers(params: { team: number; season: number }) {
+    return this.request<HockeyPlayerResponse[]>(
+      API_SPORTS_URLS.hockey,
+      '/players',
+      params as Record<string, string | number>
+    );
+  }
+  
   // ============================================================================
   // American Football Endpoints
   // ============================================================================
@@ -303,6 +319,14 @@ export class APISportsProvider {
     return this.request<NFLStandingsResponse[][]>(
       API_SPORTS_URLS.american_football,
       '/standings',
+      params as Record<string, string | number>
+    );
+  }
+  
+  async getNFLPlayers(params: { team: number; season: number }) {
+    return this.request<NFLPlayerResponse[]>(
+      API_SPORTS_URLS.american_football,
+      '/players',
       params as Record<string, string | number>
     );
   }
@@ -562,6 +586,58 @@ export interface NFLStandingsResponse {
   points: { for: number; against: number; difference: number };
   records: { home: string; road: string; conference: string; division: string };
   streak: string | null;
+}
+
+// ============================================================================
+// Player Response Types
+// ============================================================================
+
+export interface BasketballPlayerResponse {
+  id: number;
+  name: string;
+  firstname: string;
+  lastname: string;
+  birth: { date: string | null; country: string | null };
+  nationality: string | null;
+  height: { feets: string | null; inches: string | null; meters: string | null };
+  weight: { pounds: string | null; kilograms: string | null };
+  college: string | null;
+  affiliation: string | null;
+  leagues: {
+    standard?: { jersey: number | null; active: boolean; pos: string | null };
+    [key: string]: { jersey: number | null; active: boolean; pos: string | null } | undefined;
+  };
+}
+
+export interface HockeyPlayerResponse {
+  id: number;
+  name: string;
+  firstname: string;
+  lastname: string;
+  age: number | null;
+  birth: { date: string | null; place: string | null; country: string | null };
+  nationality: string | null;
+  height: string | null;
+  weight: string | null;
+  number: number | null;
+  position: string | null;
+  captain: boolean;
+  photo: string | null;
+}
+
+export interface NFLPlayerResponse {
+  id: number;
+  name: string;
+  age: number | null;
+  height: string | null;
+  weight: string | null;
+  college: string | null;
+  group: string | null;   // "Offense", "Defense", "Special Teams"
+  position: string | null;
+  number: number | null;
+  salary: string | null;
+  experience: string | null;
+  image: string | null;
 }
 
 // ============================================================================

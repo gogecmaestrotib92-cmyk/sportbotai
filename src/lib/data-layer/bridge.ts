@@ -277,3 +277,36 @@ export async function getFullEnrichedData(
   
   return result.success ? result.data || null : null;
 }
+
+/**
+ * Get team rosters for a match using the DataLayer
+ * Returns formatted string for AI consumption
+ */
+export async function getMatchRostersV2(
+  homeTeam: string,
+  awayTeam: string,
+  sport: Sport
+): Promise<string | null> {
+  const dataLayer = getDataLayer();
+  
+  // First, find the team IDs
+  const [homeTeamResult, awayTeamResult] = await Promise.all([
+    dataLayer.findTeam({ sport, name: homeTeam }),
+    dataLayer.findTeam({ sport, name: awayTeam }),
+  ]);
+  
+  if (!homeTeamResult.success || !awayTeamResult.success) {
+    console.warn(`[Bridge] Could not find teams: ${homeTeam}, ${awayTeam}`);
+    return null;
+  }
+  
+  const homeTeamId = homeTeamResult.data?.id;
+  const awayTeamId = awayTeamResult.data?.id;
+  
+  if (!homeTeamId || !awayTeamId) {
+    return null;
+  }
+  
+  // Get rosters using the DataLayer
+  return dataLayer.getMatchRosters(sport, homeTeamId, awayTeamId);
+}

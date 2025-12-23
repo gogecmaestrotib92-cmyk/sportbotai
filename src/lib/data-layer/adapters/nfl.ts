@@ -15,6 +15,7 @@ import {
   NormalizedTeamStats,
   NormalizedH2H,
   NormalizedRecentGames,
+  NormalizedPlayer,
   MatchStatus,
   TeamQuery,
   MatchQuery,
@@ -27,6 +28,7 @@ import {
   NFLTeamResponse,
   NFLGameResponse,
   NFLStandingsResponse,
+  NFLPlayerResponse,
 } from '../providers/api-sports';
 import { resolveTeamName, getSearchVariations } from '../team-resolver';
 
@@ -509,6 +511,52 @@ export class NFLAdapter extends BaseSportAdapter {
       provider: 'api-sports',
       fetchedAt: new Date(),
     });
+  }
+  
+  // ============================================================================
+  // Team Roster / Players
+  // ============================================================================
+  
+  /**
+   * Get the current roster/players for a team
+   * Returns players for the current season
+   */
+  async getTeamRoster(teamId: string): Promise<DataLayerResponse<NormalizedPlayer[]>> {
+    const externalId = teamId.replace('nfl-', '');
+    const season = this.getCurrentSeason();
+    
+    console.log(`[NFL] Fetching roster for team ${externalId}, season ${season}`);
+    
+    const result = await this.apiProvider.getNFLPlayers({
+      team: parseInt(externalId, 10),
+      season,
+    });
+    
+    if (!result.success || !result.data) {
+      return this.error(result.error || 'Failed to fetch team roster');
+    }
+    
+    const players = result.data
+      .map((raw: NFLPlayerResponse) => this.transformPlayer(raw))
+      .slice(0, 20); // NFL has more positions, get top 20
+    
+    console.log(`[NFL] Found ${players.length} players for team ${externalId}`);
+    
+    return this.success(players);
+  }
+  
+  /**
+   * Transform raw player data to normalized format
+   */
+  private transformPlayer(raw: NFLPlayerResponse): NormalizedPlayer {
+    return {
+      id: `nfl-player-${raw.id}`,
+      externalId: String(raw.id),
+      name: raw.name,
+      position: raw.position || raw.group || 'Unknown',
+      number: raw.number ?? undefined,
+      age: raw.age ?? undefined,
+    };
   }
   
   // ============================================================================

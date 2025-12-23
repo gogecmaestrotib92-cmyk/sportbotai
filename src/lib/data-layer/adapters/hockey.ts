@@ -15,6 +15,7 @@ import {
   NormalizedTeamStats,
   NormalizedH2H,
   NormalizedRecentGames,
+  NormalizedPlayer,
   MatchStatus,
   TeamQuery,
   MatchQuery,
@@ -27,6 +28,7 @@ import {
   HockeyTeamResponse,
   HockeyGameResponse,
   HockeyStandingsResponse,
+  HockeyPlayerResponse,
 } from '../providers/api-sports';
 import { resolveTeamName, getSearchVariations } from '../team-resolver';
 
@@ -541,6 +543,55 @@ export class HockeyAdapter extends BaseSportAdapter {
       provider: 'api-sports',
       fetchedAt: new Date(),
     });
+  }
+  
+  // ============================================================================
+  // Team Roster / Players
+  // ============================================================================
+  
+  /**
+   * Get the current roster/players for a team
+   * Returns players for the current season
+   */
+  async getTeamRoster(teamId: string): Promise<DataLayerResponse<NormalizedPlayer[]>> {
+    const externalId = teamId.replace('hockey-', '');
+    const season = this.getCurrentSeason();
+    
+    console.log(`[Hockey] Fetching roster for team ${externalId}, season ${season}`);
+    
+    const result = await this.apiProvider.getHockeyPlayers({
+      team: parseInt(externalId, 10),
+      season,
+    });
+    
+    if (!result.success || !result.data) {
+      return this.error(result.error || 'Failed to fetch team roster');
+    }
+    
+    const players = result.data
+      .map((raw: HockeyPlayerResponse) => this.transformPlayer(raw))
+      .slice(0, 15); // Limit to top 15 players
+    
+    console.log(`[Hockey] Found ${players.length} players for team ${externalId}`);
+    
+    return this.success(players);
+  }
+  
+  /**
+   * Transform raw player data to normalized format
+   */
+  private transformPlayer(raw: HockeyPlayerResponse): NormalizedPlayer {
+    return {
+      id: `hockey-player-${raw.id}`,
+      externalId: String(raw.id),
+      name: raw.name || `${raw.firstname} ${raw.lastname}`.trim(),
+      firstName: raw.firstname,
+      lastName: raw.lastname,
+      position: raw.position || 'Unknown',
+      number: raw.number ?? undefined,
+      nationality: raw.nationality || undefined,
+      age: raw.age ?? undefined,
+    };
   }
   
   // ============================================================================

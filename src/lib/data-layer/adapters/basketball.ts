@@ -15,6 +15,7 @@ import {
   NormalizedTeamStats,
   NormalizedH2H,
   NormalizedRecentGames,
+  NormalizedPlayer,
   MatchStatus,
   TeamQuery,
   MatchQuery,
@@ -27,6 +28,7 @@ import {
   BasketballTeamResponse,
   BasketballGameResponse,
   BasketballStandingsResponse,
+  BasketballPlayerResponse,
 } from '../providers/api-sports';
 import { resolveTeamName, getSearchVariations } from '../team-resolver';
 
@@ -561,6 +563,58 @@ export class BasketballAdapter extends BaseSportAdapter {
       provider: 'api-sports',
       fetchedAt: new Date(),
     });
+  }
+  
+  // ============================================================================
+  // Team Roster / Players
+  // ============================================================================
+  
+  /**
+   * Get the current roster/players for a team
+   * Returns players for the current season
+   */
+  async getTeamRoster(teamId: string): Promise<DataLayerResponse<NormalizedPlayer[]>> {
+    const externalId = teamId.replace('basketball-', '');
+    const season = this.getCurrentSeason();
+    
+    console.log(`[Basketball] Fetching roster for team ${externalId}, season ${season}`);
+    
+    const result = await this.apiProvider.getBasketballPlayers({
+      team: parseInt(externalId, 10),
+      season,
+    });
+    
+    if (!result.success || !result.data) {
+      return this.error(result.error || 'Failed to fetch team roster');
+    }
+    
+    const players = result.data
+      .filter((p: BasketballPlayerResponse) => p.leagues?.standard?.active !== false)
+      .map((raw: BasketballPlayerResponse) => this.transformPlayer(raw))
+      .slice(0, 15); // Limit to top 15 players
+    
+    console.log(`[Basketball] Found ${players.length} players for team ${externalId}`);
+    
+    return this.success(players);
+  }
+  
+  /**
+   * Transform raw player data to normalized format
+   */
+  private transformPlayer(raw: BasketballPlayerResponse): NormalizedPlayer {
+    const position = raw.leagues?.standard?.pos || 'Unknown';
+    const jersey = raw.leagues?.standard?.jersey;
+    
+    return {
+      id: `basketball-player-${raw.id}`,
+      externalId: String(raw.id),
+      name: raw.name || `${raw.firstname} ${raw.lastname}`.trim(),
+      firstName: raw.firstname,
+      lastName: raw.lastname,
+      position,
+      number: jersey ?? undefined,
+      nationality: raw.nationality || undefined,
+    };
   }
   
   // ============================================================================
