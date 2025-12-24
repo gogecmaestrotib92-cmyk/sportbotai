@@ -8,8 +8,9 @@
 User-agent: *
 Allow: /
 
-# Disallow admin/API routes
+# Disallow admin/API routes (except OG images for social sharing)
 Disallow: /api/
+Allow: /api/og
 Disallow: /admin/
 Disallow: /login
 Disallow: /register
