@@ -16,6 +16,7 @@ import { FavoritesProvider } from '@/lib/FavoritesContext';
 import { ToastProvider } from '@/components/ui';
 import { KeyboardShortcutsProvider } from '@/components/CommandPalette';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
+import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 import UTMTracker from '@/components/UTMTracker';
 import ReferralSync from '@/components/ReferralSync';
 import ActivityTracker from '@/components/ActivityTracker';
@@ -225,6 +226,9 @@ export default function RootLayout({
                 
                 {/* PWA Install Prompt */}
                 <PWAInstallPrompt />
+                
+                {/* Service Worker Registration */}
+                <ServiceWorkerRegistration />
               </KeyboardShortcutsProvider>
             </ToastProvider>
           </FavoritesProvider>
