@@ -280,9 +280,10 @@ interface VerdictBadgeProps {
   favored: string;
   confidence: 'high' | 'medium' | 'low';
   clarityScore?: number; // Optional - no longer displayed
+  edgePercentage?: number; // e.g. 52 for 52%
 }
 
-export function VerdictBadge({ favored, confidence }: VerdictBadgeProps) {
+export function VerdictBadge({ favored, confidence, edgePercentage }: VerdictBadgeProps) {
   const colors = {
     high: 'from-emerald-500/20 to-emerald-500/5 border-emerald-500/30 text-emerald-400',
     medium: 'from-amber-500/20 to-amber-500/5 border-amber-500/30 text-amber-400',
@@ -294,6 +295,17 @@ export function VerdictBadge({ favored, confidence }: VerdictBadgeProps) {
     medium: 'Moderate Signal',
     low: 'Weak Signal',
   };
+
+  // For low confidence matches, show "Slight edge to X (52%)" instead of "No Clear Edge"
+  const isNoEdge = !favored || favored === 'No Clear Edge';
+  const displayText = isNoEdge && confidence === 'low' 
+    ? 'Too Close to Call'
+    : confidence === 'low' && favored && edgePercentage
+      ? `Slight edge to ${favored}`
+      : favored || 'No Clear Edge';
+  
+  // Show percentage for low confidence with a lean
+  const showPercentage = confidence === 'low' && favored && favored !== 'No Clear Edge' && edgePercentage;
 
   return (
     <div className={`
@@ -307,8 +319,18 @@ export function VerdictBadge({ favored, confidence }: VerdictBadgeProps) {
             Analysis Points To
           </p>
           <p className="text-xl font-semibold text-white">
-            {favored || 'No Clear Edge'}
+            {displayText}
+            {showPercentage && (
+              <span className="text-sm font-normal text-zinc-400 ml-2">
+                ({edgePercentage}%)
+              </span>
+            )}
           </p>
+          {confidence === 'low' && (
+            <p className="text-xs text-zinc-500 mt-1">
+              Data suggests a lean, but not enough to call confidently
+            </p>
+          )}
         </div>
         <div className={`text-right ${colors[confidence].split(' ')[3]}`}>
           <p className="text-sm font-medium">{confidenceLabels[confidence]}</p>

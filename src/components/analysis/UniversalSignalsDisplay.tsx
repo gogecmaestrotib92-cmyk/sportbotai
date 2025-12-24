@@ -46,10 +46,25 @@ export default function UniversalSignalsDisplay({
   const { display, confidence, clarity_score } = signals;
   
   // Determine the favored side with null check
+  // For close matches ("even"), still determine which side has slight edge from percentage
   const edgeDirection = display.edge?.direction;
-  const favoredSide = edgeDirection === 'home' ? homeTeam
-    : edgeDirection === 'away' ? awayTeam
-    : null;
+  const edgePercentage = display.edge?.percentage || 50;
+  
+  // Even for "even" matches, show which side has slight lean if percentage exists
+  let favoredSide: string | null;
+  if (edgeDirection === 'home') {
+    favoredSide = homeTeam;
+  } else if (edgeDirection === 'away') {
+    favoredSide = awayTeam;
+  } else if (edgePercentage > 50) {
+    // "even" but has slight home lean
+    favoredSide = homeTeam;
+  } else if (edgePercentage < 50) {
+    // "even" but has slight away lean
+    favoredSide = awayTeam;
+  } else {
+    favoredSide = null;
+  }
 
   return (
     <div className="space-y-4">
@@ -58,6 +73,7 @@ export default function UniversalSignalsDisplay({
         favored={favoredSide || 'No Clear Edge'}
         confidence={confidence}
         clarityScore={clarity_score}
+        edgePercentage={edgePercentage}
       />
 
       {/* Visual Signals Grid */}

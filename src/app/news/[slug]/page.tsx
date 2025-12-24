@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { SITE_CONFIG } from '@/lib/seo';
 import ViewTracker from '@/components/ViewTracker';
+import { autoLinkTeamsSimple } from '@/lib/team-linker';
 
 export const dynamicParams = true;
 export const revalidate = 60;
@@ -361,10 +362,10 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
         {/* Article Content */}
         <article className="container mx-auto px-4 pb-16">
           <div className="max-w-3xl mx-auto">
-            {/* Use same blog-content CSS class for visual consistency */}
+            {/* Use same blog-content CSS class for visual consistency with auto-linked team names */}
             <div
               className="blog-content"
-              dangerouslySetInnerHTML={{ __html: post.newsContent || post.content }}
+              dangerouslySetInnerHTML={{ __html: autoLinkTeamsSimple(post.newsContent || post.content) }}
             />
           </div>
         </article>

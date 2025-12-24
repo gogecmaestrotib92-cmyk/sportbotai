@@ -1119,6 +1119,12 @@ button:focus-visible {
   @apply text-accent hover:text-accent-green underline underline-offset-4 transition-colors;
 }
 
+/* Team links - auto-linked team names */
+.blog-content a.team-link {
+  @apply text-emerald-400 hover:text-emerald-300 no-underline font-medium 
+         bg-emerald-500/10 px-1.5 py-0.5 rounded hover:bg-emerald-500/20 transition-all;
+}
+
 /* Blog lists */
 .blog-content ul {
   @apply list-disc list-outside pl-6 mb-6 space-y-2;
@@ -1204,6 +1210,57 @@ button:focus-visible {
 /* First paragraph styling - larger text */
 .blog-content > p:first-of-type {
   @apply text-lg md:text-xl text-gray-200 leading-relaxed;
+}
+
+/* ========================================
+   BLOG MATCH INFO BOX - Mobile Responsive
+   ======================================== */
+
+/* Match info box container - generated inline, need !important overrides */
+.blog-content .match-info-box,
+.blog-content div[style*="grid-template-columns: 1fr auto 1fr"] {
+  /* Let it use inline styles on desktop, but fix mobile */
+}
+
+/* Mobile responsive for match info boxes */
+@media (max-width: 640px) {
+  /* Main team vs team grid - stack vertically on mobile */
+  .blog-content .match-info-box > div:first-child,
+  .blog-content div[style*="grid-template-columns: 1fr auto 1fr"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    text-align: center !important;
+  }
+  
+  /* Team names - prevent awkward wrapping */
+  .blog-content .match-info-box p[style*="font-size: 24px"],
+  .blog-content div[style*="font-size: 24px"] {
+    font-size: 18px !important;
+    word-break: keep-all !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+  
+  /* VS text - smaller on mobile */
+  .blog-content div[style*="font-size: 28px"][style*="color: #64748b"] {
+    font-size: 20px !important;
+    margin: 8px 0 !important;
+  }
+  
+  /* Match details grid (date/time/competition) - 1 column on mobile */
+  .blog-content div[style*="grid-template-columns: repeat(3, 1fr)"] {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  
+  /* H2H stats grid - stack on mobile */
+  .blog-content div[style*="display: grid"][style*="repeat(3, 1fr)"] {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
 }
 
 /* ========================================

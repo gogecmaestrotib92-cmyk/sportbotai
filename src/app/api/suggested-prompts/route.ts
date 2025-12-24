@@ -2,15 +2,19 @@
  * API Route: /api/suggested-prompts
  * 
  * Returns dynamic suggested prompts for AI Desk:
+ * - 1 personalized prompt based on user's favorite teams (if any)
  * - 1 prompt based on today's actual match
  * - Remaining prompts rotate based on trending topics
  * 
- * Cached for 1 hour to reduce API calls.
+ * Cached for 15 minutes (generic prompts) + personalized prompts per user.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { theOddsClient } from '@/lib/theOdds';
 import { getPerplexityClient } from '@/lib/perplexity';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 // ============================================
 // CACHE
@@ -208,6 +212,39 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 /**
+ * Get personalized prompts based on user's favorite teams
+ */
+async function getPersonalizedPrompts(userId: string): Promise<string[]> {
+  try {
+    const favorites = await prisma.favoriteTeam.findMany({
+      where: { userId },
+      select: { teamName: true, sport: true },
+      take: 3,
+    });
+
+    if (favorites.length === 0) return [];
+
+    const prompts: string[] = [];
+    const questions = [
+      (team: string) => `How is ${team} performing this season?`,
+      (team: string) => `What's the latest news on ${team}?`,
+      (team: string) => `When does ${team} play next?`,
+      (team: string) => `Any injury updates for ${team}?`,
+      (team: string) => `How's ${team}'s form lately?`,
+    ];
+
+    // Pick a random question style for the first favorite team
+    const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+    prompts.push(randomQuestion(favorites[0].teamName));
+
+    return prompts;
+  } catch (error) {
+    console.error('[Suggested Prompts] Error getting personalized prompts:', error);
+    return [];
+  }
+}
+
+/**
  * Build the final prompts list
  * Structure: 1 match analysis + 5 dynamic sports questions from Perplexity
  * Only fall back to static if Perplexity fails
@@ -262,13 +299,32 @@ async function buildPrompts(): Promise<string[]> {
 
 export async function GET(request: NextRequest) {
   try {
-    // Check cache first
+    // Check if user is logged in for personalized prompts
+    let personalizedPrompts: string[] = [];
+    try {
+      const session = await getServerSession(authOptions);
+      if (session?.user?.id) {
+        personalizedPrompts = await getPersonalizedPrompts(session.user.id);
+        console.log(`[Suggested Prompts] Got ${personalizedPrompts.length} personalized prompts`);
+      }
+    } catch (err) {
+      console.log('[Suggested Prompts] Could not get session for personalization');
+    }
+
+    // Check cache for generic prompts
     const now = Date.now();
     if (promptsCache && (now - promptsCache.timestamp) < CACHE_TTL) {
       console.log('[Suggested Prompts] Returning cached prompts');
+      
+      // Combine personalized + cached generic prompts
+      const combinedPrompts = personalizedPrompts.length > 0
+        ? [...personalizedPrompts, ...promptsCache.prompts.slice(0, 5)]
+        : promptsCache.prompts;
+      
       return NextResponse.json({
-        prompts: promptsCache.prompts,
+        prompts: combinedPrompts,
         cached: true,
+        personalized: personalizedPrompts.length > 0,
         cacheAge: Math.round((now - promptsCache.timestamp) / 1000),
       });
     }
@@ -283,9 +339,15 @@ export async function GET(request: NextRequest) {
       timestamp: now,
     };
 
+    // Combine personalized + generic prompts
+    const combinedPrompts = personalizedPrompts.length > 0
+      ? [...personalizedPrompts, ...prompts.slice(0, 5)]
+      : prompts;
+
     return NextResponse.json({
-      prompts,
+      prompts: combinedPrompts,
       cached: false,
+      personalized: personalizedPrompts.length > 0,
       generatedAt: new Date().toISOString(),
     });
 

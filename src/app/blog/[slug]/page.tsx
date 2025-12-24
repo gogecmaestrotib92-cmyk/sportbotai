@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getBlogPostBreadcrumb, SITE_CONFIG } from '@/lib/seo';
 import ViewTracker from '@/components/ViewTracker';
+import { autoLinkTeamsSimple } from '@/lib/team-linker';
 
 // Allow dynamic rendering for new blog posts not in generateStaticParams
 export const dynamicParams = true;
@@ -299,10 +300,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         <section className="pb-16">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
-              {/* Article Content - Custom Blog Styling */}
+              {/* Article Content - Custom Blog Styling with auto-linked team names */}
               <article 
                 className="blog-content"
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                dangerouslySetInnerHTML={{ __html: autoLinkTeamsSimple(post.content) }}
               />
 
               {/* Tags */}

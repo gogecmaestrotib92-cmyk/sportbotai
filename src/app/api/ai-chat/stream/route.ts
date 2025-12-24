@@ -724,6 +724,7 @@ export async function POST(request: NextRequest) {
     // FETCH USER'S FAVORITE TEAMS FOR CONTEXT
     // ==========================================
     let favoriteTeamsContext = '';
+    let favoriteTeamsList: string[] = [];
     if (userId) {
       try {
         const favorites = await prisma.favoriteTeam.findMany({
@@ -733,10 +734,14 @@ export async function POST(request: NextRequest) {
         });
         
         if (favorites.length > 0) {
+          favoriteTeamsList = favorites.map(f => f.teamName);
           const teamsList = favorites.map(f => 
             `${f.teamName} (${f.sport}${f.league ? `, ${f.league}` : ''})`
           ).join(', ');
-          favoriteTeamsContext = `USER'S FAVORITE TEAMS: ${teamsList}. If relevant to their question, provide extra context about these teams.`;
+          favoriteTeamsContext = `USER'S FAVORITE TEAMS: ${teamsList}. 
+PROACTIVE BEHAVIOR: If the user asks a general question (like "what's happening today" or "any good matches"), 
+proactively mention any matches or news about their favorite teams FIRST before other content.
+If their favorite team has a match today/tonight, lead with that information.`;
         }
       } catch (err) {
         console.log('[AI-Chat-Stream] Could not fetch favorites:', err);
