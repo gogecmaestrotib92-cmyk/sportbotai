@@ -7,7 +7,6 @@ import { put } from '@vercel/blob';
 import { getTeamLogo, getLeagueLogo } from '@/lib/logos';
 import { getMultiSportEnrichedData } from '@/lib/sports-api';
 import { getMatchRostersV2, normalizeSport } from '@/lib/data-layer/bridge';
-import { Resvg } from '@resvg/resvg-js';
 import type { Sport } from '@/lib/data-layer/types';
 
 const openai = new OpenAI({
@@ -289,49 +288,22 @@ async function generateMatchFeaturedImage(
   <text x="600" y="598" text-anchor="middle" fill="#64748b" font-family="Arial, sans-serif" font-size="12">AI-Powered Match Preview &amp; Prediction</text>
 </svg>`;
     
-    // Convert SVG to PNG for social media compatibility (Twitter/X doesn't support SVG)
+    // Upload SVG to Vercel Blob storage
+    // Note: Twitter/X doesn't support SVG, so blog page falls back to /api/og for social sharing
     const timestamp = Date.now();
-    let imageUrl: string;
+    const blob = await put(
+      `blog/match-previews/${match.matchId}-${timestamp}.svg`,
+      svgContent,
+      {
+        access: 'public',
+        contentType: 'image/svg+xml',
+      }
+    );
     
-    try {
-      const resvg = new Resvg(svgContent, {
-        fitTo: {
-          mode: 'width',
-          value: 1200,
-        },
-      });
-      const pngData = resvg.render();
-      const pngBuffer = pngData.asPng();
-      
-      // Upload PNG to Vercel Blob storage
-      const blob = await put(
-        `blog/match-previews/${match.matchId}-${timestamp}.png`,
-        pngBuffer,
-        {
-          access: 'public',
-          contentType: 'image/png',
-        }
-      );
-      
-      imageUrl = blob.url;
-      console.log('[Match Image] Generated PNG from SVG:', blob.url);
-    } catch (pngError) {
-      console.warn('[Match Image] PNG conversion failed, falling back to SVG:', pngError);
-      
-      // Fallback: Upload SVG directly (works on website, not on Twitter)
-      const blob = await put(
-        `blog/match-previews/${match.matchId}-${timestamp}.svg`,
-        svgContent,
-        {
-          access: 'public',
-          contentType: 'image/svg+xml',
-        }
-      );
-      imageUrl = blob.url;
-    }
+    console.log('[Match Image] Generated SVG:', blob.url);
     
     return {
-      url: imageUrl,
+      url: blob.url,
       alt: `${match.homeTeam} vs ${match.awayTeam} - ${match.league} Match Preview`,
     };
   } catch (error) {
