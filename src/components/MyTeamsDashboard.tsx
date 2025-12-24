@@ -29,6 +29,19 @@ interface UpcomingMatch {
   sportTitle?: string
 }
 
+// Generate match preview URL - same format as MatchCard
+function generateMatchId(match: UpcomingMatch): string {
+  const matchData = {
+    homeTeam: match.homeTeam,
+    awayTeam: match.awayTeam,
+    league: match.league || match.sportTitle || match.sport,
+    sport: match.sport,
+    kickoff: match.commenceTime,
+  };
+  // Use btoa for browser compatibility
+  return btoa(JSON.stringify(matchData));
+}
+
 export default function MyTeamsDashboard() {
   const { status: authStatus } = useSession()
   const { favorites, isLoading, removeFavoriteById, maxTeams, error } = useFavorites()
@@ -350,7 +363,7 @@ export default function MyTeamsDashboard() {
                   {upcomingMatches.map((match) => (
                     <li key={match.id}>
                       <Link
-                        href={`/match/${match.id}?sport=${match.sport}`}
+                        href={`/match/${generateMatchId(match)}`}
                         className="flex items-center gap-4 px-5 py-4 hover:bg-bg-hover transition-colors group"
                       >
                         <div className="flex items-center gap-1 flex-shrink-0">
