@@ -28,6 +28,7 @@ export async function GET() {
       awayTeam: true,
       tags: true,
       featuredImage: true,
+      newsTitle: true, // News-friendly title (no "prediction", "tips")
     },
     orderBy: { publishedAt: 'desc' },
     take: 50, // Google News recommends max 50 items
@@ -59,8 +60,9 @@ export async function GET() {
       .replace(/"/g, '&quot;')
       .substring(0, 500);
 
-    // Clean title
-    const cleanTitle = article.title
+    // Use newsTitle if available (journalistic style), fallback to blog title
+    const displayTitle = article.newsTitle || article.title;
+    const cleanTitle = displayTitle
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
