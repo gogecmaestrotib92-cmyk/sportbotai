@@ -392,6 +392,45 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
                   Stay informed with the latest sports news and AI-powered analysis
                 </p>
               </div>
+
+              {/* Author Box - E-E-A-T signal */}
+              <div className="mt-8 p-6 bg-slate-800/50 rounded-xl border border-slate-700">
+                <div className="flex items-start gap-4">
+                  <Link href="/about" className="flex-shrink-0">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-xl font-bold text-white">
+                      SM
+                    </div>
+                  </Link>
+                  <div className="flex-1">
+                    <Link href="/about" className="text-lg font-semibold text-white hover:text-emerald-400 transition-colors">
+                      {AUTHOR.name}
+                    </Link>
+                    <p className="text-emerald-400 text-sm mb-2">{AUTHOR.jobTitle}</p>
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      Sports analyst with expertise in data-driven match analysis and betting markets. 
+                      Combining AI technology with deep sports knowledge to deliver actionable insights.
+                    </p>
+                    <div className="flex gap-3 mt-3">
+                      <a 
+                        href={AUTHOR.sameAs[0]} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-slate-400 hover:text-emerald-400 transition-colors text-sm"
+                      >
+                        Upwork
+                      </a>
+                      <a 
+                        href={AUTHOR.sameAs[1]} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-slate-400 hover:text-emerald-400 transition-colors text-sm"
+                      >
+                        LinkedIn
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>

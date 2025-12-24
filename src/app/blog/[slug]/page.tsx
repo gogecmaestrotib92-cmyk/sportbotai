@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { getBlogPostBreadcrumb } from '@/lib/seo';
+import { getBlogPostBreadcrumb, SITE_CONFIG } from '@/lib/seo';
 import ViewTracker from '@/components/ViewTracker';
 
 // Allow dynamic rendering for new blog posts not in generateStaticParams
@@ -17,6 +17,17 @@ export const revalidate = 60;
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
 }
+
+// Author info for E-E-A-T
+const AUTHOR = {
+  name: 'Stefan Mitrovic',
+  url: `${SITE_CONFIG.url}/about`,
+  jobTitle: 'Sports Analyst & Editor',
+  sameAs: [
+    'https://www.upwork.com/freelancers/~017b8c67c94029389f',
+    'https://www.linkedin.com/company/automateed/',
+  ],
+};
 
 interface RelatedPost {
   title: string;
@@ -239,8 +250,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 {post.title}
               </h1>
 
-              {/* Meta */}
+              {/* Meta - with author link */}
               <div className="flex flex-wrap items-center gap-4 text-slate-400 text-sm mb-8">
+                <Link href="/about" className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
+                  <span className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white">
+                    SM
+                  </span>
+                  <span>{AUTHOR.name}</span>
+                </Link>
+                <span>•</span>
                 <span>
                   {post.publishedAt
                     ? new Date(post.publishedAt).toLocaleDateString('en-US', {
@@ -305,6 +323,45 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 <p className="text-slate-300 text-center">
                   Found this helpful? Share it with fellow sports analytics enthusiasts!
                 </p>
+              </div>
+
+              {/* Author Box - E-E-A-T signal */}
+              <div className="mt-8 p-6 bg-slate-800/50 rounded-xl border border-slate-700">
+                <div className="flex items-start gap-4">
+                  <Link href="/about" className="flex-shrink-0">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-xl font-bold text-white">
+                      SM
+                    </div>
+                  </Link>
+                  <div className="flex-1">
+                    <Link href="/about" className="text-lg font-semibold text-white hover:text-emerald-400 transition-colors">
+                      {AUTHOR.name}
+                    </Link>
+                    <p className="text-emerald-400 text-sm mb-2">{AUTHOR.jobTitle}</p>
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      Sports analyst with expertise in data-driven match analysis and betting markets. 
+                      Combining AI technology with deep sports knowledge to deliver actionable insights.
+                    </p>
+                    <div className="flex gap-3 mt-3">
+                      <a 
+                        href={AUTHOR.sameAs[0]} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-slate-400 hover:text-emerald-400 transition-colors text-sm"
+                      >
+                        Upwork
+                      </a>
+                      <a 
+                        href={AUTHOR.sameAs[1]} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-slate-400 hover:text-emerald-400 transition-colors text-sm"
+                      >
+                        LinkedIn
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
