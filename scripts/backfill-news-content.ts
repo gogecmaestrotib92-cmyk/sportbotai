@@ -51,33 +51,54 @@ ORIGINAL CONTENT:
 ${content}
 
 REQUIREMENTS FOR NEWS VERSION:
+
 1. NEW TITLE: Create a news-style headline (50-70 chars)
    - Use present tense verbs: "face", "meet", "clash", "prepare"
    - Lead with the news angle (injuries, form, stakes)
    - Examples: "${homeTeam} Face Injury Crisis Ahead of ${awayTeam} Clash"
    - NO words like "prediction", "preview", "tips", "best bets"
 
-2. NEWS CONTENT: Rewrite as a news article
-   - REMOVE all CTA boxes, promotional divs, and "Try SportBot" links
-   - REMOVE betting odds and gambling references
-   - REMOVE any HTML divs with promotional content
-   - Keep useful tables (form, h2h stats) but remove CTAs near them
-   - Write in journalistic third-person style
-   - Lead with the most newsworthy angle (injury news, manager quotes, rivalry history)
-   - Use quotes if available in original (manager statements, etc.)
-   - Keep factual analysis: form, head-to-head, key players
-   - Add context about what's at stake (league position, knockout stage, etc.)
-   - Keep the match info box but remove promotional CTAs
-   - Keep prediction percentages but frame as "analysis suggests" not "betting value"
-   - End with match details (date, time, venue) not a CTA
+2. CONTENT TO KEEP (these are informational, not promotional):
+   ✅ Match Info Box (teams, date, time, competition)
+   ✅ Form Comparison Table (W/D/L records)
+   ✅ Head-to-Head Box (historical stats)
+   ✅ Key Players Boxes (player information)
+   ✅ Prediction Box with probabilities (reframe as "analysis suggests" not "betting value")
+   ✅ All statistical tables and data visualizations
+   ✅ Injury/suspension lists
 
-3. STRUCTURE:
+3. CONTENT TO REMOVE (promotional/sales-focused):
+   ❌ "Try SportBot AI" or "Get Started Free" CTAs
+   ❌ "Start Free Trial" or "View Plans" buttons
+   ❌ "Pro tip" boxes with links to /register or /pricing
+   ❌ "Unlock Advanced Stats" promotional boxes
+   ❌ "Ready for Deeper Analysis?" end CTAs
+   ❌ Any div with gradient background containing registration links
+   ❌ Betting language: "best bet", "stake", "wager", "betting value"
+
+4. WRITING STYLE:
+   - Write in journalistic third-person style
+   - Lead with the most newsworthy angle (injury news, stakes, rivalry)
+   - Use quotes if available (manager statements, etc.)
+   - Frame predictions as "analysis suggests" or "statistical models indicate"
+   - Replace "gamblers/bettors" with "fans" or "observers"
+
+5. STRUCTURE:
    - Opening paragraph: News lead (who, what, when, why it matters)
+   - Match Info Box (keep from original)
    - Match context: What's at stake for each team
-   - Team news: Injuries, suspensions, form
-   - Head-to-head: Brief historical context
-   - Analysis: Expert view on likely outcome
-   - Closing: Match details
+   - Team news: Injuries, suspensions, form (keep Form Table)
+   - Head-to-head: Brief historical context (keep H2H Box)
+   - Key players section (keep Key Players Boxes)
+   - Analysis: Include Prediction Box with probabilities
+   - Closing: Match details (date, time, venue)
+
+6. END CTA - Replace aggressive CTAs with this subtle box:
+<div style="background: #1e293b; border-radius: 12px; padding: 20px; margin: 24px 0; text-align: center; border: 1px solid #334155;">
+  <p style="color: #94a3b8; font-size: 14px; margin: 0;">
+    📊 Want deeper match analysis? <a href="/matches" style="color: #10b981; text-decoration: none;">Explore all matches</a> with AI-powered insights.
+  </p>
+</div>
 
 Return your response in this exact JSON format:
 {
