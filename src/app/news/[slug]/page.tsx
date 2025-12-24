@@ -121,7 +121,10 @@ export async function generateMetadata({ params }: NewsArticlePageProps): Promis
     keywords: post.tags.join(', '),
     authors: [{ name: AUTHOR.name, url: AUTHOR.url }],
     alternates: {
-      canonical: `/news/${slug}`,
+      // Canonical points to blog version to avoid duplicate content
+      // Google News bot sees /news/ (we block /blog/ for Googlebot-News in robots.ts)
+      // Regular Google indexes /blog/ as canonical
+      canonical: `https://www.sportbotai.com/blog/${slug}`,
     },
     openGraph: {
       title: post.metaTitle || displayTitle,
