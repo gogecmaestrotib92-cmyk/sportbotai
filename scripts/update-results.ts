@@ -16,6 +16,29 @@ interface MatchResult {
   completed: boolean;
 }
 
+// Helper to extract team keyword (last word, e.g., "Bulls" from "Chicago Bulls")
+function getTeamKeyword(teamName: string): string {
+  const parts = teamName.toLowerCase().split(' ');
+  return parts[parts.length - 1] || teamName.toLowerCase();
+}
+
+// Helper to check if teams match (fuzzy)
+function teamsMatch(apiTeam: string, searchTeam: string): boolean {
+  const api = apiTeam.toLowerCase();
+  const search = searchTeam.toLowerCase();
+  
+  // Direct match
+  if (api.includes(search) || search.includes(api)) return true;
+  
+  // Keyword match (e.g., "Bulls" matches "Chicago Bulls")
+  const apiKeyword = getTeamKeyword(apiTeam);
+  const searchKeyword = getTeamKeyword(searchTeam);
+  if (apiKeyword === searchKeyword) return true;
+  if (api.includes(searchKeyword) || search.includes(apiKeyword)) return true;
+  
+  return false;
+}
+
 async function fetchNBAResult(searchHome: string, searchAway: string, dateStr: string): Promise<MatchResult | null> {
   try {
     // NBA season calculation: Oct-Jun spans two years
@@ -42,24 +65,37 @@ async function fetchNBAResult(searchHome: string, searchAway: string, dateStr: s
 
     const data = await response.json();
     const games = data.response || [];
+    console.log(`  Found ${games.length} NBA games`);
 
     for (const game of games) {
-      const home = game.teams?.home?.name?.toLowerCase() || '';
-      const away = game.teams?.away?.name?.toLowerCase() || '';
+      const home = game.teams?.home?.name || '';
+      const away = game.teams?.away?.name || '';
       const status = game.status?.short || '';
 
       if (!['FT', 'AOT', 'AP'].includes(status)) continue;
 
-      if (
-        (home.includes(searchHome) || searchHome.includes(home)) &&
-        (away.includes(searchAway) || searchAway.includes(away))
-      ) {
+      // Try normal match
+      if (teamsMatch(home, searchHome) && teamsMatch(away, searchAway)) {
+        console.log(`  Matched: ${home} vs ${away}`);
         return {
-          homeTeam: game.teams.home.name,
-          awayTeam: game.teams.away.name,
+          homeTeam: home,
+          awayTeam: away,
           homeScore: game.scores?.home?.total ?? 0,
           awayScore: game.scores?.away?.total ?? 0,
           completed: true,
+        };
+      }
+      
+      // Try swapped match (prediction had home/away reversed)
+      if (teamsMatch(home, searchAway) && teamsMatch(away, searchHome)) {
+        console.log(`  Matched (swapped): ${home} vs ${away}`);
+        return {
+          homeTeam: home,
+          awayTeam: away,
+          homeScore: game.scores?.home?.total ?? 0,
+          awayScore: game.scores?.away?.total ?? 0,
+          completed: true,
+          // Note: We return actual home/away from API, evaluation will handle it
         };
       }
     }
@@ -197,6 +233,89 @@ function evaluatePrediction(predictedScenario: string, homeScore: number, awaySc
   return { wasAccurate: false, actualResult };
 }
 
+// Euroleague teams for detection
+const EUROLEAGUE_TEAMS = [
+  'fenerbahce', 'barcelona', 'real madrid', 'olympiacos', 'panathinaikos', 'maccabi',
+  'anadolu efes', 'efes', 'cska', 'milano', 'olimpia', 'bayern', 'baskonia', 'valencia basket',
+  'virtus', 'partizan', 'crvena zvezda', 'zvezda', 'zalgiris', 'alba berlin', 'asvel',
+  'lyon', 'villeurbanne', 'paris basketball', 'hapoel', 'monaco', 'dubai'
+];
+
+const NBA_TEAMS = [
+  'bulls', 'cavaliers', 'timberwolves', 'grizzlies', 'heat', 'pistons', 'celtics', 
+  'lakers', 'warriors', 'nuggets', 'suns', 'bucks', 'nets', 'knicks', 'clippers', 
+  'mavs', 'mavericks', 'rockets', 'spurs', 'jazz', 'thunder', 'pelicans', 'blazers', 
+  '76ers', 'raptors', 'wizards', 'hawks', 'hornets', 'pacers', 'magic'
+];
+
+const NHL_TEAMS = [
+  'predators', 'hurricanes', 'panthers', 'kings', 'red wings', 'bruins', 'rangers', 
+  'penguins', 'capitals', 'flyers', 'devils', 'islanders', 'canadiens', 'senators', 
+  'maple leafs', 'lightning', 'blue jackets', 'blackhawks', 'wild', 'blues', 'jets', 
+  'avalanche', 'stars', 'ducks', 'sharks', 'kraken', 'golden knights', 'flames', 
+  'oilers', 'canucks', 'coyotes', 'sabres'
+];
+
+async function fetchEuroleagueResult(searchHome: string, searchAway: string, dateStr: string): Promise<MatchResult | null> {
+  try {
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    // Euroleague uses just the year as season format (e.g., "2025" for 2024-25 season)
+    // Season starts in October, so Oct-Dec = current year, Jan-May = current year
+    const season = month >= 10 ? year : year;
+    
+    console.log(`  Euroleague API date: ${dateStr}, season: ${season}`);
+    
+    const response = await fetch(
+      `https://v1.basketball.api-sports.io/games?date=${dateStr}&league=120&season=${season}`,
+      {
+        headers: {
+          'x-rapidapi-key': API_KEY,
+          'x-rapidapi-host': 'v1.basketball.api-sports.io',
+        },
+      }
+    );
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const games = data.response || [];
+    console.log(`  Found ${games.length} Euroleague games`);
+
+    for (const game of games) {
+      const home = game.teams?.home?.name?.toLowerCase() || '';
+      const away = game.teams?.away?.name?.toLowerCase() || '';
+      const status = game.status?.short || '';
+
+      if (!['FT', 'AOT', 'AP'].includes(status)) continue;
+
+      // Fuzzy match - check if any part of team name matches
+      const homeMatch = home.includes(searchHome) || searchHome.includes(home) ||
+        searchHome.split(' ').some((w: string) => home.includes(w) && w.length > 3) ||
+        home.split(' ').some((w: string) => searchHome.includes(w) && w.length > 3);
+      const awayMatch = away.includes(searchAway) || searchAway.includes(away) ||
+        searchAway.split(' ').some((w: string) => away.includes(w) && w.length > 3) ||
+        away.split(' ').some((w: string) => searchAway.includes(w) && w.length > 3);
+
+      if (homeMatch && awayMatch) {
+        console.log(`  Matched: ${game.teams.home.name} vs ${game.teams.away.name}`);
+        return {
+          homeTeam: game.teams.home.name,
+          awayTeam: game.teams.away.name,
+          homeScore: game.scores?.home?.total ?? 0,
+          awayScore: game.scores?.away?.total ?? 0,
+          completed: true,
+        };
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('Euroleague fetch error:', error);
+    return null;
+  }
+}
+
 async function updatePredictionResults() {
   console.log('Fetching pending predictions...');
   
@@ -219,25 +338,70 @@ async function updatePredictionResults() {
     
     console.log(`\nChecking: ${prediction.matchName} (${dateStr}) - Sport: ${prediction.sport}`);
     
-    // Detect sport from sport field or team names
-    const isNBA = sportLower.includes('basketball') || sportLower.includes('nba') || 
-      ['bulls', 'cavaliers', 'timberwolves', 'grizzlies', 'heat', 'pistons', 'celtics', 'lakers', 'warriors', 'nuggets', 'suns', 'bucks', 'nets', 'knicks', 'clippers', 'mavs', 'mavericks', 'rockets', 'spurs', 'jazz', 'thunder', 'pelicans', 'blazers', '76ers', 'raptors', 'wizards', 'hawks', 'hornets', 'pacers', 'magic'].some(t => searchHome.includes(t) || searchAway.includes(t));
+    // Detect sport - check explicit sport field FIRST, then team names
+    // Priority: NHL > Euroleague > NBA > Football
     const isNHL = sportLower.includes('hockey') || sportLower.includes('nhl') || 
-      ['predators', 'hurricanes', 'panthers', 'kings', 'red wings', 'bruins', 'rangers', 'penguins', 'capitals', 'flyers', 'devils', 'islanders', 'canadiens', 'senators', 'maple leafs', 'lightning', 'blue jackets', 'blackhawks', 'wild', 'blues', 'jets', 'avalanche', 'stars', 'ducks', 'sharks', 'kraken', 'golden knights', 'flames', 'oilers', 'canucks', 'coyotes'].some(t => searchHome.includes(t) || searchAway.includes(t));
-    const isFootball = sportLower.includes('soccer') || sportLower.includes('epl') || sportLower.includes('la_liga') || sportLower.includes('serie_a') || sportLower.includes('bundesliga') || sportLower.includes('ligue_1');
+      NHL_TEAMS.some(t => searchHome.includes(t) || searchAway.includes(t));
+    
+    const isEuroleague = sportLower.includes('euroleague') || 
+      EUROLEAGUE_TEAMS.some(t => searchHome.includes(t) || searchAway.includes(t));
+    
+    const isNBA = (sportLower.includes('basketball') && !sportLower.includes('euroleague')) || 
+      sportLower.includes('nba') || 
+      NBA_TEAMS.some(t => searchHome.includes(t) || searchAway.includes(t));
+    
+    const isFootball = sportLower.includes('soccer') || sportLower.includes('epl') || 
+      sportLower.includes('la_liga') || sportLower.includes('serie_a') || 
+      sportLower.includes('bundesliga') || sportLower.includes('ligue_1');
+    
+    console.log(`  Detection: NHL=${isNHL}, Euroleague=${isEuroleague}, NBA=${isNBA}, Football=${isFootball}`);
     
     let result: MatchResult | null = null;
     
-    if (isNBA) {
-      console.log('  -> Checking NBA API...');
-      result = await fetchNBAResult(searchHome, searchAway, dateStr);
-    } else if (isNHL) {
+    // Helper to get next day date string
+    const getNextDay = (d: string) => {
+      const date = new Date(d);
+      date.setDate(date.getDate() + 1);
+      return date.toISOString().split('T')[0];
+    };
+    
+    // Check in order of specificity, also try next day if not found
+    if (isNHL) {
       console.log('  -> Checking NHL API...');
       result = await fetchNHLResult(searchHome, searchAway, dateStr);
-    } else {
-      // Default to football/soccer
+      if (!result) {
+        const nextDay = getNextDay(dateStr);
+        console.log(`  -> Trying next day (${nextDay})...`);
+        result = await fetchNHLResult(searchHome, searchAway, nextDay);
+      }
+    } else if (isEuroleague) {
+      console.log('  -> Checking Euroleague API...');
+      result = await fetchEuroleagueResult(searchHome, searchAway, dateStr);
+      if (!result) {
+        const nextDay = getNextDay(dateStr);
+        console.log(`  -> Trying next day (${nextDay})...`);
+        result = await fetchEuroleagueResult(searchHome, searchAway, nextDay);
+      }
+    } else if (isNBA) {
+      console.log('  -> Checking NBA API...');
+      result = await fetchNBAResult(searchHome, searchAway, dateStr);
+      if (!result) {
+        const nextDay = getNextDay(dateStr);
+        console.log(`  -> Trying next day (${nextDay})...`);
+        result = await fetchNBAResult(searchHome, searchAway, nextDay);
+      }
+    } else if (isFootball) {
       console.log('  -> Checking Football API...');
       result = await fetchFootballResult(searchHome, searchAway, dateStr);
+      if (!result) {
+        const nextDay = getNextDay(dateStr);
+        console.log(`  -> Trying next day (${nextDay})...`);
+        result = await fetchFootballResult(searchHome, searchAway, nextDay);
+      }
+    } else {
+      // Unknown sport - skip
+      console.log('  ⚠️ Unknown sport, skipping');
+      continue;
     }
     
     if (result && result.completed) {
