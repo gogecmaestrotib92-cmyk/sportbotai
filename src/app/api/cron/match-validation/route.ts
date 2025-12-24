@@ -294,6 +294,18 @@ export async function GET(request: NextRequest) {
         
         const actualResult = `${result.homeScore}-${result.awayScore}`;
         
+        // Evaluate value bet if present
+        let valueBetOutcome: 'HIT' | 'MISS' | null = null;
+        let valueBetProfit: number | null = null;
+        
+        if (prediction.valueBetSide && prediction.valueBetOdds) {
+          const actualWinner = result.winner === 'home' ? 'HOME' : result.winner === 'away' ? 'AWAY' : 'DRAW';
+          const valueBetWon = prediction.valueBetSide === actualWinner;
+          valueBetOutcome = valueBetWon ? 'HIT' : 'MISS';
+          valueBetProfit = valueBetWon ? (prediction.valueBetOdds - 1) : -1;
+          console.log(`[Cron] Value bet: ${prediction.valueBetSide} @ ${prediction.valueBetOdds.toFixed(2)} -> ${valueBetOutcome}`);
+        }
+        
         // Update prediction in database
         await prisma.prediction.update({
           where: { id: prediction.id },
@@ -301,6 +313,8 @@ export async function GET(request: NextRequest) {
             outcome: validation.outcome,
             actualResult,
             validatedAt: new Date(),
+            ...(valueBetOutcome && { valueBetOutcome }),
+            ...(valueBetProfit !== null && { valueBetProfit }),
           },
         });
         
