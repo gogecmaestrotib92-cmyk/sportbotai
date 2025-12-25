@@ -974,6 +974,13 @@ const SOCCER_TEAM_LOGOS: Record<string, string> = {
   'Beerschot': 'https://media.api-sports.io/football/teams/263.png',
   'Beerschot VA': 'https://media.api-sports.io/football/teams/263.png',
   'Beerschot AC': 'https://media.api-sports.io/football/teams/263.png',
+  'Zulte Waregem': 'https://media.api-sports.io/football/teams/600.png',
+  'SV Zulte Waregem': 'https://media.api-sports.io/football/teams/600.png',
+  'Essevee': 'https://media.api-sports.io/football/teams/600.png',
+  'RAAL La Louvière': 'https://media.api-sports.io/football/teams/5902.png',
+  'RAAL La Louviere': 'https://media.api-sports.io/football/teams/5902.png',
+  'La Louvière': 'https://media.api-sports.io/football/teams/5902.png',
+  'La Louviere': 'https://media.api-sports.io/football/teams/5902.png',
   
   // ============================================
   // A-LEAGUE (Australia & New Zealand) - football-data.org
