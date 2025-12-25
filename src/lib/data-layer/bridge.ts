@@ -31,10 +31,6 @@ const SPORT_MAP: Record<string, Sport> = {
   'american_football': 'american_football',
   'americanfootball_nfl': 'american_football',
   'nfl': 'american_football',
-  'mma': 'mma',
-  'mma_ufc': 'mma',
-  'ufc': 'mma',
-  'mixed_martial_arts': 'mma',
 };
 
 /**

@@ -2,7 +2,7 @@
  * Match Browser Component
  * 
  * Browse matches organized by Sport → League.
- * Sports: Soccer, Basketball, American Football, Hockey, MMA
+ * Sports: Soccer, Basketball, American Football, Hockey
  * Links to Match Preview pages.
  */
 
@@ -11,33 +11,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MatchData } from '@/types';
 import MatchCard from '@/components/MatchCard';
-import MMAFightCard from '@/components/MMAFightCard';
 import LeagueLogo from '@/components/ui/LeagueLogo';
 import CountryFlag, { getCountryForLeague } from '@/components/ui/CountryFlag';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
-
-// MMA Fight type for API response
-interface MMAFight {
-  id: string;
-  eventName: string;
-  date: string;
-  category: string;
-  isMainCard: boolean;
-  status: string;
-  fighter1: {
-    id: string;
-    name: string;
-    photo: string;
-    isWinner: boolean;
-  };
-  fighter2: {
-    id: string;
-    name: string;
-    photo: string;
-    isWinner: boolean;
-  };
-}
 
 interface MatchBrowserProps {
   initialSport?: string;
@@ -86,22 +63,12 @@ const SPORTS = [
       { key: 'icehockey_sweden_allsvenskan', name: 'SHL' },
     ],
   },
-  {
-    id: 'mma',
-    name: 'MMA / UFC',
-    icon: '🥊',
-    leagues: [
-      { key: 'mma_ufc', name: 'UFC' },
-    ],
-    useCustomApi: true, // Uses API-Sports instead of The Odds API
-  },
 ];
 
 export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 }: MatchBrowserProps) {
   const [selectedSport, setSelectedSport] = useState<string>(initialSport);
   const [selectedLeague, setSelectedLeague] = useState<string>('soccer_epl');
   const [matches, setMatches] = useState<MatchData[]>([]);
-  const [mmaFights, setMmaFights] = useState<MMAFight[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [leagueMatchCounts, setLeagueMatchCounts] = useState<Record<string, number>>({});
@@ -109,7 +76,6 @@ export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 
   // Get current sport config
   const currentSport = SPORTS.find(s => s.id === selectedSport) || SPORTS[0];
   const currentLeague = currentSport.leagues.find(l => l.key === selectedLeague) || currentSport.leagues[0];
-  const isMMA = selectedSport === 'mma';
 
   // Tournaments that have off-seasons or breaks
   const SEASONAL_LEAGUES = [
@@ -136,23 +102,12 @@ export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 
       await Promise.all(
         currentSport.leagues.map(async (league) => {
           try {
-            // MMA uses custom API
-            if (currentSport.id === 'mma') {
-              const response = await fetch('/api/mma/fights');
-              if (response.ok) {
-                const data = await response.json();
-                counts[league.key] = data.total || 0;
-              } else {
-                counts[league.key] = 0;
-              }
+            const response = await fetch(`/api/match-data?sportKey=${league.key}&includeOdds=false`);
+            if (response.ok) {
+              const data = await response.json();
+              counts[league.key] = data.events?.length || 0;
             } else {
-              const response = await fetch(`/api/match-data?sportKey=${league.key}&includeOdds=false`);
-              if (response.ok) {
-                const data = await response.json();
-                counts[league.key] = data.events?.length || 0;
-              } else {
-                counts[league.key] = 0;
-              }
+              counts[league.key] = 0;
             }
           } catch {
             counts[league.key] = 0;
@@ -172,37 +127,22 @@ export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 
       setIsLoading(true);
       setError(null);
 
-      // MMA uses custom API
-      if (isMMA) {
-        const response = await fetch('/api/mma/fights');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch MMA fights');
-        }
-
-        const data = await response.json();
-        setMmaFights(data.fights || []);
-        setMatches([]); // Clear regular matches
-      } else {
-        const response = await fetch(`/api/match-data?sportKey=${selectedLeague}&includeOdds=false`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch matches');
-        }
-
-        const data = await response.json();
-        setMatches(data.events || []);
-        setMmaFights([]); // Clear MMA fights
+      const response = await fetch(`/api/match-data?sportKey=${selectedLeague}&includeOdds=false`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch matches');
       }
+
+      const data = await response.json();
+      setMatches(data.events || []);
     } catch (err) {
       console.error('Failed to fetch matches:', err);
       setError('Failed to load matches');
       setMatches([]);
-      setMmaFights([]);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedLeague, isMMA]);
+  }, [selectedLeague]);
 
   useEffect(() => {
     fetchMatches();
@@ -291,7 +231,7 @@ export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 
           <div>
             <h3 className="text-lg font-semibold text-white">{currentLeague.name}</h3>
             <p className="text-sm text-text-muted">
-              {isLoading ? 'Loading matches...' : `${isMMA ? mmaFights?.length || 0 : matches?.length || 0} upcoming ${isMMA ? 'fights' : 'matches'}`}
+              {isLoading ? 'Loading matches...' : `${matches?.length || 0} upcoming matches`}
             </p>
           </div>
         </div>
@@ -356,7 +296,7 @@ export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 
         )}
 
         {/* Matches Grid */}
-        {!isLoading && !error && !isMMA && matches && matches.length > 0 && (
+        {!isLoading && !error && matches && matches.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {matches.slice(0, maxMatches).map((match) => (
               <MatchCard
@@ -372,24 +312,8 @@ export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 
           </div>
         )}
 
-        {/* MMA Fights Grid */}
-        {!isLoading && !error && isMMA && mmaFights && mmaFights.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mmaFights.slice(0, maxMatches).map((fight) => (
-              <MMAFightCard
-                key={fight.id}
-                fight={fight}
-                onAnalyze={(fight) => {
-                  // Navigate to dedicated fight analysis page
-                  window.location.href = `/fight/${fight.id}`;
-                }}
-              />
-            ))}
-          </div>
-        )}
-
         {/* Empty State */}
-        {!isLoading && !error && ((!isMMA && (!matches || matches.length === 0)) || (isMMA && (!mmaFights || mmaFights.length === 0))) && (
+        {!isLoading && !error && (!matches || matches.length === 0) && (
           <div className="text-center py-16 bg-gradient-to-b from-white/5 to-transparent rounded-2xl border border-white/5">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
               <svg className="w-8 h-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -431,10 +355,10 @@ export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 
         )}
 
         {/* Show More */}
-        {!isLoading && ((matches && matches.length > maxMatches) || (mmaFights && mmaFights.length > maxMatches)) && (
+        {!isLoading && matches && matches.length > maxMatches && (
           <div className="text-center mt-6">
             <p className="text-sm text-text-muted">
-              Showing {maxMatches} of {isMMA ? mmaFights?.length || 0 : matches?.length || 0} {isMMA ? 'fights' : 'matches'}
+              Showing {maxMatches} of {matches?.length || 0} matches
             </p>
           </div>
         )}
