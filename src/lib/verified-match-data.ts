@@ -17,6 +17,7 @@
 
 import { getDataLayer } from './data-layer';
 import type { Sport, NormalizedTeamStats, NormalizedMatch, DataLayerResponse } from './data-layer/types';
+import { normalizeSport } from './data-layer/bridge';
 import { 
   getVerifiedPlayerStats, 
   isStatsQuery,
@@ -508,19 +509,9 @@ export async function getVerifiedMatchData(
   const season = SeasonNormalizer.getCurrentSeason(input.sport);
   console.log(`[VerifiedMatchData] Season resolved: ${season} for ${input.sport}`);
   
-  // Normalize sport
-  const sportMap: Record<string, Sport> = {
-    'soccer': 'soccer',
-    'football': 'soccer',
-    'basketball': 'basketball',
-    'nba': 'basketball',
-    'hockey': 'hockey',
-    'nhl': 'hockey',
-    'american_football': 'american_football',
-    'nfl': 'american_football',
-  };
-  
-  const sport = sportMap[input.sport.toLowerCase()] || 'soccer';
+  // Normalize sport using the comprehensive bridge mapper
+  const sport = normalizeSport(input.sport);
+  console.log(`[VerifiedMatchData] Normalized sport: ${sport}`);
   
   // Resolve team IDs
   console.log(`[VerifiedMatchData] Resolving teams: "${input.homeTeam}" vs "${input.awayTeam}"`);
