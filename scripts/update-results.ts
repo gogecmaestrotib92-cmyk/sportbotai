@@ -256,6 +256,102 @@ const NHL_TEAMS = [
   'oilers', 'canucks', 'coyotes', 'sabres'
 ];
 
+const NFL_TEAMS = [
+  'chiefs', 'bills', 'ravens', 'dolphins', 'steelers', 'bengals', 'browns', 'texans',
+  'colts', 'jaguars', 'titans', 'broncos', 'chargers', 'raiders', 'eagles', 'cowboys',
+  'commanders', 'giants', '49ers', 'seahawks', 'rams', 'cardinals', 'lions', 'packers',
+  'vikings', 'bears', 'buccaneers', 'saints', 'falcons', 'panthers', 'jets', 'patriots'
+];
+
+// MMA keywords for detection
+const MMA_KEYWORDS = [
+  'ufc', 'mma', 'bellator', 'pfl', 'one championship', 'cage warriors',
+  'flyweight', 'bantamweight', 'featherweight', 'lightweight', 'welterweight',
+  'middleweight', 'light heavyweight', 'heavyweight'
+];
+
+async function fetchMMAResult(searchFighter1: string, searchFighter2: string, dateStr: string): Promise<MatchResult | null> {
+  const apiKey = process.env.API_FOOTBALL_KEY;
+  if (!apiKey) {
+    console.log('  No API_FOOTBALL_KEY found');
+    return null;
+  }
+
+  try {
+    // MMA API uses the same API key as football
+    const response = await fetch(`https://v1.mma.api-sports.io/fights?date=${dateStr}`, {
+      headers: {
+        'x-apisports-key': apiKey,
+      },
+    });
+
+    const data = await response.json();
+    if (!data.response?.length) {
+      console.log(`  No MMA fights found for ${dateStr}`);
+      return null;
+    }
+
+    console.log(`  Found ${data.response.length} MMA fights on ${dateStr}`);
+
+    for (const fight of data.response) {
+      // Check if fight is finished (FT = Finished)
+      if (fight.status?.short !== 'FT') continue;
+
+      const fighter1 = fight.fighters?.first?.name?.toLowerCase() || '';
+      const fighter2 = fight.fighters?.second?.name?.toLowerCase() || '';
+
+      // Match by fighter names (check both orderings)
+      const matchesOrder1 = 
+        (fighter1.includes(searchFighter1) || searchFighter1.includes(fighter1) ||
+         searchFighter1.split(' ').some((w: string) => fighter1.includes(w) && w.length > 3)) &&
+        (fighter2.includes(searchFighter2) || searchFighter2.includes(fighter2) ||
+         searchFighter2.split(' ').some((w: string) => fighter2.includes(w) && w.length > 3));
+
+      const matchesOrder2 = 
+        (fighter1.includes(searchFighter2) || searchFighter2.includes(fighter1) ||
+         searchFighter2.split(' ').some((w: string) => fighter1.includes(w) && w.length > 3)) &&
+        (fighter2.includes(searchFighter1) || searchFighter1.includes(fighter2) ||
+         searchFighter1.split(' ').some((w: string) => fighter2.includes(w) && w.length > 3));
+
+      if (matchesOrder1 || matchesOrder2) {
+        console.log(`  Matched: ${fight.fighters.first.name} vs ${fight.fighters.second.name}`);
+        
+        // For MMA, winner is determined by the winner field, not by score
+        // We'll encode the winner as score 1-0 for simpler processing
+        const winnerId = fight.winner?.id;
+        const fighter1Won = winnerId === fight.fighters?.first?.id;
+        const fighter2Won = winnerId === fight.fighters?.second?.id;
+        const isDraw = !winnerId || fight.result?.method?.toLowerCase().includes('draw');
+
+        // Map to home/away paradigm: first fighter = "home", second = "away"
+        // If matchesOrder2, the search order was reversed
+        if (matchesOrder1) {
+          return {
+            homeTeam: fight.fighters.first.name,
+            awayTeam: fight.fighters.second.name,
+            homeScore: fighter1Won ? 1 : isDraw ? 0 : 0,
+            awayScore: fighter2Won ? 1 : isDraw ? 0 : 0,
+            completed: true,
+          };
+        } else {
+          // Swapped order - searchFighter1 matched fighter2
+          return {
+            homeTeam: fight.fighters.second.name,
+            awayTeam: fight.fighters.first.name,
+            homeScore: fighter2Won ? 1 : isDraw ? 0 : 0,
+            awayScore: fighter1Won ? 1 : isDraw ? 0 : 0,
+            completed: true,
+          };
+        }
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('MMA fetch error:', error);
+    return null;
+  }
+}
+
 async function fetchEuroleagueResult(searchHome: string, searchAway: string, dateStr: string): Promise<MatchResult | null> {
   try {
     const date = new Date(dateStr);
@@ -316,6 +412,85 @@ async function fetchEuroleagueResult(searchHome: string, searchAway: string, dat
   }
 }
 
+async function fetchNFLResult(searchHome: string, searchAway: string, dateStr: string): Promise<MatchResult | null> {
+  try {
+    // NFL season: Sep-Feb, uses the starting year (e.g., "2025" for 2025-2026 season)
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    // Season starts in September
+    const season = month >= 9 ? year : year - 1;
+    
+    console.log(`  NFL API date: ${dateStr}, season: ${season}`);
+    
+    const response = await fetch(
+      `https://v1.american-football.api-sports.io/games?date=${dateStr}&league=1&season=${season}`,
+      {
+        headers: {
+          'x-rapidapi-key': API_KEY,
+          'x-rapidapi-host': 'v1.american-football.api-sports.io',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.log(`  NFL API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const games = data.response || [];
+    console.log(`  Found ${games.length} NFL games`);
+
+    for (const game of games) {
+      const home = game.teams?.home?.name?.toLowerCase() || '';
+      const away = game.teams?.away?.name?.toLowerCase() || '';
+      const status = game.game?.status?.short || '';
+
+      // NFL finished statuses: FT, AOT (After Overtime)
+      if (!['FT', 'AOT', 'POST'].includes(status)) continue;
+
+      // Fuzzy match - check if any part of team name matches
+      const homeMatch = home.includes(searchHome) || searchHome.includes(home) ||
+        searchHome.split(' ').some((w: string) => home.includes(w) && w.length > 3) ||
+        home.split(' ').some((w: string) => searchHome.includes(w) && w.length > 3);
+      const awayMatch = away.includes(searchAway) || searchAway.includes(away) ||
+        searchAway.split(' ').some((w: string) => away.includes(w) && w.length > 3) ||
+        away.split(' ').some((w: string) => searchAway.includes(w) && w.length > 3);
+
+      if (homeMatch && awayMatch) {
+        console.log(`  Matched: ${game.teams.home.name} vs ${game.teams.away.name}`);
+        return {
+          homeTeam: game.teams.home.name,
+          awayTeam: game.teams.away.name,
+          homeScore: game.scores?.home?.total ?? 0,
+          awayScore: game.scores?.away?.total ?? 0,
+          completed: true,
+        };
+      }
+      
+      // Try swapped match (prediction had home/away reversed)
+      if ((home.includes(searchAway) || searchAway.includes(home) ||
+           searchAway.split(' ').some((w: string) => home.includes(w) && w.length > 3)) &&
+          (away.includes(searchHome) || searchHome.includes(away) ||
+           searchHome.split(' ').some((w: string) => away.includes(w) && w.length > 3))) {
+        console.log(`  Matched (swapped): ${game.teams.home.name} vs ${game.teams.away.name}`);
+        return {
+          homeTeam: game.teams.home.name,
+          awayTeam: game.teams.away.name,
+          homeScore: game.scores?.home?.total ?? 0,
+          awayScore: game.scores?.away?.total ?? 0,
+          completed: true,
+        };
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('NFL fetch error:', error);
+    return null;
+  }
+}
+
 async function updatePredictionResults() {
   console.log('Fetching pending predictions...');
   
@@ -338,23 +513,31 @@ async function updatePredictionResults() {
     
     console.log(`\nChecking: ${prediction.matchName} (${dateStr}) - Sport: ${prediction.sport}`);
     
-    // Detect sport - check explicit sport field FIRST, then team names
-    // Priority: NHL > Euroleague > NBA > Football
-    const isNHL = sportLower.includes('hockey') || sportLower.includes('nhl') || 
-      NHL_TEAMS.some(t => searchHome.includes(t) || searchAway.includes(t));
+    // Detect sport - check explicit sport field FIRST (takes priority), then team names as fallback
+    // NFL must be checked before NHL because team name detection can overlap (e.g., "wild" matches both Vikings and Wild)
+    const isNFL = sportLower.includes('americanfootball') || sportLower.includes('nfl') ||
+      (!sportLower.includes('hockey') && !sportLower.includes('nhl') && 
+       NFL_TEAMS.some(t => searchHome.includes(t) || searchAway.includes(t)));
+    
+    const isNHL = !isNFL && (sportLower.includes('hockey') || sportLower.includes('nhl') || 
+      NHL_TEAMS.some(t => searchHome.includes(t) || searchAway.includes(t)));
     
     const isEuroleague = sportLower.includes('euroleague') || 
       EUROLEAGUE_TEAMS.some(t => searchHome.includes(t) || searchAway.includes(t));
     
-    const isNBA = (sportLower.includes('basketball') && !sportLower.includes('euroleague')) || 
+    const isNBA = !isEuroleague && ((sportLower.includes('basketball') && !sportLower.includes('euroleague')) || 
       sportLower.includes('nba') || 
-      NBA_TEAMS.some(t => searchHome.includes(t) || searchAway.includes(t));
+      NBA_TEAMS.some(t => searchHome.includes(t) || searchAway.includes(t)));
     
     const isFootball = sportLower.includes('soccer') || sportLower.includes('epl') || 
       sportLower.includes('la_liga') || sportLower.includes('serie_a') || 
       sportLower.includes('bundesliga') || sportLower.includes('ligue_1');
     
-    console.log(`  Detection: NHL=${isNHL}, Euroleague=${isEuroleague}, NBA=${isNBA}, Football=${isFootball}`);
+    const isMMA = sportLower.includes('mma') || sportLower.includes('ufc') || 
+      sportLower.includes('mixed_martial_arts') ||
+      MMA_KEYWORDS.some(t => searchHome.includes(t) || searchAway.includes(t) || sportLower.includes(t));
+    
+    console.log(`  Detection: NHL=${isNHL}, Euroleague=${isEuroleague}, NBA=${isNBA}, Football=${isFootball}, NFL=${isNFL}, MMA=${isMMA}`);
     
     let result: MatchResult | null = null;
     
@@ -366,7 +549,16 @@ async function updatePredictionResults() {
     };
     
     // Check in order of specificity, also try next day if not found
-    if (isNHL) {
+    // NFL is checked first since its detection already excludes NHL conflicts
+    if (isNFL) {
+      console.log('  -> Checking NFL API...');
+      result = await fetchNFLResult(searchHome, searchAway, dateStr);
+      if (!result) {
+        const nextDay = getNextDay(dateStr);
+        console.log(`  -> Trying next day (${nextDay})...`);
+        result = await fetchNFLResult(searchHome, searchAway, nextDay);
+      }
+    } else if (isNHL) {
       console.log('  -> Checking NHL API...');
       result = await fetchNHLResult(searchHome, searchAway, dateStr);
       if (!result) {
@@ -397,6 +589,14 @@ async function updatePredictionResults() {
         const nextDay = getNextDay(dateStr);
         console.log(`  -> Trying next day (${nextDay})...`);
         result = await fetchFootballResult(searchHome, searchAway, nextDay);
+      }
+    } else if (isMMA) {
+      console.log('  -> Checking MMA API...');
+      result = await fetchMMAResult(searchHome, searchAway, dateStr);
+      if (!result) {
+        const nextDay = getNextDay(dateStr);
+        console.log(`  -> Trying next day (${nextDay})...`);
+        result = await fetchMMAResult(searchHome, searchAway, nextDay);
       }
     } else {
       // Unknown sport - skip

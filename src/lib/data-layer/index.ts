@@ -38,6 +38,7 @@ import { getBasketballAdapter, BasketballAdapter } from './adapters/basketball';
 import { getHockeyAdapter } from './adapters/hockey';
 import { getNFLAdapter } from './adapters/nfl';
 import { getSoccerAdapter } from './adapters/soccer';
+import { getMMAAdapter } from './adapters/mma';
 import { LEAGUE_IDS } from './providers/api-sports';
 
 /**
@@ -79,6 +80,7 @@ export class DataLayer {
     this.registry.register(getBasketballAdapter());
     this.registry.register(getHockeyAdapter());
     this.registry.register(getNFLAdapter());
+    this.registry.register(getMMAAdapter());
   }
   
   /**

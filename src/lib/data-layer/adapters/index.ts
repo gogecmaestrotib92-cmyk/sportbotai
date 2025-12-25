@@ -11,3 +11,4 @@ export { BasketballAdapter, getBasketballAdapter } from './basketball';
 export { HockeyAdapter, getHockeyAdapter } from './hockey';
 export { NFLAdapter, getNFLAdapter } from './nfl';
 export { SoccerAdapter, getSoccerAdapter } from './soccer';
+export { MMAAdapter, getMMAAdapter } from './mma';

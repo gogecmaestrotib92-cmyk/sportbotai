@@ -2,13 +2,14 @@
  * API-Sports Unified Client
  * 
  * Exports all sport-specific clients and provides unified access
- * to Basketball, NFL, and Hockey APIs using the same API key.
+ * to Basketball, NFL, Hockey, and MMA APIs using the same API key.
  */
 
 // Re-export everything from each client
 export * from './basketballClient';
 export * from './nflClient';
 export * from './hockeyClient';
+export * from './mmaClient';
 
 // Import for internal use in this file
 import {
@@ -29,17 +30,27 @@ import {
   searchHockeyTeam,
 } from './hockeyClient';
 
+import {
+  getCurrentMMASeason,
+  searchMMAFighter,
+} from './mmaClient';
+
 // ============================================
 // UNIFIED SPORT DETECTION
 // ============================================
 
-export type SupportedSportAPI = 'football' | 'basketball' | 'nfl' | 'hockey' | 'odds-api';
+export type SupportedSportAPI = 'football' | 'basketball' | 'nfl' | 'hockey' | 'mma' | 'odds-api';
 
 /**
  * Detect which API to use based on sport key
  */
 export function detectSportAPI(sportKey: string): SupportedSportAPI {
   const key = sportKey.toLowerCase();
+  
+  // MMA/UFC
+  if (key.includes('mma') || key.includes('ufc') || key.includes('mixed_martial') || key.includes('bellator') || key.includes('pfl')) {
+    return 'mma';
+  }
   
   // Basketball
   if (key.includes('basketball') || key.includes('nba') || key.includes('euroleague')) {
@@ -61,7 +72,7 @@ export function detectSportAPI(sportKey: string): SupportedSportAPI {
     return 'football';
   }
   
-  // Default to odds-api for other sports (tennis, mma, etc.)
+  // Default to odds-api for other sports (tennis, etc.)
   return 'odds-api';
 }
 

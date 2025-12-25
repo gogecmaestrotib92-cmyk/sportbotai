@@ -12,7 +12,7 @@
  * This creates consistent, confident analysis across all sports.
  */
 
-export type Sport = 'soccer' | 'basketball' | 'football' | 'hockey';
+export type Sport = 'soccer' | 'basketball' | 'football' | 'hockey' | 'mma';
 
 export interface NormalizedSignals {
   sport: Sport;
@@ -187,6 +187,7 @@ function calculateTempo(data: RawMatchData, sport: Sport): 'low' | 'medium' | 'h
     basketball: { low: 105, high: 115 },   // points per game
     football: { low: 20, high: 28 },       // points per game
     hockey: { low: 2.5, high: 3.5 },       // goals per game
+    mma: { low: 1, high: 3 },              // rounds (fights typically end in 1-5 rounds)
   };
   
   const t = thresholds[sport];

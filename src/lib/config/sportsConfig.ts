@@ -404,14 +404,14 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     oddsApiSportKey: 'mma_mixed_martial_arts',
     displayName: 'UFC / MMA',
     category: 'Combat Sports',
-    hasDraw: true, // Draws are possible
+    hasDraw: true, // Draws are possible (rare)
     scoringUnit: 'rounds',
     matchTerm: 'bout',
     participantTerm: 'fighter',
     icon: '🥊',
-    dataSource: 'odds-api',
+    dataSource: 'api-sports', // Uses API-Sports MMA API
     priority: 50,
-    enabled: false, // No data layer support yet
+    enabled: true, // Full data layer support with API-Sports MMA
   },
   
   // ====================

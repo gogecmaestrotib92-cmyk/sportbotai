@@ -16,7 +16,7 @@
 // TYPES
 // ============================================
 
-export type SportType = 'soccer' | 'basketball' | 'football' | 'hockey';
+export type SportType = 'soccer' | 'basketball' | 'football' | 'hockey' | 'mma';
 
 export interface UniversalSignals {
   // The 5 core signals - exactly what AI sees
@@ -149,6 +149,13 @@ const SPORT_CONFIGS: Record<SportType, SportConfig> = {
     efficiencyThreshold: 0.2,
     scoringUnit: 'goals',
   },
+  mma: {
+    hasDraw: true,   // Draws are rare but possible
+    tempoThresholds: { low: 1, high: 3 },      // Rounds (1-5)
+    homeAdvantage: 0.0,                         // No home advantage in MMA
+    efficiencyThreshold: 10,                    // Win rate difference %
+    scoringUnit: 'rounds',
+  },
 };
 
 // ============================================
@@ -160,6 +167,7 @@ const SPORT_CONFIGS: Record<SportType, SportConfig> = {
  */
 export function detectSport(sport: string): SportType {
   const s = sport.toLowerCase();
+  if (s.includes('mma') || s.includes('ufc') || s.includes('mixed_martial') || s.includes('bellator') || s.includes('pfl')) return 'mma';
   if (s.includes('basketball') || s.includes('nba') || s.includes('euroleague')) return 'basketball';
   if (s.includes('american') || s.includes('nfl') || s.includes('ncaa')) return 'football';
   if (s.includes('hockey') || s.includes('nhl') || s.includes('khl')) return 'hockey';

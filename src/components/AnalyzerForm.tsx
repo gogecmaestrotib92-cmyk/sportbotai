@@ -27,6 +27,7 @@ export default function AnalyzerForm({ onResult, onLoading }: AnalyzerFormProps)
     'Hockey',
     'American Football',
     'Baseball',
+    'MMA / UFC',
     'Other',
   ];
 
