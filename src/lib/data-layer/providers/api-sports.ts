@@ -189,6 +189,14 @@ export class APISportsProvider {
     );
   }
   
+  async getSoccerStandings(params: { league: number; season: number }) {
+    return this.request<SoccerStandingsResponse[]>(
+      API_SPORTS_URLS.soccer,
+      '/standings',
+      params as Record<string, string | number>
+    );
+  }
+  
   // ============================================================================
   // Basketball Endpoints
   // ============================================================================
@@ -442,6 +450,31 @@ export interface SoccerInjuryResponse {
   team: { id: number; name: string; logo: string };
   fixture: { id: number; timezone: string; date: string; timestamp: number };
   league: { id: number; season: number; name: string; country: string; logo: string; flag: string };
+}
+
+export interface SoccerStandingsResponse {
+  league: {
+    id: number;
+    name: string;
+    country: string;
+    logo: string;
+    flag: string;
+    season: number;
+    standings: Array<Array<{
+      rank: number;
+      team: { id: number; name: string; logo: string };
+      points: number;
+      goalsDiff: number;
+      group: string;
+      form: string;
+      status: string;
+      description: string | null;
+      all: { played: number; win: number; draw: number; lose: number; goals: { for: number; against: number } };
+      home: { played: number; win: number; draw: number; lose: number; goals: { for: number; against: number } };
+      away: { played: number; win: number; draw: number; lose: number; goals: { for: number; against: number } };
+      update: string;
+    }>>;
+  };
 }
 
 // Basketball Types

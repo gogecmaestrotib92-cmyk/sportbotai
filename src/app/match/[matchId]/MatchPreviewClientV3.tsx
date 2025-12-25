@@ -27,8 +27,66 @@ import {
   RegistrationBlur,
   PremiumBlur,
 } from '@/components/analysis';
+import StandingsTable from '@/components/StandingsTable';
 import type { UniversalSignals } from '@/lib/universal-signals';
 import type { MarketIntel, OddsData } from '@/lib/value-detection';
+
+// League name to API-Sports ID mapping
+const LEAGUE_NAME_TO_ID: Record<string, { id: number; sport: 'soccer' | 'basketball' | 'hockey' | 'nfl' }> = {
+  // Soccer
+  'premier league': { id: 39, sport: 'soccer' },
+  'epl': { id: 39, sport: 'soccer' },
+  'english premier league': { id: 39, sport: 'soccer' },
+  'la liga': { id: 140, sport: 'soccer' },
+  'serie a': { id: 135, sport: 'soccer' },
+  'bundesliga': { id: 78, sport: 'soccer' },
+  'ligue 1': { id: 61, sport: 'soccer' },
+  'champions league': { id: 2, sport: 'soccer' },
+  'uefa champions league': { id: 2, sport: 'soccer' },
+  'europa league': { id: 3, sport: 'soccer' },
+  'europa conference league': { id: 848, sport: 'soccer' },
+  'mls': { id: 253, sport: 'soccer' },
+  'eredivisie': { id: 88, sport: 'soccer' },
+  'primeira liga': { id: 94, sport: 'soccer' },
+  'scottish premiership': { id: 179, sport: 'soccer' },
+  'championship': { id: 40, sport: 'soccer' },
+  'fa cup': { id: 45, sport: 'soccer' },
+  'carabao cup': { id: 48, sport: 'soccer' },
+  'league cup': { id: 48, sport: 'soccer' },
+  'copa del rey': { id: 143, sport: 'soccer' },
+  'dfb pokal': { id: 81, sport: 'soccer' },
+  'coppa italia': { id: 137, sport: 'soccer' },
+  'coupe de france': { id: 66, sport: 'soccer' },
+  // Basketball
+  'nba': { id: 12, sport: 'basketball' },
+  'euroleague': { id: 120, sport: 'basketball' },
+  // Hockey
+  'nhl': { id: 57, sport: 'hockey' },
+  // American Football
+  'nfl': { id: 1, sport: 'nfl' },
+};
+
+function getLeagueInfo(leagueName: string, sport: string): { id: number; sport: 'soccer' | 'basketball' | 'hockey' | 'nfl' } | null {
+  // Try exact match first
+  const normalized = leagueName.toLowerCase().trim();
+  if (LEAGUE_NAME_TO_ID[normalized]) {
+    return LEAGUE_NAME_TO_ID[normalized];
+  }
+  
+  // Try partial match
+  for (const [key, value] of Object.entries(LEAGUE_NAME_TO_ID)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
+      return value;
+    }
+  }
+  
+  // Default by sport
+  if (sport === 'basketball' || sport === 'nba') return { id: 12, sport: 'basketball' };
+  if (sport === 'hockey' || sport === 'nhl') return { id: 57, sport: 'hockey' };
+  if (sport === 'nfl' || sport === 'american_football') return { id: 1, sport: 'nfl' };
+  
+  return null;
+}
 
 // Parse matchId on client to show header immediately
 function parseMatchIdClient(matchId: string): { homeTeam: string; awayTeam: string; league: string; sport: string; kickoff: string } | null {
@@ -716,6 +774,29 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
             </div>
           )}
         </PremiumBlur>
+
+        {/* League Standings - Show where teams stand */}
+        {(() => {
+          const leagueInfo = getLeagueInfo(data.matchInfo.league, data.matchInfo.sport);
+          if (!leagueInfo) return null;
+          
+          return (
+            <div className="mt-6">
+              <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <span>📊</span>
+                Where They Stand
+              </h3>
+              <StandingsTable
+                sport={leagueInfo.sport}
+                leagueId={leagueInfo.id}
+                highlightTeams={[data.matchInfo.homeTeam, data.matchInfo.awayTeam]}
+                showAroundTeams={true}
+                collapsible={true}
+                defaultExpanded={false}
+              />
+            </div>
+          );
+        })()}
 
         {/* Headline Quote (if available) */}
         {data.headlines && data.headlines.length > 0 && (
