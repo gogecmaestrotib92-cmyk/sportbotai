@@ -40,6 +40,7 @@ const SPORT_MAP: Record<string, Sport> = {
   'soccer_mexico_ligamx': 'soccer',
   'soccer_usa_mls': 'soccer',
   'soccer_scotland_premiership': 'soccer',
+  'soccer_spl': 'soccer',  // Scottish Premiership (Odds API key)
   'soccer_conmebol_copa_libertadores': 'soccer',
   'soccer_fifa_world_cup': 'soccer',
   'soccer_epl_championship': 'soccer',
