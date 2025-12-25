@@ -154,6 +154,11 @@ export default function StandingsTable({
     
     const standings = [...data.standings];
     
+    // If expanded, show all
+    if (expanded) {
+      return standings;
+    }
+    
     // If showing around teams, find their positions and show context
     if (showAroundTeams && highlightTeams.length > 0) {
       const highlightPositions = standings
@@ -180,12 +185,12 @@ export default function StandingsTable({
     }
     
     // Default: show top 10 if no highlighted teams found
-    if (maxRows && !expanded) {
+    if (maxRows) {
       return standings.slice(0, maxRows);
     }
     
-    // If collapsible but no maxRows, show top 10 by default
-    if (collapsible && !expanded) {
+    // If collapsible, show top 10 by default
+    if (collapsible) {
       return standings.slice(0, 10);
     }
     
@@ -193,7 +198,8 @@ export default function StandingsTable({
   }
   
   const displayStandings = getDisplayStandings();
-  const showExpandButton = collapsible && data && displayStandings.length < data.standings.length;
+  // Show expand/collapse button if collapsible and there are more standings than would be shown collapsed
+  const showExpandButton = collapsible && data && data.standings.length > (maxRows || 10);
   
   // Check if a team should be highlighted
   const isHighlighted = (teamName: string) => {
