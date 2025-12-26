@@ -232,6 +232,11 @@ export function shouldSkipCache(query: string): boolean {
     /\b(live|right now|currently|at the moment)\b/,
     /\b(score|scores|result|results)\b.*\b(now|today|tonight)\b/,
     /\b(starting lineup|who is playing)\b.*\b(today|tonight)\b/,
+    // Last game queries - these change after every game!
+    /\b(last game|last match|previous game|most recent game|latest game)\b/,
+    /posledn(joj|ja|ju|ji|je|eg|oj|em)\s*(utakmic|meč)/i,  // Serbian: poslednja utakmica
+    /\b(sinoć|jučer|juče|yesterday|last night)\b/,  // Yesterday/last night
+    /\b(scored|points|goals|assists|rebounds)\b.*\b(last|yesterday|sinoć)\b/,
   ];
   
   return skipPatterns.some(pattern => pattern.test(q));
