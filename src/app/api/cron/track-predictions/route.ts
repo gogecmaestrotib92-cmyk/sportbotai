@@ -120,13 +120,17 @@ async function getMatchResult(homeTeam: string, awayTeam: string, matchDate: Dat
   if (!apiKey) return null;
   
   const dateStr = matchDate.toISOString().split('T')[0];
+  // Also try the next day in case match crossed midnight or API has different timezone
+  const nextDay = new Date(matchDate.getTime() + 24 * 60 * 60 * 1000);
+  const nextDayStr = nextDay.toISOString().split('T')[0];
+  
   const searchHome = homeTeam.toLowerCase();
   const searchAway = awayTeam.toLowerCase();
   const sportLower = sport?.toLowerCase() || '';
   const leagueLower = league?.toLowerCase() || '';
   
   // Detect sport from sport field, league, or team names
-  const isNBA = sportLower.includes('basketball_nba') || leagueLower.includes('nba') || 
+  const isNBA = sportLower.includes('basketball_nba') || sportLower.includes('basketball') || leagueLower.includes('nba') || 
     ['lakers', 'celtics', 'bulls', 'heat', 'warriors', 'nuggets', 'suns', 'bucks', 'nets', 'knicks', 'clippers', 'mavs', 'mavericks', 'rockets', 'spurs', 'jazz', 'thunder', 'grizzlies', 'pelicans', 'timberwolves', 'blazers', 'kings', 'magic', 'hawks', 'hornets', 'pistons', 'pacers', 'cavaliers', '76ers', 'raptors', 'wizards'].some(t => searchHome.includes(t) || searchAway.includes(t));
   
   const isEuroLeague = sportLower.includes('euroleague') || leagueLower.includes('euroleague') ||
@@ -138,72 +142,76 @@ async function getMatchResult(homeTeam: string, awayTeam: string, matchDate: Dat
   const isNFL = sportLower.includes('americanfootball') || sportLower.includes('nfl') || leagueLower.includes('nfl') || 
     ['chiefs', 'bills', 'ravens', 'bengals', 'dolphins', 'patriots', 'jets', 'steelers', 'browns', 'titans', 'colts', 'jaguars', 'texans', 'broncos', 'raiders', 'chargers', 'eagles', 'cowboys', 'giants', 'commanders', 'lions', 'packers', 'vikings', 'bears', 'buccaneers', 'saints', 'falcons', 'panthers', 'seahawks', '49ers', 'cardinals', 'rams'].some(t => searchHome.includes(t) || searchAway.includes(t));
 
-  try {
-    // Try EuroLeague API (league 120)
-    if (isEuroLeague) {
-      const euroResult = await fetchSportResult('basketball', 120, dateStr, searchHome, searchAway, apiKey);
-      if (euroResult) return euroResult;
-    }
-    
-    // Try NBA API (league 12)
-    if (isNBA) {
-      const nbaResult = await fetchSportResult('basketball', 12, dateStr, searchHome, searchAway, apiKey);
-      if (nbaResult) return nbaResult;
-    }
-    
-    // Try NHL API
-    if (isNHL) {
-      const nhlResult = await fetchSportResult('hockey', 57, dateStr, searchHome, searchAway, apiKey);
-      if (nhlResult) return nhlResult;
-    }
-    
-    // Try NFL API
-    if (isNFL) {
-      const nflResult = await fetchNFLResult(dateStr, searchHome, searchAway, apiKey);
-      if (nflResult) return nflResult;
-    }
-    
-    // Try Football API (default)
-    const response = await fetch(
-      `https://v3.football.api-sports.io/fixtures?date=${dateStr}&status=FT`,
-      {
-        headers: {
-          'x-rapidapi-key': apiKey,
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-        },
+  // Try both the match date and next day
+  for (const tryDate of [dateStr, nextDayStr]) {
+    try {
+      // Try EuroLeague API (league 120)
+      if (isEuroLeague) {
+        const euroResult = await fetchSportResult('basketball', 120, tryDate, searchHome, searchAway, apiKey);
+        if (euroResult) return euroResult;
       }
-    );
-
-    if (!response.ok) return null;
-
-    const data = await response.json();
-    const fixtures = data.response || [];
-
-    // Find matching fixture
-    for (const fixture of fixtures) {
-      const home = fixture.teams?.home?.name?.toLowerCase() || '';
-      const away = fixture.teams?.away?.name?.toLowerCase() || '';
-
-      // Check for match (fuzzy matching)
-      if (
-        (home.includes(searchHome) || searchHome.includes(home)) &&
-        (away.includes(searchAway) || searchAway.includes(away))
-      ) {
-        return {
-          homeTeam: fixture.teams.home.name,
-          awayTeam: fixture.teams.away.name,
-          homeScore: fixture.goals?.home ?? 0,
-          awayScore: fixture.goals?.away ?? 0,
-          completed: true,
-        };
+      
+      // Try NBA API (league 12)
+      if (isNBA) {
+        const nbaResult = await fetchSportResult('basketball', 12, tryDate, searchHome, searchAway, apiKey);
+        if (nbaResult) return nbaResult;
       }
-    }
+      
+      // Try NHL API
+      if (isNHL) {
+        const nhlResult = await fetchSportResult('hockey', 57, tryDate, searchHome, searchAway, apiKey);
+        if (nhlResult) return nhlResult;
+      }
+      
+      // Try NFL API
+      if (isNFL) {
+        const nflResult = await fetchNFLResult(tryDate, searchHome, searchAway, apiKey);
+        if (nflResult) return nflResult;
+      }
+      
+      // Try Football API (default for soccer)
+      if (!isNBA && !isEuroLeague && !isNHL && !isNFL) {
+        const response = await fetch(
+          `https://v3.football.api-sports.io/fixtures?date=${tryDate}&status=FT`,
+          {
+            headers: {
+              'x-rapidapi-key': apiKey,
+              'x-rapidapi-host': 'v3.football.api-sports.io',
+            },
+          }
+        );
 
-    return null;
-  } catch (error) {
-    console.error('[Track-Predictions] Failed to get match result:', error);
-    return null;
+        if (response.ok) {
+          const data = await response.json();
+          const fixtures = data.response || [];
+
+          // Find matching fixture
+          for (const fixture of fixtures) {
+            const home = fixture.teams?.home?.name?.toLowerCase() || '';
+            const away = fixture.teams?.away?.name?.toLowerCase() || '';
+
+            // Check for match (fuzzy matching)
+            if (
+              (home.includes(searchHome) || searchHome.includes(home)) &&
+              (away.includes(searchAway) || searchAway.includes(away))
+            ) {
+              return {
+                homeTeam: fixture.teams.home.name,
+                awayTeam: fixture.teams.away.name,
+                homeScore: fixture.goals?.home ?? 0,
+                awayScore: fixture.goals?.away ?? 0,
+                completed: true,
+              };
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`[Track-Predictions] Failed to get match result for ${tryDate}:`, error);
+    }
   }
+
+  return null;
 }
 
 /**
@@ -406,8 +414,11 @@ export async function GET(request: NextRequest) {
     // Verify authorization
     const authHeader = request.headers.get('Authorization');
     const vercelCron = request.headers.get('x-vercel-cron');
+    const url = new URL(request.url);
+    const secretParam = url.searchParams.get('secret');
+    
     const isVercelCron = vercelCron === '1' || vercelCron === 'true';
-    const isAuthorized = !CRON_SECRET || authHeader === `Bearer ${CRON_SECRET}`;
+    const isAuthorized = !CRON_SECRET || authHeader === `Bearer ${CRON_SECRET}` || secretParam === CRON_SECRET;
     
     console.log(`[Track-Predictions] Auth check: isVercelCron=${isVercelCron}, isAuthorized=${isAuthorized}`);
 
@@ -600,11 +611,11 @@ export async function GET(request: NextRequest) {
       where: {
         outcome: 'PENDING',
         kickoff: {
-          lte: new Date(), // Match should have started
+          lte: new Date(Date.now() - 3 * 60 * 60 * 1000), // Match should have been over for 3+ hours
           gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Within last week
         },
       },
-      take: 20,
+      take: 50, // Process up to 50 pending predictions per run
       orderBy: { kickoff: 'asc' },
     });
 
@@ -630,6 +641,19 @@ export async function GET(request: NextRequest) {
           result.awayScore
         );
 
+        // Also evaluate value bet if present
+        let valueBetOutcome: 'HIT' | 'MISS' | null = null;
+        let valueBetProfit: number | null = null;
+        
+        if (pred.valueBetSide && pred.valueBetOdds) {
+          const actualWinner = result.homeScore > result.awayScore ? 'HOME' : 
+                               result.awayScore > result.homeScore ? 'AWAY' : 'DRAW';
+          const valueBetWon = pred.valueBetSide === actualWinner;
+          valueBetOutcome = valueBetWon ? 'HIT' : 'MISS';
+          // Calculate profit: if won, profit = odds - 1; if lost, profit = -1
+          valueBetProfit = valueBetWon ? (pred.valueBetOdds - 1) : -1;
+        }
+
         try {
           await prisma.prediction.update({
             where: { id: pred.id },
@@ -638,10 +662,14 @@ export async function GET(request: NextRequest) {
               actualScore: `${result.homeScore}-${result.awayScore}`,
               outcome: evaluation.wasAccurate ? 'HIT' : 'MISS',
               validatedAt: new Date(),
+              // Value bet outcome tracking
+              ...(valueBetOutcome && { valueBetOutcome }),
+              ...(valueBetProfit !== null && { valueBetProfit }),
             },
           });
           results.updatedOutcomes++;
-          console.log(`[Track-Predictions] Updated outcome for ${pred.matchName}: ${evaluation.wasAccurate ? 'HIT' : 'MISS'}`);
+          const valueBetInfo = valueBetOutcome ? ` | Value bet: ${valueBetOutcome} (${valueBetProfit && valueBetProfit > 0 ? '+' : ''}${valueBetProfit?.toFixed(2)} units)` : '';
+          console.log(`[Track-Predictions] Updated outcome for ${pred.matchName}: ${evaluation.wasAccurate ? 'HIT' : 'MISS'}${valueBetInfo}`);
         } catch (error) {
           console.error(`[Track-Predictions] Error updating outcome:`, error);
           results.errors.push(`Failed to update outcome for ${pred.matchName}: ${error instanceof Error ? error.message : 'Unknown'}`);
