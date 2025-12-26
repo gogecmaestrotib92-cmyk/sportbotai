@@ -1961,6 +1961,33 @@ const LEAGUE_LOGOS: Record<string, string> = {
   'Viktoria Plzeň': 'https://img.uefa.com/imgml/TP/teams/logos/240x240/64312.png',
   'FC Viktoria Plzen': 'https://img.uefa.com/imgml/TP/teams/logos/240x240/64312.png',
   
+  // 2024-25 Europa League Teams - ESPN CDN (more reliable)
+  // CDN: https://a.espncdn.com/i/teamlogos/soccer/500/{id}.png
+  'Malmö FF': 'https://a.espncdn.com/i/teamlogos/soccer/500/2720.png',
+  'Malmo FF': 'https://a.espncdn.com/i/teamlogos/soccer/500/2720.png',
+  'Malmö': 'https://a.espncdn.com/i/teamlogos/soccer/500/2720.png',
+  'Malmo': 'https://a.espncdn.com/i/teamlogos/soccer/500/2720.png',
+  'Real Betis': 'https://a.espncdn.com/i/teamlogos/soccer/500/244.png',
+  'Real Betis Balompie': 'https://a.espncdn.com/i/teamlogos/soccer/500/244.png',
+  'Betis': 'https://a.espncdn.com/i/teamlogos/soccer/500/244.png',
+  'Red Star Belgrade': 'https://a.espncdn.com/i/teamlogos/soccer/500/2290.png',
+  'Crvena Zvezda': 'https://a.espncdn.com/i/teamlogos/soccer/500/2290.png',
+  'Red Star': 'https://a.espncdn.com/i/teamlogos/soccer/500/2290.png',
+  'FK Crvena Zvezda': 'https://a.espncdn.com/i/teamlogos/soccer/500/2290.png',
+  'Dinamo Zagreb': 'https://a.espncdn.com/i/teamlogos/soccer/500/597.png',
+  'GNK Dinamo Zagreb': 'https://a.espncdn.com/i/teamlogos/soccer/500/597.png',
+  'Feyenoord Rotterdam': 'https://a.espncdn.com/i/teamlogos/soccer/500/142.png',
+  'Feyenoord': 'https://a.espncdn.com/i/teamlogos/soccer/500/142.png',
+  'Go Ahead Eagles': 'https://a.espncdn.com/i/teamlogos/soccer/500/3706.png',
+  'FC Utrecht': 'https://a.espncdn.com/i/teamlogos/soccer/500/153.png',
+  'Utrecht': 'https://a.espncdn.com/i/teamlogos/soccer/500/153.png',
+  'Racing Genk': 'https://a.espncdn.com/i/teamlogos/soccer/500/938.png',
+  'Genk': 'https://a.espncdn.com/i/teamlogos/soccer/500/938.png',
+  'KRC Genk': 'https://a.espncdn.com/i/teamlogos/soccer/500/938.png',
+  'Nottingham Forest': 'https://a.espncdn.com/i/teamlogos/soccer/500/393.png',
+  'Nottm Forest': 'https://a.espncdn.com/i/teamlogos/soccer/500/393.png',
+  'Panathinaikos FC': 'https://a.espncdn.com/i/teamlogos/soccer/500/443.png',
+  
   // Playoffs / Qualifiers
   'Aberdeen': 'https://img.uefa.com/imgml/TP/teams/logos/240x240/50122.png',
   'Aberdeen FC': 'https://img.uefa.com/imgml/TP/teams/logos/240x240/50122.png',
