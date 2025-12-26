@@ -52,10 +52,14 @@ export async function POST(request: NextRequest) {
     // Resolve actual Price ID from plan key
     const actualPriceId = PRICE_IDS[planKey?.toLowerCase()] || planKey;
     
+    console.log(`[Stripe] Plan key: ${planKey}, Resolved price ID: ${actualPriceId}`);
+    console.log(`[Stripe] Available PRICE_IDS:`, JSON.stringify(PRICE_IDS));
+    
     if (!actualPriceId || !actualPriceId.startsWith('price_')) {
       console.error('Invalid price ID:', planKey, '->', actualPriceId);
+      console.error('PRICE_IDS map:', PRICE_IDS);
       return NextResponse.json(
-        { error: 'Invalid plan selected' },
+        { error: `Invalid plan selected. Please contact support. (Plan: ${planKey})` },
         { status: 400 }
       );
     }
