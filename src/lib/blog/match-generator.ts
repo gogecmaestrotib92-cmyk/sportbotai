@@ -1108,26 +1108,27 @@ function stripPromotionalContent(content: string): string {
     ''
   );
   
-  // Remove entire CTA boxes that contain signup links (div with /register, /pricing, /login)
-  // These boxes look broken without the link, so remove them entirely
+  // Remove CTA boxes with class="cta-box" where link is at the end: <div class="cta-box">...<a>...</a></div>
   result = result.replace(
-    /<div[^>]*class="cta-box"[^>]*>[\s\S]*?<\/div>/gi,
+    /<div[^>]*class="cta-box"[^>]*>(?:(?!<div)[\s\S])*?<a[^>]*>[^<]*<\/a>\s*<\/div>/gi,
     ''
   );
   
-  // Remove inline CTA boxes with "Ready for Deeper Analysis?" or similar promotional headers
+  // Remove CTA boxes with class="cta-box" where link is inside p: <div class="cta-box">...<a>...</a>...</p></div>
   result = result.replace(
-    /<div[^>]*>[\s\S]*?Ready for Deeper Analysis\?[\s\S]*?<\/div>/gi,
+    /<div[^>]*class="cta-box"[^>]*>(?:(?!<div)[\s\S])*?<\/p>\s*<\/div>/gi,
     ''
   );
-  result = result.replace(
-    /<div[^>]*>[\s\S]*?Want Real-Time AI Analysis\?[\s\S]*?<\/div>/gi,
-    ''
-  );
-  result = result.replace(
-    /<div[^>]*>[\s\S]*?Unlock Advanced Stats[\s\S]*?<\/div>/gi,
-    ''
-  );
+  
+  // Remove promotional phrases that appear inline
+  result = result.replace(/🤖\s*Want Real-Time AI Analysis\?/gi, '');
+  result = result.replace(/🤖\s*Want Deep Insights\?/gi, '');
+  result = result.replace(/Ready for Deeper Analysis\?/gi, '');
+  result = result.replace(/Unlock Advanced Stats/gi, '');
+  result = result.replace(/Get live probability updates[^<]*/gi, '');
+  
+  // Remove standalone promotional links
+  result = result.replace(/<a[^>]*href="\/(?:register|pricing|login)"[^>]*>[^<]*<\/a>/gi, '');
   
   // Remove "Pro tip" paragraphs
   result = result.replace(/<p[^>]*>\s*(?:<[^>]+>)*\s*Pro tip[^<]*(?:<[^>]+>)*\s*<\/p>/gi, '');
@@ -1145,9 +1146,11 @@ function stripPromotionalContent(content: string): string {
   result = result.replace(/gamblers?|bettors?/gi, 'fans');
   result = result.replace(/betting tips|betting preview/gi, 'match analysis');
   
-  // Clean up empty elements (run multiple times to catch nested empties)
+  // Clean up empty paragraphs that may have just had promotional text
+  result = result.replace(/<p[^>]*>\s*<\/p>/gi, '');
+  
+  // Clean up empty divs
   for (let i = 0; i < 3; i++) {
-    result = result.replace(/<p[^>]*>\s*<\/p>/gi, '');
     result = result.replace(/<div[^>]*>\s*<\/div>/gi, '');
   }
   
