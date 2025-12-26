@@ -177,8 +177,16 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-divider animate-fade-in">
-            <div className="flex flex-col gap-1">
+          <>
+            {/* Backdrop - click to close */}
+            <div 
+              className="fixed inset-0 top-16 bg-black/50 backdrop-blur-sm z-40 md:hidden animate-fade-in"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            
+            {/* Menu content */}
+            <div className="md:hidden absolute left-0 right-0 top-16 bg-bg-card border-b border-divider shadow-2xl z-50 max-h-[70vh] overflow-y-auto animate-slide-down">
+              <div className="flex flex-col gap-1 py-4">
               <MobileNavLink
                 href="/"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -323,6 +331,7 @@ export default function Header() {
               </MobileNavLink>
             </div>
           </div>
+          </>
         )}
       </nav>
     </header>
