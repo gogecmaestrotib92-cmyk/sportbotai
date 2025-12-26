@@ -54,6 +54,13 @@ export async function POST(request: NextRequest) {
     // Get price IDs at request time
     const PRICE_IDS = getPriceIds();
     
+    // Log raw env vars for debugging
+    console.log(`[Stripe] RAW ENV VARS:`);
+    console.log(`  STRIPE_PRO_PRICE_ID: ${process.env.STRIPE_PRO_PRICE_ID ? 'SET' : 'NOT SET'}`);
+    console.log(`  STRIPE_PRO_YEARLY_PRICE_ID: ${process.env.STRIPE_PRO_YEARLY_PRICE_ID ? 'SET (' + process.env.STRIPE_PRO_YEARLY_PRICE_ID + ')' : 'NOT SET'}`);
+    console.log(`  STRIPE_PREMIUM_PRICE_ID: ${process.env.STRIPE_PREMIUM_PRICE_ID ? 'SET' : 'NOT SET'}`);
+    console.log(`  STRIPE_PREMIUM_YEARLY_PRICE_ID: ${process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID ? 'SET' : 'NOT SET'}`);
+    
     // Resolve actual Price ID from plan key
     const actualPriceId = PRICE_IDS[planKey?.toLowerCase()] || planKey;
     
