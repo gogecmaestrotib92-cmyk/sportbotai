@@ -14,7 +14,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import Image from 'next/image';
 import { ChevronDown, ChevronUp, Trophy, TrendingDown, TrendingUp } from 'lucide-react';
 
@@ -283,16 +283,15 @@ export default function StandingsTable({
               const showGap = team.position - prevPos > 1;
               
               return (
-                <>
+                <Fragment key={team.teamId}>
                   {showGap && (
-                    <tr key={`gap-${team.position}`}>
+                    <tr>
                       <td colSpan={11} className="py-1 px-3 text-center text-gray-500 text-xs border-b border-white/5">
                         ···
                       </td>
                     </tr>
                   )}
                   <tr 
-                    key={team.teamId}
                     className={`
                       border-b border-white/5 transition-colors
                       ${highlighted 
@@ -346,7 +345,7 @@ export default function StandingsTable({
                       )}
                     </td>
                   </tr>
-                </>
+                </Fragment>
               );
             })}
           </tbody>
