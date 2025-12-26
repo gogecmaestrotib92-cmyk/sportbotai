@@ -255,16 +255,25 @@ export default function MatchCard({
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-400 group-hover:bg-white"></span>
             </span>
             Watch Live
+            <svg className="w-3 h-3 opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
           </span>
         ) : isFinished ? (
           <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-gray-500/15 text-gray-400 border border-gray-500/30 rounded-full group-hover:bg-gray-500 group-hover:text-white group-hover:border-gray-500 transition-all">
             <span className="w-1.5 h-1.5 bg-gray-400 rounded-full group-hover:bg-white"></span>
             View Recap
+            <svg className="w-3 h-3 opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
           </span>
         ) : (
           <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-accent/15 text-accent border border-accent/30 rounded-full group-hover:bg-accent group-hover:text-white group-hover:border-accent transition-all">
             <span className="w-1.5 h-1.5 bg-accent rounded-full group-hover:bg-white animate-pulse"></span>
             Analyze
+            <svg className="w-3 h-3 opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
           </span>
         )}
       </div>

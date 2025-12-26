@@ -30,15 +30,26 @@
   top: 16px;
 }
 
-/* Focus visible - enhanced for keyboard users */
+/* Focus visible - enhanced for keyboard users with premium glow */
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(42, 246, 160, 0.15);
+}
+
+/* Special focus for interactive cards */
+[data-card]:focus-visible,
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(42, 246, 160, 0.15), 0 0 20px rgba(42, 246, 160, 0.1);
 }
 
 /* Remove outline for mouse users */
 :focus:not(:focus-visible) {
   outline: none;
+  box-shadow: none;
 }
 
 /* Reduced motion */
@@ -652,6 +663,30 @@ button:focus-visible {
 
 .duration-500 {
   animation-duration: 500ms;
+}
+
+/* Success checkmark animations */
+@keyframes success-circle {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes success-check {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes success-particle {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) translateY(var(--distance, 40px));
+    opacity: 0;
+  }
 }
 
 /* Slide in from right (for toasts) */

@@ -32,7 +32,10 @@ export { ScrollToTop } from './ScrollToTop';
 // Staggered animations
 export { StaggeredList, StaggeredItem, StaggeredGrid, useStaggeredAnimation } from './StaggeredAnimation';
 
-// Empty states
+// Success animations
+export { SuccessCheckmark, SuccessToast, SuccessBadge, SuccessParticles } from './SuccessAnimation';
+
+// Empty states & errors
 export {
   EmptyState,
   NoMatchesFound,
@@ -42,6 +45,7 @@ export {
   FeatureComingSoon,
   OfflineState,
   ErrorState,
+  InlineError,
   MaintenanceState,
 } from './EmptyStates';
 

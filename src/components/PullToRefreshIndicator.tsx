@@ -1,7 +1,7 @@
 /**
  * Pull-to-Refresh Indicator Component
  * 
- * Visual indicator that shows during pull-to-refresh gesture.
+ * Premium visual indicator with smooth animations during pull-to-refresh gesture.
  */
 
 'use client';
@@ -21,48 +21,56 @@ export default function PullToRefreshIndicator({
 }: PullToRefreshIndicatorProps) {
   const progress = Math.min(pullDistance / threshold, 1);
   const shouldShow = pullDistance > 10 || isRefreshing;
+  const isReady = progress >= 1;
   
   if (!shouldShow) return null;
   
   return (
     <div 
-      className="fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-200"
+      className="fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-out"
       style={{ 
-        top: `max(${pullDistance}px, env(safe-area-inset-top, 20px))`,
-        opacity: progress,
+        top: `max(${Math.min(pullDistance, threshold + 20)}px, env(safe-area-inset-top, 20px))`,
+        opacity: Math.min(progress * 1.5, 1),
+        transform: `translateX(-50%) scale(${0.8 + progress * 0.2})`,
       }}
     >
-      <div className="bg-bg-card border border-divider rounded-full p-3 shadow-xl">
+      <div className={`
+        bg-bg-card/95 backdrop-blur-sm border rounded-full p-3 shadow-xl
+        transition-all duration-300
+        ${isReady || isRefreshing ? 'border-accent/50 shadow-accent/20' : 'border-divider'}
+      `}>
         {isRefreshing ? (
-          // Spinning loader
-          <svg 
-            className="w-6 h-6 text-accent animate-spin" 
-            fill="none" 
-            viewBox="0 0 24 24"
-          >
-            <circle 
-              className="opacity-25" 
-              cx="12" 
-              cy="12" 
-              r="10" 
-              stroke="currentColor" 
-              strokeWidth="3"
-            />
-            <path 
-              className="opacity-75" 
-              fill="currentColor" 
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
+          // Premium spinning loader
+          <div className="relative w-6 h-6">
+            <svg 
+              className="w-6 h-6 text-accent animate-spin" 
+              fill="none" 
+              viewBox="0 0 24 24"
+            >
+              <circle 
+                className="opacity-20" 
+                cx="12" 
+                cy="12" 
+                r="10" 
+                stroke="currentColor" 
+                strokeWidth="3"
+              />
+              <path 
+                className="opacity-90" 
+                fill="currentColor" 
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          </div>
         ) : (
           // Arrow that rotates as you pull
           <svg 
-            className="w-6 h-6 text-accent transition-transform duration-150"
+            className={`w-6 h-6 transition-all duration-200 ${isReady ? 'text-accent' : 'text-text-secondary'}`}
             style={{ transform: `rotate(${progress * 180}deg)` }}
             fill="none" 
             viewBox="0 0 24 24" 
             stroke="currentColor" 
-            strokeWidth={2}
+            strokeWidth={2.5}
           >
             <path 
               strokeLinecap="round" 
@@ -72,6 +80,13 @@ export default function PullToRefreshIndicator({
           </svg>
         )}
       </div>
+      
+      {/* Ready text indicator */}
+      {isReady && !isRefreshing && (
+        <p className="text-[10px] text-accent text-center mt-1 font-medium animate-in fade-in duration-200">
+          Release to refresh
+        </p>
+      )}
     </div>
   );
 }
