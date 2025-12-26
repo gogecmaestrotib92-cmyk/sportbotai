@@ -220,6 +220,7 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
   const { showToast } = useToast();
   const [data, setData] = useState<MatchPreviewData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState('Analyzing match data...');
   const [error, setError] = useState<string | null>(null);
   const [usageLimit, setUsageLimit] = useState<UsageLimitData | null>(null);
   
@@ -255,12 +256,28 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
         setLoading(true);
         setError(null);
         setUsageLimit(null);
+        setLoadingMessage('Analyzing match data...');
+        
+        // Loading message progression
+        const loadingTimer1 = setTimeout(() => setLoadingMessage('Gathering team stats...'), 3000);
+        const loadingTimer2 = setTimeout(() => setLoadingMessage('Processing signals...'), 6000);
+        const loadingTimer3 = setTimeout(() => setLoadingMessage('Almost ready...'), 10000);
+        const timeoutTimer = setTimeout(() => {
+          setError('Loading is taking longer than expected. Please refresh the page.');
+          setLoading(false);
+        }, 30000); // 30 second timeout
         
         // Add cache-busting timestamp to force fresh fetch (no browser cache)
         const response = await fetch(`/api/match-preview/${matchId}?_t=${Date.now()}`, {
           credentials: 'include', // Ensure cookies are sent
           cache: 'no-store', // Don't use browser cache
         });
+        
+        // Clear timers on success
+        clearTimeout(loadingTimer1);
+        clearTimeout(loadingTimer2);
+        clearTimeout(loadingTimer3);
+        clearTimeout(timeoutTimer);
         
         const result = await response.json();
         
@@ -324,9 +341,10 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
           />
 
           {/* Loading indicator */}
-          <div className="mt-6 flex items-center justify-center gap-2 text-zinc-500">
-            <div className="w-4 h-4 border-2 border-zinc-600 border-t-zinc-400 rounded-full animate-spin" />
-            <span className="text-sm">Loading analysis...</span>
+          <div className="mt-6 flex flex-col items-center justify-center gap-2">
+            <div className="w-8 h-8 border-2 border-zinc-700 border-t-emerald-500 rounded-full animate-spin" />
+            <span className="text-zinc-300 text-sm font-medium">{loadingMessage}</span>
+            <span className="text-zinc-600 text-xs">This may take a few seconds</span>
           </div>
 
           {/* Skeleton for signals */}
@@ -348,7 +366,7 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
 
   // Fallback skeleton if we can't parse matchId
   if (loading) {
-    return <PremiumSkeleton />;
+    return <PremiumSkeleton message={loadingMessage} />;
   }
 
   // Match is too far in the future - show friendly message
@@ -834,9 +852,9 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
 }
 
 /**
- * Premium Loading Skeleton
+ * Premium Loading Skeleton with progress indicator
  */
-function PremiumSkeleton() {
+function PremiumSkeleton({ message = 'Analyzing match data...' }: { message?: string }) {
   return (
     <div className="min-h-screen bg-[#050506]">
       <div className="max-w-2xl mx-auto px-4 py-10">
@@ -860,6 +878,13 @@ function PremiumSkeleton() {
               <div className="h-5 w-24 bg-white/5 rounded" />
             </div>
           </div>
+        </div>
+
+        {/* Loading indicator - visible and informative */}
+        <div className="flex flex-col items-center justify-center py-8 mb-6">
+          <div className="w-10 h-10 border-2 border-zinc-700 border-t-emerald-500 rounded-full animate-spin mb-4" />
+          <span className="text-zinc-300 text-sm font-medium">{message}</span>
+          <span className="text-zinc-600 text-xs mt-1">This may take a few seconds</span>
         </div>
 
         {/* Analysis skeleton */}
