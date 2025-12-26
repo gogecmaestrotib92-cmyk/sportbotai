@@ -198,46 +198,73 @@ button:focus-visible {
 @layer components {
   /* ---- BUTTONS ---- */
   
-  /* Primary Button - Accent Gradient */
+  /* Primary Button - Accent with premium press feedback */
   .btn-primary {
     @apply bg-accent text-primary-900 px-6 py-3 font-semibold 
            hover:bg-accent-green transition-all duration-200
            focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-primary-900
            shadow-card hover:shadow-glow-accent
-           active:scale-[0.98] active:shadow-none;
+           active:scale-[0.97] active:shadow-none;
     border-radius: var(--radius-btn);
+    transform-origin: center;
+    will-change: transform;
+  }
+  
+  .btn-primary:active {
+    transition-duration: 50ms;
   }
 
-  /* Secondary Button */
+  /* Secondary Button - with smooth press */
   .btn-secondary {
     @apply bg-transparent text-white border-2 border-divider px-6 py-3 font-semibold 
            hover:bg-surface-card hover:border-gray-500 transition-all duration-200
            focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-primary-900
-           active:scale-[0.98];
+           active:scale-[0.97];
     border-radius: var(--radius-btn);
+    transform-origin: center;
+    will-change: transform;
+  }
+  
+  .btn-secondary:active {
+    transition-duration: 50ms;
   }
 
-  /* Ghost Button */
+  /* Ghost Button - subtle feedback */
   .btn-ghost {
     @apply bg-transparent text-gray-400 px-4 py-2 font-medium
            hover:bg-surface-card hover:text-white transition-all duration-200
-           active:scale-[0.97];
+           active:scale-[0.96];
     border-radius: var(--radius-btn);
+    transform-origin: center;
+  }
+  
+  .btn-ghost:active {
+    transition-duration: 50ms;
   }
 
-  /* Icon Button - Circular */
+  /* Icon Button - Circular with spring-like press */
   .btn-icon {
     @apply w-10 h-10 flex items-center justify-center rounded-full
            bg-white/5 text-white/60 border border-white/10
            hover:bg-white/10 hover:text-white hover:border-white/20
-           active:scale-95 transition-all duration-200;
+           active:scale-90 transition-all duration-200;
+    transform-origin: center;
+  }
+  
+  .btn-icon:active {
+    transition-duration: 75ms;
   }
 
   .btn-icon-sm {
     @apply w-8 h-8 flex items-center justify-center rounded-full
            bg-white/5 text-white/60 border border-white/10
            hover:bg-white/10 hover:text-white
-           active:scale-95 transition-all duration-150;
+           active:scale-90 transition-all duration-150;
+    transform-origin: center;
+  }
+  
+  .btn-icon-sm:active {
+    transition-duration: 50ms;
   }
 
   /* ---- CARDS ---- */
@@ -316,17 +343,26 @@ button:focus-visible {
   /* Input Fields - Dark (Default) */
   .input-field {
     @apply w-full px-4 py-3 bg-surface-card border border-divider 
-           focus:ring-2 focus:ring-primary focus:border-primary 
-           transition-all duration-200 text-white placeholder-gray-500;
+           transition-all duration-300 text-white placeholder-gray-500;
     border-radius: var(--radius-btn);
+  }
+
+  /* Premium focus state */
+  .input-field:focus {
+    @apply ring-2 ring-accent/30 border-accent/50 outline-none;
+    box-shadow: 0 0 0 3px rgba(42, 246, 160, 0.1), 0 0 20px rgba(42, 246, 160, 0.05);
   }
 
   /* Input Fields - Dark variant */
   .input-field-dark {
     @apply w-full px-4 py-3 bg-surface-card border border-divider 
-           focus:ring-2 focus:ring-primary focus:border-primary 
-           transition-all duration-200 text-white placeholder-gray-500;
+           transition-all duration-300 text-white placeholder-gray-500;
     border-radius: var(--radius-btn);
+  }
+  
+  .input-field-dark:focus {
+    @apply ring-2 ring-accent/30 border-accent/50 outline-none;
+    box-shadow: 0 0 0 3px rgba(42, 246, 160, 0.1), 0 0 20px rgba(42, 246, 160, 0.05);
   }
 
   /* Label for Forms */
@@ -498,6 +534,33 @@ button:focus-visible {
 .animate-scaleIn {
   animation: scaleIn 0.3s ease-out;
 }
+
+/* Premium page entrance animation */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-enter {
+  animation: pageEnter 0.4s ease-out both;
+}
+
+/* Staggered page sections */
+.page-section {
+  animation: pageEnter 0.4s ease-out both;
+}
+
+.page-section:nth-child(1) { animation-delay: 0ms; }
+.page-section:nth-child(2) { animation-delay: 50ms; }
+.page-section:nth-child(3) { animation-delay: 100ms; }
+.page-section:nth-child(4) { animation-delay: 150ms; }
+.page-section:nth-child(5) { animation-delay: 200ms; }
 
 /* Subtle bounce for attention */
 @keyframes bounce-subtle {

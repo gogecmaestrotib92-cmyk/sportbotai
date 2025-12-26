@@ -97,7 +97,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     return favorites.some(f => f.teamSlug === slug && f.sport === sport)
   }, [favorites])
 
-  // Add a team to favorites
+  // Add a team to favorites - OPTIMISTIC UPDATE
   const addFavorite = async (team: AddFavoriteParams): Promise<boolean> => {
     if (!session?.user?.id) {
       setError('Please sign in to save teams')
@@ -109,9 +109,26 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       return false
     }
 
+    // Create optimistic favorite entry
+    const optimisticFavorite: FavoriteTeam = {
+      id: `temp-${Date.now()}`,
+      teamName: team.teamName,
+      teamSlug: generateSlug(team.teamName),
+      sport: team.sport,
+      league: team.league || null,
+      sportKey: team.sportKey || null,
+      teamLogo: team.teamLogo || null,
+      country: team.country || null,
+      notifyMatches: true,
+      notifyInjuries: false,
+      createdAt: new Date().toISOString()
+    }
+
+    // Optimistically add to state immediately
+    setFavorites(prev => [optimisticFavorite, ...prev])
+    setError(null)
+
     try {
-      setError(null)
-      
       const response = await fetch('/api/favorites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -122,29 +139,40 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
 
       if (!response.ok) {
         if (response.status === 409) {
-          // Already favorited - not an error
+          // Already favorited - just update with real data
           return true
         }
         throw new Error(data.error || 'Failed to add team')
       }
 
-      // Add to local state immediately
-      setFavorites(prev => [data.favorite, ...prev])
+      // Replace optimistic entry with real data from server
+      setFavorites(prev => prev.map(f => 
+        f.id === optimisticFavorite.id ? data.favorite : f
+      ))
       return true
     } catch (err) {
+      // Rollback optimistic update on error
+      setFavorites(prev => prev.filter(f => f.id !== optimisticFavorite.id))
       console.error('Error adding favorite:', err)
       setError(err instanceof Error ? err.message : 'Failed to add team')
       return false
     }
   }
 
-  // Remove by team name + sport
+  // Remove by team name + sport - OPTIMISTIC UPDATE
   const removeFavorite = async (teamName: string, sport: string): Promise<boolean> => {
     if (!session?.user?.id) return false
 
+    const slug = generateSlug(teamName)
+    const favoriteToRemove = favorites.find(f => f.teamSlug === slug && f.sport === sport)
+    
+    if (!favoriteToRemove) return false
+
+    // Optimistically remove from state immediately
+    setFavorites(prev => prev.filter(f => !(f.teamSlug === slug && f.sport === sport)))
+    setError(null)
+
     try {
-      setError(null)
-      
       const params = new URLSearchParams({ teamName, sport })
       const response = await fetch(`/api/favorites?${params}`, {
         method: 'DELETE'
@@ -155,24 +183,28 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         throw new Error(data.error || 'Failed to remove team')
       }
 
-      // Remove from local state
-      const slug = generateSlug(teamName)
-      setFavorites(prev => prev.filter(f => !(f.teamSlug === slug && f.sport === sport)))
       return true
     } catch (err) {
+      // Rollback: re-add the favorite on error
+      setFavorites(prev => [favoriteToRemove, ...prev])
       console.error('Error removing favorite:', err)
       setError(err instanceof Error ? err.message : 'Failed to remove team')
       return false
     }
   }
 
-  // Remove by ID
+  // Remove by ID - OPTIMISTIC UPDATE
   const removeFavoriteById = async (id: string): Promise<boolean> => {
     if (!session?.user?.id) return false
 
+    const favoriteToRemove = favorites.find(f => f.id === id)
+    if (!favoriteToRemove) return false
+
+    // Optimistically remove from state immediately
+    setFavorites(prev => prev.filter(f => f.id !== id))
+    setError(null)
+
     try {
-      setError(null)
-      
       const response = await fetch(`/api/favorites?id=${id}`, {
         method: 'DELETE'
       })
@@ -182,9 +214,10 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         throw new Error(data.error || 'Failed to remove team')
       }
 
-      setFavorites(prev => prev.filter(f => f.id !== id))
       return true
     } catch (err) {
+      // Rollback: re-add the favorite on error
+      setFavorites(prev => [favoriteToRemove, ...prev])
       console.error('Error removing favorite:', err)
       setError(err instanceof Error ? err.message : 'Failed to remove team')
       return false
