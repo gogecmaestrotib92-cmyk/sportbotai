@@ -899,8 +899,19 @@ If their favorite team has a match today/tonight, lead with that information.`;
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: statusMsg })}\n\n`));
               console.log('[AI-Chat-Stream] Fetching real-time context...');
               
-              const searchResult = await perplexity.search(searchMessage, {
-                recency: 'week',
+              // Detect "last game" type queries that need very recent data
+              const isLastGameQuery = /last (game|match|night)|yesterday|most recent|tonight|scored last|played last/i.test(searchMessage);
+              
+              // Add current date to search for recency context
+              const today = new Date();
+              const dateStr = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+              const enhancedSearch = isLastGameQuery 
+                ? `${searchMessage} (as of ${dateStr}, get the most recent game data only)`
+                : searchMessage;
+              
+              const searchResult = await perplexity.search(enhancedSearch, {
+                // Use 'day' for last game queries to get fresher data, 'week' otherwise
+                recency: isLastGameQuery ? 'day' : 'week',
                 model: 'sonar-pro',
                 maxTokens: 1000,
               });
