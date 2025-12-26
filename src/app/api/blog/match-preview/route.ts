@@ -52,10 +52,11 @@ export async function GET(request: NextRequest) {
 
     const result = await generatePreviewsForUpcomingMatches(sportKey, Math.min(limit, 10));
 
-    // Revalidate blog pages so new posts appear immediately
+    // Revalidate blog AND news pages so new posts appear immediately
     if (result.generated > 0) {
       revalidatePath('/blog');
-      console.log('[Match Preview API] Revalidated /blog cache');
+      revalidatePath('/news');
+      console.log('[Match Preview API] Revalidated /blog and /news cache');
     }
 
     return NextResponse.json({
@@ -123,10 +124,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (result.success) {
-      // Revalidate blog pages so new posts appear immediately
+      // Revalidate blog AND news pages so new posts appear immediately
       revalidatePath('/blog');
       revalidatePath(`/blog/${result.slug}`);
-      console.log('[Match Preview API] Revalidated /blog cache');
+      revalidatePath('/news');
+      revalidatePath(`/news/${result.slug}`);
+      console.log('[Match Preview API] Revalidated /blog and /news cache');
 
       return NextResponse.json({
         success: true,
@@ -135,6 +138,7 @@ export async function POST(request: NextRequest) {
         cost: result.cost,
         duration: result.duration,
         url: `/blog/${result.slug}`,
+        newsUrl: `/news/${result.slug}`,
       });
     } else {
       return NextResponse.json(
