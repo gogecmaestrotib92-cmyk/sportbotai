@@ -293,6 +293,35 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           };
         }
         
+        // Save Analysis record for cached responses too (so admin dashboard shows accurate counts)
+        if (userId && creditUsedEarly) {
+          try {
+            const favored = responseData.story?.favored || 'draw';
+            const confidence = responseData.story?.confidence || 'moderate';
+            const matchDateForSave = matchInfo.kickoff ? new Date(matchInfo.kickoff) : new Date();
+            
+            await prisma.analysis.create({
+              data: {
+                userId,
+                sport: matchInfo.sport,
+                league: matchInfo.league || responseData.matchInfo?.league || 'Unknown',
+                homeTeam: matchInfo.homeTeam,
+                awayTeam: matchInfo.awayTeam,
+                matchDate: matchDateForSave,
+                homeWinProb: favored === 'home' ? 0.6 : favored === 'away' ? 0.3 : 0.33,
+                drawProb: favored === 'draw' ? 0.5 : 0.25,
+                awayWinProb: favored === 'away' ? 0.6 : favored === 'home' ? 0.3 : 0.33,
+                riskLevel: confidence === 'strong' ? 'low' : confidence === 'slight' ? 'high' : 'medium',
+                bestValueSide: favored,
+                fullResponse: responseData as any,
+              },
+            });
+            console.log(`[Match-Preview] Analysis saved for user ${userId} (cached response)`);
+          } catch (saveError) {
+            console.error(`[Match-Preview] Failed to save analysis for cached response:`, saveError);
+          }
+        }
+        
         return NextResponse.json({
           ...responseData,
           fromCache: true,
