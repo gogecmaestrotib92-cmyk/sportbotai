@@ -1179,9 +1179,13 @@ export function getSearchVariations(teamName: string, sport: Sport): string[] {
   // Add original
   variations.add(teamName);
   
-  // Add without common prefixes/suffixes
-  const withoutFC = teamName.replace(/\s*(fc|cf|afc|sc)\s*/gi, ' ').trim();
-  if (withoutFC !== teamName) variations.add(withoutFC);
+  // Add without common prefixes/suffixes (FC, CF, AFC, SC, SV, etc.)
+  const withoutPrefix = teamName.replace(/\s*(fc|cf|afc|sc|sv|fk|bk|if)\s*/gi, ' ').trim();
+  if (withoutPrefix !== teamName) variations.add(withoutPrefix);
+  
+  // Also try replacing hyphens with spaces (e.g., "Zulte-Waregem" → "Zulte Waregem")
+  const withSpaces = teamName.replace(/-/g, ' ');
+  if (withSpaces !== teamName) variations.add(withSpaces);
   
   // Add just the main word (e.g., "Manchester United" → "United", "Manchester")
   const words = resolved.split(' ');
