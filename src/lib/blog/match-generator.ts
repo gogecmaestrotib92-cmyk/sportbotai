@@ -440,6 +440,15 @@ function normalizeTeamName(name: string): string {
 }
 
 /**
+ * Result from fetching match analysis, includes data quality for gating
+ */
+interface MatchAnalysisResult {
+  analysis: MatchAnalysisData | null;
+  dataQuality: 'HIGH' | 'MEDIUM' | 'LOW' | 'INSUFFICIENT';
+  hasRealData: boolean; // True if we have actual form/H2H data (not just AI estimation)
+}
+
+/**
  * Fetch match analysis using the Unified Match Service
  * 
  * This ensures blogs use the same data pipeline as:
@@ -447,8 +456,10 @@ function normalizeTeamName(name: string): string {
  * - AI Chat analysis
  * - Agent posts
  * - News/Match previews
+ * 
+ * Returns both analysis data AND quality info for gating blog generation
  */
-async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisData | null> {
+async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisResult> {
   try {
     console.log(`[Match Analysis] Fetching via Unified Match Service: ${match.homeTeam} vs ${match.awayTeam}`);
     
@@ -471,11 +482,35 @@ async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisData |
       }
     );
     
+    // Check if we have real data (form or H2H)
+    const hasHomeForm = (unifiedData.enrichedData.homeForm?.length || 0) > 0;
+    const hasAwayForm = (unifiedData.enrichedData.awayForm?.length || 0) > 0;
+    const hasH2H = (unifiedData.enrichedData.headToHead?.length || 0) > 0;
+    const hasRealData = hasHomeForm && hasAwayForm;
+    
+    // Determine data quality
+    const dataQuality: 'HIGH' | 'MEDIUM' | 'LOW' | 'INSUFFICIENT' = 
+      hasHomeForm && hasAwayForm && hasH2H ? 'HIGH' :
+      hasHomeForm && hasAwayForm ? 'MEDIUM' : 
+      hasHomeForm || hasAwayForm ? 'LOW' : 'INSUFFICIENT';
+    
+    console.log(`[Match Analysis] Data quality: ${dataQuality} (homeForm: ${hasHomeForm}, awayForm: ${hasAwayForm}, h2h: ${hasH2H})`);
+    
     // Convert unified data to MatchAnalysisData format
-    return convertUnifiedToAnalysisData(unifiedData, match);
+    const analysis = convertUnifiedToAnalysisData(unifiedData, match);
+    
+    return {
+      analysis,
+      dataQuality,
+      hasRealData,
+    };
   } catch (error) {
     console.error('[Match Analysis] Failed to fetch via Unified Service:', error);
-    return null;
+    return {
+      analysis: null,
+      dataQuality: 'INSUFFICIENT',
+      hasRealData: false,
+    };
   }
 }
 
@@ -1268,10 +1303,24 @@ export async function generateMatchPreview(match: MatchInfo): Promise<MatchPrevi
 
     // Step 3: Fetch AI analysis from /api/analyze
     console.log('[Match Preview] Step 3/6: Fetching AI analysis...');
-    const analysis = await fetchMatchAnalysis(match);
+    const analysisResult = await fetchMatchAnalysis(match);
+    const { analysis, dataQuality, hasRealData } = analysisResult;
+    
+    // DATA QUALITY GATE: Only generate blogs when we have real match data
+    // This prevents generating content with AI estimation only (no form/H2H)
+    if (!hasRealData) {
+      console.log(`[Match Preview] ⚠️ SKIPPING - Insufficient data quality: ${dataQuality}`);
+      console.log(`[Match Preview] Team resolution likely failed for one or both teams in API-Sports`);
+      return {
+        success: false,
+        error: `Insufficient match data (quality: ${dataQuality}). Requires form data for both teams.`,
+        duration: Date.now() - startTime,
+      };
+    }
+    
     if (analysis) {
       totalCost += 0.02; // Analysis API cost
-      console.log('[Match Preview] AI analysis data received successfully');
+      console.log(`[Match Preview] AI analysis data received (quality: ${dataQuality})`);
     } else {
       console.log('[Match Preview] No AI analysis available, using research only');
     }
