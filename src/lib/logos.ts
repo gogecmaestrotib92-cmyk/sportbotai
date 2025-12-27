@@ -778,6 +778,11 @@ const SOCCER_TEAM_LOGOS: Record<string, string> = {
   'St Johnstone': 'https://media.api-sports.io/football/teams/258.png',
   'ST Johnstone': 'https://media.api-sports.io/football/teams/258.png',
   'Saint Johnstone': 'https://media.api-sports.io/football/teams/258.png',
+  'Livingston': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/259.png',
+  'Livingston FC': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/259.png',
+  'Falkirk': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/254.png',
+  'Falkirk FC': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/254.png',
+  'Falkirk F.C.': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/254.png',
   
   // ============================================
   // UEFA CHAMPIONS LEAGUE / EUROPA LEAGUE TEAMS
