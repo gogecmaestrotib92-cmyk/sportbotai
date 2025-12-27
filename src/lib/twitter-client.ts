@@ -271,7 +271,7 @@ class TwitterClient {
       }
 
       return { success: true };
-    } catch (_error) {
+    } catch {
       return { success: false, error: 'Failed to connect to Twitter API' };
     }
   }

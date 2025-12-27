@@ -1513,22 +1513,22 @@ async function getNFLTeamStats(teamId: number, baseUrl: string): Promise<TeamSea
 
 async function getNFLH2H(homeTeamId: number, awayTeamId: number, baseUrl: string): Promise<{ matches: H2HMatch[], summary: any } | null> {
   const cacheKey = `nfl:h2h:${homeTeamId}:${awayTeamId}`;
-  const cached = getCached<{ matches: H2HMatch[], summary: any }>(cacheKey);
+  const cached = getCached<{ matches: H2HMatch[], summary: { totalMatches: number; homeWins: number; awayWins: number; draws: number } }>(cacheKey);
   if (cached) return cached;
 
   // NFL API supports H2H but not 'last' parameter - we filter/limit in code
-  const response = await apiRequest<any>(baseUrl, `/games?h2h=${homeTeamId}-${awayTeamId}`);
+  const response = await apiRequest<{ response: NFLGameResponse[] }>(baseUrl, `/games?h2h=${homeTeamId}-${awayTeamId}`);
   
   if (!response?.response || response.response.length === 0) return null;
 
   // Sort by date descending and take last 10
   const games = response.response
-    .sort((a: any, b: any) => new Date(b.game?.date?.date || 0).getTime() - new Date(a.game?.date?.date || 0).getTime())
+    .sort((a: NFLGameResponse, b: NFLGameResponse) => new Date(b.game?.date?.date || 0).getTime() - new Date(a.game?.date?.date || 0).getTime())
     .slice(0, 10);
   
   let homeWins = 0, awayWins = 0, draws = 0;
 
-  const matches: H2HMatch[] = games.slice(0, 5).map((g: any) => {
+  const matches: H2HMatch[] = games.slice(0, 5).map((g: NFLGameResponse) => {
     const homeScore = g.scores.home.total;
     const awayScore = g.scores.away.total;
     
@@ -1570,6 +1570,12 @@ async function getNFLH2H(homeTeamId: number, awayTeamId: number, baseUrl: string
 // NFL INJURIES
 // ============================================
 
+interface NFLGameResponse {
+  game?: { date?: { date?: string } };
+  scores: { home: { total: number }; away: { total: number } };
+  teams: { home: { id: number; name: string }; away: { id: number; name: string } };
+}
+
 interface NFLPlayerInjury {
   player: string;
   position: string;
@@ -1585,7 +1591,7 @@ async function getNFLTeamInjuries(teamId: number, baseUrl: string): Promise<NFLP
   const cached = getCached<NFLPlayerInjury[]>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiRequest<any>(baseUrl, `/injuries?team=${teamId}`);
+  const response = await apiRequest<{ response: Array<{ player?: { name?: string; position?: string }; status?: string }> }>(baseUrl, `/injuries?team=${teamId}`);
   
   if (!response?.response || response.response.length === 0) {
     setCache(cacheKey, []);
@@ -1594,7 +1600,7 @@ async function getNFLTeamInjuries(teamId: number, baseUrl: string): Promise<NFLP
 
   const injuries: NFLPlayerInjury[] = response.response
     .slice(0, 10) // Limit to 10 injuries per team
-    .map((item: any) => ({
+    .map((item) => ({
       player: item.player?.name || 'Unknown',
       position: item.player?.position || 'Unknown',
       reason: item.status?.toLowerCase()?.includes('suspend') 
@@ -1818,22 +1824,23 @@ function getCurrentNBASeason(): number {
 }
 
 // Cache for all NBA teams (loaded once)
-let allNBATeams: any[] | null = null;
+interface NBATeam { id: number; name?: string; nickname?: string; city?: string; nbaFranchise?: boolean }
+let allNBATeams: NBATeam[] | null = null;
 
-async function getAllNBATeams(baseUrl: string): Promise<any[]> {
+async function getAllNBATeams(baseUrl: string): Promise<NBATeam[]> {
   if (allNBATeams) return allNBATeams;
   
   const cacheKey = 'nba:all-teams';
-  const cached = getCached<any[]>(cacheKey);
+  const cached = getCached<NBATeam[]>(cacheKey);
   if (cached) {
     allNBATeams = cached;
     return cached;
   }
   
-  const response = await apiRequest<any>(baseUrl, '/teams?league=standard');
+  const response = await apiRequest<{ response: NBATeam[] }>(baseUrl, '/teams?league=standard');
   if (response?.response) {
     // Filter to NBA franchise teams only
-    allNBATeams = response.response.filter((t: any) => t.nbaFranchise === true);
+    allNBATeams = response.response.filter((t) => t.nbaFranchise === true);
     setCache(cacheKey, allNBATeams);
     console.log(`[NBA] Loaded ${allNBATeams?.length || 0} NBA teams`);
     return allNBATeams || [];
@@ -2418,6 +2425,7 @@ async function getMMAFighterFights(fighterId: number, baseUrl: string): Promise<
   return finishedFights;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function getMMAH2H(_fighter1Id: number, _fighter2Id: number, _baseUrl: string): Promise<{ matches: H2HMatch[], summary: { totalMatches: number, homeWins: number, awayWins: number, draws: number } } | null> {
   // For MMA, we need to search through both fighters' fight histories to find common opponents
   // The API doesn't have a direct H2H endpoint, so this is limited
