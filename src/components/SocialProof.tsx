@@ -188,7 +188,7 @@ export function TestimonialCard({ quote, author, role, rating = 5 }: Testimonial
         </div>
         <div>
           <p className="text-white text-sm font-medium">{author}</p>
-          {role && <p className="text-white/40 text-xs">{role}</p>}
+          {role && <p className="text-white/60 text-xs">{role}</p>}
         </div>
       </div>
     </div>

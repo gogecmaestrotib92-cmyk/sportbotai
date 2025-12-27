@@ -6,7 +6,7 @@
  * - Mobile detection (static image on phones)
  * - Accessibility (respects reduced motion)
  * - Dark overlay for text readability
- * - Lazy loading for performance
+ * - Lazy loading for performance (deferred until after LCP)
  */
 
 'use client';
@@ -37,10 +37,11 @@ export default function VideoBackground({
   className = '',
 }: VideoBackgroundProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(true); // Default to mobile to prevent video load on SSR
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false); // Defer video loading
 
   useEffect(() => {
     // Check for mobile device
@@ -61,14 +62,21 @@ export default function VideoBackground({
     };
     motionQuery.addEventListener('change', handleMotionChange);
     
+    // Defer video loading until after initial render (LCP optimization)
+    // Wait 2 seconds to ensure LCP has completed
+    const timer = setTimeout(() => {
+      setShouldLoadVideo(true);
+    }, 2000);
+    
     return () => {
       window.removeEventListener('resize', checkMobile);
       motionQuery.removeEventListener('change', handleMotionChange);
+      clearTimeout(timer);
     };
   }, []);
 
-  // Should we show video?
-  const showVideo = !hasError && !prefersReducedMotion && !(disableOnMobile && isMobile);
+  // Should we show video? Only after deferred loading and on desktop
+  const showVideo = shouldLoadVideo && !hasError && !prefersReducedMotion && !(disableOnMobile && isMobile);
 
   // Try to play video when conditions are met
   useEffect(() => {
@@ -105,7 +113,7 @@ export default function VideoBackground({
         />
       )}
       
-      {/* Video (only on desktop with no reduced motion) */}
+      {/* Video (only on desktop with no reduced motion, deferred 2s after page load) */}
       {showVideo && (
         <video
           ref={videoRef}
@@ -116,7 +124,7 @@ export default function VideoBackground({
           muted
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           poster={posterSrc}
           onLoadedData={() => setIsVideoLoaded(true)}
           onError={() => setHasError(true)}

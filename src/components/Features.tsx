@@ -53,7 +53,7 @@ export default function Features() {
     <section className="bg-bg-card section-container">
       <ScrollReveal animation="fade-up">
         <div className="text-center mb-14">
-          <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-3">Features</p>
+          <p className="text-blue-400 font-semibold text-sm uppercase tracking-wider mb-3">Features</p>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Everything you need for smarter analysis
           </h2>

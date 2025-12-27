@@ -75,7 +75,7 @@ export function StaggeredItem({
   return (
     <div
       className={`animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both ${className}`}
-      style={{ animationDelay: `${delay}ms` }}
+      style={{ animationDelay: `${delay}ms`, willChange: 'opacity, transform' }}
     >
       {children}
     </div>

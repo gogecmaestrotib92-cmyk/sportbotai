@@ -219,7 +219,7 @@ export default function MatchCard({
             </span>
           </div>
         ) : (
-          <span className="text-gray-600 text-sm font-medium px-2 group-hover:text-gray-400 transition-colors">vs</span>
+          <span className="text-gray-400 text-sm font-medium px-2 group-hover:text-gray-300 transition-colors">vs</span>
         )}
 
         {/* Away Team */}

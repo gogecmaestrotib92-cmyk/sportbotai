@@ -57,7 +57,7 @@ export default function HowItWorks() {
     <section className="bg-bg-primary section-container">
       <ScrollReveal animation="fade-up">
         <div className="text-center mb-14">
-          <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-3">How It Works</p>
+          <p className="text-blue-400 font-semibold text-sm uppercase tracking-wider mb-3">How It Works</p>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Four simple steps to smarter analysis
           </h2>

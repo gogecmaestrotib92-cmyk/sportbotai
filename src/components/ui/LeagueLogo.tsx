@@ -14,6 +14,16 @@ import { getLeagueLogo } from '@/lib/logos';
 // In-memory cache for loaded images (persists across component instances)
 const loadedImages = new Set<string>();
 
+/**
+ * Proxy external logo URLs through our API for better caching and resizing
+ */
+function getProxiedLogoUrl(url: string, pixelSize: number = 100): string {
+  if (!url || url.startsWith('data:') || url.startsWith('/')) {
+    return url;
+  }
+  return `/api/logo?url=${encodeURIComponent(url)}&size=${pixelSize}`;
+}
+
 interface LeagueLogoProps {
   leagueName: string;
   sport?: string;
@@ -29,6 +39,15 @@ const sizeClasses = {
   md: 'w-9 h-9',
   lg: 'w-12 h-12',
   xl: 'w-16 h-16',
+};
+
+// Pixel sizes for image optimization (2x for retina)
+const sizePixels = {
+  xs: 40,
+  sm: 56,
+  md: 72,
+  lg: 96,
+  xl: 128,
 };
 
 // Font sizes for fallback initials
@@ -47,8 +66,10 @@ export default function LeagueLogo({
   className = '',
   priority = false 
 }: LeagueLogoProps) {
-  const logoUrl = getLeagueLogo(leagueName, sport);
-  const isFallback = !logoUrl || logoUrl.startsWith('data:');
+  const rawLogoUrl = getLeagueLogo(leagueName, sport);
+  const isFallback = !rawLogoUrl || rawLogoUrl.startsWith('data:');
+  // Use proxied URL for better caching + resizing
+  const logoUrl = isFallback ? rawLogoUrl : getProxiedLogoUrl(rawLogoUrl, sizePixels[size]);
   
   // Check if image was already loaded (cached in memory)
   const [hasError, setHasError] = useState(false);

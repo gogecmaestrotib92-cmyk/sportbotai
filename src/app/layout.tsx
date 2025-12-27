@@ -37,7 +37,7 @@ export const viewport: Viewport = {
   themeColor: SITE_CONFIG.themeColor,
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  maximumScale: 5,
   viewportFit: 'cover',
 };
 
@@ -167,13 +167,16 @@ export default function RootLayout({
         
         {/* DNS Prefetch & Preconnect for Logo CDNs - faster image loading */}
         <link rel="dns-prefetch" href="//a.espncdn.com" />
+        <link rel="dns-prefetch" href="//media.api-sports.io" />
+        <link rel="dns-prefetch" href="//crests.football-data.org" />
         <link rel="dns-prefetch" href="//media-cdn.cortextech.io" />
         <link rel="dns-prefetch" href="//media-cdn.incrowdsports.com" />
         <link rel="dns-prefetch" href="//upload.wikimedia.org" />
-        <link rel="dns-prefetch" href="//crests.football-data.org" />
         <link rel="dns-prefetch" href="//flagcdn.com" />
+        {/* Preconnect to top 4 origins for LCP improvement */}
         <link rel="preconnect" href="https://a.espncdn.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://media-cdn.cortextech.io" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://media.api-sports.io" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://crests.football-data.org" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://flagcdn.com" crossOrigin="anonymous" />
         
         {/* AI/LLM Discovery Links */}

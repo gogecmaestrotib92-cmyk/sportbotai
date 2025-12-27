@@ -78,7 +78,7 @@ export default function PricingTeaser() {
   return (
     <section className="bg-bg-primary section-container">
       <div className="text-center mb-8">
-        <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-3">Pricing</p>
+        <p className="text-blue-400 font-semibold text-sm uppercase tracking-wider mb-3">Pricing</p>
         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
           Simple, transparent pricing
         </h2>
@@ -89,9 +89,12 @@ export default function PricingTeaser() {
 
       {/* Single Billing Toggle at Top */}
       <div className="flex items-center justify-center gap-4 mb-8">
-        <span className={`text-sm font-medium transition-colors ${!isYearlyBilling ? 'text-white' : 'text-gray-500'}`}>Monthly</span>
+        <span className={`text-sm font-medium transition-colors ${!isYearlyBilling ? 'text-white' : 'text-gray-400'}`}>Monthly</span>
         <button
           onClick={toggleBilling}
+          role="switch"
+          aria-checked={isYearlyBilling}
+          aria-label="Toggle between monthly and yearly billing"
           className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
             isYearlyBilling ? 'bg-primary' : 'bg-gray-600'
           }`}
@@ -102,9 +105,9 @@ export default function PricingTeaser() {
             }`}
           />
         </button>
-        <span className={`text-sm font-medium transition-colors ${isYearlyBilling ? 'text-white' : 'text-gray-500'}`}>
+        <span className={`text-sm font-medium transition-colors ${isYearlyBilling ? 'text-white' : 'text-gray-400'}`}>
           Yearly
-          <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Save up to 52%</span>
+          <span className="ml-2 text-xs bg-primary/30 text-white px-2 py-0.5 rounded-full">Save up to 52%</span>
         </span>
       </div>
 
@@ -229,7 +232,7 @@ export default function PricingTeaser() {
       </div>
 
       <div className="text-center mt-10">
-        <Link href="/pricing" className="inline-flex items-center gap-2 text-primary font-medium hover:text-accent transition-colors">
+        <Link href="/pricing" className="inline-flex items-center gap-2 text-blue-400 font-medium hover:text-accent transition-colors">
           View full pricing details
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

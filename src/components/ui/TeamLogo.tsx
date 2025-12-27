@@ -18,16 +18,17 @@ import FighterFlag from './FighterFlag';
 const loadedLogos = new Set<string>();
 
 /**
- * Proxy external logo URLs through our API for better caching
+ * Proxy external logo URLs through our API for better caching and resizing
  * Only proxy external URLs, not data URIs or local URLs
  */
-function getProxiedLogoUrl(url: string): string {
+function getProxiedLogoUrl(url: string, pixelSize: number = 100): string {
   // Don't proxy data URIs or local URLs
   if (url.startsWith('data:') || url.startsWith('/')) {
     return url;
   }
   // Proxy external URLs for better caching (7 days vs ESPN's short TTL)
-  return `/api/logo?url=${encodeURIComponent(url)}`;
+  // Include size parameter for ESPN images to be resized by their combiner
+  return `/api/logo?url=${encodeURIComponent(url)}&size=${pixelSize}`;
 }
 
 interface TeamLogoProps {
@@ -38,6 +39,14 @@ interface TeamLogoProps {
   className?: string;
   priority?: boolean;
 }
+
+// Map size names to pixel values for image optimization
+const sizePixels = {
+  sm: 48,  // 24px * 2 for retina
+  md: 64,  // 32px * 2 for retina
+  lg: 80,  // 40px * 2 for retina
+  xl: 96,  // 48px * 2 for retina
+};
 
 const sizeClasses = {
   sm: 'w-6 h-6',
@@ -80,8 +89,9 @@ export default function TeamLogo({
   const isIndividual = isIndividualSport(sport);
   const rawLogoUrl = isIndividual ? '' : getTeamLogo(teamName, sport, league);
   const isFallback = !isIndividual && rawLogoUrl.startsWith('data:');
-  // Use proxied URL for external logos (better caching)
-  const logoUrl = isFallback ? rawLogoUrl : getProxiedLogoUrl(rawLogoUrl);
+  // Use proxied URL for external logos (better caching + resizing for ESPN)
+  const pixelSize = sizePixels[size];
+  const logoUrl = isFallback ? rawLogoUrl : getProxiedLogoUrl(rawLogoUrl, pixelSize);
   
   // All hooks must be called unconditionally at the top level
   const [hasError, setHasError] = useState(false);

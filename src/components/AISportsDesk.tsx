@@ -208,7 +208,7 @@ export default function AISportsDesk({ sport, limit = 10, compact = false }: AIS
         <div className="text-center pt-4">
           <button 
             onClick={fetchPosts}
-            className="text-sm text-primary hover:text-primary/80 transition-colors"
+            className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
           >
             Refresh Feed
           </button>

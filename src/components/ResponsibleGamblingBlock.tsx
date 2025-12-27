@@ -39,7 +39,7 @@ export default function ResponsibleGamblingBlock() {
                 href="/responsible-gambling" 
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-bg-card hover:bg-bg-primary text-gray-300 rounded-lg font-medium transition-colors text-sm border border-divider"
               >
-                Learn more
+                Responsible gambling guide
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>

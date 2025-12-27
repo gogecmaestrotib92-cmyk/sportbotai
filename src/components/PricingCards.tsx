@@ -172,9 +172,12 @@ export default function PricingCards() {
     <div className="relative">
       {/* Single Billing Toggle at Top */}
       <div className="flex items-center justify-center gap-4 mb-8">
-        <span className={`text-sm font-medium transition-colors ${!isYearlyBilling ? 'text-white' : 'text-gray-500'}`}>Monthly</span>
+        <span className={`text-sm font-medium transition-colors ${!isYearlyBilling ? 'text-white' : 'text-gray-400'}`}>Monthly</span>
         <button
           onClick={toggleBilling}
+          role="switch"
+          aria-checked={isYearlyBilling}
+          aria-label="Toggle between monthly and yearly billing"
           className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
             isYearlyBilling ? 'bg-primary' : 'bg-gray-600'
           }`}
@@ -185,14 +188,14 @@ export default function PricingCards() {
             }`}
           />
         </button>
-        <span className={`text-sm font-medium transition-colors ${isYearlyBilling ? 'text-white' : 'text-gray-500'}`}>
+        <span className={`text-sm font-medium transition-colors ${isYearlyBilling ? 'text-white' : 'text-gray-400'}`}>
           Yearly
-          <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Save up to 52%</span>
+          <span className="ml-2 text-xs bg-primary/30 text-white px-2 py-0.5 rounded-full">Save up to 52%</span>
         </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
-        {/* Free Plan Card */}
+        {/* Free Plan Card */}}
         <div className={`rounded-card p-5 sm:p-6 bg-bg-card ${
           currentPlan === 'FREE' ? 'border-2 border-accent' : 'border border-divider'
         } relative`}>
