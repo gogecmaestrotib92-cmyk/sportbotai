@@ -1252,18 +1252,33 @@ function transformToNewsContent(
   </a>
 </div>`;
   
-  // Replace any existing CTA boxes at the end with news-style box
-  newsContent = newsContent.replace(
-    /<div[^>]*style="[^"]*background:\s*linear-gradient[^"]*"[^>]*>[\s\S]*?<\/div>\s*$/i,
-    newsEndBox
-  );
+  // Don't strip/replace - just use the first few sections of the blog content for news
+  // Take content up to and including Form Analysis sections (about first 3-4 sections)
+  const sections = newsContent.split(/<h2[^>]*>/i);
   
-  // If no CTA box was at the end, append the news box
-  if (!newsContent.includes('More ' + league + ' Coverage')) {
-    newsContent += newsEndBox;
+  // Keep Match Overview + Both Form Analysis sections + maybe Head to Head
+  // Each section starts at <h2>, so we take first 4-5 sections
+  let newsArticle = '';
+  const maxSections = 5; // Match Overview, Home Form, Away Form, H2H, maybe Key Stats
+  
+  for (let i = 0; i < Math.min(sections.length, maxSections); i++) {
+    if (i === 0) {
+      // First part is before first <h2>
+      newsArticle = sections[i];
+    } else {
+      newsArticle += '<h2>' + sections[i];
+    }
   }
   
-  return newsContent;
+  // Clean up any trailing incomplete HTML
+  newsArticle = newsArticle.replace(/<h2[^>]*>[^<]*$/, '');
+  
+  // Add the news end box
+  if (!newsArticle.includes('More ' + league + ' Coverage')) {
+    newsArticle += newsEndBox;
+  }
+  
+  return newsArticle;
 }
 
 // ============================================
