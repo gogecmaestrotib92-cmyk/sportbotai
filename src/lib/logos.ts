@@ -988,10 +988,11 @@ const SOCCER_TEAM_LOGOS: Record<string, string> = {
   'SV Zulte-Waregem': 'https://a.espncdn.com/i/teamlogos/soccer/500/4691.png',
   'Zulte-Waregem': 'https://a.espncdn.com/i/teamlogos/soccer/500/4691.png',
   'Essevee': 'https://a.espncdn.com/i/teamlogos/soccer/500/4691.png',
-  'RAAL La Louvière': 'https://a.espncdn.com/i/teamlogos/soccer/500/131235.png',
-  'RAAL La Louviere': 'https://a.espncdn.com/i/teamlogos/soccer/500/131235.png',
-  'La Louvière': 'https://a.espncdn.com/i/teamlogos/soccer/500/131235.png',
-  'La Louviere': 'https://a.espncdn.com/i/teamlogos/soccer/500/131235.png',
+  'RAAL La Louvière': 'https://media.api-sports.io/football/teams/1393.png',
+  'RAAL La Louviere': 'https://media.api-sports.io/football/teams/1393.png',
+  'La Louvière': 'https://media.api-sports.io/football/teams/1393.png',
+  'La Louviere': 'https://media.api-sports.io/football/teams/1393.png',
+  'RAAL': 'https://media.api-sports.io/football/teams/1393.png',
   
   // ============================================
   // A-LEAGUE (Australia & New Zealand) - football-data.org
