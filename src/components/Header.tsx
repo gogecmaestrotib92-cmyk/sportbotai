@@ -115,7 +115,7 @@ export default function Header() {
         transition-all duration-300 ease-out
         ${isVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'}
         ${isScrolled 
-          ? 'bg-bg/80 backdrop-blur-xl border-b border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.3)]' 
+          ? 'bg-black/50 backdrop-blur-xl border-b border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.3)]' 
           : 'bg-transparent border-b border-transparent'
         }
       `}

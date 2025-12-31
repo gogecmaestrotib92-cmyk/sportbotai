@@ -6,6 +6,7 @@
 
 import { Metadata } from 'next';
 import PricingCards from '@/components/PricingCards';
+import FAQ, { pricingFAQData } from '@/components/FAQ';
 import { META, SITE_CONFIG, getFAQSchema, getPricingSchema, getPricingBreadcrumb } from '@/lib/seo';
 
 export const metadata: Metadata = {
@@ -94,46 +95,12 @@ export default function PricingPage() {
         <PricingCards />
       </section>
 
-      {/* FAQ section */}
-      <section className="section-container relative">
-        <p className="text-violet font-semibold text-sm uppercase tracking-wider text-center mb-3">FAQ</p>
-        <h2 className="text-2xl font-extrabold text-white text-center mb-8 tracking-tight">
-          Frequently Asked Questions
-        </h2>
-        
-        <div className="max-w-3xl mx-auto space-y-6">
-          <div className="card-glass p-6">
-            <h3 className="font-bold text-white mb-2">Can I cancel my subscription?</h3>
-            <p className="text-text-secondary">
-              Yes, you can cancel your subscription at any time. There are no fixed-term contracts. 
-              Access remains active until the end of the paid period.
-            </p>
-          </div>
-
-          <div className="card-glass p-6">
-            <h3 className="font-bold text-white mb-2">What payment methods are supported?</h3>
-            <p className="text-text-secondary">
-              We accept all major cards (Visa, Mastercard, Amex) through the secure Stripe payment system.
-            </p>
-          </div>
-
-          <div className="card-glass p-6">
-            <h3 className="font-bold text-white mb-2">Are analyses a guarantee of winnings?</h3>
-            <p className="text-text-secondary">
-              <strong>No.</strong> SportBot AI is an analytical tool that provides estimates based on available data. 
-              Sports betting always carries risk and we cannot guarantee any outcome.
-            </p>
-          </div>
-
-          <div className="card-glass p-6">
-            <h3 className="font-bold text-white mb-2">What do I get with the Free plan?</h3>
-            <p className="text-text-secondary">
-              The Free plan includes 1 match analysis and 1 AI chat message to try out the platform 
-              before deciding to upgrade.
-            </p>
-          </div>
-        </div>
-      </section>
+      {/* FAQ section - accordion style */}
+      <FAQ 
+        items={pricingFAQData} 
+        title="Frequently Asked Questions" 
+        label="FAQ"
+      />
 
       {/* Disclaimer */}
       <section className="bg-warning/5 border-t border-warning/20 py-8 relative">

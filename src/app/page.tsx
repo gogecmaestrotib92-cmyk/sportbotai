@@ -15,6 +15,7 @@ import HowItWorks from '@/components/HowItWorks';
 import WhyNotTipster from '@/components/WhyNotTipster';
 import Features from '@/components/Features';
 import PricingTeaser from '@/components/PricingTeaser';
+import FAQ from '@/components/FAQ';
 import ResponsibleGamblingBlock from '@/components/ResponsibleGamblingBlock';
 import { StatsStrip, TrustBadges } from '@/components/SocialProof';
 import { getOrganizationSchema, getWebsiteSchema, getMatchAnalyzerSchema, getAIDeskSchema, getHomepageFAQSchema, getHomeBreadcrumb } from '@/lib/seo';
@@ -86,6 +87,9 @@ export default function HomePage() {
 
       {/* Pricing teaser */}
       <PricingTeaser />
+
+      {/* FAQ section */}
+      <FAQ />
 
       {/* Trust badges */}
       <div className="py-8 bg-bg">
