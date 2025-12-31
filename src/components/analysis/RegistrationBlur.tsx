@@ -23,6 +23,17 @@ interface RegistrationBlurProps {
   title?: string;
   /** Optional description for the blur overlay */
   description?: string;
+  /** i18n translations */
+  translations?: {
+    createFreeAccount: string;
+    alreadyHaveAccount: string;
+    signIn: string;
+    matchSignals: string;
+    aiInsights: string;
+    gameFlow: string;
+  };
+  /** Locale for proper link routing */
+  locale?: 'en' | 'sr';
 }
 
 export function RegistrationBlur({
@@ -30,7 +41,20 @@ export function RegistrationBlur({
   isAuthenticated,
   title = 'Full Analysis Unlocked',
   description = 'Create a free account to access complete match intelligence, signals, and AI insights.',
+  translations,
+  locale = 'en',
 }: RegistrationBlurProps) {
+  const localePath = locale === 'sr' ? '/sr' : '';
+  
+  // Default translations
+  const t = translations || {
+    createFreeAccount: 'Create Free Account',
+    alreadyHaveAccount: 'Already have an account?',
+    signIn: 'Sign in',
+    matchSignals: 'Match Signals',
+    aiInsights: 'AI Insights',
+    gameFlow: 'Game Flow',
+  };
   // If authenticated, just render children normally
   if (isAuthenticated) {
     return <>{children}</>;
@@ -75,10 +99,10 @@ export function RegistrationBlur({
           
           {/* CTA Button */}
           <Link
-            href="/register"
+            href={`${localePath}/register`}
             className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg shadow-emerald-500/20"
           >
-            <span>Create Free Account</span>
+            <span>{t.createFreeAccount}</span>
             <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
@@ -86,9 +110,9 @@ export function RegistrationBlur({
           
           {/* Sign in link */}
           <p className="mt-3 sm:mt-4 text-[10px] sm:text-xs text-zinc-500">
-            Already have an account?{' '}
-            <Link href="/login" className="text-emerald-400 hover:text-emerald-300 transition-colors">
-              Sign in
+            {t.alreadyHaveAccount}{' '}
+            <Link href={`${localePath}/login`} className="text-emerald-400 hover:text-emerald-300 transition-colors">
+              {t.signIn}
             </Link>
           </p>
           
@@ -96,13 +120,13 @@ export function RegistrationBlur({
           <div className="mt-3 sm:mt-6 pt-2 sm:pt-4 border-t border-white/5">
             <div className="flex flex-wrap justify-center gap-2 sm:gap-3 text-[9px] sm:text-[10px] text-zinc-500 uppercase tracking-wider">
               <span className="flex items-center gap-1">
-                <span className="text-emerald-400">✓</span> Match Signals
+                <span className="text-emerald-400">✓</span> {t.matchSignals}
               </span>
               <span className="flex items-center gap-1">
-                <span className="text-emerald-400">✓</span> AI Insights
+                <span className="text-emerald-400">✓</span> {t.aiInsights}
               </span>
               <span className="flex items-center gap-1">
-                <span className="text-emerald-400">✓</span> Game Flow
+                <span className="text-emerald-400">✓</span> {t.gameFlow}
               </span>
             </div>
           </div>

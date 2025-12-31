@@ -113,15 +113,35 @@ export const authOptions: NextAuthOptions = {
       // Get the proper base URL
       const siteUrl = process.env.NEXTAUTH_URL || baseUrl;
       
-      // If the URL contains /analyzer, use it
-      if (url.includes('/analyzer')) {
-        if (url.startsWith('/')) {
-          return `${siteUrl}${url}`;
-        }
-        return url;
+      // Normalize the URL to get just the path
+      let urlPath = url;
+      if (url.startsWith(siteUrl)) {
+        urlPath = url.slice(siteUrl.length) || '/';
+      } else if (url.startsWith('http://') || url.startsWith('https://')) {
+        // External URL - don't allow
+        return `${siteUrl}/analyzer`;
       }
       
-      // For all other cases (including home page, empty, etc.), go to analyzer
+      // Ensure urlPath starts with /
+      if (!urlPath.startsWith('/')) {
+        urlPath = '/' + urlPath;
+      }
+      
+      // Check if the URL contains Serbian locale
+      const isSerbianPath = urlPath.startsWith('/sr/') || urlPath === '/sr';
+      
+      // If it's a Serbian path, preserve it completely
+      if (isSerbianPath) {
+        return `${siteUrl}${urlPath}`;
+      }
+      
+      // Check for specific valid pages
+      const validPaths = ['/analyzer', '/matches', '/ai-desk', '/pricing', '/market-alerts', '/account', '/my-teams', '/history'];
+      if (validPaths.some(path => urlPath.includes(path))) {
+        return `${siteUrl}${urlPath}`;
+      }
+      
+      // Default: go to analyzer
       return `${siteUrl}/analyzer`;
     },
     async jwt({ token, user, trigger }) {

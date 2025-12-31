@@ -23,6 +23,17 @@ interface PremiumBlurProps {
   title?: string;
   /** Optional description for the blur overlay */
   description?: string;
+  /** i18n translations */
+  translations?: {
+    whatYouGet: string;
+    matchSnapshotInsights: string;
+    gameFlowPredictions: string;
+    valueDetection: string;
+    analysesPerDay: string;
+    upgradeToProPrice: string;
+  };
+  /** Locale for proper link routing */
+  locale?: 'en' | 'sr';
 }
 
 export function PremiumBlur({
@@ -30,7 +41,20 @@ export function PremiumBlur({
   isPro,
   title = 'Pro Match Analysis',
   description = 'Unlock detailed match insights, game flow predictions, and value detection.',
+  translations,
+  locale = 'en',
 }: PremiumBlurProps) {
+  const localePath = locale === 'sr' ? '/sr' : '';
+  
+  // Default translations with correct price
+  const t = translations || {
+    whatYouGet: 'What you get:',
+    matchSnapshotInsights: 'Match snapshot & key insights',
+    gameFlowPredictions: 'Game flow predictions',
+    valueDetection: 'Value detection & odds analysis',
+    analysesPerDay: '30 analyses per day',
+    upgradeToProPrice: 'Upgrade to Pro – $19.99/mo',
+  };
   // If Pro user, just render children normally
   if (isPro) {
     return <>{children}</>;
@@ -53,33 +77,33 @@ export function PremiumBlur({
         
         {/* Feature List */}
         <div className="bg-black/30 rounded-xl p-4 mb-5 text-left max-w-xs mx-auto">
-          <h4 className="font-semibold text-white mb-3 text-center text-sm">What you get:</h4>
+          <h4 className="font-semibold text-white mb-3 text-center text-sm">{t.whatYouGet}</h4>
           <ul className="space-y-2 text-zinc-300 text-sm">
             <li className="flex items-center gap-2">
               <span className="text-violet-400">✓</span>
-              Match snapshot & key insights
+              {t.matchSnapshotInsights}
             </li>
             <li className="flex items-center gap-2">
               <span className="text-violet-400">✓</span>
-              Game flow predictions
+              {t.gameFlowPredictions}
             </li>
             <li className="flex items-center gap-2">
               <span className="text-violet-400">✓</span>
-              Value detection & odds analysis
+              {t.valueDetection}
             </li>
             <li className="flex items-center gap-2">
               <span className="text-violet-400">✓</span>
-              30 analyses per day
+              {t.analysesPerDay}
             </li>
           </ul>
         </div>
         
         {/* CTA Button */}
         <Link
-          href="/pricing"
+          href={`${localePath}/pricing`}
           className="inline-block bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors"
         >
-          Upgrade to Pro – €9/mo
+          {t.upgradeToProPrice}
         </Link>
       </div>
     </div>

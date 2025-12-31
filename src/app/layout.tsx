@@ -8,9 +8,9 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { Suspense } from 'react';
 import './globals.css';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import MobileBottomNav from '@/components/MobileBottomNav';
+import HeaderI18n from '@/components/HeaderI18n';
+import FooterI18n from '@/components/FooterI18n';
+import MobileBottomNavI18n from '@/components/MobileBottomNavI18n';
 import MobileQuickActions from '@/components/MobileQuickActions';
 import NavigationProgress from '@/components/NavigationProgress';
 import { AuthProvider } from '@/components/auth';
@@ -211,18 +211,18 @@ export default function RootLayout({
                 
                 {/* Flex container for sticky footer */}
                 <div className="min-h-screen flex flex-col pb-16 md:pb-0 pt-16">
-                  <Header />
+                  <HeaderI18n />
                   
                   {/* Main content */}
                   <main id="main-content" className="flex-grow" role="main">
                     {children}
                   </main>
                   
-                  <Footer />
+                  <FooterI18n />
                 </div>
                 
                 {/* Mobile Bottom Navigation */}
-                <MobileBottomNav />
+                <MobileBottomNavI18n />
                 
                 {/* Mobile Quick Actions FAB */}
                 <MobileQuickActions />

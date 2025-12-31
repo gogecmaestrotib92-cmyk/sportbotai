@@ -46,6 +46,10 @@
     {
       "path": "/api/cron/fetch-clv",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/translate",
+      "schedule": "30 0,3,6,8,10,12,14,16,18,21 * * *"
     }
   ]
 }

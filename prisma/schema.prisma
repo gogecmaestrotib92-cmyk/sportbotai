@@ -146,6 +146,18 @@ model BlogPost {
   sport              String?
   newsContent        String?
   newsTitle          String?
+  
+  // Serbian translations
+  slugSr             String?
+  titleSr            String?
+  excerptSr          String?
+  contentSr          String?
+  metaTitleSr        String?
+  metaDescriptionSr  String?
+  newsTitleSr        String?
+  newsContentSr      String?
+  translatedAt       DateTime?    // When Serbian translation was done
+  
   keyword            BlogKeyword? @relation(fields: [keywordId], references: [id])
 
   @@index([slug])
@@ -155,6 +167,7 @@ model BlogPost {
   @@index([matchId])
   @@index([matchDate])
   @@index([postType])
+  @@index([translatedAt])
 }
 
 model FavoriteTeam {

@@ -31,10 +31,17 @@ export async function GET(
 
     const { data: events, requestsRemaining } = await theOddsClient.getEvents(sport);
 
-    // Sort by start time
-    const sortedEvents = events.sort(
-      (a, b) => new Date(a.commence_time).getTime() - new Date(b.commence_time).getTime()
-    );
+    // Sort by start time and transform to camelCase
+    const sortedEvents = events
+      .sort((a, b) => new Date(a.commence_time).getTime() - new Date(b.commence_time).getTime())
+      .map(event => ({
+        matchId: event.id,
+        sportKey: event.sport_key,
+        sportTitle: event.sport_title,
+        commenceTime: event.commence_time,
+        homeTeam: event.home_team,
+        awayTeam: event.away_team,
+      }));
 
     return NextResponse.json({
       events: sortedEvents,

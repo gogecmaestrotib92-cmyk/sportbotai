@@ -3,6 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import ProBadge from '@/components/ProBadge';
 
 // Admin emails - only these users see admin link
@@ -16,9 +17,14 @@ export const USAGE_UPDATED_EVENT = 'sportbot:usage-updated';
 
 export function UserMenu() {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  
+  // Detect if we're on Serbian version
+  const isSerbian = pathname?.startsWith('/sr');
+  const localePath = (path: string) => isSerbian ? `/sr${path}` : path;
   
   // Use live plan from API, fallback to session
   const [livePlan, setLivePlan] = useState<string>('FREE');
@@ -98,21 +104,27 @@ export function UserMenu() {
     );
   }
 
+  // i18n labels
+  const t = {
+    signIn: isSerbian ? 'Prijavi se' : 'Sign in',
+    getStarted: isSerbian ? 'Započni' : 'Get Started',
+  };
+
   // Not authenticated
   if (!session) {
     return (
       <div className="flex items-center gap-3">
         <Link
-          href="/login"
+          href={localePath('/login')}
           className="text-text-secondary hover:text-text-primary transition-colors text-sm font-medium"
         >
-          Sign in
+          {t.signIn}
         </Link>
         <Link
-          href="/register"
+          href={localePath('/register')}
           className="btn-primary text-sm py-2 px-4"
         >
-          Get Started
+          {t.getStarted}
         </Link>
       </div>
     );
@@ -203,7 +215,7 @@ export function UserMenu() {
             )}
             
             <Link
-              href="/my-teams"
+              href={localePath('/my-teams')}
               onClick={closeMenu}
               className="flex items-center gap-3 px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-tertiary transition-colors"
               role="menuitem"
@@ -211,11 +223,11 @@ export function UserMenu() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              My Teams
+              {isSerbian ? 'Moji Timovi' : 'My Teams'}
             </Link>
 
             <Link
-              href="/matches"
+              href={localePath('/matches')}
               onClick={closeMenu}
               className="flex items-center gap-3 px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-tertiary transition-colors"
               role="menuitem"
@@ -223,11 +235,11 @@ export function UserMenu() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
-              Matches
+              {isSerbian ? 'Mečevi' : 'Matches'}
             </Link>
 
             <Link
-              href="/account"
+              href={localePath('/account')}
               onClick={closeMenu}
               className="flex items-center gap-3 px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-tertiary transition-colors"
               role="menuitem"
@@ -235,12 +247,12 @@ export function UserMenu() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              My Account
+              {isSerbian ? 'Moj Nalog' : 'My Account'}
             </Link>
 
             {!isPro && (
               <Link
-                href="/pricing"
+                href={localePath('/pricing')}
                 onClick={closeMenu}
                 className="flex items-center gap-3 px-4 py-2 text-sm text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-colors font-medium"
                 role="menuitem"
@@ -248,13 +260,13 @@ export function UserMenu() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                Upgrade to Pro
+                {isSerbian ? 'Nadogradi na Pro' : 'Upgrade to Pro'}
               </Link>
             )}
             
             {isPro && !isPremium && (
               <Link
-                href="/pricing"
+                href={localePath('/pricing')}
                 onClick={closeMenu}
                 className="flex items-center gap-3 px-4 py-2 text-sm bg-gradient-to-r from-slate-300 via-slate-100 to-slate-300 bg-clip-text text-transparent hover:from-white hover:via-slate-200 hover:to-white hover:bg-slate-500/10 transition-colors font-semibold"
                 role="menuitem"
@@ -262,7 +274,7 @@ export function UserMenu() {
                 <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                ✨ Upgrade to Premium
+                ✨ {isSerbian ? 'Nadogradi na Premium' : 'Upgrade to Premium'}
               </Link>
             )}
           </div>
@@ -272,7 +284,7 @@ export function UserMenu() {
             <button
               onClick={() => {
                 closeMenu();
-                signOut({ callbackUrl: '/' });
+                signOut({ callbackUrl: isSerbian ? '/sr' : '/' });
               }}
               className="flex items-center gap-3 w-full px-4 py-2 text-sm text-danger hover:bg-danger/10 transition-colors"
               role="menuitem"
@@ -280,7 +292,7 @@ export function UserMenu() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              Sign out
+              {isSerbian ? 'Odjavi se' : 'Sign out'}
             </button>
           </div>
         </div>

@@ -2133,6 +2133,11 @@ function generateFallbackLogo(name: string, type: 'team' | 'league' = 'team'): s
  * @returns Logo URL (ESPN, API-Sports, or fallback SVG)
  */
 export function getTeamLogo(teamName: string, sport: string, league?: string): string {
+  // Guard against undefined/null values
+  if (!teamName || !sport) {
+    return generateFallbackLogo(teamName || 'Unknown', 'team');
+  }
+  
   const cleanName = teamName.trim();
   const sportLower = sport.toLowerCase();
   

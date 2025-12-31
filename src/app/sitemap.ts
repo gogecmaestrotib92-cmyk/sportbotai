@@ -28,11 +28,33 @@ const STATIC_PAGES = [
   { path: '/llms-full.txt', priority: 0.4, changeFreq: 'monthly' as const },
 ];
 
+// Serbian static pages
+const SERBIAN_STATIC_PAGES = [
+  { path: '/sr', priority: 0.9, changeFreq: 'daily' as const },
+  { path: '/sr/matches', priority: 0.9, changeFreq: 'hourly' as const },
+  { path: '/sr/ai-desk', priority: 0.9, changeFreq: 'hourly' as const },
+  { path: '/sr/news', priority: 0.9, changeFreq: 'hourly' as const },
+  { path: '/sr/blog', priority: 0.8, changeFreq: 'daily' as const },
+  { path: '/sr/pricing', priority: 0.75, changeFreq: 'monthly' as const },
+  { path: '/sr/analyzer', priority: 0.8, changeFreq: 'weekly' as const },
+  { path: '/sr/market-alerts', priority: 0.75, changeFreq: 'daily' as const },
+  { path: '/sr/login', priority: 0.5, changeFreq: 'monthly' as const },
+  { path: '/sr/register', priority: 0.5, changeFreq: 'monthly' as const },
+];
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const currentDate = new Date().toISOString();
   
-  // Build static pages
+  // Build static pages (English)
   const staticEntries: MetadataRoute.Sitemap = STATIC_PAGES.map(page => ({
+    url: `${BASE_URL}${page.path}`,
+    lastModified: currentDate,
+    changeFrequency: page.changeFreq,
+    priority: page.priority,
+  }));
+
+  // Build static pages (Serbian)
+  const serbianStaticEntries: MetadataRoute.Sitemap = SERBIAN_STATIC_PAGES.map(page => ({
     url: `${BASE_URL}${page.path}`,
     lastModified: currentDate,
     changeFrequency: page.changeFreq,
@@ -41,6 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Fetch published blog posts for dynamic sitemap
   let blogEntries: MetadataRoute.Sitemap = [];
+  let serbianBlogEntries: MetadataRoute.Sitemap = [];
   try {
     const blogPosts = await prisma.blogPost.findMany({
       where: { 
@@ -49,25 +72,40 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
       select: {
         slug: true,
+        slugSr: true,
+        titleSr: true,
         updatedAt: true,
         publishedAt: true,
+        translatedAt: true,
       },
       orderBy: { publishedAt: 'desc' },
-      take: 100, // Limit to latest 100 posts
+      take: 100,
     });
 
+    // English blog entries
     blogEntries = blogPosts.map(post => ({
       url: `${BASE_URL}/blog/${post.slug}`,
       lastModified: post.updatedAt?.toISOString() || post.publishedAt?.toISOString() || currentDate,
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     }));
+
+    // Serbian blog entries (only translated posts)
+    serbianBlogEntries = blogPosts
+      .filter(post => post.titleSr)
+      .map(post => ({
+        url: `${BASE_URL}/sr/blog/${post.slug}`,
+        lastModified: post.translatedAt?.toISOString() || post.updatedAt?.toISOString() || currentDate,
+        changeFrequency: 'weekly' as const,
+        priority: 0.65,
+      }));
   } catch (error) {
     console.error('[Sitemap] Error fetching blog posts:', error);
   }
 
-  // Fetch news articles (match previews) - these go under /news/ path
+  // Fetch news articles (match previews)
   let newsEntries: MetadataRoute.Sitemap = [];
+  let serbianNewsEntries: MetadataRoute.Sitemap = [];
   try {
     const newsArticles = await prisma.blogPost.findMany({
       where: {
@@ -77,27 +115,46 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
       select: {
         slug: true,
+        slugSr: true,
+        titleSr: true,
         updatedAt: true,
         publishedAt: true,
+        translatedAt: true,
       },
       orderBy: { publishedAt: 'desc' },
-      take: 200, // More news articles for Google News
+      take: 200,
     });
 
+    // English news entries
     newsEntries = newsArticles.map(article => ({
       url: `${BASE_URL}/news/${article.slug}`,
       lastModified: article.updatedAt?.toISOString() || article.publishedAt?.toISOString() || currentDate,
-      changeFrequency: 'daily' as const, // News changes more frequently
-      priority: 0.8, // Higher priority for news
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
     }));
+
+    // Serbian news entries (only translated)
+    serbianNewsEntries = newsArticles
+      .filter(article => article.titleSr)
+      .map(article => ({
+        url: `${BASE_URL}/sr/news/${article.slug}`,
+        lastModified: article.translatedAt?.toISOString() || article.updatedAt?.toISOString() || currentDate,
+        changeFrequency: 'daily' as const,
+        priority: 0.75,
+      }));
   } catch (error) {
     console.error('[Sitemap] Error fetching news articles:', error);
   }
 
-  // NOTE: Team pages removed from sitemap - they require numeric teamId from API-Football,
-  // but sitemap was generating slug-based URLs which cause 500 errors.
-  // TODO: Implement proper team slug -> teamId resolution before re-adding to sitemap.
   const teamEntries: MetadataRoute.Sitemap = [];
 
-  return [...staticEntries, ...newsEntries, ...blogEntries, ...teamEntries];
+  return [
+    ...staticEntries, 
+    ...serbianStaticEntries,
+    ...newsEntries, 
+    ...serbianNewsEntries,
+    ...blogEntries, 
+    ...serbianBlogEntries,
+    ...teamEntries,
+  ];
 }

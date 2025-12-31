@@ -1,0 +1,478 @@
+// Serbian individual blog post page - /sr/blog/[slug]
+// Displays Serbian translation if available, falls back to English
+
+import { Metadata } from 'next';
+import Image from 'next/image';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
+import { SITE_CONFIG } from '@/lib/seo';
+import ViewTracker from '@/components/ViewTracker';
+import { autoLinkTeamsSimple } from '@/lib/team-linker';
+
+export const dynamicParams = true;
+export const revalidate = 60;
+
+interface BlogPostPageProps {
+  params: Promise<{ slug: string }>;
+}
+
+// Author info
+const AUTHOR = {
+  name: 'Stefan Mitrovic',
+  url: `${SITE_CONFIG.url}/about`,
+  jobTitle: 'Sportski Analitičar & Urednik',
+  photo: 'https://www.upwork.com/profile-portraits/c1QVpOOlRVMXCujp1syLSScOWIl0cbOsxFl4HtH9scBn6y1CaZPeWLI5v_eg78VPCd',
+  sameAs: [
+    'https://www.upwork.com/freelancers/~017b8c67c94029389f',
+    'https://www.linkedin.com/company/automateed/',
+  ],
+};
+
+// Serbian category translations
+const CATEGORY_TRANSLATIONS: Record<string, string> = {
+  'Strategy Guides': 'Strateški Vodiči',
+  'Bankroll Management': 'Upravljanje Budžetom',
+  'Sports Analysis': 'Sportske Analize',
+  'Odds & Probability': 'Kvote i Verovatnoća',
+  'Platform Tutorials': 'Uputstva za Platformu',
+  'Match Preview': 'Najave Utakmica',
+};
+
+interface RelatedPost {
+  title: string;
+  titleSr: string | null;
+  slug: string;
+  excerpt: string;
+  excerptSr: string | null;
+  featuredImage: string | null;
+  category: string | null;
+  publishedAt: Date | null;
+}
+
+async function getBlogPost(slug: string) {
+  const post = await prisma.blogPost.findFirst({
+    where: {
+      slug,
+      status: 'PUBLISHED',
+    },
+  });
+
+  if (!post) {
+    return null;
+  }
+
+  // Get related posts with Serbian content
+  const relatedPosts: RelatedPost[] = await prisma.blogPost.findMany({
+    where: {
+      status: 'PUBLISHED',
+      id: { not: post.id },
+      category: post.category,
+      titleSr: { not: null },
+    },
+    select: {
+      title: true,
+      titleSr: true,
+      slug: true,
+      excerpt: true,
+      excerptSr: true,
+      featuredImage: true,
+      category: true,
+      publishedAt: true,
+    },
+    take: 3,
+    orderBy: { publishedAt: 'desc' },
+  });
+
+  return { post, relatedPosts };
+}
+
+export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const data = await getBlogPost(slug);
+
+  if (!data) {
+    return {
+      title: 'Članak Nije Pronađen | SportBot AI Blog',
+    };
+  }
+
+  const { post } = data;
+  const baseUrl = SITE_CONFIG.url;
+
+  // Use Serbian translations if available
+  const displayTitle = post.titleSr || post.title;
+  const displayDescription = post.metaDescriptionSr || post.metaDescription || post.excerptSr || post.excerpt;
+
+  const ogImageUrl = post.featuredImage?.startsWith('http')
+    ? post.featuredImage
+    : `${baseUrl}${post.featuredImage || '/og-blog.png'}`;
+
+  return {
+    title: post.metaTitleSr || `${displayTitle} | SportBot AI Blog`,
+    description: displayDescription,
+    keywords: post.tags.join(', '),
+    authors: [{ name: AUTHOR.name, url: AUTHOR.url }],
+    alternates: {
+      canonical: `${SITE_CONFIG.url}/sr/blog/${slug}`,
+      languages: {
+        'en': `${SITE_CONFIG.url}/blog/${slug}`,
+        'sr': `${SITE_CONFIG.url}/sr/blog/${slug}`,
+      },
+    },
+    openGraph: {
+      title: displayTitle,
+      description: displayDescription,
+      type: 'article',
+      publishedTime: post.publishedAt?.toISOString(),
+      modifiedTime: post.updatedAt.toISOString(),
+      authors: [AUTHOR.name],
+      section: post.category ? CATEGORY_TRANSLATIONS[post.category] || post.category : 'Sport',
+      tags: post.tags,
+      locale: 'sr_RS',
+      images: [{
+        url: ogImageUrl,
+        width: 1200,
+        height: 630,
+        alt: displayTitle,
+      }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: displayTitle,
+      description: displayDescription,
+      images: [ogImageUrl],
+    },
+  };
+}
+
+export default async function SerbianBlogPostPage({ params }: BlogPostPageProps) {
+  const { slug } = await params;
+  const data = await getBlogPost(slug);
+
+  if (!data) {
+    notFound();
+  }
+
+  const { post, relatedPosts } = data;
+  const baseUrl = SITE_CONFIG.url;
+
+  // Check if Serbian translation exists
+  const hasSerbian = Boolean(post.contentSr || post.titleSr);
+  
+  // Use Serbian translations when available
+  const articleContent = post.contentSr || post.content;
+  const articleTitle = post.titleSr || post.title;
+  const articleExcerpt = post.excerptSr || post.excerpt;
+
+  // Article schema
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: articleTitle,
+    description: articleExcerpt,
+    image: post.featuredImage || `${baseUrl}/og-blog.png`,
+    datePublished: post.publishedAt?.toISOString(),
+    dateModified: post.updatedAt.toISOString(),
+    inLanguage: 'sr',
+    author: {
+      '@type': 'Person',
+      name: AUTHOR.name,
+      url: AUTHOR.url,
+      jobTitle: AUTHOR.jobTitle,
+      sameAs: AUTHOR.sameAs,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'SportBot AI',
+      url: baseUrl,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${baseUrl}/logo.png`,
+        width: 512,
+        height: 512,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `${baseUrl}/sr/blog/${post.slug}`,
+    },
+    articleSection: post.category ? CATEGORY_TRANSLATIONS[post.category] || post.category : 'Sport',
+    keywords: post.tags.join(', '),
+    wordCount: articleContent.split(/\s+/).length,
+  };
+
+  // Breadcrumb schema
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Početna',
+        item: `${baseUrl}/sr`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Blog',
+        item: `${baseUrl}/sr/blog`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: articleTitle,
+        item: `${baseUrl}/sr/blog/${post.slug}`,
+      },
+    ],
+  };
+
+  return (
+    <>
+      <ViewTracker postId={post.id} />
+
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        {/* Hero Section */}
+        <header className="pt-8 pb-12">
+          <div className="container mx-auto px-4">
+            {/* Breadcrumb */}
+            <nav className="mb-8">
+              <ol className="flex items-center gap-2 text-sm text-slate-400">
+                <li>
+                  <Link href="/sr" className="hover:text-white">Početna</Link>
+                </li>
+                <li>/</li>
+                <li>
+                  <Link href="/sr/blog" className="hover:text-white">Blog</Link>
+                </li>
+                <li>/</li>
+                <li className="text-slate-300 truncate max-w-[200px]">{articleTitle}</li>
+              </ol>
+            </nav>
+
+            <div className="max-w-4xl mx-auto">
+              {/* Language switch */}
+              <div className="flex items-center justify-between mb-4">
+                {post.category && (
+                  <Link
+                    href={`/sr/blog?category=${encodeURIComponent(post.category)}`}
+                    className="text-emerald-400 text-sm font-medium hover:text-emerald-300"
+                  >
+                    {CATEGORY_TRANSLATIONS[post.category] || post.category}
+                  </Link>
+                )}
+                <Link 
+                  href={`/blog/${slug}`} 
+                  className="text-sm text-slate-500 hover:text-emerald-400 transition-colors"
+                >
+                  🌐 English
+                </Link>
+              </div>
+
+              {/* Translation notice if not translated */}
+              {!hasSerbian && (
+                <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                  <p className="text-amber-300 text-sm">
+                    ⚠️ Ovaj članak još nije preveden na srpski. Prikazuje se originalna engleska verzija.
+                  </p>
+                </div>
+              )}
+
+              {/* Title */}
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
+                {articleTitle}
+              </h1>
+
+              {/* Meta */}
+              <div className="flex flex-wrap items-center gap-4 text-slate-400 text-sm mb-8">
+                <Link href="/about" className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
+                  <Image
+                    src={AUTHOR.photo}
+                    alt={AUTHOR.name}
+                    width={24}
+                    height={24}
+                    className="w-6 h-6 rounded-full object-cover"
+                  />
+                  <span>{AUTHOR.name}</span>
+                </Link>
+                <span>•</span>
+                <span>
+                  {post.publishedAt
+                    ? new Date(post.publishedAt).toLocaleDateString('sr-RS', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })
+                    : 'Nacrt'}
+                </span>
+                <span>•</span>
+                <span>{Math.ceil(articleContent.split(' ').length / 200)} min čitanja</span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  {post.views} pregleda
+                </span>
+              </div>
+
+              {/* Featured Image */}
+              {post.featuredImage && (
+                <div className="aspect-video relative rounded-xl overflow-hidden bg-slate-700 mb-8">
+                  <Image
+                    src={post.featuredImage}
+                    alt={post.imageAlt || articleTitle}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Article Content */}
+        <article className="container mx-auto px-4 pb-16">
+          <div className="max-w-3xl mx-auto">
+            <div
+              className="blog-content"
+              dangerouslySetInnerHTML={{ __html: autoLinkTeamsSimple(articleContent) }}
+            />
+          </div>
+        </article>
+
+        {/* Content Footer - Tags */}
+        <section className="pb-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto">
+              {/* Tags */}
+              {post.tags.length > 0 && (
+                <div className="mt-12 pt-8 border-t border-slate-700">
+                  <h3 className="text-sm font-medium text-slate-400 mb-4">Tagovi</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {post.tags.map((tag: string) => (
+                      <Link
+                        key={tag}
+                        href={`/sr/blog?tag=${encodeURIComponent(tag)}`}
+                        className="px-3 py-1 bg-slate-800 text-slate-300 text-sm rounded-full hover:bg-slate-700"
+                      >
+                        #{tag}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* CTA */}
+              <div className="mt-8 p-6 bg-slate-800/50 rounded-xl border border-slate-700 text-center">
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Spremni za Analizu Utakmica?
+                </h3>
+                <p className="text-slate-400 text-sm mb-4">
+                  Primenite svoje znanje uz naš AI alat za sportsku analitiku.
+                </p>
+                <Link
+                  href="/sr/matches"
+                  className="inline-flex items-center px-4 py-2 bg-emerald-500 text-white font-semibold rounded-lg hover:bg-emerald-600 transition-colors"
+                >
+                  Pregledaj Utakmice
+                  <svg className="ml-2 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+
+              {/* Author Box */}
+              <div className="mt-8 p-6 bg-slate-800/50 rounded-xl border border-slate-700">
+                <div className="flex items-start gap-4">
+                  <Link href="/about" className="flex-shrink-0">
+                    <Image
+                      src={AUTHOR.photo}
+                      alt={AUTHOR.name}
+                      width={64}
+                      height={64}
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  </Link>
+                  <div className="flex-1">
+                    <Link href="/about" className="text-lg font-semibold text-white hover:text-emerald-400 transition-colors">
+                      {AUTHOR.name}
+                    </Link>
+                    <p className="text-emerald-400 text-sm mb-2">{AUTHOR.jobTitle}</p>
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      Sportski analitičar sa ekspertizom u analizi utakmica zasnovanih na podacima i tržištima klađenja. 
+                      Kombinovanje AI tehnologije sa dubokim poznavanjem sporta za pružanje korisnih uvida.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Related Posts */}
+        {relatedPosts.length > 0 && (
+          <section className="py-16 bg-slate-800/30">
+            <div className="container mx-auto px-4">
+              <h2 className="text-2xl font-bold text-white mb-8 text-center">
+                Povezani Članci
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                {relatedPosts.map((article) => (
+                  <Link
+                    key={article.slug}
+                    href={`/sr/blog/${article.slug}`}
+                    className="bg-slate-800/50 rounded-xl overflow-hidden border border-slate-700 hover:border-emerald-500/50 transition-all"
+                  >
+                    <div className="aspect-video relative bg-slate-700">
+                      {article.featuredImage && (
+                        <Image
+                          src={article.featuredImage}
+                          alt={article.titleSr || article.title}
+                          fill
+                          className="object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="p-4">
+                      {article.category && (
+                        <span className="text-emerald-400 text-xs font-medium">
+                          {CATEGORY_TRANSLATIONS[article.category] || article.category}
+                        </span>
+                      )}
+                      <h3 className="font-semibold text-white hover:text-emerald-300 transition-colors line-clamp-2 mt-1">
+                        {article.titleSr || article.title}
+                      </h3>
+                      {article.publishedAt && (
+                        <p className="text-slate-500 text-xs mt-2">
+                          {new Date(article.publishedAt).toLocaleDateString('sr-RS', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+      </div>
+    </>
+  );
+}

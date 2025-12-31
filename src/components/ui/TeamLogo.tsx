@@ -117,6 +117,7 @@ export default function TeamLogo({
 
   // Generate fallback initials
   const getInitials = (name: string) => {
+    if (!name) return '??';
     const words = name.split(/\s+/).filter(w => w.length > 0);
     if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
     return words.slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -124,6 +125,7 @@ export default function TeamLogo({
 
   // Generate consistent color from name
   const getColor = (name: string) => {
+    if (!name) return 'hsl(0, 65%, 45%)';
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
@@ -134,6 +136,7 @@ export default function TeamLogo({
 
   // Dark logos that need a light background (black/dark logos on dark UI)
   const needsLightBackground = (name: string) => {
+    if (!name) return false;
     const darkLogos = ['asvel', 'lyon', 'ldlc asvel', 'villeurbanne'];
     return darkLogos.some(dark => name.toLowerCase().includes(dark));
   };

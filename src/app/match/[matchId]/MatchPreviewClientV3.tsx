@@ -119,6 +119,7 @@ function parseMatchIdClient(matchId: string): { homeTeam: string; awayTeam: stri
 
 interface MatchPreviewClientProps {
   matchId: string;
+  locale?: 'en' | 'sr';
 }
 
 interface MatchPreviewData {
@@ -215,17 +216,188 @@ interface UsageLimitData {
   };
 }
 
-export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps) {
+// i18n translations for MatchPreviewClient
+const translations = {
+  en: {
+    allMatches: 'All Matches',
+    analyzing: 'Analyzing match data...',
+    gatheringStats: 'Gathering team stats...',
+    processingSignals: 'Processing signals...',
+    almostReady: 'Almost ready...',
+    loadingLonger: 'Loading is taking longer than expected. Please refresh the page.',
+    thisMayTake: 'This may take a few seconds',
+    creditUsed: 'Analysis credit used. Upgrade to Pro for more!',
+    somethingWrong: 'Something went wrong',
+    matchAnalysis: 'Match Analysis',
+    comingSoon: 'Coming Soon',
+    availableIn: 'Available in',
+    days: 'days',
+    checkBackAt: 'Check back at',
+    analysisAvailableOn: 'Analysis available on',
+    weNeed48h: 'We need at least 48 hours before kickoff to gather reliable data.',
+    setReminder: 'Set Reminder',
+    backToMatches: 'Back to Matches',
+    reachLimit: 'You\'ve reached your daily analysis limit',
+    usedAllCredits: 'You\'ve used all {used} of your {limit} daily analysis credits.',
+    upgradeToPro: 'Upgrade to Pro',
+    limitResetsAt: 'Your limit resets at midnight.',
+    errorLoading: 'Unable to load match analysis',
+    tryAgain: 'Try Again',
+    goBack: 'Go Back',
+    findOther: 'Find Other Matches',
+    signInRequired: 'Sign in required',
+    signInToView: 'Sign in to view this match analysis',
+    signIn: 'Sign In',
+    createAccount: 'Create Account',
+    tableStandings: 'Table Standings',
+    loading: 'Loading standings...',
+    standingsError: 'Unable to load standings',
+    notAvailable: 'Standings not available for this league',
+    leagueTable: 'League Table',
+    whatYouGet: 'What you get:',
+    analysesPerDay: '30 analyses per day',
+    marketIntel: 'Market Intel & Value Detection',
+    earlyAccess: 'Early access to new features',
+    prioritySupport: 'Priority customer support',
+    unlimitedAnalyses: 'Unlimited analyses',
+    priorityAI: 'Priority AI processing',
+    fullHistory: 'Full analysis history access',
+    marketAlerts: 'Market Alerts & Steam Moves',
+    upgradeToPremium: 'Upgrade to Premium',
+    creditsResetDaily: 'Your credits reset daily at midnight UTC',
+    matchNotFound: 'Match Not Found',
+    couldntFindMatch: "We couldn't find this match. It may have already been played or the link is incorrect.",
+    browseMatches: 'Browse Matches',
+    whyWeWait: 'Why We Wait',
+    analysisWindow: 'Analysis Window',
+    hoursBeforeKickoff: 'Available 48h before kickoff',
+    dataAccuracy: 'Data Accuracy',
+    recentStats: 'Recent stats & confirmed lineups',
+    marketSignals: 'Market Signals',
+    oddsMovements: 'Track odds movements & patterns',
+    matchKicksOff: 'Match kicks off',
+    // Registration blur
+    unlockSignals: 'Unlock Match Signals',
+    createFreeDesc: 'Create a free account to see our 5 universal match signals and risk analysis.',
+    createFreeAccount: 'Create Free Account',
+    alreadyHaveAccount: 'Already have an account?',
+    // Premium blur
+    proMatchAnalysis: 'Pro Match Analysis',
+    proMatchDesc: 'Get detailed match insights, game flow predictions, and value detection with Pro.',
+    matchSnapshotInsights: 'Match snapshot & key insights',
+    gameFlowPredictions: 'Game flow predictions',
+    valueDetection: 'Value detection & odds analysis',
+    upgradeToProPrice: 'Upgrade to Pro – $19.99/mo',
+    // Sections
+    riskFactors: 'Risk Factors',
+    matchSnapshot: 'Match Snapshot',
+    gameFlow: 'Game Flow',
+    marketEdge: 'Market Edge',
+    oddsUnavailable: 'Odds data temporarily unavailable for this match',
+    whereTheyStand: 'Where They Stand',
+    shareAnalysis: 'Share This Analysis',
+    helpFriends: 'Help your friends prepare for the match',
+    copyLink: 'Copy Link',
+    disclaimer: 'SportBot AI provides match intelligence for educational purposes only. This is not betting advice. If you gamble, please do so responsibly.',
+  },
+  sr: {
+    allMatches: 'Svi Mečevi',
+    analyzing: 'Analiziramo meč...',
+    gatheringStats: 'Prikupljamo statistiku...',
+    processingSignals: 'Obrađujemo signale...',
+    almostReady: 'Skoro gotovo...',
+    loadingLonger: 'Učitavanje traje duže nego očekivano. Molimo osvežite stranicu.',
+    thisMayTake: 'Ovo može potrajati nekoliko sekundi',
+    creditUsed: 'Iskorišćen kredit za analizu. Nadogradi na Pro za više!',
+    somethingWrong: 'Nešto nije u redu',
+    matchAnalysis: 'Analiza Meča',
+    comingSoon: 'Uskoro Dostupno',
+    availableIn: 'Dostupno za',
+    days: 'dana',
+    checkBackAt: 'Vratite se u',
+    analysisAvailableOn: 'Analiza dostupna',
+    weNeed48h: 'Potrebno nam je najmanje 48 sati pre početka da prikupimo pouzdane podatke.',
+    setReminder: 'Postavi Podsetnik',
+    backToMatches: 'Nazad na Mečeve',
+    reachLimit: 'Dostigli ste dnevni limit analiza',
+    usedAllCredits: 'Iskoristili ste svih {used} od {limit} dnevnih kredita za analizu.',
+    upgradeToPro: 'Nadogradi na Pro',
+    limitResetsAt: 'Vaš limit se resetuje u ponoć.',
+    errorLoading: 'Nije moguće učitati analizu meča',
+    tryAgain: 'Pokušaj Ponovo',
+    goBack: 'Nazad',
+    findOther: 'Pronađi Druge Mečeve',
+    signInRequired: 'Potrebna prijava',
+    signInToView: 'Prijavite se da vidite analizu ovog meča',
+    signIn: 'Prijavi se',
+    createAccount: 'Napravi Nalog',
+    tableStandings: 'Tabela',
+    loading: 'Učitavamo tabelu...',
+    standingsError: 'Nije moguće učitati tabelu',
+    notAvailable: 'Tabela nije dostupna za ovu ligu',
+    leagueTable: 'Tabela Lige',
+    whatYouGet: 'Šta dobijate:',
+    analysesPerDay: '30 analiza dnevno',
+    marketIntel: 'Market Intel i Detekcija Vrednosti',
+    earlyAccess: 'Rani pristup novim funkcijama',
+    prioritySupport: 'Prioritetna korisnička podrška',
+    unlimitedAnalyses: 'Neograničene analize',
+    priorityAI: 'Prioritetna AI obrada',
+    fullHistory: 'Pristup punoj istoriji analiza',
+    marketAlerts: 'Market Alarmi i Steam Moves',
+    upgradeToPremium: 'Nadogradi na Premium',
+    creditsResetDaily: 'Vaši krediti se resetuju svaki dan u ponoć UTC',
+    matchNotFound: 'Meč Nije Pronađen',
+    couldntFindMatch: 'Nismo pronašli ovaj meč. Možda je već odigran ili je link neispravan.',
+    browseMatches: 'Pregledaj Mečeve',
+    whyWeWait: 'Zašto Čekamo',
+    analysisWindow: 'Period Analize',
+    hoursBeforeKickoff: 'Dostupno 48h pre početka',
+    dataAccuracy: 'Tačnost Podataka',
+    recentStats: 'Nedavna statistika i potvrđeni sastavi',
+    marketSignals: 'Tržišni Signali',
+    oddsMovements: 'Pratimo kretanje kvota i obrasce',
+    matchKicksOff: 'Meč počinje',
+    // Registration blur
+    unlockSignals: 'Otključaj Signale Meča',
+    createFreeDesc: 'Napravi besplatan nalog da vidiš naših 5 univerzalnih signala i analizu rizika.',
+    createFreeAccount: 'Napravi Besplatan Nalog',
+    alreadyHaveAccount: 'Već imaš nalog?',
+    // Premium blur
+    proMatchAnalysis: 'Pro Analiza Meča',
+    proMatchDesc: 'Dobij detaljne uvide u meč, predikcije toka igre i detekciju vrednosti sa Pro.',
+    matchSnapshotInsights: 'Pregled meča i ključni uvidi',
+    gameFlowPredictions: 'Predikcije toka igre',
+    valueDetection: 'Detekcija vrednosti i analiza kvota',
+    upgradeToProPrice: 'Nadogradi na Pro – $19.99/mes',
+    // Sections
+    riskFactors: 'Faktori Rizika',
+    matchSnapshot: 'Pregled Meča',
+    gameFlow: 'Tok Igre',
+    marketEdge: 'Tržišna Prednost',
+    oddsUnavailable: 'Podaci o kvotama trenutno nisu dostupni za ovaj meč',
+    whereTheyStand: 'Pozicija na Tabeli',
+    shareAnalysis: 'Podeli Ovu Analizu',
+    helpFriends: 'Pomozi prijateljima da se pripreme za meč',
+    copyLink: 'Kopiraj Link',
+    disclaimer: 'SportBot AI pruža informacije o mečevima samo u edukativne svrhe. Ovo nije savet za klađenje. Ako se kladite, činite to odgovorno.',
+  },
+};
+
+export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPreviewClientProps) {
+  const t = translations[locale];
+  const localePath = locale === 'sr' ? '/sr' : '';
   const { data: session } = useSession();
   const { showToast } = useToast();
   const [data, setData] = useState<MatchPreviewData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadingMessage, setLoadingMessage] = useState('Analyzing match data...');
+  const [loadingMessage, setLoadingMessage] = useState(t.analyzing);
   const [error, setError] = useState<string | null>(null);
   const [usageLimit, setUsageLimit] = useState<UsageLimitData | null>(null);
   
   // Parse matchId immediately to show header while loading
   const parsedMatch = useMemo(() => parseMatchIdClient(matchId), [matchId]);
+
 
   // Check if match is too far in the future (>48 hours)
   const matchTiming = useMemo(() => {
@@ -256,14 +428,14 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
         setLoading(true);
         setError(null);
         setUsageLimit(null);
-        setLoadingMessage('Analyzing match data...');
+        setLoadingMessage(t.analyzing);
         
         // Loading message progression
-        const loadingTimer1 = setTimeout(() => setLoadingMessage('Gathering team stats...'), 3000);
-        const loadingTimer2 = setTimeout(() => setLoadingMessage('Processing signals...'), 6000);
-        const loadingTimer3 = setTimeout(() => setLoadingMessage('Almost ready...'), 10000);
+        const loadingTimer1 = setTimeout(() => setLoadingMessage(t.gatheringStats), 3000);
+        const loadingTimer2 = setTimeout(() => setLoadingMessage(t.processingSignals), 6000);
+        const loadingTimer3 = setTimeout(() => setLoadingMessage(t.almostReady), 10000);
         const timeoutTimer = setTimeout(() => {
-          setError('Loading is taking longer than expected. Please refresh the page.');
+          setError(t.loadingLonger);
           setLoading(false);
         }, 30000); // 30 second timeout
         
@@ -299,19 +471,19 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
         
         // Successful analysis - show toast for FREE users
         if (result.creditUsed) {
-          showToast('Analysis credit used. Upgrade to Pro for more!', 'info');
+          showToast(t.creditUsed, 'info');
         }
         
         setData(result);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : t.somethingWrong);
       } finally {
         setLoading(false);
       }
     };
 
     fetchMatchPreview();
-  }, [matchId]);
+  }, [matchId, t]);
 
   // Show header immediately with skeleton content while loading
   if (loading && parsedMatch) {
@@ -322,13 +494,13 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
         <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
           {/* Back navigation */}
           <Link 
-            href="/matches"
+            href={`${localePath}/matches`}
             className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
             </svg>
-            <span className="text-sm">All Matches</span>
+            <span className="text-sm">{t.allMatches}</span>
           </Link>
 
           {/* Show real match header immediately */}
@@ -344,7 +516,7 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
           <div className="mt-6 flex flex-col items-center justify-center gap-2">
             <div className="w-8 h-8 border-2 border-zinc-700 border-t-emerald-500 rounded-full animate-spin" />
             <span className="text-zinc-300 text-sm font-medium">{loadingMessage}</span>
-            <span className="text-zinc-600 text-xs">This may take a few seconds</span>
+            <span className="text-zinc-600 text-xs">{t.thisMayTake}</span>
           </div>
 
           {/* Skeleton for signals */}
@@ -384,13 +556,13 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
         <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
           {/* Back navigation */}
           <Link 
-            href="/matches"
+            href={`${localePath}/matches`}
             className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
             </svg>
-            <span className="text-sm">All Matches</span>
+            <span className="text-sm">{t.allMatches}</span>
           </Link>
 
           {/* Match header */}
@@ -413,16 +585,17 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
                 </svg>
               </div>
               <div>
-                <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Coming Soon</span>
+                <span className="text-[10px] text-zinc-500 uppercase tracking-wider">{t.comingSoon}</span>
                 <h3 className="text-base font-medium text-white">
-                  Analysis Available in {daysUntil} Day{daysUntil !== 1 ? 's' : ''}
+                  {t.availableIn} {daysUntil} {t.days}
                 </h3>
               </div>
             </div>
             
             <p className="text-zinc-500 text-sm leading-relaxed mb-4">
-              Our AI analysis becomes available <span className="text-zinc-300">48 hours before kickoff</span> when 
-              we have the most accurate data.
+              {locale === 'sr' 
+                ? <>Naša AI analiza postaje dostupna <span className="text-zinc-300">48 sati pre početka</span> kada imamo najtačnije podatke.</>
+                : <>Our AI analysis becomes available <span className="text-zinc-300">48 hours before kickoff</span> when we have the most accurate data.</>}
             </p>
             
             {availableDateStr && (
@@ -430,7 +603,7 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
                 <svg className="w-3.5 h-3.5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span>Available: {new Date(availableDateStr).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                <span>{locale === 'sr' ? 'Dostupno' : 'Available'}: {new Date(availableDateStr).toLocaleDateString(locale === 'sr' ? 'sr-Latn' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
               </div>
             )}
           </div>
@@ -439,24 +612,24 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
           <div className="mt-4 p-4 rounded-xl bg-[#0a0a0b] border border-white/[0.04]">
             <div className="flex items-center gap-2 mb-3">
               <span className="text-sm">💡</span>
-              <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Why We Wait</span>
+              <span className="text-[10px] text-zinc-500 uppercase tracking-wider">{t.whyWeWait}</span>
             </div>
             <ul className="space-y-2 text-xs text-zinc-500">
               <li className="flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-zinc-600" />
-                <span>Latest injury & lineup updates</span>
+                <span>{locale === 'sr' ? 'Najnovije informacije o povredama i sastavima' : 'Latest injury & lineup updates'}</span>
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-zinc-600" />
-                <span>Most recent form from mid-week fixtures</span>
+                <span>{locale === 'sr' ? 'Najnovija forma iz utakmica tokom nedelje' : 'Most recent form from mid-week fixtures'}</span>
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-zinc-600" />
-                <span>Accurate market odds & movements</span>
+                <span>{locale === 'sr' ? 'Tačne tržišne kvote i kretanja' : 'Accurate market odds & movements'}</span>
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-zinc-600" />
-                <span>Manager press conference insights</span>
+                <span>{locale === 'sr' ? 'Uvidi iz konferencija za novinare' : 'Manager press conference insights'}</span>
               </li>
             </ul>
           </div>
@@ -464,10 +637,10 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
           {/* CTA to browse other matches */}
           <div className="mt-6 text-center">
             <Link 
-              href="/matches"
+              href={`${localePath}/matches`}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] rounded-lg text-sm text-zinc-300 hover:text-white transition-colors"
             >
-              <span>Browse matches happening soon</span>
+              <span>{t.findOther}</span>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
               </svg>
@@ -488,13 +661,13 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
         <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
           {/* Back navigation */}
           <Link 
-            href="/matches"
+            href={`${localePath}/matches`}
             className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
             </svg>
-            <span className="text-sm">All Matches</span>
+            <span className="text-sm">{t.allMatches}</span>
           </Link>
 
           {/* Show match header */}
@@ -529,44 +702,44 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
 
             {/* Plan Benefits */}
             <div className="bg-[#0A0D10]/50 rounded-xl p-6 mb-8 text-left max-w-md mx-auto">
-              <h3 className="font-semibold text-white mb-4 text-center">What you get:</h3>
+              <h3 className="font-semibold text-white mb-4 text-center">{t.whatYouGet}</h3>
               <ul className="space-y-3 text-zinc-300">
                 {usageLimit.plan === 'FREE' ? (
                   <>
                     <li className="flex items-center gap-3">
                       <span className="text-purple-400">✓</span>
-                      30 analyses per day
+                      {t.analysesPerDay}
                     </li>
                     <li className="flex items-center gap-3">
                       <span className="text-purple-400">✓</span>
-                      Market Intel & Value Detection
+                      {t.marketIntel}
                     </li>
                     <li className="flex items-center gap-3">
                       <span className="text-purple-400">✓</span>
-                      Early access to new features
+                      {t.earlyAccess}
                     </li>
                     <li className="flex items-center gap-3">
                       <span className="text-purple-400">✓</span>
-                      Priority customer support
+                      {t.prioritySupport}
                     </li>
                   </>
                 ) : (
                   <>
                     <li className="flex items-center gap-3">
                       <span className="text-zinc-300">✓</span>
-                      Unlimited analyses
+                      {t.unlimitedAnalyses}
                     </li>
                     <li className="flex items-center gap-3">
                       <span className="text-zinc-300">✓</span>
-                      Priority AI processing
+                      {t.priorityAI}
                     </li>
                     <li className="flex items-center gap-3">
                       <span className="text-zinc-300">✓</span>
-                      Full analysis history access
+                      {t.fullHistory}
                     </li>
                     <li className="flex items-center gap-3">
                       <span className="text-zinc-300">✓</span>
-                      Market Alerts & Steam Moves
+                      {t.marketAlerts}
                     </li>
                   </>
                 )}
@@ -575,18 +748,18 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
 
             {/* CTA Button - Pro uses purple, Premium uses silver */}
             <Link 
-              href="/pricing" 
+              href={`${localePath}/pricing`}
               className={usageLimit.plan === 'FREE' 
                 ? "inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold text-lg px-8 py-3 rounded-lg transition-colors"
                 : "inline-block bg-gradient-to-r from-zinc-300 to-zinc-400 hover:from-zinc-200 hover:to-zinc-300 text-zinc-900 font-semibold text-lg px-8 py-3 rounded-lg transition-colors shadow-lg shadow-zinc-400/20"
               }
             >
-              {usageLimit.plan === 'FREE' ? 'Upgrade to Pro' : 'Upgrade to Premium'}
+              {usageLimit.plan === 'FREE' ? t.upgradeToPro : t.upgradeToPremium}
             </Link>
 
             {/* Secondary info */}
             <p className="mt-4 text-zinc-500 text-sm">
-              Your credits reset daily at midnight UTC
+              {t.creditsResetDaily}
             </p>
           </div>
         </div>
@@ -601,16 +774,16 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
           <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-500/20">
             <span className="text-3xl">⚠️</span>
           </div>
-          <h1 className="text-xl font-semibold text-white mb-2">Match Not Found</h1>
+          <h1 className="text-xl font-semibold text-white mb-2">{t.matchNotFound}</h1>
           <p className="text-zinc-500 mb-6 text-sm">
-            {error || "We couldn't find this match. It may have already been played or the link is incorrect."}
+            {error || t.couldntFindMatch}
           </p>
           <Link 
-            href="/matches"
+            href={`${localePath}/matches`}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 rounded-xl text-white text-sm font-medium hover:bg-white/10 transition-colors border border-white/10"
           >
             <span>←</span>
-            <span>Browse Matches</span>
+            <span>{t.browseMatches}</span>
           </Link>
         </div>
       </div>
@@ -656,13 +829,13 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
       <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
         {/* Back navigation - Minimal */}
         <Link 
-          href="/matches"
+          href={`${localePath}/matches`}
           className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
           </svg>
-          <span className="text-sm">All Matches</span>
+          <span className="text-sm">{t.allMatches}</span>
         </Link>
 
         {/* Match Header - Clean and premium */}
@@ -690,8 +863,17 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
         {/* LAYER 1: Registration Blur - Universal Signals & Risk Factors */}
         <RegistrationBlur 
           isAuthenticated={!!session}
-          title="Unlock Match Signals"
-          description="Create a free account to see our 5 universal match signals and risk analysis."
+          title={t.unlockSignals}
+          description={t.createFreeDesc}
+          locale={locale}
+          translations={{
+            createFreeAccount: t.createFreeAccount,
+            alreadyHaveAccount: t.alreadyHaveAccount,
+            signIn: t.signIn,
+            matchSignals: locale === 'sr' ? 'Signali Meča' : 'Match Signals',
+            aiInsights: locale === 'sr' ? 'AI Uvidi' : 'AI Insights',
+            gameFlow: t.gameFlow,
+          }}
         >
           {/* Universal Signals Display - Free with registration */}
           {data.universalSignals && (
@@ -711,7 +893,7 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
             <div className="mt-3 sm:mt-4 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-4 sm:p-5">
               <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <span className="text-amber-500/80">⚠</span>
-                Risk Factors
+                {t.riskFactors}
               </h3>
               <ul className="space-y-2">
                 {riskFactors.map((risk, index) => (
@@ -728,15 +910,24 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
         {/* LAYER 2: Premium Blur - Match Snapshot, Game Flow, Market Edge */}
         <PremiumBlur
           isPro={hasPremiumAccess}
-          title="Pro Match Analysis"
-          description="Get detailed match insights, game flow predictions, and value detection with Pro."
+          title={t.proMatchAnalysis}
+          description={t.proMatchDesc}
+          locale={locale}
+          translations={{
+            whatYouGet: t.whatYouGet,
+            matchSnapshotInsights: t.matchSnapshotInsights,
+            gameFlowPredictions: t.gameFlowPredictions,
+            valueDetection: t.valueDetection,
+            analysesPerDay: t.analysesPerDay,
+            upgradeToProPrice: t.upgradeToProPrice,
+          }}
         >
           {/* Match Snapshot - Premium */}
           {snapshot && snapshot.length > 0 && (
             <div className="mt-3 sm:mt-4 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-4 sm:p-5">
               <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                 <span className="text-violet-400">✦</span>
-                Match Snapshot
+                {t.matchSnapshot}
                 <span className="ml-auto text-[9px] px-2 py-0.5 bg-violet-500/10 text-violet-400 rounded-full border border-violet-500/20">PRO</span>
               </h3>
               <ul className="space-y-2.5">
@@ -755,7 +946,7 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
             <div className="mt-3 sm:mt-4 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-4 sm:p-5">
               <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <span className="text-violet-400">✦</span>
-                Game Flow
+                {t.gameFlow}
                 <span className="ml-auto text-[9px] px-2 py-0.5 bg-violet-500/10 text-violet-400 rounded-full border border-violet-500/20">PRO</span>
               </h3>
               <p className="text-sm text-zinc-400 leading-relaxed">
@@ -780,14 +971,14 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
             <div className="mt-5 p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06]">
               <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <span className="text-violet-400">✦</span>
-                Market Edge
+                {t.marketEdge}
                 <span className="ml-auto text-[9px] px-2 py-0.5 bg-violet-500/10 text-violet-400 rounded-full border border-violet-500/20">PRO</span>
               </h3>
               <div className="flex items-center gap-3 text-zinc-400 text-sm">
                 <svg className="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>Odds data temporarily unavailable for this match</span>
+                <span>{t.oddsUnavailable}</span>
               </div>
             </div>
           )}
@@ -802,7 +993,7 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
             <div className="mt-6">
               <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <span>📊</span>
-                Where They Stand
+                {t.whereTheyStand}
               </h3>
               <StandingsTable
                 sport={leagueInfo.sport}
@@ -823,7 +1014,7 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
               &ldquo;{data.headlines[0].text}&rdquo;
             </p>
             <p className="text-[10px] text-zinc-600 mt-2 uppercase tracking-wider">
-              — SportBot Analysis
+              — SportBot {locale === 'sr' ? 'Analiza' : 'Analysis'}
             </p>
           </div>
         )}
@@ -846,8 +1037,7 @@ export default function MatchPreviewClient({ matchId }: MatchPreviewClientProps)
         {/* Footer */}
         <div className="mt-12 text-center">
           <p className="text-[11px] text-zinc-600 max-w-sm mx-auto">
-            SportBot AI provides match intelligence for educational purposes only. 
-            This is not betting advice. If you gamble, please do so responsibly.
+            {t.disclaimer}
           </p>
         </div>
       </div>
