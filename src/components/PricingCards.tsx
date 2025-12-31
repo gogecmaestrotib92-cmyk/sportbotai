@@ -179,7 +179,7 @@ export default function PricingCards() {
           aria-checked={isYearlyBilling}
           aria-label="Toggle between monthly and yearly billing"
           className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
-            isYearlyBilling ? 'bg-primary' : 'bg-gray-600'
+            isYearlyBilling ? 'bg-violet' : 'bg-gray-600'
           }`}
         >
           <span
@@ -190,24 +190,24 @@ export default function PricingCards() {
         </button>
         <span className={`text-sm font-medium transition-colors ${isYearlyBilling ? 'text-white' : 'text-gray-400'}`}>
           Yearly
-          <span className="ml-2 text-xs bg-primary/30 text-white px-2 py-0.5 rounded-full">Save up to 52%</span>
+          <span className="ml-2 text-xs bg-violet/30 text-white px-2 py-0.5 rounded-full">Save up to 52%</span>
         </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
         {/* Free Plan Card */}
-        <div className={`rounded-card p-5 sm:p-6 bg-bg-card ${
-          currentPlan === 'FREE' ? 'border-2 border-accent' : 'border border-divider'
+        <div className={`card-glass p-5 sm:p-6 ${
+          currentPlan === 'FREE' ? 'border-2 border-accent shadow-glow-accent' : ''
         } relative`}>
           {currentPlan === 'FREE' && (
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-bg text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-accent to-accent-dark text-bg text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap shadow-glow-accent">
               YOUR PLAN
             </div>
           )}
           <div className="text-center mb-6 pt-2">
             <h3 className="text-xl font-bold mb-2 text-white">Free</h3>
             <div className="mb-2">
-              <span className="text-4xl font-bold text-white">$0</span>
+              <span className="text-4xl font-extrabold text-white">$0</span>
             </div>
             <p className="text-sm text-gray-400">Try it once for free</p>
           </div>
@@ -229,7 +229,7 @@ export default function PricingCards() {
             className={`w-full py-3 px-6 rounded-btn font-semibold transition-all duration-200 min-h-[48px] ${
               currentPlan === 'FREE'
                 ? 'bg-accent/20 text-accent border border-accent/30 cursor-default'
-                : 'bg-bg-elevated text-white hover:bg-bg-elevated/80 border border-divider'
+                : 'btn-gradient-border'
             }`}
           >
             {currentPlan === 'FREE' ? '✓ Current Plan' : 'Start Free'}
@@ -269,49 +269,49 @@ export default function PricingCards() {
           return (
             <div
               key={plan.id}
-              className={`rounded-card p-5 sm:p-6 relative ${
-                plan.highlighted && canUpgrade
-                  ? 'bg-bg-card border-2 border-primary shadow-glow-primary md:scale-105'
+              className={`card-glass p-5 sm:p-6 relative ${
+                isCurrentPlan
+                  ? 'border-2 border-accent shadow-glow-accent'
+                  : plan.highlighted && canUpgrade
+                  ? 'border-2 border-violet/50 shadow-glow-violet md:scale-105'
                   : isPremium && canUpgrade
-                  ? 'bg-gradient-to-b from-slate-800/50 to-slate-900/50 border-2 border-slate-400/30 shadow-[0_0_20px_rgba(148,163,184,0.15)]'
-                  : isCurrentPlan
-                  ? 'bg-bg-card border-2 border-accent'
-                  : 'bg-bg-card border border-divider'
+                  ? 'border-2 border-accent/30 shadow-glow-accent'
+                  : ''
               }`}
             >
               {/* Badge */}
               {isCurrentPlan ? (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-bg text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-accent to-accent-dark text-bg text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap shadow-glow-accent">
                   YOUR PLAN
                 </div>
               ) : plan.highlighted && canUpgrade ? (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet to-violet-dark text-white text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap shadow-glow-violet">
                   MOST POPULAR
                 </div>
               ) : isPremium && canUpgrade && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-slate-300 to-slate-400 text-slate-900 text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-accent to-accent-dark text-bg text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap shadow-glow-accent">
                   BEST VALUE
                 </div>
               )}
 
               {/* Plan header */}
               <div className="text-center mb-4 pt-2">
-                <h3 className={`text-xl font-bold mb-3 ${isPremium ? 'text-slate-200' : 'text-white'}`}>
+                <h3 className="text-xl font-bold mb-3 text-white">
                   {plan.name}
                 </h3>
 
                 {/* Price */}
                 <div className="mb-2">
-                  <span className={`text-4xl font-bold ${
-                    plan.highlighted ? 'text-primary' : isPremium ? 'text-slate-200' : 'text-white'
+                  <span className={`text-4xl font-extrabold ${
+                    plan.highlighted ? 'text-gradient-violet-accent' : isPremium ? 'text-accent' : 'text-white'
                   }`}>
                     {yearly ? plan.yearlyPrice : plan.monthlyPrice}
                   </span>
-                  <span className={`text-sm ${isPremium ? 'text-slate-400' : 'text-gray-400'}`}>
+                  <span className="text-sm text-gray-400">
                     {yearly ? '/year' : '/month'}
                   </span>
                 </div>
-                <p className={`text-sm ${isPremium ? 'text-slate-400' : 'text-gray-400'}`}>
+                <p className="text-sm text-gray-400">
                   {yearly ? plan.yearlyDescription : plan.description}
                 </p>
               </div>
@@ -333,7 +333,7 @@ export default function PricingCards() {
                         clipRule="evenodd"
                       />
                     </svg>
-                    <span className={`text-sm ${isPremium ? 'text-slate-300' : 'text-gray-300'}`}>{feature}</span>
+                    <span className="text-sm text-gray-300">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -346,12 +346,12 @@ export default function PricingCards() {
                   isCurrentPlan
                     ? 'bg-accent/20 text-accent border border-accent/30 cursor-default'
                     : isDowngrade
-                    ? 'bg-bg-elevated text-text-secondary hover:bg-bg-elevated/80 border border-divider'
+                    ? 'btn-gradient-border'
                     : plan.highlighted
-                    ? 'bg-primary text-white hover:bg-primary/80'
+                    ? 'btn-violet'
                     : isPremium
-                    ? 'bg-gradient-to-r from-slate-300 to-slate-400 text-slate-900 hover:from-slate-200 hover:to-slate-300'
-                    : 'bg-bg-elevated text-white hover:bg-bg-elevated/80 border border-divider'
+                    ? 'bg-gradient-to-r from-accent to-accent-dark text-bg hover:from-accent-dark hover:to-accent shadow-glow-accent'
+                    : 'btn-gradient-border'
                 } ${loading === checkoutId ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {loading === checkoutId ? (

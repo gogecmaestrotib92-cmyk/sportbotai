@@ -56,7 +56,11 @@ export default function PricingPage() {
   const breadcrumbSchema = getPricingBreadcrumb();
 
   return (
-    <div className="bg-bg min-h-screen">
+    <div className="bg-bg min-h-screen relative overflow-hidden">
+      {/* Ambient background glows */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-1/3 left-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
+      
       {/* Breadcrumb Schema */}
       <script
         type="application/ld+json"
@@ -73,10 +77,11 @@ export default function PricingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingSchema) }}
       />
       {/* Header section */}
-      <section className="bg-bg-card border-b border-divider text-white py-16">
+      <section className="relative text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Simple Pricing
+          <p className="text-violet font-semibold text-sm uppercase tracking-wider mb-3">Pricing</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
+            Simple, <span className="text-gradient-violet-accent">Transparent Pricing</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
             No hidden fees. Cancel anytime. Start free and upgrade when you&apos;re ready.
@@ -85,18 +90,19 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing cards */}
-      <section className="section-container -mt-8">
+      <section className="section-container -mt-8 relative">
         <PricingCards />
       </section>
 
       {/* FAQ section */}
-      <section className="section-container">
-        <h2 className="text-2xl font-bold text-white text-center mb-8">
+      <section className="section-container relative">
+        <p className="text-violet font-semibold text-sm uppercase tracking-wider text-center mb-3">FAQ</p>
+        <h2 className="text-2xl font-extrabold text-white text-center mb-8 tracking-tight">
           Frequently Asked Questions
         </h2>
         
         <div className="max-w-3xl mx-auto space-y-6">
-          <div className="card">
+          <div className="card-glass p-6">
             <h3 className="font-bold text-white mb-2">Can I cancel my subscription?</h3>
             <p className="text-text-secondary">
               Yes, you can cancel your subscription at any time. There are no fixed-term contracts. 
@@ -104,14 +110,14 @@ export default function PricingPage() {
             </p>
           </div>
 
-          <div className="card">
+          <div className="card-glass p-6">
             <h3 className="font-bold text-white mb-2">What payment methods are supported?</h3>
             <p className="text-text-secondary">
               We accept all major cards (Visa, Mastercard, Amex) through the secure Stripe payment system.
             </p>
           </div>
 
-          <div className="card">
+          <div className="card-glass p-6">
             <h3 className="font-bold text-white mb-2">Are analyses a guarantee of winnings?</h3>
             <p className="text-text-secondary">
               <strong>No.</strong> SportBot AI is an analytical tool that provides estimates based on available data. 
@@ -119,7 +125,7 @@ export default function PricingPage() {
             </p>
           </div>
 
-          <div className="card">
+          <div className="card-glass p-6">
             <h3 className="font-bold text-white mb-2">What do I get with the Free plan?</h3>
             <p className="text-text-secondary">
               The Free plan includes 1 match analysis and 1 AI chat message to try out the platform 
@@ -130,9 +136,9 @@ export default function PricingPage() {
       </section>
 
       {/* Disclaimer */}
-      <section className="bg-warning/10 border-t border-warning/30 py-8">
+      <section className="bg-warning/5 border-t border-warning/20 py-8 relative">
         <div className="max-w-3xl mx-auto px-4 text-center">
-          <p className="text-warning text-sm leading-relaxed">
+          <p className="text-warning/80 text-sm leading-relaxed">
             <strong>⚠️ Note:</strong> Payment for SportBot AI does not guarantee winnings. 
             Our tool is purely analytical and educational. Bet responsibly and only with money you can afford to lose.
           </p>
