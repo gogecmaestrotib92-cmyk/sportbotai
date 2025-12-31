@@ -273,9 +273,9 @@ export default function PricingCards() {
                 isCurrentPlan
                   ? 'border-2 border-accent shadow-glow-accent'
                   : plan.highlighted && canUpgrade
-                  ? 'border-2 border-violet/50 shadow-glow-violet md:scale-105'
+                  ? 'border-2 border-primary/50 md:scale-105'
                   : isPremium && canUpgrade
-                  ? 'border-2 border-accent/30 shadow-glow-accent'
+                  ? 'border-2 border-white/10'
                   : ''
               }`}
             >
@@ -285,7 +285,7 @@ export default function PricingCards() {
                   YOUR PLAN
                 </div>
               ) : plan.highlighted && canUpgrade ? (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet to-violet-dark text-white text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap shadow-glow-violet">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
                   MOST POPULAR
                 </div>
               ) : isPremium && canUpgrade && (
@@ -303,7 +303,7 @@ export default function PricingCards() {
                 {/* Price */}
                 <div className="mb-2">
                   <span className={`text-4xl font-extrabold ${
-                    plan.highlighted ? 'text-gradient-violet-accent' : isPremium ? 'text-accent' : 'text-white'
+                    plan.highlighted ? 'text-white' : isPremium ? 'text-white' : 'text-white'
                   }`}>
                     {yearly ? plan.yearlyPrice : plan.monthlyPrice}
                   </span>
@@ -311,7 +311,7 @@ export default function PricingCards() {
                     {yearly ? '/year' : '/month'}
                   </span>
                 </div>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-text-muted">
                   {yearly ? plan.yearlyDescription : plan.description}
                 </p>
               </div>
@@ -322,7 +322,7 @@ export default function PricingCards() {
                   <li key={index} className="flex items-start gap-3">
                     <svg
                       className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                        plan.highlighted ? 'text-primary' : isPremium ? 'text-slate-300' : 'text-accent'
+                        plan.highlighted ? 'text-primary' : isPremium ? 'text-accent' : 'text-accent'
                       }`}
                       fill="currentColor"
                       viewBox="0 0 20 20"
@@ -348,9 +348,9 @@ export default function PricingCards() {
                     : isDowngrade
                     ? 'btn-gradient-border'
                     : plan.highlighted
-                    ? 'btn-violet'
+                    ? 'bg-primary hover:bg-primary-hover text-white'
                     : isPremium
-                    ? 'bg-gradient-to-r from-accent to-accent-dark text-bg hover:from-accent-dark hover:to-accent shadow-glow-accent'
+                    ? 'bg-slate-600/50 hover:bg-slate-600/70 text-white border border-slate-500/30'
                     : 'btn-gradient-border'
                 } ${loading === checkoutId ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
