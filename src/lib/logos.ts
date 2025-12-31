@@ -192,7 +192,7 @@ const ESPN_TEAM_IDS: Record<string, Record<string, string>> = {
     'Rutgers Scarlet Knights': '164', 'Rutgers': '164', 'Scarlet Knights': '164',
     'UCLA Bruins': '26', 'UCLA': '26', 'Bruins': '26',
     'USC Trojans': '30', 'USC': '30', 'Trojans': '30', 'Southern California': '30',
-    'Washington Huskies': '264', 'Washington Huskies': '264', 'Huskies': '264',
+    'Washington Huskies': '264', 'Washington': '264', 'Huskies': '264',
     'Wisconsin Badgers': '275', 'Wisconsin': '275', 'Badgers': '275',
     // Big 12
     'Arizona Wildcats': '12', 'Arizona': '12',
