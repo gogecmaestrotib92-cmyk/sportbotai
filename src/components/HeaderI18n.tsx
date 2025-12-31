@@ -112,11 +112,14 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
-  const { isVisible } = useHideOnScroll({ threshold: 15, mobileOnly: true });
+  const { isVisible, scrollY } = useHideOnScroll({ threshold: 15, mobileOnly: true });
   
   // Determine current locale from pathname or prop
   const locale: Locale = propLocale || (pathname?.startsWith('/sr') ? 'sr' : 'en');
   const t = getTranslations(locale);
+  
+  // Scroll-aware styling
+  const isScrolled = scrollY > 20;
   
   // Helper to create locale-aware links
   const localePath = (path: string) => locale === 'sr' ? `/sr${path === '/' ? '' : path}` : path;
@@ -125,14 +128,22 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
   return (
     <header 
       className={`
-        bg-bg/95 backdrop-blur-md border-b border-divider 
         fixed top-0 left-0 right-0 z-50
-        transition-transform duration-300 ease-out
+        transition-all duration-300 ease-out
         ${isVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'}
+        ${isScrolled 
+          ? 'bg-black/50 backdrop-blur-xl border-b border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.3)]' 
+          : 'bg-transparent border-b border-transparent'
+        }
       `}
     >
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+      {/* Subtle gradient glow when scrolled */}
+      {isScrolled && (
+        <div className="absolute inset-0 bg-gradient-to-r from-violet/5 via-transparent to-accent/5 pointer-events-none" />
+      )}
+      
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className={`flex justify-between items-center transition-all duration-300 ${isScrolled ? 'h-14' : 'h-16'}`}>
           {/* Logo */}
           <Link href={homeLink} className="flex items-center gap-2.5 group">
             <Image 

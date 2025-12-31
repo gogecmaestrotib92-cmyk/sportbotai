@@ -284,8 +284,8 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
         {/* Free Plan Card */}
-        <div className={`rounded-card p-5 sm:p-6 bg-bg-card ${
-          currentPlan === 'FREE' ? 'border-2 border-accent' : 'border border-divider'
+        <div className={`card-glass p-5 sm:p-6 ${
+          currentPlan === 'FREE' ? 'border-2 border-accent shadow-glow-accent' : ''
         } relative`}>
           {currentPlan === 'FREE' && (
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-bg text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
@@ -354,14 +354,14 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
           return (
             <div
               key={plan.id}
-              className={`rounded-card p-5 sm:p-6 relative ${
-                plan.highlighted && canUpgrade
-                  ? 'bg-bg-card border-2 border-primary shadow-glow-primary md:scale-105'
+              className={`card-glass p-5 sm:p-6 relative ${
+                isCurrentPlan
+                  ? 'border-2 border-accent shadow-glow-accent'
+                  : plan.highlighted && canUpgrade
+                  ? 'border-2 border-primary/50 md:scale-105'
                   : isPremium && canUpgrade
-                  ? 'bg-gradient-to-b from-slate-800/50 to-slate-900/50 border-2 border-slate-400/30 shadow-[0_0_20px_rgba(148,163,184,0.15)]'
-                  : isCurrentPlan
-                  ? 'bg-bg-card border-2 border-accent'
-                  : 'bg-bg-card border border-divider'
+                  ? 'border-2 border-white/10'
+                  : ''
               }`}
             >
               {/* Badge */}
@@ -374,29 +374,27 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
                   {t.mostPopular}
                 </div>
               ) : isPremium && canUpgrade && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-slate-300 to-slate-400 text-slate-900 text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-accent to-accent-dark text-bg text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap shadow-glow-accent">
                   {t.bestValue}
                 </div>
               )}
 
               {/* Plan header */}
               <div className="text-center mb-4 pt-2">
-                <h3 className={`text-xl font-bold mb-3 ${isPremium ? 'text-slate-200' : 'text-white'}`}>
+                <h3 className="text-xl font-bold mb-3 text-white">
                   {plan.name}
                 </h3>
 
                 {/* Price */}
                 <div className="mb-2">
-                  <span className={`text-4xl font-bold ${
-                    plan.highlighted ? 'text-primary' : isPremium ? 'text-slate-200' : 'text-white'
-                  }`}>
+                  <span className="text-4xl font-extrabold text-white">
                     {yearly ? plan.yearlyPrice : plan.monthlyPrice}
                   </span>
-                  <span className={`text-sm ${isPremium ? 'text-slate-400' : 'text-gray-400'}`}>
+                  <span className="text-sm text-gray-400">
                     {yearly ? t.perYear : t.perMonth}
                   </span>
                 </div>
-                <p className={`text-sm ${isPremium ? 'text-slate-400' : 'text-gray-400'}`}>
+                <p className="text-sm text-text-muted">
                   {yearly ? plan.yearlyDescription : plan.description}
                 </p>
               </div>
@@ -407,7 +405,7 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
                   <li key={index} className="flex items-start gap-3">
                     <svg
                       className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                        plan.highlighted ? 'text-primary' : isPremium ? 'text-slate-300' : 'text-accent'
+                        plan.highlighted ? 'text-primary' : isPremium ? 'text-accent' : 'text-accent'
                       }`}
                       fill="currentColor"
                       viewBox="0 0 20 20"
@@ -418,7 +416,7 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
                         clipRule="evenodd"
                       />
                     </svg>
-                    <span className={`text-sm ${isPremium ? 'text-slate-300' : 'text-gray-300'}`}>{feature}</span>
+                    <span className="text-sm text-gray-300">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -431,12 +429,12 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
                   isCurrentPlan
                     ? 'bg-accent/20 text-accent border border-accent/30 cursor-default'
                     : isDowngrade
-                    ? 'bg-bg-elevated text-text-secondary hover:bg-bg-elevated/80 border border-divider'
+                    ? 'btn-gradient-border'
                     : plan.highlighted
-                    ? 'bg-primary text-white hover:bg-primary/80'
+                    ? 'bg-primary hover:bg-primary-hover text-white'
                     : isPremium
-                    ? 'bg-gradient-to-r from-slate-300 to-slate-400 text-slate-900 hover:from-slate-200 hover:to-slate-300'
-                    : 'bg-bg-elevated text-white hover:bg-bg-elevated/80 border border-divider'
+                    ? 'bg-slate-600/50 hover:bg-slate-600/70 text-white border border-slate-500/30'
+                    : 'btn-gradient-border'
                 } ${loading === checkoutId ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {loading === checkoutId ? (
