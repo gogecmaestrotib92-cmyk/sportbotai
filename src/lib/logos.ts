@@ -201,7 +201,7 @@ const ESPN_TEAM_IDS: Record<string, Record<string, string>> = {
     'BYU Cougars': '252', 'BYU': '252', 'Brigham Young': '252',
     'Cincinnati Bearcats': '2132', 'Cincinnati': '2132', 'Bearcats': '2132',
     'Colorado Buffaloes': '38', 'Colorado': '38', 'Buffaloes': '38', 'Buffs': '38',
-    'Houston Cougars': '248', 'Houston Cougars': '248',
+    'Houston Cougars': '248', 'Houston': '248', 'Cougars': '248',
     'Iowa State Cyclones': '66', 'Iowa State': '66', 'Cyclones': '66',
     'Kansas Jayhawks': '2305', 'Kansas': '2305', 'Jayhawks': '2305', 'KU': '2305',
     'Kansas State Wildcats': '2306', 'Kansas State': '2306', 'K-State': '2306',
