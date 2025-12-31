@@ -105,25 +105,24 @@ export default function TrendingSection({ maxMatches = 6 }: TrendingSectionProps
   }
 
   return (
-    <section id="trending" className="py-12 sm:py-16 bg-bg-primary scroll-mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="trending" className="py-12 sm:py-16 bg-bg scroll-mt-20 relative overflow-hidden">
+      {/* Subtle ambient glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-violet/3 rounded-full blur-[150px] pointer-events-none" />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-xl">🔥</span>
-            </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-white">Trending Matches</h2>
-              <p className="text-sm text-gray-400">Top matches happening now</p>
-            </div>
+          <div>
+            <span className="text-violet-light text-xs font-semibold uppercase tracking-wider mb-1 block">Live Now</span>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Trending Matches</h2>
+            <p className="text-sm text-text-muted mt-0.5">Top matches happening now</p>
           </div>
           <Link 
             href="/matches"
-            className="text-sm text-blue-400 hover:text-blue-300 font-medium hidden sm:flex items-center gap-1 transition-colors"
+            className="text-sm text-violet-light hover:text-violet font-semibold hidden sm:flex items-center gap-1.5 transition-colors group"
           >
             View all
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
@@ -133,7 +132,7 @@ export default function TrendingSection({ maxMatches = 6 }: TrendingSectionProps
         {isLoading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-[140px] rounded-xl bg-bg-card animate-pulse border border-divider" />
+              <div key={i} className="h-[140px] rounded-xl card-glass animate-pulse" />
             ))}
           </div>
         )}
@@ -164,7 +163,7 @@ export default function TrendingSection({ maxMatches = 6 }: TrendingSectionProps
         {/* Empty State */}
         {!isLoading && matches.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-400 mb-4">No trending matches right now</p>
+            <p className="text-text-muted mb-4">No trending matches right now</p>
             <Link href="/matches" className="btn-primary">
               Browse all matches
             </Link>
@@ -173,7 +172,7 @@ export default function TrendingSection({ maxMatches = 6 }: TrendingSectionProps
 
         {/* Mobile CTA */}
         <div className="mt-6 sm:hidden text-center">
-          <Link href="/matches" className="btn-secondary inline-flex items-center gap-2">
+          <Link href="/matches" className="btn-gradient-border inline-flex items-center gap-2">
             View all matches
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
