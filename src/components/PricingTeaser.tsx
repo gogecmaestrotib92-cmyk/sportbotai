@@ -76,11 +76,14 @@ export default function PricingTeaser() {
   const toggleBilling = () => setIsYearlyBilling(!isYearlyBilling);
 
   return (
-    <section className="bg-bg-primary section-container">
-      <div className="text-center mb-8">
-        <p className="text-blue-400 font-semibold text-sm uppercase tracking-wider mb-3">Pricing</p>
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-          Simple, transparent pricing
+    <section className="bg-bg section-container relative overflow-hidden">
+      {/* Ambient glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
+      
+      <div className="text-center mb-8 relative">
+        <p className="text-violet font-semibold text-sm uppercase tracking-wider mb-3">Pricing</p>
+        <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">
+          Simple, <span className="text-gradient-violet-accent">transparent pricing</span>
         </h2>
         <p className="text-lg text-gray-400 max-w-2xl mx-auto">
           Start free, upgrade when you need more. No hidden fees.
@@ -96,7 +99,7 @@ export default function PricingTeaser() {
           aria-checked={isYearlyBilling}
           aria-label="Toggle between monthly and yearly billing"
           className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
-            isYearlyBilling ? 'bg-primary' : 'bg-gray-600'
+            isYearlyBilling ? 'bg-violet' : 'bg-gray-600'
           }`}
         >
           <span
@@ -107,17 +110,17 @@ export default function PricingTeaser() {
         </button>
         <span className={`text-sm font-medium transition-colors ${isYearlyBilling ? 'text-white' : 'text-gray-400'}`}>
           Yearly
-          <span className="ml-2 text-xs bg-primary/30 text-white px-2 py-0.5 rounded-full">Save up to 52%</span>
+          <span className="ml-2 text-xs bg-violet/30 text-white px-2 py-0.5 rounded-full">Save up to 52%</span>
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto relative">
         {/* Free Plan Card */}
-        <div className="rounded-card p-5 sm:p-6 bg-bg-card border border-divider">
+        <div className="card-glass p-5 sm:p-6">
           <div className="text-center mb-6">
             <h3 className="text-xl font-bold mb-2 text-white">Free</h3>
             <div className="mb-2">
-              <span className="text-4xl font-bold text-white">$0</span>
+              <span className="text-4xl font-extrabold text-white">$0</span>
             </div>
             <p className="text-sm text-gray-400">Try it once for free</p>
           </div>
@@ -135,7 +138,7 @@ export default function PricingTeaser() {
 
           <Link
             href="/analyzer"
-            className="block w-full py-3 px-6 rounded-btn font-semibold transition-all duration-200 bg-bg-elevated text-white hover:bg-bg-elevated/80 border border-divider min-h-[48px] text-center"
+            className="btn-gradient-border block w-full py-3 px-6 text-center font-semibold min-h-[48px]"
           >
             Start Free
           </Link>
@@ -149,22 +152,22 @@ export default function PricingTeaser() {
           return (
             <div
               key={plan.id}
-              className={`rounded-card p-5 sm:p-6 relative ${
+              className={`card-glass p-5 sm:p-6 relative ${
                 plan.highlighted
-                  ? 'bg-bg-card border-2 border-primary shadow-glow-primary md:scale-105'
+                  ? 'border-2 border-violet/50 shadow-glow-violet md:scale-105'
                   : isPremium
-                  ? 'bg-gradient-to-b from-slate-800/50 to-slate-900/50 border-2 border-slate-400/30 shadow-[0_0_20px_rgba(148,163,184,0.15)]'
-                  : 'bg-bg-card border border-divider'
+                  ? 'border-2 border-accent/30 shadow-glow-accent'
+                  : ''
               }`}
             >
               {/* Badge */}
               {plan.highlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet to-violet-dark text-white text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap shadow-glow-violet">
                   MOST POPULAR
                 </div>
               )}
               {isPremium && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-slate-300 to-slate-400 text-slate-900 text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-accent to-accent-dark text-bg text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap shadow-glow-accent">
                   BEST VALUE
                 </div>
               )}

@@ -125,7 +125,7 @@ export function TrustBadges({ variant = 'horizontal', className = '' }: TrustBad
 
 // ============================================
 // STATS STRIP
-// Horizontal bar with key metrics
+// Horizontal bar with key metrics - BOLD STYLE
 // ============================================
 interface StatsStripProps {
   className?: string;
@@ -140,13 +140,13 @@ export function StatsStrip({ className = '' }: StatsStripProps) {
   ];
 
   return (
-    <div className={`py-6 border-y border-white/10 ${className}`}>
+    <div className={`py-8 border-y border-white/5 bg-bg ${className}`}>
       <div className="max-w-5xl mx-auto px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {stats.map((stat, i) => (
             <div key={i} className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-white mb-1">{stat.value}</div>
-              <div className="text-xs md:text-sm text-white/50">{stat.label}</div>
+              <div className="text-3xl md:text-4xl font-extrabold text-white mb-1 tracking-tight">{stat.value}</div>
+              <div className="text-xs md:text-sm text-white/40 uppercase tracking-wider">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -168,7 +168,7 @@ interface TestimonialProps {
 
 export function TestimonialCard({ quote, author, role, rating = 5 }: TestimonialProps) {
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+    <div className="card-glass p-6 hover:shadow-glow-violet transition-all duration-300">
       {/* Stars */}
       <div className="flex gap-0.5 mb-4">
         {[...Array(5)].map((_, i) => (
@@ -183,12 +183,12 @@ export function TestimonialCard({ quote, author, role, rating = 5 }: Testimonial
       
       {/* Author */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-bold">
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet to-accent flex items-center justify-center text-white text-xs font-bold shadow-glow-violet">
           {author.charAt(0)}
         </div>
         <div>
-          <p className="text-white text-sm font-medium">{author}</p>
-          {role && <p className="text-white/60 text-xs">{role}</p>}
+          <p className="text-white text-sm font-semibold">{author}</p>
+          {role && <p className="text-white/50 text-xs">{role}</p>}
         </div>
       </div>
     </div>
@@ -222,11 +222,15 @@ export function TestimonialsSection() {
   ];
 
   return (
-    <section className="py-16 px-4">
-      <div className="max-w-6xl mx-auto">
+    <section className="py-16 px-4 bg-bg relative overflow-hidden">
+      {/* Ambient glow */}
+      <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
+      
+      <div className="max-w-6xl mx-auto relative">
         <div className="text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">What Users Are Saying</h2>
-          <p className="text-white/50">Join thousands who understand matches better</p>
+          <p className="text-violet font-semibold text-sm uppercase tracking-wider mb-3">Testimonials</p>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-3 tracking-tight">What Users Are Saying</h2>
+          <p className="text-white/40">Join thousands who understand matches better</p>
         </div>
         
         <div className="grid md:grid-cols-3 gap-6">

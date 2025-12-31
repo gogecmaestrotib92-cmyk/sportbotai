@@ -37,13 +37,22 @@ module.exports = {
           light: '#D6FFEC',
         },
         
-        // Background / Surface (Dark Theme)
+        // Secondary (Violet/Purple - Props.Cash inspired)
+        violet: {
+          DEFAULT: '#8B5CF6',
+          light: '#A78BFA',
+          dark: '#7C3AED',
+          glow: 'rgba(139, 92, 246, 0.4)',
+        },
+        
+        // Background / Surface (Dark Theme - warmer blacks)
         bg: {
-          DEFAULT: '#0B0E11',
-          card: '#14181D',
-          hover: '#1C2229',
-          elevated: '#1F252C',
-          subtle: '#111518',
+          DEFAULT: '#0A0A0A',
+          card: '#121212',
+          hover: '#1A1A1A',
+          elevated: '#1E1E1E',
+          subtle: '#0E0E0E',
+          glass: 'rgba(18, 18, 18, 0.7)',
           light: '#F8FAFC', // Legacy - avoid using
         },
         
@@ -85,13 +94,13 @@ module.exports = {
       },
       
       fontSize: {
-        // Typography Scale
-        'h1': ['2.5rem', { lineHeight: '1.2', fontWeight: '700' }],      // 40px
-        'h1-mobile': ['1.75rem', { lineHeight: '1.2', fontWeight: '700' }], // 28px
-        'h2': ['2rem', { lineHeight: '1.25', fontWeight: '600' }],       // 32px
-        'h2-mobile': ['1.375rem', { lineHeight: '1.25', fontWeight: '600' }], // 22px
-        'h3': ['1.5rem', { lineHeight: '1.3', fontWeight: '600' }],      // 24px
-        'h3-mobile': ['1.125rem', { lineHeight: '1.3', fontWeight: '600' }], // 18px
+        // Typography Scale - Bold & Tight (Props.Cash inspired)
+        'h1': ['2.75rem', { lineHeight: '1.1', fontWeight: '800', letterSpacing: '-0.03em' }],      // 44px
+        'h1-mobile': ['2rem', { lineHeight: '1.1', fontWeight: '800', letterSpacing: '-0.02em' }], // 32px
+        'h2': ['2.25rem', { lineHeight: '1.15', fontWeight: '700', letterSpacing: '-0.02em' }],    // 36px
+        'h2-mobile': ['1.5rem', { lineHeight: '1.2', fontWeight: '700', letterSpacing: '-0.02em' }], // 24px
+        'h3': ['1.75rem', { lineHeight: '1.2', fontWeight: '700', letterSpacing: '-0.01em' }],     // 28px
+        'h3-mobile': ['1.25rem', { lineHeight: '1.25', fontWeight: '700' }], // 20px
         'body-lg': ['1.125rem', { lineHeight: '1.5', fontWeight: '400' }], // 18px
         'body': ['1rem', { lineHeight: '1.5', fontWeight: '400' }],      // 16px
         'body-sm': ['0.875rem', { lineHeight: '1.5', fontWeight: '400' }], // 14px
@@ -116,20 +125,27 @@ module.exports = {
       },
       
       boxShadow: {
-        'card': '0 4px 12px rgba(0, 0, 0, 0.2)',
-        'card-hover': '0 8px 24px rgba(0, 0, 0, 0.3)',
-        'glow-accent': '0 0 20px rgba(42, 246, 160, 0.3)',
-        'glow-primary': '0 0 20px rgba(26, 115, 232, 0.3)',
+        'card': '0 4px 12px rgba(0, 0, 0, 0.4)',
+        'card-hover': '0 8px 32px rgba(0, 0, 0, 0.5)',
+        'glow-accent': '0 0 30px rgba(42, 246, 160, 0.35)',
+        'glow-primary': '0 0 30px rgba(26, 115, 232, 0.35)',
+        'glow-violet': '0 0 40px rgba(139, 92, 246, 0.3)',
         'glow-danger': '0 0 15px rgba(248, 113, 113, 0.25)',
         'inner-glow': 'inset 0 1px 2px rgba(42, 246, 160, 0.1)',
+        'glass': '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+        'ambient': '0 0 60px rgba(139, 92, 246, 0.15), 0 0 100px rgba(42, 246, 160, 0.1)',
       },
       
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'hero-pattern': 'linear-gradient(135deg, #0B0E11 0%, #14181D 50%, #0B0E11 100%)',
-        'card-gradient': 'linear-gradient(145deg, #14181D 0%, #1C2229 100%)',
+        'hero-pattern': 'linear-gradient(135deg, #0A0A0A 0%, #121212 50%, #0A0A0A 100%)',
+        'card-gradient': 'linear-gradient(145deg, #121212 0%, #1A1A1A 100%)',
         'accent-gradient': 'linear-gradient(135deg, #1A73E8 0%, #2AF6A0 100%)',
+        'violet-gradient': 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)',
+        'violet-accent-gradient': 'linear-gradient(135deg, #8B5CF6 0%, #2AF6A0 100%)',
         'glow-border': 'linear-gradient(135deg, #1A73E8, #2AF6A0)',
+        'gradient-border-violet': 'linear-gradient(135deg, #8B5CF6, #2AF6A0)',
+        'glass-gradient': 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)',
       },
       
       animation: {

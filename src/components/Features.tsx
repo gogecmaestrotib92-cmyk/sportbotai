@@ -50,12 +50,15 @@ export default function Features() {
   ];
 
   return (
-    <section className="bg-bg-card section-container">
+    <section className="bg-bg section-container relative overflow-hidden">
+      {/* Ambient background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
+      
       <ScrollReveal animation="fade-up">
-        <div className="text-center mb-14">
-          <p className="text-blue-400 font-semibold text-sm uppercase tracking-wider mb-3">Features</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Everything you need for smarter analysis
+        <div className="text-center mb-14 relative">
+          <p className="text-violet font-semibold text-sm uppercase tracking-wider mb-3">Features</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">
+            Everything you need for <span className="text-gradient-violet-accent">smarter analysis</span>
           </h2>
           <p className="text-lg text-gray-400 max-w-2xl mx-auto">
             Professional-grade analytics tools designed for informed decision-making.
@@ -63,15 +66,15 @@ export default function Features() {
         </div>
       </ScrollReveal>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative">
         {features.map((feature, index) => (
           <ScrollReveal key={feature.title} animation="fade-up" delay={index * 80}>
             <div 
-              className="bg-bg-elevated rounded-card p-6 border border-divider hover:border-primary/30 hover:shadow-glow-primary transition-all duration-300 group h-full"
+              className="card-glass p-6 hover:border-violet/30 hover:shadow-glow-violet transition-all duration-300 group h-full"
             >
               <div className="flex items-start justify-between mb-4">
                 <span className="text-3xl">{feature.icon}</span>
-                <span className="text-xs font-medium px-2 py-1 bg-primary/10 text-primary rounded-full">
+                <span className="text-xs font-medium px-2.5 py-1 bg-violet/15 text-violet-light rounded-full">
                   {feature.badge}
                 </span>
               </div>

@@ -54,12 +54,15 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section className="bg-bg-primary section-container">
+    <section className="bg-bg section-container relative overflow-hidden">
+      {/* Ambient glow */}
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
+      
       <ScrollReveal animation="fade-up">
-        <div className="text-center mb-14">
-          <p className="text-blue-400 font-semibold text-sm uppercase tracking-wider mb-3">How It Works</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Four simple steps to smarter analysis
+        <div className="text-center mb-14 relative">
+          <p className="text-violet font-semibold text-sm uppercase tracking-wider mb-3">How It Works</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">
+            Four simple steps to <span className="text-gradient-violet-accent">smarter analysis</span>
           </h2>
           <p className="text-lg text-gray-400 max-w-2xl mx-auto">
             From match selection to AI-powered insights in seconds.
@@ -67,22 +70,22 @@ export default function HowItWorks() {
         </div>
       </ScrollReveal>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
         {steps.map((step, index) => (
           <ScrollReveal key={step.number} animation="fade-up" delay={index * 100}>
             <div className="relative group h-full">
               {/* Connector Line (desktop) */}
               {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-10 left-[calc(50%+2rem)] w-[calc(100%-2rem)] h-[2px] bg-gradient-to-r from-primary/50 to-accent/50" />
+                <div className="hidden lg:block absolute top-10 left-[calc(50%+2rem)] w-[calc(100%-2rem)] h-[2px] bg-gradient-to-r from-violet/50 to-accent/50" />
               )}
               
-              <div className="relative bg-bg-card rounded-card p-6 border border-divider hover:border-primary/30 hover:shadow-glow-primary transition-all duration-300 h-full">
+              <div className="relative card-glass p-6 hover:border-violet/30 hover:shadow-glow-violet transition-all duration-300 h-full">
                 {/* Step Number */}
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center group-hover:bg-accent group-hover:text-bg-primary transition-colors">
+                  <div className="w-12 h-12 bg-gradient-to-br from-violet to-violet-dark text-white rounded-xl flex items-center justify-center group-hover:from-accent group-hover:to-accent-dark group-hover:text-bg transition-all">
                     {step.icon}
                   </div>
-                  <span className="text-4xl font-bold text-bg-elevated group-hover:text-primary/20 transition-colors">
+                  <span className="text-4xl font-bold text-white/5 group-hover:text-violet/20 transition-colors">
                     {step.number}
                   </span>
                 </div>

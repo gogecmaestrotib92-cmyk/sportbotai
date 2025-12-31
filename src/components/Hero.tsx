@@ -22,34 +22,35 @@ export default function Hero() {
         disableOnMobile={true}
       />
       
-      {/* Additional decorative elements */}
+      {/* Additional decorative elements - Violet + Accent ambient glows */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-primary/5 rounded-full blur-[80px] sm:blur-[120px]" />
-        <div className="absolute bottom-0 left-0 w-[200px] sm:w-[400px] h-[200px] sm:h-[400px] bg-accent/5 rounded-full blur-[60px] sm:blur-[100px]" />
+        <div className="absolute top-0 right-0 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-violet/10 rounded-full blur-[80px] sm:blur-[120px]" />
+        <div className="absolute bottom-0 left-0 w-[200px] sm:w-[400px] h-[200px] sm:h-[400px] bg-accent/8 rounded-full blur-[60px] sm:blur-[100px]" />
+        <div className="absolute top-1/2 left-1/3 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-violet/5 rounded-full blur-[100px]" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           {/* Left Side - Content */}
           <div className="text-center lg:text-left">
-            {/* Live Stats Badge */}
+            {/* Live Stats Badge - Glassmorphism */}
             <div className="flex flex-col sm:flex-row items-center gap-3 mb-4 sm:mb-6 justify-center lg:justify-start">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full text-xs sm:text-sm font-medium text-gray-300 backdrop-blur-sm border border-white/10">
-                <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-xl rounded-full text-xs sm:text-sm font-medium text-gray-200 border border-white/10 shadow-glass">
+                <span className="w-2 h-2 bg-accent rounded-full animate-pulse shadow-glow-accent" />
                 Understand any match in 60 seconds
               </div>
               <LiveStatsCounter className="hidden sm:flex" />
             </div>
 
-            {/* Headline - H1 for SEO */}
-            <h1 className="text-3xl xs:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.1] mb-4 sm:mb-6 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+            {/* Headline - H1 for SEO - Bolder with gradient */}
+            <h1 className="text-3xl xs:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.05] tracking-tight mb-4 sm:mb-6 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
               Know Any Match
               <br className="hidden xs:block" />
-              <span className="text-accent drop-shadow-[0_0_20px_rgba(42,246,160,0.5)]">Before It Happens</span>
+              <span className="text-gradient-violet-accent drop-shadow-[0_0_30px_rgba(139,92,246,0.4)]">Before It Happens</span>
             </h1>
 
-            {/* Subheadline */}
-            <p className="text-base sm:text-lg text-white leading-relaxed mb-6 sm:mb-8 max-w-xl mx-auto lg:mx-0 bg-black/60 backdrop-blur-md rounded-xl px-5 py-4 shadow-xl border border-white/10">
+            {/* Subheadline - Glassmorphism card */}
+            <p className="text-base sm:text-lg text-white/90 leading-relaxed mb-6 sm:mb-8 max-w-xl mx-auto lg:mx-0 card-glass px-5 py-4">
               Pre-match intelligence: headlines, form, H2H history & AI insights.
               <strong className="text-accent"> Soccer, NBA, NFL & NHL—all in 60 seconds.</strong>
             </p>
@@ -58,13 +59,13 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
               <Link 
                 href="/matches" 
-                className="btn-primary text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto"
+                className="btn-primary text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto glow-accent-strong"
               >
                 Browse Matches
               </Link>
               <Link 
                 href="/ai-desk" 
-                className="inline-flex items-center justify-center gap-2 text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto bg-gradient-to-r from-violet-500 to-purple-600 text-white font-semibold rounded-lg hover:from-violet-400 hover:to-purple-500 transition-all shadow-lg shadow-purple-500/20"
+                className="btn-violet inline-flex items-center justify-center gap-2 text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto"
               >
                 <span>🧠</span>
                 Ask AI Agent
