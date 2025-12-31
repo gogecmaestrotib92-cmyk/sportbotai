@@ -611,7 +611,7 @@ function PremiumGate() {
       <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
       
-      <div className="container-custom max-w-2xl mx-auto relative">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 relative">
         <div className="card-glass p-8 text-center">
           <div className="text-6xl mb-6">🔒</div>
           <h1 className="text-3xl font-extrabold text-text-primary mb-4 tracking-tight">Market Alerts</h1>
@@ -661,7 +661,7 @@ function LoadingState() {
       {/* Ambient Background Glows */}
       <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
       
-      <div className="container-custom relative">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="animate-pulse space-y-6">
           <div className="h-20 card-glass rounded-xl"></div>
           <div className="grid lg:grid-cols-2 gap-8">
@@ -750,7 +750,7 @@ export default function MarketAlertsPage() {
   if (error && !data?.data) {
     return (
       <div className="min-h-screen bg-bg-primary py-12">
-        <div className="container-custom">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-bg-card border border-danger/30 rounded-xl p-8 text-center">
             <div className="text-4xl mb-4">⚠️</div>
             <h2 className="text-xl font-semibold text-text-primary mb-2">Something went wrong</h2>
@@ -794,7 +794,7 @@ export default function MarketAlertsPage() {
       <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
       
-      <div className="container-custom relative">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Upgrade Banner for non-premium users */}
         {!isPremium && (
           <div className="mb-6 card-glass border-violet/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
