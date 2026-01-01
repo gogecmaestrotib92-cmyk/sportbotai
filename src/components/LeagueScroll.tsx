@@ -49,13 +49,14 @@ export default function LeagueScroll() {
                 key={`${league.name}-${index}`}
                 className="flex-shrink-0 flex items-center gap-3 px-5 py-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 hover:border-accent/30 transition-all duration-300 group"
               >
-                {/* League logo */}
-                <div className="relative w-8 h-8 flex-shrink-0">
+                {/* League logo with white background for visibility */}
+                <div className="relative w-8 h-8 flex-shrink-0 bg-white rounded-md p-1">
                   <Image
                     src={league.logo}
                     alt={`${league.name} logo`}
                     fill
-                    className="object-contain group-hover:scale-110 transition-transform duration-300"
+                    className="object-contain group-hover:scale-110 transition-transform duration-300 p-0.5"
+                    unoptimized
                   />
                 </div>
                 {/* League name */}
@@ -75,7 +76,7 @@ export default function LeagueScroll() {
             transform: translateX(0);
           }
           100% {
-            transform: trans25teX(-50%);
+            transform: translateX(-50%);
           }
         }
 

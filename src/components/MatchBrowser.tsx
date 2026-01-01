@@ -178,7 +178,7 @@ export default function MatchBrowser({ initialSport = 'soccer', maxMatches = 12 
               onClick={() => setSelectedSport(sport.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
                 selectedSport === sport.id
-                  ? 'bg-accent text-white shadow-lg shadow-accent/20'
+                  ? 'bg-accent/20 text-white border border-accent/30 shadow-lg shadow-accent/10'
                   : 'bg-white/5 backdrop-blur-sm text-gray-300 hover:bg-white/10 border border-white/5'
               }`}
             >

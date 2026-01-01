@@ -60,6 +60,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'media-4.api-sports.io',
       },
+      // ESPN CDN for NBA/NFL/NHL logos
+      {
+        protocol: 'https',
+        hostname: 'a.espncdn.com',
+      },
     ],
   },
   
