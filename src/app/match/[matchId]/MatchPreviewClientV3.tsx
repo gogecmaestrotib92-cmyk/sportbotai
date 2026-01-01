@@ -1054,6 +1054,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
                 awayTeam={data.matchInfo.awayTeam}
                 hasDraw={data.matchInfo.hasDraw}
                 isPro={true}
+                locale={locale}
               />
             </div>
           ) : (
