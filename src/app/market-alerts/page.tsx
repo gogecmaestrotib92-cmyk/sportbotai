@@ -646,7 +646,7 @@ function PremiumGate() {
             </ul>
           </div>
           
-          <Link href="/pricing" className="btn-violet inline-block">
+          <Link href="/pricing" className="btn-secondary inline-block">
             Upgrade to Premium
           </Link>
         </div>
@@ -807,7 +807,7 @@ export default function MarketAlertsPage() {
             </div>
             <Link 
               href="/pricing" 
-              className="btn-violet flex-shrink-0 text-sm px-5 py-2"
+              className="btn-secondary flex-shrink-0 text-sm px-5 py-2"
             >
               Upgrade to Premium
             </Link>

@@ -59,7 +59,7 @@ export default function HeroVariantB() {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
               <Link 
                 href="/matches" 
-                className="inline-flex items-center justify-center gap-2 text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto bg-gradient-to-r from-accent to-emerald-500 text-bg-primary font-bold rounded-lg hover:from-emerald-400 hover:to-accent transition-all shadow-lg shadow-accent/30"
+                className="inline-flex items-center justify-center gap-2 text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto bg-gradient-to-r from-accent to-accent-dark text-bg-primary font-bold rounded-lg hover:from-accent-dark hover:to-accent transition-all shadow-lg shadow-accent/30"
               >
                 Browse Matches
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

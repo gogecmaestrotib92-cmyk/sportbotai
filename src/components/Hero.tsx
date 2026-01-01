@@ -22,11 +22,11 @@ export default function Hero() {
         disableOnMobile={true}
       />
       
-      {/* Additional decorative elements - Violet + Accent ambient glows */}
+      {/* Additional decorative elements - Accent ambient glows */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 right-0 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-accent/10 rounded-full blur-[80px] sm:blur-[120px]" />
         <div className="absolute bottom-0 left-0 w-[200px] sm:w-[400px] h-[200px] sm:h-[400px] bg-accent/8 rounded-full blur-[60px] sm:blur-[100px]" />
-        <div className="absolute top-1/2 left-1/3 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-violet/5 rounded-full blur-[100px]" />
+        <div className="absolute top-1/2 left-1/3 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-accent/5 rounded-full blur-[100px]" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-28">
@@ -65,7 +65,7 @@ export default function Hero() {
               </Link>
               <Link 
                 href="/ai-desk" 
-                className="btn-violet inline-flex items-center justify-center gap-2 text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto"
+                className="btn-secondary inline-flex items-center justify-center gap-2 text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto"
               >
                 <span>🧠</span>
                 Ask AI Agent

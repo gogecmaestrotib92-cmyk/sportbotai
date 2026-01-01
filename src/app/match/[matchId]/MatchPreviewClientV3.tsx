@@ -833,7 +833,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
             {/* CTA Button - Uses violet theming */}
             <Link 
               href={`${localePath}/pricing`}
-              className="btn-violet inline-block text-lg px-8 py-3"
+              className="btn-secondary inline-block text-lg px-8 py-3"
             >
               {usageLimit.plan === 'FREE' ? t.upgradeToPro : t.upgradeToPremium}
             </Link>
