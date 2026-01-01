@@ -243,8 +243,17 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
       />
 
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 relative">
-        {/* Glass morphism overlay */}
-        <div className="absolute inset-0 bg-white/40 backdrop-blur-3xl" />
+        {/* Glass morphism overlay with newspaper texture */}
+        <div 
+          className="absolute inset-0 bg-white/40 backdrop-blur-3xl"
+          style={{
+            backgroundImage: `
+              url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E"),
+              radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px)
+            `,
+            backgroundSize: 'auto, 3px 3px'
+          }}
+        />
         {/* Hero Section */}
         <header className="pt-8 pb-12 relative z-10">
           <div className="container mx-auto px-4">
