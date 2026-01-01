@@ -271,22 +271,33 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <article className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 relative">
+        {/* Glass morphism overlay with newspaper texture */}
+        <div 
+          className="absolute inset-0 bg-white/40 z-0"
+          style={{
+            backgroundImage: `
+              url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E"),
+              radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px)
+            `,
+            backgroundSize: 'auto, 3px 3px'
+          }}
+        />
         {/* Hero Section - matches blog structure */}
-        <header className="pt-8 pb-12">
+        <header className="pt-8 pb-12 relative z-10">
           <div className="container mx-auto px-4">
             {/* Breadcrumb */}
             <nav className="mb-8">
-              <ol className="flex items-center gap-2 text-sm text-slate-400">
+              <ol className="flex items-center gap-2 text-sm text-slate-600">
                 <li>
-                  <Link href="/" className="hover:text-white">Home</Link>
+                  <Link href="/" className="hover:text-slate-900">Home</Link>
                 </li>
                 <li>/</li>
                 <li>
-                  <Link href="/news" className="hover:text-white">News</Link>
+                  <Link href="/news" className="hover:text-slate-900">News</Link>
                 </li>
                 <li>/</li>
-                <li className="text-slate-300 truncate max-w-[200px]">{post.newsTitle || post.title}</li>
+                <li className="text-slate-900 truncate max-w-[200px] font-medium">{post.newsTitle || post.title}</li>
               </ol>
             </nav>
 
@@ -295,19 +306,19 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
               {post.league && (
                 <Link
                   href={`/news?sport=${post.sport?.toLowerCase() || ''}`}
-                  className="inline-block text-emerald-400 text-sm font-medium mb-4 hover:text-emerald-300"
+                  className="inline-block text-emerald-700 text-sm font-bold mb-4 hover:text-emerald-800"
                 >
                   {post.league}
                 </Link>
               )}
 
               {/* Title */}
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-6 leading-tight">
                 {post.newsTitle || post.title}
               </h1>
 
               {/* Meta - with author link */}
-              <div className="flex flex-wrap items-center gap-4 text-slate-400 text-sm mb-8">
+              <div className="flex flex-wrap items-center gap-4 text-slate-700 text-sm mb-8 font-medium">
                 <Link href="/about" className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
                   <Image
                     src={AUTHOR.photo}
@@ -360,30 +371,32 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
         </header>
 
         {/* Article Content */}
-        <article className="container mx-auto px-4 pb-16">
-          <div className="max-w-3xl mx-auto">
-            {/* Use same blog-content CSS class for visual consistency with auto-linked team names */}
-            <div
-              className="blog-content"
-              dangerouslySetInnerHTML={{ __html: autoLinkTeamsSimple(post.newsContent || post.content) }}
-            />
+        <section className="pb-16 relative z-10">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto">
+              {/* Use same blog-content CSS class for visual consistency with auto-linked team names */}
+              <article
+                className="blog-content bg-white rounded-2xl shadow-lg p-8 md:p-12 border border-slate-200"
+                dangerouslySetInnerHTML={{ __html: autoLinkTeamsSimple(post.newsContent || post.content) }}
+              />
+            </div>
           </div>
-        </article>
+        </section>
 
         {/* Content Footer - Tags & Share (matches blog structure) */}
-        <section className="pb-16">
+        <section className="pb-16 relative z-10">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
               {/* Tags */}
               {post.tags.length > 0 && (
-                <div className="mt-12 pt-8 border-t border-slate-700">
-                  <h3 className="text-sm font-medium text-slate-400 mb-4">Tags</h3>
+                <div className="mt-8 pt-8 border-t border-slate-300 bg-white rounded-2xl shadow-lg p-8 border border-slate-200">
+                  <h3 className="text-sm font-medium text-slate-600 mb-4">Tags</h3>
                   <div className="flex flex-wrap gap-2">
                     {post.tags.map((tag: string) => (
                       <Link
                         key={tag}
                         href={`/news?tag=${encodeURIComponent(tag)}`}
-                        className="px-3 py-1 bg-slate-800 text-slate-300 text-sm rounded-full hover:bg-slate-700"
+                        className="px-3 py-1 bg-white border border-slate-300 text-slate-700 text-sm rounded-full hover:border-emerald-600 hover:text-emerald-700"
                       >
                         #{tag}
                       </Link>
@@ -393,14 +406,14 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
               )}
 
               {/* Share Section */}
-              <div className="mt-8 p-6 bg-slate-800/50 rounded-xl border border-slate-700">
-                <p className="text-slate-300 text-center">
+              <div className="mt-8 p-6 bg-white rounded-xl shadow-lg border-2 border-slate-200">
+                <p className="text-slate-700 text-center">
                   Stay informed with the latest sports news and AI-powered analysis
                 </p>
               </div>
 
               {/* Author Box - E-E-A-T signal */}
-              <div className="mt-8 p-6 bg-slate-800/50 rounded-xl border border-slate-700">
+              <div className="mt-8 p-6 bg-white rounded-xl shadow-lg border-2 border-slate-200">
                 <div className="flex items-start gap-4">
                   <Link href="/about" className="flex-shrink-0">
                     <Image
@@ -412,11 +425,11 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
                     />
                   </Link>
                   <div className="flex-1">
-                    <Link href="/about" className="text-lg font-semibold text-white hover:text-emerald-400 transition-colors">
+                    <Link href="/about" className="text-lg font-semibold text-slate-900 hover:text-emerald-600 transition-colors">
                       {AUTHOR.name}
                     </Link>
-                    <p className="text-emerald-400 text-sm mb-2">{AUTHOR.jobTitle}</p>
-                    <p className="text-slate-400 text-sm leading-relaxed">
+                    <p className="text-emerald-600 text-sm mb-2">{AUTHOR.jobTitle}</p>
+                    <p className="text-slate-600 text-sm leading-relaxed">
                       Sports analyst with expertise in data-driven match analysis and betting markets. 
                       Combining AI technology with deep sports knowledge to deliver actionable insights.
                     </p>
@@ -425,7 +438,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
                         href={AUTHOR.sameAs[0]} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-slate-400 hover:text-emerald-400 transition-colors text-sm"
+                        className="text-slate-600 hover:text-emerald-600 transition-colors text-sm"
                       >
                         Upwork
                       </a>
@@ -433,7 +446,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
                         href={AUTHOR.sameAs[1]} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-slate-400 hover:text-emerald-400 transition-colors text-sm"
+                        className="text-slate-600 hover:text-emerald-600 transition-colors text-sm"
                       >
                         LinkedIn
                       </a>
@@ -447,9 +460,9 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
 
         {/* Related Articles */}
         {relatedArticles.length > 0 && (
-          <section className="py-16 bg-slate-800/30">
+          <section className="py-16 relative z-10">
             <div className="container mx-auto px-4">
-              <h2 className="text-2xl font-bold text-white mb-8 text-center">
+              <h2 className="text-2xl font-bold text-slate-900 mb-8 text-center">
                 Related Articles
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -457,9 +470,9 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
                   <Link
                     key={article.slug}
                     href={`/news/${article.slug}`}
-                    className="bg-slate-800/50 rounded-xl overflow-hidden border border-slate-700 hover:border-emerald-500/50 transition-all"
+                    className="group bg-white rounded-xl overflow-hidden border-2 border-slate-900/20 hover:border-emerald-600/60 transition-all hover:shadow-xl shadow-lg"
                   >
-                    <div className="aspect-video relative bg-slate-700">
+                    <div className="aspect-video relative bg-slate-200">
                       {article.featuredImage && (
                         <Image
                           src={article.featuredImage}
@@ -471,11 +484,11 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
                     </div>
                     <div className="p-4">
                       {article.league && (
-                        <span className="text-emerald-400 text-xs font-medium">
+                        <span className="inline-block px-2 py-1 bg-slate-900 text-white text-xs font-bold uppercase tracking-wide rounded-sm mb-2">
                           {article.league}
                         </span>
                       )}
-                      <h3 className="font-semibold text-white hover:text-emerald-300 transition-colors line-clamp-2 mt-1">
+                      <h3 className="text-slate-900 font-bold text-sm line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">
                         {article.title}
                       </h3>
                       {article.publishedAt && (
@@ -494,7 +507,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
             </div>
           </section>
         )}
-      </div>
+      </article>
     </>
   );
 }
