@@ -147,7 +147,7 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
   
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isYearlyBilling, setIsYearlyBilling] = useState(true);
+  const [isYearlyBilling, setIsYearlyBilling] = useState(false);
   const [currentPlan, setCurrentPlan] = useState<string>('FREE');
   const { data: session } = useSession();
   const router = useRouter();

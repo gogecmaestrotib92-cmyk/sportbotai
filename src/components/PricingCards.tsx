@@ -84,7 +84,7 @@ export default function PricingCards() {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Single billing period toggle - yearly is default (true = yearly)
-  const [isYearlyBilling, setIsYearlyBilling] = useState(true);
+  const [isYearlyBilling, setIsYearlyBilling] = useState(false);
   const [currentPlan, setCurrentPlan] = useState<string>('FREE');
   const { data: session } = useSession();
   const router = useRouter();

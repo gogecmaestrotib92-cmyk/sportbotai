@@ -67,7 +67,7 @@ const plans: PricingPlan[] = [
 
 export default function PricingTeaser() {
   // Single billing period toggle - yearly is default (true = yearly)
-  const [isYearlyBilling, setIsYearlyBilling] = useState(true);
+  const [isYearlyBilling, setIsYearlyBilling] = useState(false);
 
   // Get the toggle state
   const isYearly = () => isYearlyBilling;

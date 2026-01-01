@@ -16,8 +16,8 @@ interface PricingTeaserI18nProps {
 }
 
 export default function PricingTeaserI18n({ t, locale }: PricingTeaserI18nProps) {
-  // Single billing period toggle - yearly is default (true = yearly)
-  const [isYearlyBilling, setIsYearlyBilling] = useState(true);
+  // Single billing period toggle - monthly is default (false = monthly)
+  const [isYearlyBilling, setIsYearlyBilling] = useState(false);
 
   const pricingHref = locale === 'sr' ? '/sr/pricing' : '/pricing';
   const analyzerHref = locale === 'sr' ? '/sr/analyzer' : '/analyzer';
