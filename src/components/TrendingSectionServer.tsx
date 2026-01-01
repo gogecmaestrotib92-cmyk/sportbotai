@@ -65,28 +65,29 @@ function TrendingSkeleton() {
 }
 
 // Server component that fetches and renders
-async function TrendingContent({ maxMatches }: { maxMatches: number }) {
+async function TrendingContent({ maxMatches, locale }: { maxMatches: number; locale: 'en' | 'sr' }) {
   const matches = await fetchTrendingMatches(maxMatches);
 
   if (matches.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-400 mb-4">No trending matches right now</p>
-        <Link href="/matches" className="btn-primary">
-          Browse all matches
+        <p className="text-gray-400 mb-4">{locale === 'sr' ? 'Trenutno nema popularnih mečeva' : 'No trending matches right now'}</p>
+        <Link href={locale === 'sr' ? '/sr/matches' : '/matches'} className="btn-primary">
+          {locale === 'sr' ? 'Pregled svih mečeva' : 'Browse all matches'}
         </Link>
       </div>
     );
   }
 
-  return <TrendingGrid matches={matches} />;
+  return <TrendingGrid matches={matches} locale={locale} />;
 }
 
 interface TrendingSectionServerProps {
   maxMatches?: number;
+  locale?: 'en' | 'sr';
 }
 
-export default function TrendingSectionServer({ maxMatches = 6 }: TrendingSectionServerProps) {
+export default function TrendingSectionServer({ maxMatches = 6, locale = 'en' }: TrendingSectionServerProps) {
   return (
     <section id="trending" className="py-12 sm:py-16 bg-bg-primary scroll-mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -97,15 +98,15 @@ export default function TrendingSectionServer({ maxMatches = 6 }: TrendingSectio
               <span className="text-xl">🔥</span>
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-white">Trending Matches</h2>
-              <p className="text-sm text-gray-400">Top matches happening now</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">{locale === 'sr' ? 'Popularni Mečevi' : 'Trending Matches'}</h2>
+              <p className="text-sm text-gray-400">{locale === 'sr' ? 'Najpopularniji mečevi koji se trenutno dešavaju' : 'Top matches happening now'}</p>
             </div>
           </div>
           <Link 
-            href="/matches"
+            href={locale === 'sr' ? '/sr/matches' : '/matches'}
             className="text-sm text-blue-400 hover:text-blue-300 font-medium hidden sm:flex items-center gap-1 transition-colors"
           >
-            View all
+            {locale === 'sr' ? 'Svi mečevi' : 'View all'}
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -114,13 +115,13 @@ export default function TrendingSectionServer({ maxMatches = 6 }: TrendingSectio
 
         {/* Content with Suspense for streaming */}
         <Suspense fallback={<TrendingSkeleton />}>
-          <TrendingContent maxMatches={maxMatches} />
+          <TrendingContent maxMatches={maxMatches} locale={locale} />
         </Suspense>
 
         {/* Mobile CTA */}
         <div className="mt-6 sm:hidden text-center">
-          <Link href="/matches" className="btn-secondary inline-flex items-center gap-2">
-            View all matches
+          <Link href={locale === 'sr' ? '/sr/matches' : '/matches'} className="btn-secondary inline-flex items-center gap-2">
+            {locale === 'sr' ? 'Svi mečevi' : 'View all matches'}
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>

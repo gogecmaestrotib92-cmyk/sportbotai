@@ -13,6 +13,7 @@ import Link from 'next/link';
 import TeamLogo from '@/components/ui/TeamLogo';
 import LeagueLogo from '@/components/ui/LeagueLogo';
 import MatchCountdown from '@/components/ui/MatchCountdown';
+import { translateLeague } from '@/lib/translate-client';
 
 interface LiveScore {
   homeScore: number;
@@ -32,6 +33,7 @@ interface MatchCardProps {
   commenceTime: string;
   hotScore?: number;
   tags?: string[];
+  locale?: 'en' | 'sr';
 }
 
 export default function MatchCard({
@@ -42,10 +44,14 @@ export default function MatchCard({
   commenceTime,
   hotScore = 0,
   tags = [],
+  locale = 'en',
 }: MatchCardProps) {
   const [liveScore, setLiveScore] = useState<LiveScore | null>(null);
   const [isLive, setIsLive] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  
+  // Translate league name (team names stay original)
+  const translatedLeague = translateLeague(league, locale);
 
   // Detect sport type for live scores API
   const getSportType = (sport: string): string => {
@@ -174,7 +180,7 @@ export default function MatchCard({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <LeagueLogo leagueName={league || sportKey} sport={sportKey} size="sm" />
-          <span className="text-xs text-gray-400 truncate max-w-[120px]">{league}</span>
+          <span className="text-xs text-gray-400 truncate max-w-[120px]">{translatedLeague}</span>
         </div>
         {isLive && liveScore ? (
           <span className="text-xs text-red-400 font-mono font-medium">
@@ -182,7 +188,7 @@ export default function MatchCard({
           </span>
         ) : isFinished && liveScore ? (
           <span className="text-xs text-gray-500 font-medium">
-            Full Time
+            {locale === 'sr' ? 'Kraj' : 'Full Time'}
           </span>
         ) : (
           <MatchCountdown commenceTime={commenceTime} size="sm" />
@@ -254,7 +260,7 @@ export default function MatchCard({
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 group-hover:bg-white"></span>
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-400 group-hover:bg-white"></span>
             </span>
-            Watch Live
+            {locale === 'sr' ? 'Gledaj Uživo' : 'Watch Live'}
             <svg className="w-3 h-3 opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
@@ -262,7 +268,7 @@ export default function MatchCard({
         ) : isFinished ? (
           <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-gray-500/15 text-gray-400 border border-gray-500/30 rounded-full group-hover:bg-gray-500 group-hover:text-white group-hover:border-gray-500 transition-all">
             <span className="w-1.5 h-1.5 bg-gray-400 rounded-full group-hover:bg-white"></span>
-            View Recap
+            {locale === 'sr' ? 'Pregled' : 'View Recap'}
             <svg className="w-3 h-3 opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
@@ -270,7 +276,7 @@ export default function MatchCard({
         ) : (
           <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-accent/15 text-accent border border-accent/30 rounded-full group-hover:bg-accent group-hover:text-white group-hover:border-accent transition-all">
             <span className="w-1.5 h-1.5 bg-accent rounded-full group-hover:bg-white animate-pulse"></span>
-            Analyze
+            {locale === 'sr' ? 'Analiziraj' : 'Analyze'}
             <svg className="w-3 h-3 opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>

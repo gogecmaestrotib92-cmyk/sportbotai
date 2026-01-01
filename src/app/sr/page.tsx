@@ -80,7 +80,7 @@ export default function SerbianHomePage() {
       <StatsStripI18n t={t} />
 
       {/* Trending matches - server-rendered for fast LCP */}
-      <TrendingSectionServer maxMatches={6} />
+      <TrendingSectionServer maxMatches={6} locale="sr" />
 
       {/* How it works - 4 steps */}
       <HowItWorksI18n t={t} />

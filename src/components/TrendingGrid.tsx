@@ -13,6 +13,7 @@ import { StaggeredItem } from '@/components/ui';
 
 interface TrendingGridProps {
   matches: TrendingMatch[];
+  locale?: 'en' | 'sr';
 }
 
 // Get derby/rivalry tags from hotFactors
@@ -25,7 +26,7 @@ function getMatchTags(match: TrendingMatch): string[] {
   return tags;
 }
 
-export default function TrendingGrid({ matches }: TrendingGridProps) {
+export default function TrendingGrid({ matches, locale = 'en' }: TrendingGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {matches.map((match, index) => {
@@ -41,6 +42,7 @@ export default function TrendingGrid({ matches }: TrendingGridProps) {
               commenceTime={match.commenceTime}
               hotScore={match.hotScore}
               tags={tags}
+              locale={locale}
             />
           </StaggeredItem>
         );
