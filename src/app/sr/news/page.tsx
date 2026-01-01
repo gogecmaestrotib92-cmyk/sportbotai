@@ -162,21 +162,32 @@ export default async function SerbianNewsPage({ searchParams }: NewsPageProps) {
   const { posts, pagination } = await getNewsPosts(page, sport);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 relative">
+      {/* Glass morphism overlay with newspaper texture */}
+      <div 
+        className="absolute inset-0 bg-white/40 z-0"
+        style={{
+          backgroundImage: `
+            url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E"),
+            radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px)
+          `,
+          backgroundSize: 'auto, 3px 3px'
+        }}
+      />
       {/* Header */}
-      <section className="py-8 md:py-12 border-b border-slate-700/50">
+      <section className="py-8 md:py-12 border-b border-slate-300/50 relative z-10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                Sportske <span className="text-accent">Vesti</span>
+              <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+                Sportske <span className="text-emerald-600">Vesti</span>
               </h1>
-              <p className="text-slate-400">
+              <p className="text-slate-700">
                 Najnovije sportske vesti, najave utakmica i ekskluzivni uvidi
               </p>
             </div>
-            <div className="text-sm text-slate-500">
-              <Link href="/news" className="hover:text-accent transition-colors">
+            <div className="text-sm text-slate-600">
+              <Link href="/news" className="hover:text-emerald-600 transition-colors">
                 🌐 English
               </Link>
             </div>
@@ -185,7 +196,7 @@ export default async function SerbianNewsPage({ searchParams }: NewsPageProps) {
       </section>
 
       {/* Sport Filters */}
-      <section className="py-6 sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700/30">
+      <section className="py-6 sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-slate-300/50">
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap gap-2">
             {SPORT_FILTERS.map((filter) => (
@@ -194,8 +205,8 @@ export default async function SerbianNewsPage({ searchParams }: NewsPageProps) {
                 href={filter.key === 'all' ? '/sr/news' : `/sr/news?sport=${filter.key}`}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   (sport === filter.key || (!sport && filter.key === 'all'))
-                    ? 'bg-accent-dark text-white'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-white border border-slate-300 text-slate-700 hover:border-emerald-600 hover:text-emerald-700'
                 }`}
               >
                 {filter.label}
@@ -206,11 +217,11 @@ export default async function SerbianNewsPage({ searchParams }: NewsPageProps) {
       </section>
 
       {/* News Articles */}
-      <section className="py-8">
+      <section className="py-8 relative z-10">
         <div className="container mx-auto px-4">
           {posts.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-slate-400 text-lg">Nema pronađenih vesti.</p>
+              <p className="text-slate-600 text-lg">Nema pronađenih vesti.</p>
               <p className="text-slate-500 mt-2">Uskoro stižu novi članci!</p>
             </div>
           ) : (
@@ -219,9 +230,9 @@ export default async function SerbianNewsPage({ searchParams }: NewsPageProps) {
               {posts[0] && (
                 <article className="mb-8">
                   <Link href={`/sr/news/${posts[0].slug}`} className="group block">
-                    <div className="grid md:grid-cols-5 gap-6 bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-700/50 hover:border-accent/50 transition-all">
+                    <div className="grid md:grid-cols-5 gap-6 bg-white rounded-2xl overflow-hidden border-2 border-slate-900/20 hover:border-emerald-600/60 transition-all hover:shadow-2xl shadow-lg">
                       {/* Image container */}
-                      <div className="md:col-span-2 aspect-[4/3] md:aspect-auto relative bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center p-4 min-h-[200px] md:min-h-[280px]">
+                      <div className="md:col-span-2 aspect-[4/3] md:aspect-auto relative bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center p-4 min-h-[200px] md:min-h-[280px]">
                         {posts[0].featuredImage ? (
                           <Image
                             src={posts[0].featuredImage}
@@ -238,7 +249,7 @@ export default async function SerbianNewsPage({ searchParams }: NewsPageProps) {
                       <div className="md:col-span-3 p-6 flex flex-col justify-center">
                         <div className="flex items-center gap-3 mb-3">
                           {posts[0].league && (
-                            <span className="px-3 py-1 bg-accent/10 text-accent text-xs font-semibold rounded-full">
+                            <span className="px-3 py-1 bg-slate-900 text-white text-xs font-semibold rounded-full">
                               {posts[0].league}
                             </span>
                           )}
@@ -246,10 +257,10 @@ export default async function SerbianNewsPage({ searchParams }: NewsPageProps) {
                             {posts[0].publishedAt && formatTimeAgo(new Date(posts[0].publishedAt))}
                           </span>
                         </div>
-                        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-3 group-hover:text-accent transition-colors line-clamp-2">
+                        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 mb-3 group-hover:text-emerald-700 transition-colors line-clamp-2">
                           {getDisplayTitle(posts[0])}
                         </h2>
-                        <p className="text-slate-400 line-clamp-2 md:line-clamp-3 mb-4 text-sm md:text-base">
+                        <p className="text-slate-600 line-clamp-2 md:line-clamp-3 mb-4 text-sm md:text-base">
                           {getDisplayExcerpt(posts[0])}
                         </p>
                         {posts[0].matchDate && (
@@ -275,10 +286,10 @@ export default async function SerbianNewsPage({ searchParams }: NewsPageProps) {
                 {posts.slice(1).map((post) => (
                   <article
                     key={post.id}
-                    className="group bg-slate-800/50 rounded-xl overflow-hidden border border-slate-700/50 hover:border-accent/50 transition-all"
+                    className="group bg-white rounded-xl overflow-hidden border-2 border-slate-900/20 hover:border-emerald-600/60 transition-all hover:shadow-xl shadow-lg"
                   >
                     <Link href={`/sr/news/${post.slug}`}>
-                      <div className="aspect-video relative bg-gradient-to-br from-slate-700 to-slate-800">
+                      <div className="aspect-video relative bg-gradient-to-br from-slate-200 to-slate-300">
                         {post.featuredImage ? (
                           <Image
                             src={post.featuredImage}
@@ -300,14 +311,14 @@ export default async function SerbianNewsPage({ searchParams }: NewsPageProps) {
                       </div>
                       <div className="p-4">
                         {post.league && (
-                          <span className="inline-block px-2 py-0.5 bg-accent/10 text-accent text-xs font-semibold rounded mb-2">
+                          <span className="inline-block px-2 py-0.5 bg-slate-900 text-white text-xs font-semibold rounded mb-2">
                             {post.league}
                           </span>
                         )}
-                        <h3 className="font-bold text-white group-hover:text-accent transition-colors line-clamp-2 mb-2">
+                        <h3 className="font-bold text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-2 mb-2">
                           {getDisplayTitle(post)}
                         </h3>
-                        <p className="text-slate-400 text-sm line-clamp-2">
+                        <p className="text-slate-600 text-sm line-clamp-2">
                           {getDisplayExcerpt(post)}
                         </p>
                       </div>
@@ -322,18 +333,18 @@ export default async function SerbianNewsPage({ searchParams }: NewsPageProps) {
                   {page > 1 && (
                     <Link
                       href={`/sr/news?page=${page - 1}${sport ? `&sport=${sport}` : ''}`}
-                      className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600"
+                      className="px-4 py-2 bg-white border border-slate-300 text-slate-900 rounded-lg hover:border-emerald-600 hover:text-emerald-700"
                     >
                       Prethodna
                     </Link>
                   )}
-                  <span className="px-4 py-2 text-slate-400">
+                  <span className="px-4 py-2 text-slate-600">
                     Strana {page} od {pagination.totalPages}
                   </span>
                   {page < pagination.totalPages && (
                     <Link
                       href={`/sr/news?page=${page + 1}${sport ? `&sport=${sport}` : ''}`}
-                      className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600"
+                      className="px-4 py-2 bg-white border border-slate-300 text-slate-900 rounded-lg hover:border-emerald-600 hover:text-emerald-700"
                     >
                       Sledeća
                     </Link>

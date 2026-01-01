@@ -236,7 +236,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
               {posts[0] && (
                 <article className="mb-8">
                   <Link href={`/news/${posts[0].slug}`} className="group block">
-                    <div className="grid md:grid-cols-5 gap-6 bg-white/95 rounded-2xl overflow-hidden border-2 border-slate-900/20 hover:border-emerald-600/60 transition-all hover:shadow-2xl">
+                    <div className="grid md:grid-cols-5 gap-6 bg-white rounded-2xl overflow-hidden border-2 border-slate-900/20 hover:border-emerald-600/60 transition-all hover:shadow-2xl shadow-lg">
                       {/* Image container - 2 columns on md+ */}
                       <div className="md:col-span-2 aspect-[4/3] md:aspect-auto relative bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center p-4 min-h-[200px] md:min-h-[280px]">
                         {posts[0].featuredImage ? (
@@ -292,7 +292,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
                 {posts.slice(1).map((post) => (
                   <article
                     key={post.id}
-                    className="group bg-white/95 rounded-xl overflow-hidden border-2 border-slate-900/20 hover:border-emerald-600/60 transition-all hover:shadow-xl"
+                    className="group bg-white rounded-xl overflow-hidden border-2 border-slate-900/20 hover:border-emerald-600/60 transition-all hover:shadow-xl shadow-lg"
                   >
                     <Link href={`/news/${post.slug}`}>
                       <div className="aspect-video relative bg-gradient-to-br from-slate-200 to-slate-300">
