@@ -193,7 +193,7 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
             <UserMenu />
           </div>
 
-          {/* Mobile: Language + Menu Button */}
+          {/* Mobile: Language Switcher + Menu Button */}
           <div className="md:hidden flex items-center gap-2">
             <LanguageSwitcher currentLocale={locale} />
             <button
