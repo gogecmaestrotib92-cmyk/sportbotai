@@ -1881,9 +1881,10 @@ html, body, main, section, article, div {
   background: var(--color-bg-hover);
 }
 
-/* === LEAGUE SCROLL ANIMATION v2.0 === */
-/* Last updated: 2026-01-02T00:30:00Z */
+/* === LEAGUE SCROLL ANIMATION v3.0 FORCE DEPLOY === */
+/* Last updated: 2026-01-02T00:45:00Z */
 /* 15s speed, seamless loop with -50% transform, no glitches */
+/* CRITICAL: THIS MUST BE LIVE ON PRODUCTION */
 @keyframes league-scroll {
   from {
     transform: translateX(0);
