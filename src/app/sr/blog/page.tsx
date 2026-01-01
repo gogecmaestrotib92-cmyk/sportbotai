@@ -243,8 +243,8 @@ export default async function SerbianBlogPage({ searchParams }: BlogPageProps) {
                             <span className="text-5xl opacity-50">📊</span>
                           </div>
                         )}
-                        {/* Gradient Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        {/* Gradient Overlay - always visible */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
                       </div>
                       
                       {/* Content */}
@@ -257,7 +257,7 @@ export default async function SerbianBlogPage({ searchParams }: BlogPageProps) {
                         )}
                         
                         {/* Title */}
-                        <h2 className="text-xl font-bold text-slate-900 mb-3 line-clamp-2 group-hover:text-emerald-600 transition-colors leading-tight">
+                        <h2 className="text-xl font-bold text-emerald-600 mb-3 line-clamp-2 hover:text-emerald-700 transition-colors leading-tight">
                           {getDisplayTitle(post)}
                         </h2>
                         
