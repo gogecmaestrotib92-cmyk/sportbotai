@@ -308,18 +308,18 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </header>
 
         {/* Content */}
-        <section className="pb-16">
+        <section className="pb-16 relative z-10">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
               {/* Article Content - Custom Blog Styling with auto-linked team names */}
               <article 
-                className="blog-content"
+                className="blog-content bg-white rounded-2xl shadow-lg p-8 md:p-12 border border-slate-200"
                 dangerouslySetInnerHTML={{ __html: autoLinkTeamsSimple(post.content) }}
               />
 
               {/* Tags */}
               {post.tags.length > 0 && (
-                <div className="mt-12 pt-8 border-t border-slate-300">
+                <div className="mt-8 pt-8 border-t border-slate-300 bg-white rounded-2xl shadow-lg p-8 border border-slate-200">
                   <h3 className="text-sm font-medium text-slate-600 mb-4">Tags</h3>
                   <div className="flex flex-wrap gap-2">
                     {post.tags.map((tag: string) => (
@@ -336,14 +336,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               )}
 
               {/* Share Section */}
-              <div className="mt-8 p-6 bg-white/80 rounded-xl border border-slate-300">
+              <div className="mt-8 p-6 bg-white rounded-xl shadow-lg border-2 border-slate-200">
                 <p className="text-slate-700 text-center">
                   Found this helpful? Share it with fellow sports analytics enthusiasts!
                 </p>
               </div>
 
               {/* Author Box - E-E-A-T signal */}
-              <div className="mt-8 p-6 bg-white/80 rounded-xl border border-slate-300">
+              <div className="mt-8 p-6 bg-white rounded-xl shadow-lg border-2 border-slate-200">
                 <div className="flex items-start gap-4">
                   <Link href="/about" className="flex-shrink-0">
                     <Image
