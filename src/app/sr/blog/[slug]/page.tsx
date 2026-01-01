@@ -242,9 +242,11 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-100 to-slate-100">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 relative">
+        {/* Glass morphism overlay */}
+        <div className="absolute inset-0 bg-white/40 backdrop-blur-3xl" />
         {/* Hero Section */}
-        <header className="pt-8 pb-12">
+        <header className="pt-8 pb-12 relative z-10">
           <div className="container mx-auto px-4">
             {/* Breadcrumb */}
             <nav className="mb-8">

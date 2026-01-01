@@ -150,9 +150,11 @@ export default async function SerbianBlogPage({ searchParams }: BlogPageProps) {
   const { posts, pagination } = await getBlogPosts(page, category);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-100 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 relative">
+      {/* Glass morphism overlay */}
+      <div className="absolute inset-0 bg-white/40 backdrop-blur-3xl" />
       {/* Header */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-24 relative z-10">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <div className="mb-4 text-right">

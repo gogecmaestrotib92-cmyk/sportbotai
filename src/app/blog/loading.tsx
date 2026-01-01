@@ -5,8 +5,10 @@
 
 export default function BlogLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-100 to-slate-100">
-      <div className="container mx-auto px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 relative">
+      {/* Glass morphism overlay */}
+      <div className="absolute inset-0 bg-white/40 backdrop-blur-3xl" />
+      <div className="container mx-auto px-4 py-12 relative z-10">
         {/* Header skeleton */}
         <div className="text-center mb-12">
           <div className="h-10 w-32 bg-slate-800 rounded animate-pulse mx-auto mb-4" />
