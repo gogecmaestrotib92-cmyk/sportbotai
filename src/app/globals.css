@@ -1410,29 +1410,29 @@ button:focus-visible {
 
 /* Blog article container */
 .blog-content {
-  @apply text-slate-700 leading-relaxed;
+  @apply text-slate-900 leading-relaxed;
 }
 
 /* Blog headings */
 .blog-content h1 {
-  @apply text-3xl md:text-4xl font-bold text-slate-900 mt-12 mb-6;
+  @apply text-3xl md:text-4xl font-bold text-black mt-12 mb-6;
 }
 
 .blog-content h2 {
-  @apply text-2xl md:text-3xl font-bold text-slate-900 mt-10 mb-5 pb-3 border-b border-slate-300;
+  @apply text-2xl md:text-3xl font-bold text-black mt-10 mb-5 pb-3 border-b border-slate-400;
 }
 
 .blog-content h3 {
-  @apply text-xl md:text-2xl font-semibold text-slate-900 mt-8 mb-4;
+  @apply text-xl md:text-2xl font-semibold text-black mt-8 mb-4;
 }
 
 .blog-content h4 {
-  @apply text-lg md:text-xl font-semibold text-slate-800 mt-6 mb-3;
+  @apply text-lg md:text-xl font-semibold text-slate-900 mt-6 mb-3;
 }
 
 /* Blog paragraphs */
 .blog-content p {
-  @apply text-slate-700 text-base md:text-lg leading-relaxed mb-6;
+  @apply text-slate-900 text-base md:text-lg leading-relaxed mb-6;
 }
 
 /* Blog links */
@@ -1456,17 +1456,17 @@ button:focus-visible {
 }
 
 .blog-content li {
-  @apply text-slate-700 text-base md:text-lg leading-relaxed pl-2;
+  @apply text-slate-900 text-base md:text-lg leading-relaxed pl-2;
 }
 
 .blog-content li::marker {
-  color: #10b981;
+  color: #059669;
 }
 
 /* Blog blockquotes */
 .blog-content blockquote {
-  @apply border-l-4 border-emerald-600 pl-6 py-4 pr-4 my-8 italic text-slate-700 rounded-r-lg;
-  background-color: rgba(16, 185, 129, 0.05);
+  @apply border-l-4 border-emerald-600 pl-6 py-4 pr-4 my-8 italic text-slate-900 rounded-r-lg;
+  background-color: rgba(16, 185, 129, 0.08);
 }
 
 .blog-content blockquote p {
@@ -1475,17 +1475,17 @@ button:focus-visible {
 
 /* Blog code blocks */
 .blog-content pre {
-  @apply border border-slate-300 rounded-xl p-4 my-6 overflow-x-auto;
-  background-color: #f8fafc;
-}
-
-.blog-content code {
-  @apply text-emerald-700 px-2 py-1 rounded text-sm font-mono;
+  @apply border-2 border-slate-400 rounded-xl p-4 my-6 overflow-x-auto;
   background-color: #f1f5f9;
 }
 
+.blog-content code {
+  @apply text-emerald-800 px-2 py-1 rounded text-sm font-mono font-semibold;
+  background-color: #e2e8f0;
+}
+
 .blog-content pre code {
-  @apply p-0 text-slate-700;
+  @apply p-0 text-slate-900;
   background-color: transparent;
 }
 
@@ -1496,17 +1496,17 @@ button:focus-visible {
 
 /* Blog horizontal rule */
 .blog-content hr {
-  @apply border-slate-300 my-10;
+  @apply border-slate-400 my-10;
 }
 
 /* Blog strong/bold */
 .blog-content strong {
-  @apply text-slate-900 font-semibold;
+  @apply text-black font-bold;
 }
 
 /* Blog emphasis */
 .blog-content em {
-  @apply text-slate-700 italic;
+  @apply text-slate-900 italic;
 }
 
 /* Blog table */
@@ -1515,22 +1515,22 @@ button:focus-visible {
 }
 
 .blog-content th {
-  @apply text-slate-900 font-semibold text-left p-3 border-b border-slate-300;
-  background-color: #f1f5f9;
+  @apply text-black font-bold text-left p-3 border-b-2 border-slate-400;
+  background-color: #e2e8f0;
 }
 
 .blog-content td {
-  @apply text-slate-700 p-3;
-  border-bottom: 1px solid rgba(203, 213, 225, 0.5);
+  @apply text-slate-900 p-3;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.5);
 }
 
 .blog-content tr:hover td {
-  background-color: rgba(241, 245, 249, 0.5);
+  background-color: rgba(226, 232, 240, 0.5);
 }
 
 /* First paragraph styling - larger text */
 .blog-content > p:first-of-type {
-  @apply text-lg md:text-xl text-slate-700 leading-relaxed;
+  @apply text-lg md:text-xl text-slate-900 leading-relaxed font-medium;
 }
 
 /* ========================================

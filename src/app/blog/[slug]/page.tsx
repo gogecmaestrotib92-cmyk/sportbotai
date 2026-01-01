@@ -234,16 +234,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <div className="container mx-auto px-4">
             {/* Breadcrumb */}
             <nav className="mb-8">
-              <ol className="flex items-center gap-2 text-sm text-slate-400">
+              <ol className="flex items-center gap-2 text-sm text-slate-600">
                 <li>
-                  <Link href="/" className="hover:text-white">Home</Link>
+                  <Link href="/" className="hover:text-slate-900">Home</Link>
                 </li>
                 <li>/</li>
                 <li>
-                  <Link href="/blog" className="hover:text-white">Blog</Link>
+                  <Link href="/blog" className="hover:text-slate-900">Blog</Link>
                 </li>
                 <li>/</li>
-                <li className="text-slate-700 truncate max-w-[200px]">{post.title}</li>
+                <li className="text-slate-900 truncate max-w-[200px] font-medium">{post.title}</li>
               </ol>
             </nav>
 
@@ -252,19 +252,19 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {post.category && (
                 <Link
                   href={`/blog?category=${encodeURIComponent(post.category)}`}
-                  className="inline-block text-emerald-600 text-sm font-medium mb-4 hover:text-emerald-700"
+                  className="inline-block text-emerald-700 text-sm font-bold mb-4 hover:text-emerald-800"
                 >
                   {post.category}
                 </Link>
               )}
 
               {/* Title */}
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-6 leading-tight">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-6 leading-tight">
                 {post.title}
               </h1>
 
               {/* Meta - with author link */}
-              <div className="flex flex-wrap items-center gap-4 text-slate-600 text-sm mb-8">
+              <div className="flex flex-wrap items-center gap-4 text-slate-700 text-sm mb-8 font-medium">
                 <Link href="/about" className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
                   <Image
                     src={AUTHOR.photo}
