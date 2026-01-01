@@ -76,14 +76,14 @@ export default function LanguageSwitcher({ currentLocale, className = '', showLa
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 border-2 border-accent/50 hover:border-accent transition-all"
+        className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all"
         aria-label="Change language"
         aria-expanded={isOpen}
       >
-        <span className="text-2xl leading-none">{currentLanguage.flag}</span>
+        <span className="text-lg leading-none">{currentLanguage.flag}</span>
         {showLabel && <span className="text-sm text-white">{currentLanguage.name}</span>}
         <svg 
-          className={`w-3 h-3 text-white transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+          className={`w-3 h-3 text-white/60 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
           fill="none" 
           viewBox="0 0 24 24" 
           stroke="currentColor"
