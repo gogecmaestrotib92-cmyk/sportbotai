@@ -1410,29 +1410,29 @@ button:focus-visible {
 
 /* Blog article container */
 .blog-content {
-  @apply text-gray-300 leading-relaxed;
+  @apply text-slate-700 leading-relaxed;
 }
 
 /* Blog headings */
 .blog-content h1 {
-  @apply text-3xl md:text-4xl font-bold text-white mt-12 mb-6;
+  @apply text-3xl md:text-4xl font-bold text-slate-900 mt-12 mb-6;
 }
 
 .blog-content h2 {
-  @apply text-2xl md:text-3xl font-bold text-white mt-10 mb-5 pb-3 border-b border-divider;
+  @apply text-2xl md:text-3xl font-bold text-slate-900 mt-10 mb-5 pb-3 border-b border-slate-300;
 }
 
 .blog-content h3 {
-  @apply text-xl md:text-2xl font-semibold text-white mt-8 mb-4;
+  @apply text-xl md:text-2xl font-semibold text-slate-900 mt-8 mb-4;
 }
 
 .blog-content h4 {
-  @apply text-lg md:text-xl font-semibold text-gray-100 mt-6 mb-3;
+  @apply text-lg md:text-xl font-semibold text-slate-800 mt-6 mb-3;
 }
 
 /* Blog paragraphs */
 .blog-content p {
-  @apply text-gray-300 text-base md:text-lg leading-relaxed mb-6;
+  @apply text-slate-700 text-base md:text-lg leading-relaxed mb-6;
 }
 
 /* Blog links */
@@ -1456,17 +1456,17 @@ button:focus-visible {
 }
 
 .blog-content li {
-  @apply text-gray-300 text-base md:text-lg leading-relaxed pl-2;
+  @apply text-slate-700 text-base md:text-lg leading-relaxed pl-2;
 }
 
 .blog-content li::marker {
-  color: #2AF6A0;
+  color: #10b981;
 }
 
 /* Blog blockquotes */
 .blog-content blockquote {
-  @apply border-l-4 border-accent pl-6 py-4 pr-4 my-8 italic text-gray-200 rounded-r-lg;
-  background-color: rgba(20, 24, 29, 0.5);
+  @apply border-l-4 border-emerald-600 pl-6 py-4 pr-4 my-8 italic text-slate-700 rounded-r-lg;
+  background-color: rgba(16, 185, 129, 0.05);
 }
 
 .blog-content blockquote p {
@@ -1475,17 +1475,17 @@ button:focus-visible {
 
 /* Blog code blocks */
 .blog-content pre {
-  @apply border border-divider rounded-xl p-4 my-6 overflow-x-auto;
-  background-color: #0B0E11;
+  @apply border border-slate-300 rounded-xl p-4 my-6 overflow-x-auto;
+  background-color: #f8fafc;
 }
 
 .blog-content code {
-  @apply text-accent px-2 py-1 rounded text-sm font-mono;
-  background-color: #14181D;
+  @apply text-emerald-700 px-2 py-1 rounded text-sm font-mono;
+  background-color: #f1f5f9;
 }
 
 .blog-content pre code {
-  @apply p-0 text-gray-300;
+  @apply p-0 text-slate-700;
   background-color: transparent;
 }
 
@@ -1496,17 +1496,17 @@ button:focus-visible {
 
 /* Blog horizontal rule */
 .blog-content hr {
-  @apply border-divider my-10;
+  @apply border-slate-300 my-10;
 }
 
 /* Blog strong/bold */
 .blog-content strong {
-  @apply text-white font-semibold;
+  @apply text-slate-900 font-semibold;
 }
 
 /* Blog emphasis */
 .blog-content em {
-  @apply text-gray-200 italic;
+  @apply text-slate-700 italic;
 }
 
 /* Blog table */
@@ -1515,22 +1515,22 @@ button:focus-visible {
 }
 
 .blog-content th {
-  @apply text-white font-semibold text-left p-3 border-b border-divider;
-  background-color: #14181D;
+  @apply text-slate-900 font-semibold text-left p-3 border-b border-slate-300;
+  background-color: #f1f5f9;
 }
 
 .blog-content td {
-  @apply text-gray-300 p-3;
-  border-bottom: 1px solid rgba(42, 48, 54, 0.5);
+  @apply text-slate-700 p-3;
+  border-bottom: 1px solid rgba(203, 213, 225, 0.5);
 }
 
 .blog-content tr:hover td {
-  background-color: rgba(20, 24, 29, 0.3);
+  background-color: rgba(241, 245, 249, 0.5);
 }
 
 /* First paragraph styling - larger text */
 .blog-content > p:first-of-type {
-  @apply text-lg md:text-xl text-gray-200 leading-relaxed;
+  @apply text-lg md:text-xl text-slate-700 leading-relaxed;
 }
 
 /* ========================================

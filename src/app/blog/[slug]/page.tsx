@@ -319,14 +319,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
               {/* Tags */}
               {post.tags.length > 0 && (
-                <div className="mt-12 pt-8 border-t border-slate-700">
-                  <h3 className="text-sm font-medium text-slate-400 mb-4">Tags</h3>
+                <div className="mt-12 pt-8 border-t border-slate-300">
+                  <h3 className="text-sm font-medium text-slate-600 mb-4">Tags</h3>
                   <div className="flex flex-wrap gap-2">
                     {post.tags.map((tag: string) => (
                       <Link
                         key={tag}
                         href={`/blog?tag=${encodeURIComponent(tag)}`}
-                        className="px-3 py-1 bg-slate-800 text-slate-300 text-sm rounded-full hover:bg-slate-700"
+                        className="px-3 py-1 bg-white border border-slate-300 text-slate-700 text-sm rounded-full hover:border-emerald-600 hover:text-emerald-700"
                       >
                         #{tag}
                       </Link>
@@ -336,14 +336,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               )}
 
               {/* Share Section */}
-              <div className="mt-8 p-6 bg-slate-800/50 rounded-xl border border-slate-700">
-                <p className="text-slate-300 text-center">
+              <div className="mt-8 p-6 bg-white/80 rounded-xl border border-slate-300">
+                <p className="text-slate-700 text-center">
                   Found this helpful? Share it with fellow sports analytics enthusiasts!
                 </p>
               </div>
 
               {/* Author Box - E-E-A-T signal */}
-              <div className="mt-8 p-6 bg-slate-800/50 rounded-xl border border-slate-700">
+              <div className="mt-8 p-6 bg-white/80 rounded-xl border border-slate-300">
                 <div className="flex items-start gap-4">
                   <Link href="/about" className="flex-shrink-0">
                     <Image
@@ -355,11 +355,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                     />
                   </Link>
                   <div className="flex-1">
-                    <Link href="/about" className="text-lg font-semibold text-white hover:text-emerald-400 transition-colors">
+                    <Link href="/about" className="text-lg font-semibold text-slate-900 hover:text-emerald-600 transition-colors">
                       {AUTHOR.name}
                     </Link>
-                    <p className="text-emerald-400 text-sm mb-2">{AUTHOR.jobTitle}</p>
-                    <p className="text-slate-400 text-sm leading-relaxed">
+                    <p className="text-emerald-600 text-sm mb-2">{AUTHOR.jobTitle}</p>
+                    <p className="text-slate-600 text-sm leading-relaxed">
                       Sports analyst with expertise in data-driven match analysis and betting markets. 
                       Combining AI technology with deep sports knowledge to deliver actionable insights.
                     </p>
@@ -368,7 +368,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                         href={AUTHOR.sameAs[0]} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-slate-400 hover:text-emerald-400 transition-colors text-sm"
+                        className="text-slate-600 hover:text-emerald-600 transition-colors text-sm"
                       >
                         Upwork
                       </a>
@@ -376,7 +376,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                         href={AUTHOR.sameAs[1]} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-slate-400 hover:text-emerald-400 transition-colors text-sm"
+                        className="text-slate-600 hover:text-emerald-600 transition-colors text-sm"
                       >
                         LinkedIn
                       </a>
@@ -390,9 +390,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
         {/* Related Posts */}
         {relatedPosts.length > 0 && (
-          <section className="py-16 bg-slate-800/30">
+          <section className="py-16 relative z-10">
             <div className="container mx-auto px-4">
-              <h2 className="text-2xl font-bold text-white mb-8 text-center">
+              <h2 className="text-2xl font-bold text-slate-900 mb-8 text-center">
                 Related Articles
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -434,12 +434,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         )}
 
         {/* CTA */}
-        <section className="py-16">
+        <section className="py-16 relative z-10">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">
               Put This Knowledge to Use
             </h2>
-            <p className="text-slate-300 mb-8 max-w-xl mx-auto">
+            <p className="text-slate-600 mb-8 max-w-xl mx-auto">
               Use our AI-powered analyzer to apply these concepts to real matches.
             </p>
             <Link
