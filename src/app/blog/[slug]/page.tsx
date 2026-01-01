@@ -217,7 +217,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <article className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <article className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-100 to-slate-100">
         {/* Hero Section */}
         <header className="pt-8 pb-12">
           <div className="container mx-auto px-4">

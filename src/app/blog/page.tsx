@@ -113,7 +113,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   const breadcrumbSchema = getBlogBreadcrumb();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-100 to-slate-100">
       {/* Breadcrumb Schema */}
       <script
         type="application/ld+json"

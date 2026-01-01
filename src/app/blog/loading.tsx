@@ -5,7 +5,7 @@
 
 export default function BlogLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-100 to-slate-100">
       <div className="container mx-auto px-4 py-12">
         {/* Header skeleton */}
         <div className="text-center mb-12">
