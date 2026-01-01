@@ -400,9 +400,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   <Link
                     key={related.slug}
                     href={`/blog/${related.slug}`}
-                    className="bg-slate-800/50 rounded-xl overflow-hidden border border-slate-700 hover:border-emerald-500/50 transition-all"
+                    className="group bg-white/95 rounded-xl overflow-hidden border-2 border-slate-900/20 hover:border-emerald-600/60 transition-all hover:shadow-xl"
                   >
-                    <div className="aspect-video relative bg-slate-700">
+                    <div className="aspect-video relative bg-slate-200">
                       {related.featuredImage ? (
                         <Image
                           src={related.featuredImage}
@@ -415,14 +415,18 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                           <span className="text-3xl">📊</span>
                         </div>
                       )}
-                    </div>
-                    <div className="p-4">
-                      <span className="text-emerald-400 text-xs font-medium">
-                        {related.category}
-                      </span>
-                      <h3 className="text-white font-semibold mt-1 line-clamp-2">
-                        {related.title}
-                      </h3>
+                      {/* Gradient overlay - always visible */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
+                      
+                      {/* Content overlay */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+                        <span className="inline-block px-2 py-1 bg-slate-900 text-white text-xs font-bold uppercase tracking-wide rounded-sm mb-2">
+                          {related.category}
+                        </span>
+                        <h3 className="text-white font-bold text-sm line-clamp-2 leading-tight">
+                          {related.title}
+                        </h3>
+                      </div>
                     </div>
                   </Link>
                 ))}
