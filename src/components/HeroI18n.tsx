@@ -70,13 +70,13 @@ export default function HeroI18n({ t, locale }: HeroI18nProps) {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
               <Link 
                 href={matchesHref} 
-                className="btn-primary text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto"
+                className="btn-primary text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto glow-accent-strong"
               >
                 {t.hero.ctaPrimary}
               </Link>
               <Link 
                 href={aiDeskHref} 
-                className="inline-flex items-center justify-center gap-2 text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg transition-all shadow-lg shadow-accent/20"
+                className="btn-secondary inline-flex items-center justify-center gap-2 text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto"
               >
                 <span>🧠</span>
                 {t.hero.ctaSecondary}
