@@ -43,14 +43,14 @@ export default function LeagueScroll() {
           <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-bg-primary to-transparent z-10 pointer-events-none" />
 
           {/* Scrolling track */}
-          <div className="flex gap-6 animate-scroll">
+          <div className="flex gap-8 animate-scroll">
             {duplicatedLeagues.map((league, index) => (
               <div
                 key={`${league.name}-${index}`}
-                className="flex-shrink-0 flex items-center gap-3 px-5 py-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 hover:border-accent/30 transition-all duration-300 group"
+                className="flex-shrink-0 flex items-center gap-4 px-6 py-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 hover:border-accent/30 transition-all duration-300 group"
               >
                 {/* League logo with white background for visibility */}
-                <div className="relative w-8 h-8 flex-shrink-0 bg-white rounded-md p-1">
+                <div className="relative w-12 h-12 flex-shrink-0 bg-white rounded-lg p-1.5">
                   <Image
                     src={league.logo}
                     alt={`${league.name} logo`}
@@ -60,7 +60,7 @@ export default function LeagueScroll() {
                   />
                 </div>
                 {/* League name */}
-                <span className="text-sm font-medium text-gray-300 whitespace-nowrap group-hover:text-white transition-colors">
+                <span className="text-base font-semibold text-gray-300 whitespace-nowrap group-hover:text-white transition-colors">
                   {league.name}
                 </span>
               </div>
@@ -81,7 +81,7 @@ export default function LeagueScroll() {
         }
 
         .animate-scroll {
-          animation: scroll 40s linear infinite;
+          animation: scroll 15s linear infinite;
         }
 
         .animate-scroll:hover {
