@@ -259,16 +259,16 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
           <div className="container mx-auto px-4">
             {/* Breadcrumb */}
             <nav className="mb-8">
-              <ol className="flex items-center gap-2 text-sm text-slate-400">
+              <ol className="flex items-center gap-2 text-sm text-slate-600">
                 <li>
-                  <Link href="/sr" className="hover:text-white">Početna</Link>
+                  <Link href="/sr" className="hover:text-slate-900">Početna</Link>
                 </li>
                 <li>/</li>
                 <li>
-                  <Link href="/sr/blog" className="hover:text-white">Blog</Link>
+                  <Link href="/sr/blog" className="hover:text-slate-900">Blog</Link>
                 </li>
                 <li>/</li>
-                <li className="text-slate-700 truncate max-w-[200px]">{articleTitle}</li>
+                <li className="text-slate-900 truncate max-w-[200px] font-medium">{articleTitle}</li>
               </ol>
             </nav>
 
@@ -278,14 +278,14 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
                 {post.category && (
                   <Link
                     href={`/sr/blog?category=${encodeURIComponent(post.category)}`}
-                    className="text-emerald-600 text-sm font-medium hover:text-emerald-700"
+                    className="text-emerald-700 text-sm font-bold hover:text-emerald-800"
                   >
                     {CATEGORY_TRANSLATIONS[post.category] || post.category}
                   </Link>
                 )}
                 <Link 
                   href={`/blog/${slug}`} 
-                  className="text-sm text-slate-500 hover:text-emerald-400 transition-colors"
+                  className="text-sm text-slate-600 hover:text-emerald-600 transition-colors"
                 >
                   🌐 English
                 </Link>
@@ -294,20 +294,20 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
               {/* Translation notice if not translated */}
               {!hasSerbian && (
                 <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                  <p className="text-amber-300 text-sm">
+                  <p className="text-amber-700 text-sm">
                     ⚠️ Ovaj članak još nije preveden na srpski. Prikazuje se originalna engleska verzija.
                   </p>
                 </div>
               )}
 
               {/* Title */}
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-6 leading-tight">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-6 leading-tight">
                 {articleTitle}
               </h1>
 
               {/* Meta */}
-              <div className="flex flex-wrap items-center gap-4 text-slate-600 text-sm mb-8">
-                <Link href="/about" className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
+              <div className="flex flex-wrap items-center gap-4 text-slate-700 text-sm mb-8 font-medium">
+                <Link href="/about" className="flex items-center gap-2 hover:text-emerald-600 transition-colors">
                   <Image
                     src={AUTHOR.photo}
                     alt={AUTHOR.name}
@@ -356,29 +356,31 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
         </header>
 
         {/* Article Content */}
-        <article className="container mx-auto px-4 pb-16">
-          <div className="max-w-3xl mx-auto">
-            <div
-              className="blog-content"
-              dangerouslySetInnerHTML={{ __html: autoLinkTeamsSimple(articleContent) }}
-            />
+        <section className="pb-16 relative z-10">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto">
+              <article
+                className="blog-content bg-white rounded-2xl shadow-lg p-8 md:p-12 border border-slate-200"
+                dangerouslySetInnerHTML={{ __html: autoLinkTeamsSimple(articleContent) }}
+              />
+            </div>
           </div>
-        </article>
+        </section>
 
         {/* Content Footer - Tags */}
-        <section className="pb-16">
+        <section className="pb-16 relative z-10">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
               {/* Tags */}
               {post.tags.length > 0 && (
-                <div className="mt-12 pt-8 border-t border-slate-700">
-                  <h3 className="text-sm font-medium text-slate-400 mb-4">Tagovi</h3>
+                <div className="mt-8 pt-8 border-t border-slate-300 bg-white rounded-2xl shadow-lg p-8 border border-slate-200">
+                  <h3 className="text-sm font-medium text-slate-600 mb-4">Tagovi</h3>
                   <div className="flex flex-wrap gap-2">
                     {post.tags.map((tag: string) => (
                       <Link
                         key={tag}
                         href={`/sr/blog?tag=${encodeURIComponent(tag)}`}
-                        className="px-3 py-1 bg-slate-800 text-slate-300 text-sm rounded-full hover:bg-slate-700"
+                        className="px-3 py-1 bg-white border border-slate-300 text-slate-700 text-sm rounded-full hover:border-emerald-600 hover:text-emerald-700"
                       >
                         #{tag}
                       </Link>
@@ -388,11 +390,11 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
               )}
 
               {/* CTA */}
-              <div className="mt-8 p-6 bg-slate-800/50 rounded-xl border border-slate-700 text-center">
-                <h3 className="text-lg font-semibold text-white mb-2">
+              <div className="mt-8 p-6 bg-white rounded-xl shadow-lg border-2 border-slate-200 text-center">
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
                   Spremni za Analizu Utakmica?
                 </h3>
-                <p className="text-slate-400 text-sm mb-4">
+                <p className="text-slate-600 text-sm mb-4">
                   Primenite svoje znanje uz naš AI alat za sportsku analitiku.
                 </p>
                 <Link
@@ -407,7 +409,7 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
               </div>
 
               {/* Author Box */}
-              <div className="mt-8 p-6 bg-slate-800/50 rounded-xl border border-slate-700">
+              <div className="mt-8 p-6 bg-white rounded-xl shadow-lg border-2 border-slate-200">
                 <div className="flex items-start gap-4">
                   <Link href="/about" className="flex-shrink-0">
                     <Image
@@ -419,11 +421,11 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
                     />
                   </Link>
                   <div className="flex-1">
-                    <Link href="/about" className="text-lg font-semibold text-white hover:text-emerald-400 transition-colors">
+                    <Link href="/about" className="text-lg font-semibold text-slate-900 hover:text-emerald-600 transition-colors">
                       {AUTHOR.name}
                     </Link>
-                    <p className="text-emerald-400 text-sm mb-2">{AUTHOR.jobTitle}</p>
-                    <p className="text-slate-400 text-sm leading-relaxed">
+                    <p className="text-emerald-600 text-sm mb-2">{AUTHOR.jobTitle}</p>
+                    <p className="text-slate-600 text-sm leading-relaxed">
                       Sportski analitičar sa ekspertizom u analizi utakmica zasnovanih na podacima i tržištima klađenja. 
                       Kombinovanje AI tehnologije sa dubokim poznavanjem sporta za pružanje korisnih uvida.
                     </p>
@@ -436,9 +438,9 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
 
         {/* Related Posts */}
         {relatedPosts.length > 0 && (
-          <section className="py-16 bg-slate-800/30">
+          <section className="py-16">
             <div className="container mx-auto px-4">
-              <h2 className="text-2xl font-bold text-white mb-8 text-center">
+              <h2 className="text-2xl font-bold text-slate-900 mb-8 text-center">
                 Povezani Članci
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -446,7 +448,7 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
                   <Link
                     key={article.slug}
                     href={`/sr/blog/${article.slug}`}
-                    className="group bg-white/95 rounded-xl overflow-hidden border-2 border-slate-900/20 hover:border-emerald-600/60 transition-all hover:shadow-xl"
+                    className="group bg-white rounded-2xl overflow-hidden border-2 border-slate-900/20 hover:border-emerald-600/60 transition-all hover:shadow-2xl shadow-lg"
                   >
                     <div className="aspect-video relative bg-slate-200">
                       {article.featuredImage && (
