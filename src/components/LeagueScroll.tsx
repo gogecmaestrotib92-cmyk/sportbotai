@@ -33,7 +33,7 @@ export default function LeagueScroll() {
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes leagueMarquee {
           0% { transform: translate3d(0, 0, 0); }
-          100% { transform: translate3d(-50%, 0, 0); }
+          100% { transform: translate3d(-25%, 0, 0); }
         }
       `}} />
       
@@ -62,47 +62,28 @@ export default function LeagueScroll() {
               perspective: 1000,
             }}
           >
-            {/* First set */}
-            {leagues.map((league, index) => (
-              <Link
-                key={`a-${league.key}-${index}`}
-                href={`/matches?league=${league.key}`}
-                className="flex-shrink-0 flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-white/5 rounded-xl border border-white/10"
-              >
-                <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-white rounded-lg p-1.5">
-                  <Image
-                    src={league.logo}
-                    alt={`${league.name} logo`}
-                    fill
-                    className="object-contain p-0.5"
-                    unoptimized
-                  />
-                </div>
-                <span className="text-sm sm:text-base font-semibold text-gray-300 whitespace-nowrap">
-                  {league.name}
-                </span>
-              </Link>
-            ))}
-            {/* Second set (duplicate for seamless loop) */}
-            {leagues.map((league, index) => (
-              <Link
-                key={`b-${league.key}-${index}`}
-                href={`/matches?league=${league.key}`}
-                className="flex-shrink-0 flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-white/5 rounded-xl border border-white/10"
-              >
-                <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-white rounded-lg p-1.5">
-                  <Image
-                    src={league.logo}
-                    alt={`${league.name} logo`}
-                    fill
-                    className="object-contain p-0.5"
-                    unoptimized
-                  />
-                </div>
-                <span className="text-sm sm:text-base font-semibold text-gray-300 whitespace-nowrap">
-                  {league.name}
-                </span>
-              </Link>
+            {/* 4 sets of logos for seamless infinite loop - reset happens off-screen */}
+            {[0, 1, 2, 3].map((setIndex) => (
+              leagues.map((league, index) => (
+                <Link
+                  key={`${setIndex}-${league.key}-${index}`}
+                  href={`/matches?league=${league.key}`}
+                  className="flex-shrink-0 flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-white/5 rounded-xl border border-white/10"
+                >
+                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-white rounded-lg p-1.5">
+                    <Image
+                      src={league.logo}
+                      alt={`${league.name} logo`}
+                      fill
+                      className="object-contain p-0.5"
+                      unoptimized
+                    />
+                  </div>
+                  <span className="text-sm sm:text-base font-semibold text-gray-300 whitespace-nowrap">
+                    {league.name}
+                  </span>
+                </Link>
+              ))
             ))}
           </div>
         </div>
