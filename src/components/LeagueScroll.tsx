@@ -1,9 +1,8 @@
 /**
- * Infinite League Logos Scroll - v4.0
+ * Infinite League Logos Scroll - v5.0
  * 
- * Displays supported sports leagues in an infinite horizontal scroll animation.
- * Uses Tailwind animation class for proper bundling.
- * Updated: 2026-01-02 - Uses Tailwind config animation (10s speed)
+ * Fast, smooth marquee animation with embedded CSS.
+ * No Tailwind dependency for animation - pure CSS.
  */
 
 'use client';
@@ -25,52 +24,94 @@ const leagues = [
 ];
 
 export default function LeagueScroll() {
-  // Double duplicate for seamless infinite scroll (animates -50%)
-  const duplicatedLeagues = [...leagues, ...leagues];
-
   return (
-    <section className="py-8 bg-bg-primary border-y border-white/5 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Label */}
-        <div className="text-center mb-6">
-          <span className="text-accent text-xs font-semibold uppercase tracking-wider">
-            Sports Coverage
-          </span>
-        </div>
+    <>
+      {/* Embedded CSS - guaranteed to load */}
+      <style jsx>{`
+        @keyframes marquee {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        .marquee-track {
+          display: flex;
+          gap: 1rem;
+          animation: marquee 15s linear infinite;
+          will-change: transform;
+        }
+        @media (min-width: 640px) {
+          .marquee-track {
+            gap: 2rem;
+          }
+        }
+      `}</style>
+      
+      <section className="py-8 bg-bg-primary border-y border-white/5 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Label */}
+          <div className="text-center mb-6">
+            <span className="text-accent text-xs font-semibold uppercase tracking-wider">
+              Sports Coverage
+            </span>
+          </div>
 
-        {/* Infinite Scroll Container */}
-        <div className="relative overflow-hidden">
-          {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-20 bg-gradient-to-r from-bg-primary to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-20 bg-gradient-to-l from-bg-primary to-transparent z-10 pointer-events-none" />
+          {/* Infinite Scroll Container */}
+          <div className="relative overflow-hidden">
+            {/* Fade edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-20 bg-gradient-to-r from-bg-primary to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-20 bg-gradient-to-l from-bg-primary to-transparent z-10 pointer-events-none" />
 
-          {/* Scrolling track - uses Tailwind animate-league-scroll class */}
-          <div className="flex gap-4 sm:gap-8 animate-league-scroll">
-            {duplicatedLeagues.map((league, index) => (
-              <Link
-                key={`${league.name}-${index}`}
-                href={`/matches?league=${league.key}`}
-                className="flex-shrink-0 flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 hover:border-accent/30 hover:bg-white/10 transition-all duration-300 group cursor-pointer"
-              >
-                {/* League logo with white background for visibility */}
-                <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-white rounded-lg p-1.5">
-                  <Image
-                    src={league.logo}
-                    alt={`${league.name} logo`}
-                    fill
-                    className="object-contain p-0.5"
-                    unoptimized
-                  />
-                </div>
-                {/* League name */}
-                <span className="text-sm sm:text-base font-semibold text-gray-300 whitespace-nowrap group-hover:text-white transition-colors">
-                  {league.name}
-                </span>
-              </Link>
-            ))}
+            {/* Scrolling track - duplicated for seamless loop */}
+            <div className="marquee-track">
+              {/* First set */}
+              {leagues.map((league, index) => (
+                <Link
+                  key={`a-${league.key}-${index}`}
+                  href={`/matches?league=${league.key}`}
+                  className="flex-shrink-0 flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-white/5 rounded-xl border border-white/10"
+                >
+                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-white rounded-lg p-1.5">
+                    <Image
+                      src={league.logo}
+                      alt={`${league.name} logo`}
+                      fill
+                      className="object-contain p-0.5"
+                      unoptimized
+                    />
+                  </div>
+                  <span className="text-sm sm:text-base font-semibold text-gray-300 whitespace-nowrap">
+                    {league.name}
+                  </span>
+                </Link>
+              ))}
+              {/* Second set (duplicate for seamless loop) */}
+              {leagues.map((league, index) => (
+                <Link
+                  key={`b-${league.key}-${index}`}
+                  href={`/matches?league=${league.key}`}
+                  className="flex-shrink-0 flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-white/5 rounded-xl border border-white/10"
+                >
+                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-white rounded-lg p-1.5">
+                    <Image
+                      src={league.logo}
+                      alt={`${league.name} logo`}
+                      fill
+                      className="object-contain p-0.5"
+                      unoptimized
+                    />
+                  </div>
+                  <span className="text-sm sm:text-base font-semibold text-gray-300 whitespace-nowrap">
+                    {league.name}
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
