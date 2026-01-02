@@ -96,6 +96,7 @@ interface AIPredictionStats {
   byConviction?: Array<{ level: string; total: number; hits: number; accuracy: number }>;
   byType?: Array<{ type: string; total: number; hits: number; accuracy: number }>;
   valueBetStats?: ValueBetStats;
+  legacyStats?: { total: number; hits: number; accuracy: number };
 }
 interface AdminDashboardProps {
   stats: Stats;
@@ -622,9 +623,20 @@ export default function AdminDashboard({
         {/* AI Predictions Tab - Pre-Analyzed Match Predictions */}
         {activeTab === 'ai-predictions' && aiPredictionStats && (
           <div className="space-y-6">
+            {/* Model Version Indicator */}
+            <div className="flex items-center gap-4 p-3 bg-primary/10 border border-primary/30 rounded-lg">
+              <span className="text-primary font-semibold">📊 Showing: v2 (New Model)</span>
+              <span className="text-text-secondary text-sm">Started Jan 2, 2026</span>
+              {aiPredictionStats.legacyStats && aiPredictionStats.legacyStats.total > 0 && (
+                <span className="text-text-muted text-sm ml-auto">
+                  Legacy v1: {aiPredictionStats.legacyStats.accuracy}% ({aiPredictionStats.legacyStats.hits}/{aiPredictionStats.legacyStats.total})
+                </span>
+              )}
+            </div>
+
             {/* AI Prediction Overview Cards - Winner Accuracy */}
             <div>
-              <h3 className="text-lg font-semibold text-text-primary mb-3">🎯 Winner Prediction Accuracy</h3>
+              <h3 className="text-lg font-semibold text-text-primary mb-3">🎯 Winner Prediction Accuracy (v2)</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 <div className="card p-4 border-green-500/30 bg-green-500/5">
                   <div className="text-3xl font-bold text-green-400">{aiPredictionStats.overallAccuracy}%</div>
@@ -645,7 +657,7 @@ export default function AdminDashboard({
                 </div>
                 <div className="card p-4">
                   <div className="text-3xl font-bold text-text-primary">{aiPredictionStats.totalPredictions}</div>
-                  <div className="text-sm text-text-secondary">Total</div>
+                  <div className="text-sm text-text-secondary">Total v2</div>
                 </div>
               </div>
             </div>
@@ -653,7 +665,7 @@ export default function AdminDashboard({
             {/* Value Bet ROI Stats */}
             {aiPredictionStats.valueBetStats && (
               <div>
-                <h3 className="text-lg font-semibold text-text-primary mb-3">💰 Value Bet ROI</h3>
+                <h3 className="text-lg font-semibold text-text-primary mb-3">💰 Value Bet ROI (v2)</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   <div className={`card p-4 ${aiPredictionStats.valueBetStats.roi >= 0 ? 'border-green-500/30 bg-green-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
                     <div className={`text-3xl font-bold ${aiPredictionStats.valueBetStats.roi >= 0 ? 'text-green-400' : 'text-red-400'}`}>

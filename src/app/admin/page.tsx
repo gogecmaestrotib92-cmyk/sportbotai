@@ -232,9 +232,12 @@ async function getAgentPostsCount() {
 
 /**
  * Get AI Prediction stats from the Prediction model (pre-analyzed matches)
+ * Only shows v2 (new model) stats - legacy v1 predictions are excluded
  */
 async function getAIPredictionStats() {
   try {
+    const modelVersionFilter = { modelVersion: 'v2' };
+    
     const [
       totalPredictions,
       pendingPredictions,
@@ -246,21 +249,24 @@ async function getAIPredictionStats() {
       byConviction,
       byType,
       valueBetStats,
+      // Also get legacy stats for comparison
+      legacyStats,
     ] = await Promise.all([
-      // Total predictions
-      prisma.prediction.count(),
+      // Total predictions (v2 only)
+      prisma.prediction.count({ where: modelVersionFilter }),
       
       // Pending (not yet validated)
-      prisma.prediction.count({ where: { outcome: 'PENDING' } }),
+      prisma.prediction.count({ where: { ...modelVersionFilter, outcome: 'PENDING' } }),
       
       // Hits
-      prisma.prediction.count({ where: { outcome: 'HIT' } }),
+      prisma.prediction.count({ where: { ...modelVersionFilter, outcome: 'HIT' } }),
       
       // Misses
-      prisma.prediction.count({ where: { outcome: 'MISS' } }),
+      prisma.prediction.count({ where: { ...modelVersionFilter, outcome: 'MISS' } }),
       
-      // Recent 50 predictions
+      // Recent 50 predictions (v2 only)
       prisma.prediction.findMany({
+        where: modelVersionFilter,
         take: 50,
         orderBy: { kickoff: 'desc' },
         select: {
@@ -280,19 +286,20 @@ async function getAIPredictionStats() {
           valueBetEdge: true,
           valueBetOutcome: true,
           valueBetProfit: true,
+          modelVersion: true,
         },
       }),
       
-      // By league
+      // By league (v2 only)
       prisma.prediction.groupBy({
         by: ['league'],
-        where: { outcome: { not: 'PENDING' } },
+        where: { ...modelVersionFilter, outcome: { not: 'PENDING' } },
         _count: { id: true },
       }).then(async (leagues) => {
         return Promise.all(
           leagues.map(async (l) => {
             const hits = await prisma.prediction.count({
-              where: { league: l.league, outcome: 'HIT' },
+              where: { ...modelVersionFilter, league: l.league, outcome: 'HIT' },
             });
             return {
               league: l.league,
@@ -304,16 +311,16 @@ async function getAIPredictionStats() {
         );
       }),
       
-      // By sport
+      // By sport (v2 only)
       prisma.prediction.groupBy({
         by: ['sport'],
-        where: { outcome: { not: 'PENDING' } },
+        where: { ...modelVersionFilter, outcome: { not: 'PENDING' } },
         _count: { id: true },
       }).then(async (sports) => {
         return Promise.all(
           sports.map(async (s) => {
             const hits = await prisma.prediction.count({
-              where: { sport: s.sport, outcome: 'HIT' },
+              where: { ...modelVersionFilter, sport: s.sport, outcome: 'HIT' },
             });
             return {
               sport: s.sport,
@@ -326,13 +333,16 @@ async function getAIPredictionStats() {
       }),
       
       // By conviction level (grouped into Low: 1-3, Medium: 4-6, High: 7-10)
-      getConvictionStats(),
+      getConvictionStats('v2'),
       
       // By prediction type (HOME, AWAY, DRAW)
-      getTypeStats(),
+      getTypeStats('v2'),
       
       // Value bet ROI stats
-      getValueBetStats(),
+      getValueBetStats('v2'),
+      
+      // Legacy v1 stats for comparison
+      getLegacyStats(),
     ]);
     
     const evaluatedCount = hitPredictions + missPredictions;
@@ -353,6 +363,7 @@ async function getAIPredictionStats() {
       byConviction,
       byType,
       valueBetStats,
+      legacyStats,
     };
   } catch (error) {
     console.error('Error fetching AI prediction stats:', error);
@@ -369,18 +380,40 @@ async function getAIPredictionStats() {
       byConviction: [],
       byType: [],
       valueBetStats: { totalBets: 0, hits: 0, misses: 0, totalProfit: 0, roi: 0 },
+      legacyStats: { total: 0, hits: 0, accuracy: 0 },
     };
+  }
+}
+
+/**
+ * Get legacy v1 stats for comparison
+ */
+async function getLegacyStats() {
+  try {
+    const total = await prisma.prediction.count({
+      where: { modelVersion: 'v1', outcome: { not: 'PENDING' } }
+    });
+    const hits = await prisma.prediction.count({
+      where: { modelVersion: 'v1', outcome: 'HIT' }
+    });
+    return {
+      total,
+      hits,
+      accuracy: total > 0 ? Math.round((hits / total) * 100) : 0,
+    };
+  } catch {
+    return { total: 0, hits: 0, accuracy: 0 };
   }
 }
 
 /**
  * Get accuracy stats grouped by conviction level
  */
-async function getConvictionStats() {
+async function getConvictionStats(modelVersion: string = 'v2') {
   try {
     // Get all evaluated predictions with conviction
     const predictions = await prisma.prediction.findMany({
-      where: { outcome: { not: 'PENDING' } },
+      where: { modelVersion, outcome: { not: 'PENDING' } },
       select: { conviction: true, outcome: true },
     });
     
@@ -421,10 +454,10 @@ async function getConvictionStats() {
 /**
  * Get accuracy stats grouped by prediction type (HOME, AWAY, DRAW)
  */
-async function getTypeStats() {
+async function getTypeStats(modelVersion: string = 'v2') {
   try {
     const predictions = await prisma.prediction.findMany({
-      where: { outcome: { not: 'PENDING' } },
+      where: { modelVersion, outcome: { not: 'PENDING' } },
       select: { prediction: true, outcome: true },
     });
     
@@ -463,11 +496,12 @@ async function getTypeStats() {
 /**
  * Get value bet ROI statistics
  */
-async function getValueBetStats() {
+async function getValueBetStats(modelVersion: string = 'v2') {
   try {
     // Get all predictions with value bet data that have been evaluated
     const predictions = await prisma.prediction.findMany({
       where: { 
+        modelVersion,
         valueBetOutcome: { not: null },
         valueBetProfit: { not: null },
       },
