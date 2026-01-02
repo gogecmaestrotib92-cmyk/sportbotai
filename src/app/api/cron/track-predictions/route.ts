@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import OpenAI from 'openai';
+import { applyConvictionCap } from '@/lib/accuracy-core/types';
 
 export const maxDuration = 120;
 
@@ -577,23 +578,28 @@ export async function GET(request: NextRequest) {
 
       if (prediction) {
         try {
+          // Calculate conviction with sport-specific cap
+          const sportKey = analysis.sport || 'soccer';
+          const rawConviction = Math.round(prediction.confidenceLevel / 10);
+          const cappedConviction = applyConvictionCap(rawConviction, sportKey);
+          
           await prisma.prediction.create({
             data: {
               matchId: matchRef.replace(/\s+/g, '_').toLowerCase(),
               matchName: matchRef,
-              sport: analysis.sport || 'soccer',
+              sport: sportKey,
               league: analysis.league || 'Unknown',
               kickoff: analysis.matchDate || new Date(),
               type: 'MATCH_RESULT',
               prediction: prediction.predictedScenario,
               reasoning: `Market Edge Analysis: ${analysis.bestValueSide} identified as best value`,
-              conviction: Math.round(prediction.confidenceLevel / 10),
+              conviction: cappedConviction,
               source: 'MATCH_ANALYSIS',
               outcome: 'PENDING',
             },
           });
           results.newAnalysisPredictions++;
-          console.log(`[Track-Predictions] Created analysis prediction for ${matchRef}`);
+          console.log(`[Track-Predictions] Created analysis prediction for ${matchRef} (conviction: ${rawConviction} -> ${cappedConviction})`);
         } catch (error) {
           console.error(`[Track-Predictions] Error creating analysis prediction:`, error);
           results.errors.push(`Failed to create analysis prediction for ${matchRef}: ${error instanceof Error ? error.message : 'Unknown'}`);

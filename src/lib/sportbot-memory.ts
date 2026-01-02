@@ -13,6 +13,7 @@
 
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
+import { applyConvictionCap } from '@/lib/accuracy-core/types';
 
 // ============================================
 // TYPES
@@ -565,22 +566,28 @@ export async function recordPrediction(data: {
   sport?: string;
 }): Promise<string | null> {
   try {
+    // Apply sport-specific conviction cap
+    const sportKey = data.sport || 'soccer';
+    const rawConviction = data.confidenceLevel || 5;
+    const cappedConviction = applyConvictionCap(rawConviction, sportKey);
+    
     const prediction = await prisma.prediction.create({
       data: {
         matchId: data.matchRef.replace(/\s+/g, '_').toLowerCase(),
         matchName: data.matchRef,
-        sport: data.sport || 'soccer',
+        sport: sportKey,
         league: data.league || 'Unknown',
         kickoff: data.matchDate,
         type: 'MATCH_RESULT',
         prediction: data.predictedScenario || '',
         reasoning: data.narrativeAngle || '',
-        conviction: data.confidenceLevel || 5,
+        conviction: cappedConviction,
         source: 'AGENT_POST',
         outcome: 'PENDING',
       },
     });
     
+    console.log(`[Memory] Recorded prediction with conviction: ${rawConviction} -> ${cappedConviction} (${sportKey})`);
     return prediction.id;
   } catch (error) {
     console.error('[Memory] Failed to record prediction:', error);

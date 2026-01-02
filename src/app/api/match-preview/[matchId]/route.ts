@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions, canUserAnalyze, incrementAnalysisCount } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { applyConvictionCap } from '@/lib/accuracy-core/types';
 
 // Force dynamic rendering (uses headers/session)
 export const dynamic = 'force-dynamic';
@@ -896,24 +897,29 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
               ? `Away Win - ${matchInfo.awayTeam}` 
               : 'Draw';
           
+          // Apply sport-specific conviction cap
+          const sportKey = matchInfo.sport || 'unknown';
+          const rawConviction = confidence === 'strong' ? 8 : confidence === 'moderate' ? 6 : 4;
+          const cappedConviction = applyConvictionCap(rawConviction, sportKey);
+          
           await prisma.prediction.create({
             data: {
               matchId: matchRef.replace(/\s+/g, '_').toLowerCase(),
               matchName: matchRef,
-              sport: matchInfo.sport || 'unknown',
+              sport: sportKey,
               league: matchInfo.league || 'Unknown',
               kickoff: matchDate,
               type: 'MATCH_RESULT',
               prediction: predictedScenario,
               reasoning: aiAnalysis?.story?.narrative?.substring(0, 500) || `Analysis: ${matchRef}`,
-              conviction: confidence === 'strong' ? 8 : confidence === 'moderate' ? 6 : 4,
+              conviction: cappedConviction,
               odds: odds?.homeOdds || null,
               impliedProb: marketIntel?.impliedProbability?.home || null,
               source: 'MATCH_ANALYSIS',
               outcome: 'PENDING',
             },
           });
-          console.log(`[Match-Preview] Prediction saved: ${matchRef} -> ${predictedScenario}`);
+          console.log(`[Match-Preview] Prediction saved: ${matchRef} -> ${predictedScenario} (conviction: ${rawConviction} -> ${cappedConviction})`);
         }
         
         // ========================================

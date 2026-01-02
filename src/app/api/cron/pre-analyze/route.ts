@@ -36,6 +36,7 @@ import {
   type MatchIdentifier,
   type OddsInfo,
 } from '@/lib/unified-match-service';
+import { applyConvictionCap } from '@/lib/accuracy-core/types';
 import OpenAI from 'openai';
 
 export const maxDuration = 300; // 5 minute timeout for batch processing
@@ -1197,7 +1198,9 @@ export async function GET(request: NextRequest) {
             }
             
             // Conviction: 1-10 scale based on probability confidence (higher prob = higher conviction)
-            const conviction = Math.min(10, Math.max(1, Math.round(winnerProb * 12)));
+            // Apply sport-specific cap to prevent overconfidence in high-variance sports
+            const rawConviction = Math.min(10, Math.max(1, Math.round(winnerProb * 12)));
+            const conviction = applyConvictionCap(rawConviction, sport.key);
             
             // Data quality check - require minimum form data
             const homeFormLength = homeFormStr.replace(/-/g, '').length;

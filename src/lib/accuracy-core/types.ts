@@ -11,6 +11,70 @@
 
 export type SportType = 'soccer' | 'basketball' | 'football' | 'hockey';
 
+// ============================================
+// SPORT-SPECIFIC CONVICTION CAPS
+// ============================================
+
+/**
+ * Maximum conviction levels by sport based on historical accuracy:
+ * 
+ * - icehockey_nhl: 5 (was 19.4% accuracy - model unreliable)
+ * - soccer variants: 7 (draws add variance, ~40-50% accuracy)
+ * - basketball: 7 (48.6% accuracy, high variance)
+ * - football_nfl: 9 (72.7% accuracy - model works well)
+ * 
+ * These caps prevent overconfident predictions in high-variance sports.
+ */
+export const SPORT_CONVICTION_CAPS: Record<string, number> = {
+  // NHL - Cap at 5 (model historically unreliable)
+  'icehockey_nhl': 5,
+  'hockey': 5,
+  'nhl': 5,
+  
+  // Soccer - Cap at 7 (draws add significant variance)
+  'soccer': 7,
+  'soccer_epl': 7,
+  'soccer_italy_serie_a': 7,
+  'soccer_spain_la_liga': 7,
+  'soccer_germany_bundesliga': 7,
+  'soccer_france_ligue_one': 7,
+  'soccer_portugal_primeira_liga': 7,
+  'soccer_belgium_first_div': 6, // Lower volume, less reliable
+  'soccer_spl': 7,
+  
+  // Basketball - Cap at 7 (high scoring variance)
+  'basketball_nba': 7,
+  'basketball_euroleague': 7,
+  'basketball': 7,
+  
+  // American Football - Cap at 9 (model works well, 72.7%)
+  'americanfootball_nfl': 9,
+  'football': 9,
+  'nfl': 9,
+  
+  // Default fallback
+  'default': 7,
+};
+
+/**
+ * Get conviction cap for a sport
+ */
+export function getConvictionCap(sport: string | null | undefined): number {
+  if (!sport) return SPORT_CONVICTION_CAPS['default'];
+  
+  const normalized = sport.toLowerCase().replace(/\s+/g, '_');
+  return SPORT_CONVICTION_CAPS[normalized] || SPORT_CONVICTION_CAPS['default'];
+}
+
+/**
+ * Apply conviction cap based on sport
+ * Returns capped conviction (1-10 scale)
+ */
+export function applyConvictionCap(conviction: number, sport: string | null | undefined): number {
+  const cap = getConvictionCap(sport);
+  return Math.min(conviction, cap);
+}
+
 export interface BookmakerOdds {
   bookmaker: string;
   homeOdds: number;

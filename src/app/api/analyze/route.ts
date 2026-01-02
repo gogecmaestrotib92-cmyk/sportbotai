@@ -80,6 +80,7 @@ import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rateLimit'
 import { generatePreMatchInsights } from '@/lib/utils/preMatchInsights';
 import { getPerplexityClient, type ResearchResult } from '@/lib/perplexity';
 import * as Sentry from '@sentry/nextjs';
+import { applyConvictionCap } from '@/lib/accuracy-core/types';
 
 // ============================================
 // VERIFIED DATA LAYER - GUARDRAILS
@@ -1164,7 +1165,7 @@ export async function POST(request: NextRequest) {
       // Determine the best value prediction (what the AI recommends)
       const bestValue = analysis.valueAnalysis.bestValueSide;
       let predictionText = 'No clear value';
-      let conviction = 50;
+      let rawConviction = 50;
       
       if (bestValue && bestValue !== 'NONE') {
         // Map best value side to prediction text
@@ -1185,8 +1186,16 @@ export async function POST(request: NextRequest) {
         const awayProb = probs.awayWin ?? 0;
         const drawProb = probs.draw ?? 0;
         const maxProb = Math.max(homeProb, awayProb, drawProb);
-        conviction = Math.min(95, Math.round(maxProb));
+        
+        // CALIBRATION FIX: Improved conviction calculation
+        // - Convert to 1-10 scale (not 0-100)
+        // - Apply sport-specific caps to prevent overconfidence
+        rawConviction = Math.max(1, Math.min(10, Math.round(maxProb / 10)));
       }
+      
+      // Apply sport-specific conviction cap
+      // NHL capped at 5, NBA at 7, NFL at 9, etc.
+      const conviction = applyConvictionCap(rawConviction, sportInput);
       
       // Build match ID from teams and date
       const matchDate = normalizedRequest.matchData.matchDate 
@@ -1220,7 +1229,7 @@ export async function POST(request: NextRequest) {
           outcome: 'PENDING',
         },
       });
-      console.log('[Prediction] Prediction saved for tracking:', predictionText);
+      console.log('[Prediction] Prediction saved for tracking:', predictionText, `(conviction: ${rawConviction} -> ${conviction} after ${sportInput} cap)`);
     } catch (predictionError) {
       // Don't fail the request if prediction save fails
       console.error('[Prediction] Failed to save prediction:', predictionError);

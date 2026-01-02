@@ -472,15 +472,16 @@ export function calculateModelProbability(
   
   // 2. Apply Form Factor (additional boost for extreme form differences)
   // This is on TOP of form already in edge calculation
+  // CALIBRATION FIX: Reduced from ±8 to ±5 - form often mean-reverts
   const homeForm = signals.display.form.home;
   const awayForm = signals.display.form.away;
   
-  // Strong form = +8, Weak form = -8 (increased from ±5)
-  if (homeForm === 'strong') homeBase += 8;
-  else if (homeForm === 'weak') homeBase -= 8;
+  // Strong form = +5, Weak form = -5 (reduced from ±8 due to mean reversion)
+  if (homeForm === 'strong') homeBase += 5;
+  else if (homeForm === 'weak') homeBase -= 5;
   
-  if (awayForm === 'strong') awayBase += 8;
-  else if (awayForm === 'weak') awayBase -= 8;
+  if (awayForm === 'strong') awayBase += 5;
+  else if (awayForm === 'weak') awayBase -= 5;
   
   // 3. Apply Efficiency Edge
   const effWinner = signals.display.efficiency.winner;
@@ -526,10 +527,23 @@ export function calculateModelProbability(
   const away = Math.max(5, Math.min(90, Math.round((awayBase / total) * 100)));
   const draw = hasDraw ? 100 - home - away : undefined;
   
-  // Confidence based on clarity score
-  // Cap at 85% - sports are inherently unpredictable, 100% confidence is misleading
+  // CALIBRATION FIX: Better confidence calculation
+  // Confidence should reflect ACTUAL predictive power, not just signal clarity
+  // - Reduce confidence when probability spread is low (close matches are unpredictable)
+  // - Cap lower because our historical accuracy is ~45%, not 85%
   const rawConfidence = signals.clarity_score;
-  const confidence = Math.min(85, rawConfidence);
+  
+  // Calculate probability spread (higher = clearer prediction)
+  const maxProb = Math.max(home, away, draw || 0);
+  const minProb = Math.min(home, away, draw || 100);
+  const probSpread = maxProb - minProb;
+  
+  // Reduce confidence for close matches (spread < 20 means toss-up)
+  const spreadFactor = Math.min(1, probSpread / 30); // Max factor at 30% spread
+  
+  // Cap at 70% instead of 85% - our actual accuracy is ~45-55%
+  // High confidence should only be given when we have clear edges
+  const confidence = Math.min(70, Math.round(rawConfidence * spreadFactor * 0.85));
   
   return {
     home,
@@ -544,11 +558,43 @@ export function calculateModelProbability(
 // ============================================
 
 /**
+ * Minimum edge requirements based on bookmaker quality
+ * 
+ * Sharp bookmakers (Pinnacle, Betfair) are rarely wrong.
+ * Require higher edges before calling value against them.
+ * 
+ * CALIBRATION FIX: Our predictions were overconfident (-44% edge).
+ * Sharp books aggregate millions in information - respect them.
+ */
+const MIN_EDGE_BY_BOOKMAKER_QUALITY: Record<string, number> = {
+  // Sharp books - require 8%+ edge (they're rarely wrong)
+  'sharp': 8,
+  // Mid-tier - require 5%+ edge
+  'mid': 5,
+  // Soft books - standard 3%+ edge (more pricing errors)
+  'soft': 3,
+};
+
+/**
+ * Get bookmaker tier for edge requirements
+ */
+function getBookmakerTier(bookmaker?: string): 'sharp' | 'mid' | 'soft' {
+  if (!bookmaker) return 'mid'; // Default to mid-tier
+  
+  const quality = BOOKMAKER_QUALITY[bookmaker.toLowerCase()] || 0.7;
+  if (quality >= 0.9) return 'sharp';
+  if (quality >= 0.7) return 'mid';
+  return 'soft';
+}
+
+/**
  * Detect value by comparing model probability to implied odds
  * 
  * Now includes bookmaker quality weighting:
  * - Sharp bookmakers (Pinnacle, Betfair) = more trusted implied probs
  * - Soft bookmakers = implied probs regressed toward prior
+ * 
+ * CALIBRATION FIX: Higher edge requirements for sharp books
  */
 export function detectValue(
   modelProb: ModelProbability,
@@ -574,28 +620,40 @@ export function detectValue(
     ? modelProb.draw - impliedDraw 
     : -999;
   
-  // Find best edge
+  // Get minimum edge requirement based on bookmaker quality
+  const bookmakerTier = getBookmakerTier(odds.bookmaker);
+  const minEdge = MIN_EDGE_BY_BOOKMAKER_QUALITY[bookmakerTier];
+  
+  // Find best edge (must exceed minimum threshold)
   let bestOutcome: 'home' | 'away' | 'draw' | null = null;
   let bestEdge = 0;
   
-  if (homeEdge > bestEdge && homeEdge > 3) {
+  if (homeEdge > bestEdge && homeEdge >= minEdge) {
     bestEdge = homeEdge;
     bestOutcome = 'home';
   }
-  if (awayEdge > bestEdge && awayEdge > 3) {
+  if (awayEdge > bestEdge && awayEdge >= minEdge) {
     bestEdge = awayEdge;
     bestOutcome = 'away';
   }
-  if (drawEdge > bestEdge && drawEdge > 3) {
+  if (drawEdge > bestEdge && drawEdge >= minEdge) {
     bestEdge = drawEdge;
     bestOutcome = 'draw';
   }
   
-  // Determine strength
+  // Determine strength (adjusted thresholds based on bookmaker tier)
   let strength: ValueEdge['strength'] = 'none';
-  if (bestEdge >= 10) strength = 'strong';
-  else if (bestEdge >= 6) strength = 'moderate';
-  else if (bestEdge >= 3) strength = 'slight';
+  if (bookmakerTier === 'sharp') {
+    // Against sharp books, need bigger edges for same confidence
+    if (bestEdge >= 15) strength = 'strong';
+    else if (bestEdge >= 10) strength = 'moderate';
+    else if (bestEdge >= 8) strength = 'slight';
+  } else {
+    // Standard thresholds for softer books
+    if (bestEdge >= 10) strength = 'strong';
+    else if (bestEdge >= 6) strength = 'moderate';
+    else if (bestEdge >= 3) strength = 'slight';
+  }
   
   // Build label
   let label = 'No clear value';
