@@ -5,11 +5,13 @@
  * - Static assets: Cache first, update in background
  * - API calls: Network first, cache fallback
  * - Images: Cache first with long expiry
+ * 
+ * v3: Force complete cache clear
  */
 
-const CACHE_NAME = 'sportbot-v2';
-const STATIC_CACHE = 'sportbot-static-v2';
-const IMAGE_CACHE = 'sportbot-images-v2';
+const CACHE_NAME = 'sportbot-v3';
+const STATIC_CACHE = 'sportbot-static-v3';
+const IMAGE_CACHE = 'sportbot-images-v3';
 
 // Static assets to cache immediately
 const STATIC_ASSETS = [
@@ -31,13 +33,13 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate event - clean old caches
+// Activate event - clean ALL old caches aggressively
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name.startsWith('sportbot-') && name !== CACHE_NAME && name !== STATIC_CACHE && name !== IMAGE_CACHE)
+          .filter((name) => !name.endsWith('-v3'))
           .map((name) => caches.delete(name))
       );
     })
