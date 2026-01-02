@@ -23,8 +23,8 @@ const leagues = [
   { name: 'EuroLeague', logo: 'https://media.api-sports.io/basketball/leagues/120.png', key: 'basketball_euroleague' },
 ];
 
-// Animation duration - 8 seconds for fast scroll
-const ANIMATION_DURATION = '8s';
+// Animation duration - 2 seconds for VERY FAST scroll (testing)
+const ANIMATION_DURATION = '2s';
 
 export default function LeagueScroll() {
   return (
