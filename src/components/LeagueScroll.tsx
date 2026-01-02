@@ -23,8 +23,8 @@ const leagues = [
   { name: 'EuroLeague', logo: 'https://media.api-sports.io/basketball/leagues/120.png', key: 'basketball_euroleague' },
 ];
 
-// Animation duration - 2 seconds for VERY FAST scroll (testing)
-const ANIMATION_DURATION = '2s';
+// Animation duration - 12 seconds for smooth, fast scroll
+const ANIMATION_DURATION = '12s';
 
 export default function LeagueScroll() {
   return (
@@ -32,8 +32,8 @@ export default function LeagueScroll() {
       {/* Inject keyframes globally via style tag - this ALWAYS works */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes leagueMarquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-50%, 0, 0); }
         }
       `}} />
       
@@ -51,12 +51,15 @@ export default function LeagueScroll() {
           <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-20 bg-gradient-to-r from-bg-primary to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-20 bg-gradient-to-l from-bg-primary to-transparent z-10 pointer-events-none" />
 
-          {/* Scrolling track with inline animation style */}
+          {/* Scrolling track with GPU-accelerated animation */}
           <div 
             style={{
               display: 'flex',
               gap: '1rem',
               animation: `leagueMarquee ${ANIMATION_DURATION} linear infinite`,
+              willChange: 'transform',
+              backfaceVisibility: 'hidden',
+              perspective: 1000,
             }}
           >
             {/* First set */}
