@@ -1,8 +1,8 @@
 /**
- * Infinite League Logos Scroll - v5.0
+ * Infinite League Logos Scroll - v6.0
  * 
- * Fast, smooth marquee animation with embedded CSS.
- * No Tailwind dependency for animation - pure CSS.
+ * Fast, smooth marquee animation using inline styles.
+ * Bulletproof approach - no CSS extraction issues.
  */
 
 'use client';
@@ -23,95 +23,87 @@ const leagues = [
   { name: 'EuroLeague', logo: 'https://media.api-sports.io/basketball/leagues/120.png', key: 'basketball_euroleague' },
 ];
 
+// Animation duration - 8 seconds for fast scroll
+const ANIMATION_DURATION = '8s';
+
 export default function LeagueScroll() {
   return (
-    <>
-      {/* Embedded CSS - guaranteed to load */}
-      <style jsx>{`
-        @keyframes marquee {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
+    <section className="py-8 bg-bg-primary border-y border-white/5 overflow-hidden">
+      {/* Inject keyframes globally via style tag - this ALWAYS works */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes leagueMarquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
         }
-        .marquee-track {
-          display: flex;
-          gap: 1rem;
-          animation: marquee 15s linear infinite;
-          will-change: transform;
-        }
-        @media (min-width: 640px) {
-          .marquee-track {
-            gap: 2rem;
-          }
-        }
-      `}</style>
+      `}} />
       
-      <section className="py-8 bg-bg-primary border-y border-white/5 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Label */}
-          <div className="text-center mb-6">
-            <span className="text-accent text-xs font-semibold uppercase tracking-wider">
-              Sports Coverage
-            </span>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Label */}
+        <div className="text-center mb-6">
+          <span className="text-accent text-xs font-semibold uppercase tracking-wider">
+            Sports Coverage
+          </span>
+        </div>
 
-          {/* Infinite Scroll Container */}
-          <div className="relative overflow-hidden">
-            {/* Fade edges */}
-            <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-20 bg-gradient-to-r from-bg-primary to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-20 bg-gradient-to-l from-bg-primary to-transparent z-10 pointer-events-none" />
+        {/* Infinite Scroll Container */}
+        <div className="relative overflow-hidden">
+          {/* Fade edges */}
+          <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-20 bg-gradient-to-r from-bg-primary to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-20 bg-gradient-to-l from-bg-primary to-transparent z-10 pointer-events-none" />
 
-            {/* Scrolling track - duplicated for seamless loop */}
-            <div className="marquee-track">
-              {/* First set */}
-              {leagues.map((league, index) => (
-                <Link
-                  key={`a-${league.key}-${index}`}
-                  href={`/matches?league=${league.key}`}
-                  className="flex-shrink-0 flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-white/5 rounded-xl border border-white/10"
-                >
-                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-white rounded-lg p-1.5">
-                    <Image
-                      src={league.logo}
-                      alt={`${league.name} logo`}
-                      fill
-                      className="object-contain p-0.5"
-                      unoptimized
-                    />
-                  </div>
-                  <span className="text-sm sm:text-base font-semibold text-gray-300 whitespace-nowrap">
-                    {league.name}
-                  </span>
-                </Link>
-              ))}
-              {/* Second set (duplicate for seamless loop) */}
-              {leagues.map((league, index) => (
-                <Link
-                  key={`b-${league.key}-${index}`}
-                  href={`/matches?league=${league.key}`}
-                  className="flex-shrink-0 flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-white/5 rounded-xl border border-white/10"
-                >
-                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-white rounded-lg p-1.5">
-                    <Image
-                      src={league.logo}
-                      alt={`${league.name} logo`}
-                      fill
-                      className="object-contain p-0.5"
-                      unoptimized
-                    />
-                  </div>
-                  <span className="text-sm sm:text-base font-semibold text-gray-300 whitespace-nowrap">
-                    {league.name}
-                  </span>
-                </Link>
-              ))}
-            </div>
+          {/* Scrolling track with inline animation style */}
+          <div 
+            style={{
+              display: 'flex',
+              gap: '1rem',
+              animation: `leagueMarquee ${ANIMATION_DURATION} linear infinite`,
+            }}
+          >
+            {/* First set */}
+            {leagues.map((league, index) => (
+              <Link
+                key={`a-${league.key}-${index}`}
+                href={`/matches?league=${league.key}`}
+                className="flex-shrink-0 flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-white/5 rounded-xl border border-white/10"
+              >
+                <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-white rounded-lg p-1.5">
+                  <Image
+                    src={league.logo}
+                    alt={`${league.name} logo`}
+                    fill
+                    className="object-contain p-0.5"
+                    unoptimized
+                  />
+                </div>
+                <span className="text-sm sm:text-base font-semibold text-gray-300 whitespace-nowrap">
+                  {league.name}
+                </span>
+              </Link>
+            ))}
+            {/* Second set (duplicate for seamless loop) */}
+            {leagues.map((league, index) => (
+              <Link
+                key={`b-${league.key}-${index}`}
+                href={`/matches?league=${league.key}`}
+                className="flex-shrink-0 flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-white/5 rounded-xl border border-white/10"
+              >
+                <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-white rounded-lg p-1.5">
+                  <Image
+                    src={league.logo}
+                    alt={`${league.name} logo`}
+                    fill
+                    className="object-contain p-0.5"
+                    unoptimized
+                  />
+                </div>
+                <span className="text-sm sm:text-base font-semibold text-gray-300 whitespace-nowrap">
+                  {league.name}
+                </span>
+              </Link>
+            ))}
           </div>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }
