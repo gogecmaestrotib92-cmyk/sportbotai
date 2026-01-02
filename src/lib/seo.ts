@@ -32,7 +32,7 @@ export const SITE_CONFIG = {
 
 export const META = {
   home: {
-    title: 'SportBot AI – Free AI-Powered Sports Match Analysis',
+    title: 'SportBot AI – AI Sports Analysis in 60 Seconds',
     description: 'Free AI-powered sports match analysis. Get probability estimates, value detection, and risk assessment for any match in 60 seconds. Soccer, NBA, NFL, Tennis & more.',
     keywords: [
       'sports analytics',
@@ -53,7 +53,7 @@ export const META = {
   },
   
   matches: {
-    title: 'Browse Matches – Live Sports Analysis Tool',
+    title: 'Browse Matches – Live Sports Analysis',
     description: 'Browse upcoming matches across 7 major sports. Get instant AI analysis for Premier League, La Liga, Champions League, NBA, NFL, Tennis & more. Real-time odds and probability models.',
     keywords: [
       'upcoming matches',
@@ -71,7 +71,7 @@ export const META = {
   },
   
   aiDesk: {
-    title: 'AI Sports Desk – Real-Time Sports Intelligence Feed',
+    title: 'AI Sports Desk – Real-Time Intelligence Feed',
     description: 'Live sports intelligence powered by AI. Get instant updates on injuries, lineups, market movements, and match insights. Your 24/7 AI sports analyst covering football, NBA, NFL & more.',
     keywords: [
       'sports intelligence feed',
@@ -104,7 +104,7 @@ export const META = {
   },
   
   blog: {
-    title: 'Sports Analytics Blog – Expert Insights & Guides',
+    title: 'Sports Analytics Blog – Insights & Guides',
     description: 'Educational articles on sports analytics, data-driven analysis techniques, and responsible gambling. Learn how AI transforms sports understanding.',
     keywords: [
       'sports analytics blog',
@@ -118,7 +118,7 @@ export const META = {
   },
   
   pricing: {
-    title: 'Pricing Plans – Free Trial & Pro Sports Analytics',
+    title: 'Pricing – Free Trial & Pro Sports Analytics',
     description: 'Try free with 1 analysis. Upgrade to Pro for 30 daily AI match analyses, audio reports, and advanced insights. No hidden fees, cancel anytime.',
     keywords: [
       'sports analytics pricing',

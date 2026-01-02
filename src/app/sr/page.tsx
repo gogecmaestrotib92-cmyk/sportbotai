@@ -22,8 +22,8 @@ import { getOrganizationSchema, getWebsiteSchema, getMatchAnalyzerSchema, getAID
 
 // Homepage metadata with canonical for Serbian
 export const metadata: Metadata = {
-  title: 'SportBot AI - AI Sportska Analiza | Razumi Mečeve za 60 Sekundi',
-  description: 'Pred-utakmična inteligencija: naslovi, forma, H2H istorija i AI uvidi. Fudbal, NBA, NFL, NHL i UFC—sve za 60 sekundi.',
+  title: 'SportBot AI - AI Analiza Mečeva za 60 Sekundi',
+  description: 'Pred-utakmična inteligencija sa AI uvidima. Naslovi, forma timova, H2H statistika. Fudbal, NBA, NFL, NHL i UFC analiza.',
   alternates: {
     canonical: '/sr',
     languages: {

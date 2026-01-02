@@ -17,12 +17,25 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { matchId } = await params;
   
+  // Try to extract team names from matchId for unique meta description
+  const teamNames = matchId.split('-vs-').map(team => 
+    team.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+  );
+  
+  const uniqueTitle = teamNames.length === 2 
+    ? `${teamNames[0]} vs ${teamNames[1]} - Analiza | SportBot AI`
+    : `Analiza Meča ${matchId} | SportBot AI`;
+    
+  const uniqueDescription = teamNames.length === 2
+    ? `Detaljne AI analize za ${teamNames[0]} vs ${teamNames[1]}. Forma, H2H statistika, ključni igrači i predikcije za ovaj meč.`
+    : 'Detaljne AI analize sa formom timova, H2H statistikom, ključnim igračima i predikcijama za ovaj meč.';
+  
   return {
-    title: `Analiza Meča | SportBot AI`,
-    description: 'Premium analiza mečeva pokretana AI-jem. Razumi bilo koji meč za 60 sekundi.',
+    title: uniqueTitle,
+    description: uniqueDescription,
     openGraph: {
-      title: `Analiza Meča | SportBot AI`,
-      description: 'Premium analiza mečeva pokretana AI-jem',
+      title: uniqueTitle,
+      description: uniqueDescription,
       type: 'article',
     },
   };
