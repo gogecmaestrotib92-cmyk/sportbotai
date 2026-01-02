@@ -93,12 +93,14 @@ function validatePrediction(
   
   switch (prediction.type) {
     case 'MATCH_RESULT':
-      if (pred.includes('home') || pred.includes('win')) {
+      // CRITICAL FIX: Check "home win" OR "home" FIRST before generic "win"
+      // Otherwise "Away Win" gets misclassified as home prediction!
+      if (pred.includes('home win') || (pred.includes('home') && !pred.includes('away'))) {
         return winner === 'home' 
           ? { outcome: 'HIT', reason: 'Home team won as predicted' }
           : { outcome: 'MISS', reason: `Predicted home win, got ${winner}` };
       }
-      if (pred.includes('away')) {
+      if (pred.includes('away win') || (pred.includes('away') && !pred.includes('home'))) {
         return winner === 'away'
           ? { outcome: 'HIT', reason: 'Away team won as predicted' }
           : { outcome: 'MISS', reason: `Predicted away win, got ${winner}` };
