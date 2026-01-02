@@ -284,7 +284,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-black">
+      <section className="py-16 bg-black relative z-10">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
             Ready to Analyze Matches?
@@ -294,7 +294,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           </p>
           <Link
             href="/matches"
-            className="inline-flex items-center px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors"
+            className="inline-flex items-center px-6 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-colors"
           >
             Browse Matches
             <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
