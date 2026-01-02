@@ -9,6 +9,7 @@
  * 3. Calibration Layer
  * 4. Edge Quality Filter
  * 5. Prediction Logging
+ * 6. Advanced Features (situational, ensemble, CLV)
  * 
  * The output is a clean PipelineOutput that the LLM receives READ-ONLY.
  * 
