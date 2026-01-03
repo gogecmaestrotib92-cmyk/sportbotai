@@ -1054,12 +1054,17 @@ export async function getMatchInjuries(
   awayTeam: string,
   league?: string
 ): Promise<{ home: PlayerInjury[]; away: PlayerInjury[] }> {
+  console.log(`[Football-API] getMatchInjuries called for: ${homeTeam} vs ${awayTeam}`);
+  
   const [homeTeamId, awayTeamId] = await Promise.all([
     findTeam(homeTeam, league),
     findTeam(awayTeam, league),
   ]);
 
+  console.log(`[Football-API] Team IDs: home=${homeTeamId}, away=${awayTeamId}`);
+
   if (!homeTeamId || !awayTeamId) {
+    console.log(`[Football-API] Cannot fetch injuries - missing team ID(s)`);
     return { home: [], away: [] };
   }
 
@@ -1068,6 +1073,7 @@ export async function getMatchInjuries(
     getTeamInjuries(awayTeamId),
   ]);
 
+  console.log(`[Football-API] Final injuries - home: ${homeInjuries.length}, away: ${awayInjuries.length}`);
   return { home: homeInjuries, away: awayInjuries };
 }
 
