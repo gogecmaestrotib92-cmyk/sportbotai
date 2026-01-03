@@ -925,6 +925,9 @@ export async function getTeamInjuries(teamId: number): Promise<PlayerInjury[]> {
   }
   
   console.log(`[Football-API] Raw injuries response for team ${teamId}: ${response.response.length} items`);
+  if (response.response.length > 0) {
+    console.log(`[Football-API] Sample injury item:`, JSON.stringify(response.response[0]));
+  }
 
   const injuries: PlayerInjury[] = response.response
     .filter((item: any) => item.player?.reason)
