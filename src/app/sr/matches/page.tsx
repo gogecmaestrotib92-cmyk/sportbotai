@@ -67,22 +67,28 @@ export default function MatchesPageSr({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       
-      <div className="min-h-screen bg-bg-primary">
+      <div className="min-h-screen bg-bg relative overflow-hidden">
+        {/* Ambient Background Glows */}
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
+        
         {/* Header */}
-        <section className="bg-bg-card border-b border-divider">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <section className="relative border-b border-white/5">
+          <div className="absolute inset-0 bg-gradient-to-b from-violet/5 to-transparent" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
-                  {t.matches.pageTitle}
+                <span className="text-violet-light text-xs font-semibold uppercase tracking-wider mb-2 block">Meč Inteligencija</span>
+                <h1 className="text-2xl md:text-3xl font-extrabold text-white mb-1 tracking-tight">
+                  Pregledaj Mečeve
                 </h1>
                 <p className="text-text-secondary text-sm">
-                  {t.matches.pageSubtitle}
+                  Izaberi bilo koji predstojeći meč za pred-utakmični brifing
                 </p>
               </div>
               <div className="flex items-center gap-2 text-sm text-text-secondary">
                 <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-                <span>{t.matches.pageDescription}</span>
+                <span>Podaci uživo iz 7 glavnih sportova</span>
               </div>
             </div>
           </div>

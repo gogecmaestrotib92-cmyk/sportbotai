@@ -13,10 +13,10 @@ import { MatchData } from '@/types';
 import MatchCardI18n from '@/components/MatchCardI18n';
 import { StaggeredItem } from '@/components/ui';
 import LeagueLogo from '@/components/ui/LeagueLogo';
-import CountryFlag, { getCountryForLeague } from '@/components/ui/CountryFlag';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { Locale, getTranslations } from '@/lib/i18n/translations';
+import SportLeagueSelectorI18n from '@/components/SportLeagueSelectorI18n';
 
 interface MatchBrowserI18nProps {
   initialSport?: string;
@@ -63,6 +63,7 @@ const getSports = (locale: Locale) => {
       icon: '🏈',
       leagues: [
         { key: 'americanfootball_nfl', name: 'NFL' },
+        { key: 'americanfootball_ncaaf', name: 'NCAA Football' },
       ],
     },
     {
@@ -76,11 +77,12 @@ const getSports = (locale: Locale) => {
   ];
 };
 
-// Seasonal leagues that have off-seasons (American sports)
+// Tournaments that have off-seasons or breaks
 const SEASONAL_LEAGUES = [
-  'americanfootball_nfl',
-  'basketball_nba',
-  'icehockey_nhl',
+  'soccer_uefa_champs_league',
+  'soccer_uefa_europa_league', 
+  'soccer_uefa_europa_conference_league',
+  'americanfootball_ncaaf',
 ];
 
 export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatches = 12, locale }: MatchBrowserI18nProps) {
@@ -114,38 +116,46 @@ export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatch
     }
   }, [initialLeague]);
 
-  // When sport changes, select first league of that sport
+  // When sport changes, select first league of that sport (only if current league isn't valid)
   useEffect(() => {
     const sport = SPORTS.find(s => s.id === selectedSport);
-    if (sport && !initialLeague) {
-      setSelectedLeague(sport.leagues[0].key);
+    if (sport && sport.leagues.length > 0 && !initialLeague) {
+      // Only reset if current league doesn't belong to the new sport
+      const leagueBelongsToSport = sport.leagues.some(l => l.key === selectedLeague);
+      if (!leagueBelongsToSport) {
+        setSelectedLeague(sport.leagues[0].key);
+      }
     }
-  }, [selectedSport, initialLeague]);
+  }, [selectedSport, initialLeague, selectedLeague]);
 
-  // Fetch match counts for all leagues of current sport
+  // Pre-fetch match counts for ALL leagues (for badges and trending)
   useEffect(() => {
-    const fetchLeagueCounts = async () => {
+    async function fetchLeagueCounts() {
       const counts: Record<string, number> = {};
-      const sport = SPORTS.find(s => s.id === selectedSport);
-      if (!sport) return;
-
+      const allLeagues = SPORTS.flatMap(sport => sport.leagues);
+      
+      // Fetch counts in parallel for all leagues across all sports
       await Promise.all(
-        sport.leagues.map(async (league) => {
+        allLeagues.map(async (league) => {
           try {
             const response = await fetch(`/api/match-data?sportKey=${league.key}&includeOdds=false`);
-            if (!response.ok) throw new Error();
-            const data = await response.json();
-            counts[league.key] = data.events?.length || 0;
+            if (response.ok) {
+              const data = await response.json();
+              counts[league.key] = data.events?.length || 0;
+            } else {
+              counts[league.key] = 0;
+            }
           } catch {
             counts[league.key] = 0;
           }
         })
       );
+      
       setLeagueMatchCounts(counts);
-    };
+    }
 
     fetchLeagueCounts();
-  }, [selectedSport]);
+  }, []); // Fetch once on mount for all leagues
 
   const fetchMatches = useCallback(async () => {
     setIsLoading(true);
@@ -182,72 +192,22 @@ export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatch
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Sport Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-          {SPORTS.map((sport) => (
-            <button
-              key={sport.id}
-              onClick={() => setSelectedSport(sport.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                selectedSport === sport.id
-                  ? 'bg-primary/20 text-white border border-primary/30 shadow-lg shadow-primary/10'
-                  : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/5'
-              }`}
-            >
-              <span className="text-lg">{sport.icon}</span>
-              <span>{sport.name}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* League Pills */}
-        <div className="mb-6">
-          <p className="text-xs text-text-muted uppercase tracking-wider mb-3">
-            {currentSport.name} {t.matches.leagues}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {currentSport.leagues.map((league) => {
-              const matchCount = leagueMatchCounts[league.key];
-              const hasNoMatches = matchCount === 0;
-              
-              return (
-                <button
-                  key={league.key}
-                  onClick={() => setSelectedLeague(league.key)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    selectedLeague === league.key
-                      ? 'bg-white/20 text-white border border-white/20'
-                      : hasNoMatches
-                        ? 'bg-white/5 text-gray-500 hover:bg-white/10 opacity-60'
-                        : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-300'
-                  }`}
-                >
-                  {/* Use country flag for domestic leagues, league logo for international competitions */}
-                  {getCountryForLeague(league.name) && !league.name.toLowerCase().includes('champions') && !league.name.toLowerCase().includes('europa') ? (
-                    <CountryFlag country={getCountryForLeague(league.name)!} size="xs" />
-                  ) : (
-                    <LeagueLogo leagueName={league.name} sport={league.key} size="xs" />
-                  )}
-                  <span>{league.name}</span>
-                  {matchCount !== undefined && matchCount > 0 && (
-                    <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/10 text-gray-400">
-                      {matchCount}
-                    </span>
-                  )}
-                  {hasNoMatches && matchCount !== undefined && (
-                    <span className="ml-1 text-xs text-gray-500">•</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        {/* Sport & League Selector - Responsive Design */}
+        <SportLeagueSelectorI18n
+          sports={SPORTS}
+          selectedSport={selectedSport}
+          selectedLeague={selectedLeague}
+          leagueMatchCounts={leagueMatchCounts}
+          onSportChange={setSelectedSport}
+          onLeagueChange={setSelectedLeague}
+          locale={locale}
+        />
 
         {/* Current League Header */}
-        <div className="flex items-center gap-3 mb-4 py-3 border-t border-divider">
+        <div className="flex items-center gap-3 mb-4 py-3 border-t border-white/5">
           <LeagueLogo leagueName={currentLeague.name} sport={selectedLeague} size="md" />
           <div>
-            <h3 className="text-lg font-semibold text-white">{currentLeague.name}</h3>
+            <h3 className="text-lg font-bold text-white tracking-tight">{currentLeague.name}</h3>
             <p className="text-sm text-text-muted">
               {isLoading ? t.matches.loadingMatches : `${matches?.length || 0} ${t.matches.upcomingMatches}`}
             </p>
@@ -258,7 +218,7 @@ export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatch
         {isLoading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-bg-card rounded-xl border border-divider p-4">
+              <div key={i} className="card-glass rounded-xl p-4">
                 {/* League & Time Skeleton */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">

@@ -272,6 +272,11 @@ export const translations = {
       showingOf: 'Showing',
       of: 'of',
       matchesText: 'matches',
+      trendingNow: 'Trending Now',
+      matchesCount: 'matches',
+      noMatches: 'No matches',
+      noUpcoming: 'No upcoming',
+      leaguesCount: 'leagues',
       sports: {
         soccer: 'Soccer',
         basketball: 'Basketball',
@@ -609,6 +614,11 @@ export const translations = {
       showingOf: 'Prikazano',
       of: 'od',
       matchesText: 'mečeva',
+      trendingNow: 'U Trendu',
+      matchesCount: 'mečeva',
+      noMatches: 'Nema mečeva',
+      noUpcoming: 'Nema predstojećih',
+      leaguesCount: 'liga',
       sports: {
         soccer: 'Fudbal',
         basketball: 'Košarka',
@@ -838,6 +848,11 @@ export type TranslationsType = {
     showingOf: string;
     of: string;
     matchesText: string;
+    trendingNow: string;
+    matchesCount: string;
+    noMatches: string;
+    noUpcoming: string;
+    leaguesCount: string;
     sports: {
       soccer: string;
       basketball: string;

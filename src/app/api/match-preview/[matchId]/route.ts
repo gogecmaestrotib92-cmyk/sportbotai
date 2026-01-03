@@ -152,10 +152,56 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // ==========================================
     console.log(`[Match-Preview] Registered user: ${session.user.email} - proceeding with live analysis`);
 
+    const userId = session.user.id;
+    
+    // ==========================================
+    // CHECK IF USER ALREADY ANALYZED THIS MATCH TODAY
+    // If so, return cached analysis without using a credit
+    // ==========================================
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const existingAnalysis = await prisma.analysis.findFirst({
+      where: {
+        userId,
+        homeTeam: matchInfo.homeTeam,
+        awayTeam: matchInfo.awayTeam,
+        createdAt: { gte: today },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    
+    if (existingAnalysis) {
+      console.log(`[Match-Preview] User ${session.user.email} already analyzed this match today - checking cache`);
+      
+      // Build cache key and check for cached response
+      const matchDate = matchInfo.kickoff ? new Date(matchInfo.kickoff).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+      const cacheKey = CACHE_KEYS.matchPreview(matchInfo.homeTeam, matchInfo.awayTeam, matchInfo.sport, matchDate);
+      const cachedPreview = await cacheGet<any>(cacheKey);
+      
+      if (cachedPreview) {
+        console.log(`[Match-Preview] Returning cached analysis for repeat view (no credit used)`);
+        return NextResponse.json({
+          ...cachedPreview,
+          creditUsed: false,
+          repeatView: true,
+        });
+      }
+      
+      // If no cache but analysis exists, try to return the stored analysis
+      if (existingAnalysis.fullResponse) {
+        console.log(`[Match-Preview] Returning stored analysis from DB for repeat view`);
+        return NextResponse.json({
+          ...(existingAnalysis.fullResponse as object),
+          creditUsed: false,
+          repeatView: true,
+        });
+      }
+    }
+
     // ==========================================
     // CHECK USER USAGE LIMITS
     // ==========================================
-    const userId = session.user.id;
     console.log(`[Match-Preview] Checking usage for user ${userId} (${session.user.email})`);
     const usageCheck = await canUserAnalyze(userId);
     console.log(`[Match-Preview] Usage check result:`, JSON.stringify(usageCheck));

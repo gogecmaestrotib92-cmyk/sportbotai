@@ -760,6 +760,34 @@ export async function POST(request: NextRequest) {
     }
 
     // ========================================
+    // CHECK IF USER ALREADY ANALYZED THIS MATCH TODAY
+    // If so, return cached analysis without using a credit
+    // ========================================
+    if (!isInternalCall) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const existingAnalysis = await prisma.analysis.findFirst({
+        where: {
+          userId,
+          homeTeam: normalizedRequest.matchData.homeTeam,
+          awayTeam: normalizedRequest.matchData.awayTeam,
+          createdAt: { gte: today },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      
+      if (existingAnalysis && existingAnalysis.fullResponse) {
+        console.log(`[Analyze] User ${userId} already analyzed this match today - returning stored analysis`);
+        return NextResponse.json({
+          ...(existingAnalysis.fullResponse as object),
+          creditUsed: false,
+          repeatView: true,
+        });
+      }
+    }
+
+    // ========================================
     // USAGE LIMIT CHECK (skip for internal calls)
     // ========================================
     let usageCheck: { allowed: boolean; plan: string; limit: number; remaining: number };
