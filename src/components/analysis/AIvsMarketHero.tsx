@@ -108,15 +108,18 @@ export function AIvsMarketHero({
 
   const { modelProbability, impliedProbability, valueEdge } = marketIntel;
   
-  // Determine which side has the edge
+  // Determine which side has the edge (positive edge = value)
   const homeEdge = modelProbability.home - impliedProbability.home;
   const awayEdge = modelProbability.away - impliedProbability.away;
   const hasSignificantEdge = Math.abs(homeEdge) > 5 || Math.abs(awayEdge) > 5;
   
-  // Who does the model favor?
-  const favoredSide = homeEdge > awayEdge ? 'home' : awayEdge > homeEdge ? 'away' : 'even';
+  // Who has VALUE? (positive edge means underpriced by market)
+  // If home is negative (overpriced) and away is positive (underpriced), away has value
+  const favoredSide = awayEdge > homeEdge ? 'away' : homeEdge > awayEdge ? 'home' : 'even';
   const favoredTeam = favoredSide === 'home' ? homeTeam : favoredSide === 'away' ? awayTeam : null;
-  const edgeMagnitude = Math.max(Math.abs(homeEdge), Math.abs(awayEdge));
+  
+  // Edge magnitude should be the POSITIVE edge of the favored team, not the max absolute
+  const edgeMagnitude = favoredSide === 'home' ? homeEdge : favoredSide === 'away' ? awayEdge : 0;
 
   // ============================================
   // STATE 1: GUEST (Not logged in) - Teaser skeleton (NO real numbers)
