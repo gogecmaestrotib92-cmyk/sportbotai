@@ -27,7 +27,7 @@ interface Sport {
 const SPORT_BACKGROUNDS: Record<string, string> = {
   soccer: '/sports/soccer.jpg',
   basketball: '/sports/basketball.jpg',
-  football: '/sports/football.jpg',
+  americanfootball: '/sports/football.jpg',
   hockey: '/sports/hockey.jpg',
 };
 
