@@ -13,9 +13,9 @@ import { MatchData } from '@/types';
 import MatchCard from '@/components/MatchCard';
 import { StaggeredItem } from '@/components/ui';
 import LeagueLogo from '@/components/ui/LeagueLogo';
-import CountryFlag, { getCountryForLeague } from '@/components/ui/CountryFlag';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
+import SportLeagueSelector from '@/components/SportLeagueSelector';
 
 interface MatchBrowserProps {
   initialSport?: string;
@@ -106,22 +106,27 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
     }
   }, [initialLeague]);
 
-  // When sport changes, select first league of that sport
+  // When sport changes, select first league of that sport (only if current league isn't valid)
   useEffect(() => {
     const sport = SPORTS.find(s => s.id === selectedSport);
     if (sport && sport.leagues.length > 0 && !initialLeague) {
-      setSelectedLeague(sport.leagues[0].key);
+      // Only reset if current league doesn't belong to the new sport
+      const leagueBelongsToSport = sport.leagues.some(l => l.key === selectedLeague);
+      if (!leagueBelongsToSport) {
+        setSelectedLeague(sport.leagues[0].key);
+      }
     }
-  }, [selectedSport, initialLeague]);
+  }, [selectedSport, initialLeague, selectedLeague]);
 
-  // Pre-fetch match counts for all leagues in current sport (for badges)
+  // Pre-fetch match counts for ALL leagues (for badges and trending)
   useEffect(() => {
     async function fetchLeagueCounts() {
       const counts: Record<string, number> = {};
+      const allLeagues = SPORTS.flatMap(sport => sport.leagues);
       
-      // Fetch counts in parallel for all leagues in current sport
+      // Fetch counts in parallel for all leagues across all sports
       await Promise.all(
-        currentSport.leagues.map(async (league) => {
+        allLeagues.map(async (league) => {
           try {
             const response = await fetch(`/api/match-data?sportKey=${league.key}&includeOdds=false`);
             if (response.ok) {
@@ -140,7 +145,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
     }
 
     fetchLeagueCounts();
-  }, [currentSport]);
+  }, []); // Fetch once on mount for all leagues
 
   // Fetch matches for selected league
   const fetchMatches = useCallback(async () => {
@@ -185,65 +190,15 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Sport Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-          {SPORTS.map((sport) => (
-            <button
-              key={sport.id}
-              onClick={() => setSelectedSport(sport.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
-                selectedSport === sport.id
-                  ? 'bg-accent/20 text-white border border-accent/30 shadow-lg shadow-accent/10'
-                  : 'bg-white/5 backdrop-blur-sm text-gray-300 hover:bg-white/10 border border-white/5'
-              }`}
-            >
-              <span className="text-lg">{sport.icon}</span>
-              <span>{sport.name}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* League Pills */}
-        <div className="mb-6">
-          <p className="text-xs text-text-muted uppercase tracking-wider mb-3 font-medium">
-            {currentSport.name} Leagues
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {currentSport.leagues.map((league) => {
-              const matchCount = leagueMatchCounts[league.key];
-              const hasNoMatches = matchCount === 0;
-              return (
-                <button
-                  key={league.key}
-                  onClick={() => setSelectedLeague(league.key)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    selectedLeague === league.key
-                      ? 'bg-white/20 text-white border border-accent/30 shadow-sm shadow-accent/10'
-                      : hasNoMatches
-                        ? 'bg-white/5 text-gray-500 hover:bg-white/10 opacity-60 border border-transparent'
-                        : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-300 border border-white/5'
-                  }`}
-                >
-                  {/* Use country flag for domestic leagues, league logo for international competitions */}
-                  {getCountryForLeague(league.name) && !league.name.toLowerCase().includes('champions') && !league.name.toLowerCase().includes('europa') ? (
-                    <CountryFlag country={getCountryForLeague(league.name)!} size="xs" />
-                  ) : (
-                    <LeagueLogo leagueName={league.name} sport={league.key} size="xs" />
-                  )}
-                  <span>{league.name}</span>
-                  {matchCount !== undefined && matchCount > 0 && (
-                    <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/10 text-gray-400">
-                      {matchCount}
-                    </span>
-                  )}
-                  {hasNoMatches && matchCount !== undefined && (
-                    <span className="ml-1 text-xs text-gray-500">•</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        {/* Sport & League Selector - Responsive Design */}
+        <SportLeagueSelector
+          sports={SPORTS}
+          selectedSport={selectedSport}
+          selectedLeague={selectedLeague}
+          leagueMatchCounts={leagueMatchCounts}
+          onSportChange={setSelectedSport}
+          onLeagueChange={setSelectedLeague}
+        />
 
         {/* Current League Header */}
         <div className="flex items-center gap-3 mb-4 py-3 border-t border-white/5">

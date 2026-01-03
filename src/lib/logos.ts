@@ -1741,12 +1741,12 @@ const LEAGUE_LOGOS: Record<string, string> = {
   'NFL Playoffs': 'https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png',
   'Super Bowl': 'https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png',
   
-  // NCAA Football - All variations
-  'NCAA Football': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
-  'NCAAF': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
-  'americanfootball_ncaaf': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
-  'College Football': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
-  'CFB': 'https://a.espncdn.com/i/teamlogos/ncaa/500/ncaa.png',
+  // NCAA Football - All variations (using Wikipedia NCAA logo)
+  'NCAA Football': 'https://upload.wikimedia.org/wikipedia/commons/d/dd/NCAA_logo.svg',
+  'NCAAF': 'https://upload.wikimedia.org/wikipedia/commons/d/dd/NCAA_logo.svg',
+  'americanfootball_ncaaf': 'https://upload.wikimedia.org/wikipedia/commons/d/dd/NCAA_logo.svg',
+  'College Football': 'https://upload.wikimedia.org/wikipedia/commons/d/dd/NCAA_logo.svg',
+  'CFB': 'https://upload.wikimedia.org/wikipedia/commons/d/dd/NCAA_logo.svg',
   
   // CFL - Canadian Football (use API-Sports)
   'CFL': 'https://media.api-sports.io/american-football/leagues/1.png',

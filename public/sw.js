@@ -59,6 +59,9 @@ self.addEventListener('fetch', (event) => {
   // Skip chrome-extension and other non-http(s) requests
   if (!url.protocol.startsWith('http')) return;
 
+  // Skip _next/static in development (causes caching issues)
+  if (url.pathname.startsWith('/_next/')) return;
+
   // API requests - network first, cache fallback for GET
   if (url.pathname.startsWith('/api/')) {
     // Don't cache most API routes - they need fresh data

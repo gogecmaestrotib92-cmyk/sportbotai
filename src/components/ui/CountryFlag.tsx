@@ -84,18 +84,11 @@ const LEAGUE_COUNTRY: Record<string, string> = {
   'primeira liga': 'portugal',
   'eredivisie': 'netherlands',
   'pro league': 'belgium',
+  'jupiler pro league': 'belgium',
   'super lig': 'turkey',
+  'süper lig': 'turkey',
   'scottish premiership': 'scotland',
-  // Basketball - only domestic
-  'nba': 'usa',
-  // American Football
-  'nfl': 'usa',
-  'ncaa football': 'usa',
-  'ncaaf': 'usa',
-  // Hockey - only domestic
-  'nhl': 'usa',
-  'shl': 'sweden',
-  'khl': 'russia',
+  // Note: Basketball, Football, Hockey leagues use logos not country flags
 };
 
 export function getCountryForLeague(leagueName: string): string | null {
