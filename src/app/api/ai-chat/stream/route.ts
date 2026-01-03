@@ -135,10 +135,17 @@ async function translateToEnglish(message: string): Promise<{
 
 type QueryCategory = 'PLAYER' | 'ROSTER' | 'FIXTURE' | 'RESULT' | 'STANDINGS' | 'STATS' | 
   'INJURY' | 'TRANSFER' | 'MANAGER' | 'ODDS' | 'COMPARISON' | 'HISTORY' | 'BROADCAST' | 
-  'VENUE' | 'PLAYER_PROP' | 'BETTING_ADVICE' | 'GENERAL';
+  'VENUE' | 'PLAYER_PROP' | 'BETTING_ADVICE' | 'OUR_PREDICTION' | 'GENERAL';
 
 function detectQueryCategory(message: string): QueryCategory {
   const msg = message.toLowerCase();
+  
+  // Check if asking about OUR prediction/analysis first
+  if (/\b(your|sua|vaš[ae]?|sportbot|our)\b.*\b(analysis|prediction|previsão|prognos|analiz|call|tip)\b/i.test(msg) ||
+      /\b(how did you|como foi|kako si|what did you predict|šta si predvideo)\b/i.test(msg) ||
+      /\b(your pre.?match|your pre.?game|nossa análise)\b/i.test(msg)) {
+    return 'OUR_PREDICTION';
+  }
   
   // Betting patterns
   if (/should i bet|over|under|plus|minus|prop|parlay|odds|spread|line/i.test(msg)) {
@@ -246,6 +253,86 @@ function needsDataLayerStats(message: string, category: QueryCategory): boolean 
   ];
   
   return statsPatterns.some(p => p.test(message));
+}
+
+/**
+ * Fetch SportBot's past prediction for a specific match
+ */
+async function fetchOurPrediction(message: string): Promise<string> {
+  try {
+    // Extract team names and date from the message
+    const teams = extractTeamNames(message);
+    
+    // Try to extract date from message
+    const datePatterns = [
+      /(\d{1,2})[\s/.-](?:de\s+)?(\w+)[\s/.-](\d{4})/i,  // "01 de janeiro de 2026" or "01/01/2026"
+      /(\w+)\s+(\d{1,2}),?\s+(\d{4})/i,  // "January 1, 2026"
+      /(\d{4})[\s/.-](\d{1,2})[\s/.-](\d{1,2})/i,  // "2026-01-01"
+    ];
+    
+    let targetDate: Date | null = null;
+    for (const pattern of datePatterns) {
+      const match = message.match(pattern);
+      if (match) {
+        // Try to parse the date
+        const dateStr = match[0];
+        const parsed = new Date(dateStr);
+        if (!isNaN(parsed.getTime())) {
+          targetDate = parsed;
+          break;
+        }
+      }
+    }
+    
+    if (!teams.homeTeam && !teams.awayTeam) {
+      return '';  // Can't identify the match
+    }
+    
+    // Search for predictions matching the teams
+    const searchTerms = [teams.homeTeam, teams.awayTeam].filter(Boolean);
+    
+    // Build OR conditions for fuzzy matching
+    const predictions = await prisma.prediction.findMany({
+      where: {
+        OR: searchTerms.map(term => ({
+          matchName: { contains: term, mode: 'insensitive' }
+        })),
+        ...(targetDate ? {
+          kickoff: {
+            gte: new Date(targetDate.setHours(0, 0, 0, 0)),
+            lte: new Date(targetDate.setHours(23, 59, 59, 999)),
+          }
+        } : {}),
+      },
+      orderBy: { kickoff: 'desc' },
+      take: 5,
+    });
+    
+    if (predictions.length === 0) {
+      return `⚠️ NO PREDICTION FOUND: SportBot does not have a stored analysis for this match. Say: "I don't have a pre-match analysis stored for that game."`;
+    }
+    
+    // Format predictions for context
+    let context = '=== SPORTBOT\'S PAST PREDICTIONS ===\n';
+    for (const pred of predictions) {
+      const outcomeEmoji = pred.outcome === 'WIN' ? '✅' : pred.outcome === 'LOSS' ? '❌' : '⏳';
+      context += `\nMatch: ${pred.matchName}`;
+      context += `\nDate: ${pred.kickoff.toLocaleDateString()}`;
+      context += `\nOur Prediction: ${pred.prediction}`;
+      context += `\nReasoning: ${pred.reasoning}`;
+      context += `\nConviction: ${pred.conviction}/5`;
+      context += `\nOutcome: ${outcomeEmoji} ${pred.outcome}`;
+      if (pred.actualResult) {
+        context += `\nActual Result: ${pred.actualResult}`;
+      }
+      context += '\n---';
+    }
+    
+    return context;
+  } catch (error) {
+    console.error('[AI-Chat] Error fetching our prediction:', error);
+    return '';
+  }
 }
 
 /**
@@ -957,6 +1044,16 @@ If their favorite team has a match today/tonight, lead with that information.`;
             }
           }
 
+          // Step 1.4: Fetch our past predictions if user asks about them
+          let ourPredictionContext = '';
+          if (queryCategory === 'OUR_PREDICTION') {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '📊 Looking up our prediction...' })}\n\n`));
+            ourPredictionContext = await fetchOurPrediction(searchMessage);
+            if (ourPredictionContext) {
+              console.log('[AI-Chat-Stream] Found our past prediction');
+            }
+          }
+
           // Step 1.5: DataLayer stats if needed (form, H2H, season stats)
           let dataLayerContext = '';
           if (needsDataLayerStats(searchMessage, queryCategory)) {
@@ -1088,11 +1185,25 @@ If their favorite team has a match today/tonight, lead with that information.`;
 
           // Add user message with context
           let userContent = message;
-          const hasContext = perplexityContext || dataLayerContext || verifiedPlayerStatsContext;
+          const hasContext = perplexityContext || dataLayerContext || verifiedPlayerStatsContext || ourPredictionContext;
           
           if (hasContext) {
-            // For STATS queries, use strict real-time data instructions
-            if (queryCategory === 'STATS') {
+            // For OUR_PREDICTION queries, use our stored analysis
+            if (queryCategory === 'OUR_PREDICTION' && ourPredictionContext) {
+              userContent = `USER QUESTION: ${message}
+
+The user is asking about SportBot's past prediction/analysis. Here is what we found:
+
+${ourPredictionContext}
+
+INSTRUCTIONS:
+1. If we found a prediction, summarize it naturally: what we predicted, our reasoning, and the outcome
+2. If outcome is WIN ✅, acknowledge we got it right
+3. If outcome is LOSS ❌, acknowledge we got it wrong and what actually happened
+4. If outcome is PENDING ⏳, note that the match hasn't been played yet or result not updated
+5. If no prediction was found (⚠️ NO PREDICTION FOUND), say: "I don't have a stored analysis for that specific match"
+6. DO NOT make up an analysis if we don't have one`;
+            } else if (queryCategory === 'STATS') {
               // Prioritize verified player stats over Perplexity
               const statsData = verifiedPlayerStatsContext || perplexityContext || 'No real-time data available';
               
