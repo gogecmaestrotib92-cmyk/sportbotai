@@ -557,11 +557,15 @@ function normalizeTeamName(name: string): string {
 async function findTeam(teamName: string, league?: string): Promise<number | null> {
   const cacheKey = `team:${teamName}:${league || ''}`;
   const cached = getCached<number>(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    console.log(`[Football-API] findTeam cache HIT for "${teamName}": ${cached}`);
+    return cached;
+  }
 
   // Check direct mapping first
   const mapping = TEAM_NAME_MAPPINGS[teamName];
   if (mapping?.id) {
+    console.log(`[Football-API] findTeam mapping HIT for "${teamName}": ${mapping.id}`);
     setCache(cacheKey, mapping.id);
     return mapping.id;
   }
@@ -592,10 +596,12 @@ async function findTeam(teamName: string, league?: string): Promise<number | nul
     
     // Otherwise take first result
     const teamId = response.response[0].team.id;
+    console.log(`[Football-API] findTeam API search for "${teamName}" found: ${teamId}`);
     setCache(cacheKey, teamId);
     return teamId;
   }
   
+  console.log(`[Football-API] findTeam FAILED for "${teamName}" - no results`);
   return null;
 }
 
