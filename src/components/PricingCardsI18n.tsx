@@ -77,16 +77,16 @@ const cardTranslations = {
       'Unlimited analyses',
       'Unlimited AI chat messages',
       'All sports',
-      'Market Alerts (value edge detection)',
+      'Edge Alerts (value detection)',
       'Advanced statistics & trends',
       'Unlimited analysis history',
       'My Teams favorites',
       'Priority support 24/7',
     ],
-    proDescription: 'For serious analysts',
+    proDescription: 'Analysis + Edge Detection',
     proYearlyDescription: 'Save $90/year',
     proButtonText: 'Upgrade to Pro',
-    premiumDescription: 'Unlimited everything + Alerts',
+    premiumDescription: 'Unlimited Analysis + Edge Alerts',
     premiumYearlyDescription: 'Save $310/year (52% off)',
     premiumButtonText: 'Go Premium',
   },
@@ -126,16 +126,16 @@ const cardTranslations = {
       'Neograničene analize',
       'Neograničene AI chat poruke',
       'Svi sportovi',
-      'Tržišni alarmi (detekcija vrednosti)',
+      'Edge Alarmi (detekcija vrednosti)',
       'Napredna statistika i trendovi',
       'Neograničena istorija analiza',
       'Moji Timovi favoriti',
       'Prioritetna podrška 24/7',
     ],
-    proDescription: 'Za ozbiljne analitičare',
+    proDescription: 'Analiza + Detekcija Edge-a',
     proYearlyDescription: 'Uštedi $90/godišnje',
     proButtonText: 'Nadogradi na Pro',
-    premiumDescription: 'Neograničeno sve + Alarmi',
+    premiumDescription: 'Neograničena Analiza + Edge Alarmi',
     premiumYearlyDescription: 'Uštedi $310/godišnje (52% popusta)',
     premiumButtonText: 'Pređi na Premium',
   },
@@ -396,7 +396,7 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
                     {yearly ? t.perYear : t.perMonth}
                   </span>
                 </div>
-                <p className="text-sm text-text-muted">
+                <p className={`text-sm font-semibold ${yearly ? 'text-gray-400' : 'text-gradient-gold'}`}>
                   {yearly ? plan.yearlyDescription : plan.description}
                 </p>
               </div>

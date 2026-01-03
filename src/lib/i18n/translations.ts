@@ -372,7 +372,7 @@ export const translations = {
     
     // Hero Section
     hero: {
-      badge: 'Razumi bilo koji meč za 60 sekundi',
+      badge: 'Pronađi gde tržište greši',
       title: 'Poznaj Svaki Meč',
       titleHighlight: 'Pre Nego Što Se Desi',
       subtitle: 'Pred-utakmična inteligencija: naslovi, forma, H2H istorija i AI uvidi.',
