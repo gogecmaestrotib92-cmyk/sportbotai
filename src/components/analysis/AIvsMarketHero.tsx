@@ -45,7 +45,7 @@ const translations = {
     oddsDrift: 'Whether odds drift creates late value',
     altMarkets: 'Alternative markets (O/U, AH)',
     // Value tooltip
-    valueTooltip: 'Value ≠ Favorite. A team can be the underdog while offering betting value if the market underprices their chances.',
+    valueTooltip: 'Value ≠ Favorite. A team can be the underdog while offering value if the market underprices their chances.',
   },
   sr: {
     aiVsMarket: 'AI vs Tržište',
@@ -74,7 +74,7 @@ const translations = {
     oddsDrift: 'Da li pomeranje kvota stvara kasnu vrednost',
     altMarkets: 'Alternativna tržišta (O/U, AH)',
     // Value tooltip
-    valueTooltip: 'Vrednost ≠ Favorit. Tim može biti autsajder, a ipak nuditi vrednost za klađenje ako tržište potcenjuje njihove šanse.',
+    valueTooltip: 'Vrednost ≠ Favorit. Tim može biti autsajder, a ipak nuditi vrednost ako tržište potcenjuje njihove šanse.',
   },
 };
 
