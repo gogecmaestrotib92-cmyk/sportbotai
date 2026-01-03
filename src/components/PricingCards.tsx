@@ -309,7 +309,7 @@ export default function PricingCards() {
                     {yearly ? '/year' : '/month'}
                   </span>
                 </div>
-                <p className="text-sm text-gray-400">
+                <p className={`text-sm font-semibold ${yearly ? 'text-gray-400' : 'text-gradient-gold'}`}>
                   {yearly ? plan.yearlyDescription : plan.description}
                 </p>
               </div>

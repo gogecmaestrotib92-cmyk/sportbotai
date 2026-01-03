@@ -459,6 +459,14 @@ button:focus-visible {
     background-clip: text;
   }
   
+  /* White-Gold Gradient Text (Premium features) */
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #FFFFFF 0%, #FFD700 50%, #FFA500 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
   /* Glassmorphism Card */
   .card-glass {
     background: rgba(18, 18, 18, 0.7);
