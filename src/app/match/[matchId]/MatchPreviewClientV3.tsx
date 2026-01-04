@@ -101,6 +101,88 @@ async function translateAnalysisToSerbian(data: any): Promise<any> {
   }
 }
 
+/**
+ * Transform demo match signals (flat format) to full UniversalSignals format
+ * Demo matches have: { form: { score, label, direction }, availability: { score, label } }
+ * Real API returns: { form, display: { form: {...}, availability: { level, homeInjuries, awayInjuries } } }
+ */
+function normalizeSignalsWithInjuries(
+  signals: any,
+  injuries?: { home: any[]; away: any[] }
+): any {
+  // If signals already has display property with proper structure, just merge injuries
+  if (signals?.display?.availability) {
+    return {
+      ...signals,
+      display: {
+        ...signals.display,
+        availability: {
+          ...signals.display.availability,
+          homeInjuries: signals.display.availability.homeInjuries?.length 
+            ? signals.display.availability.homeInjuries 
+            : injuries?.home || [],
+          awayInjuries: signals.display.availability.awayInjuries?.length 
+            ? signals.display.availability.awayInjuries 
+            : injuries?.away || [],
+        },
+      },
+    };
+  }
+  
+  // Transform flat demo format to full format
+  if (signals?.form && signals?.availability) {
+    const homeInjuries = injuries?.home || [];
+    const awayInjuries = injuries?.away || [];
+    const totalInjuries = homeInjuries.length + awayInjuries.length;
+    
+    // Determine availability level based on injury count
+    const availabilityLevel = totalInjuries >= 5 ? 'high' 
+      : totalInjuries >= 2 ? 'medium' 
+      : 'low';
+    
+    return {
+      form: signals.form?.label || 'Form data',
+      strength_edge: signals.edge?.label || 'Edge data',
+      tempo: signals.tempo?.label || 'Tempo data',
+      efficiency_edge: signals.efficiency?.label || 'Efficiency data',
+      availability_impact: signals.availability?.label || 'Low',
+      confidence: 'medium',
+      clarity_score: signals.clarityScore || 70,
+      display: {
+        form: {
+          home: signals.form?.direction === 'home' ? 'strong' : signals.form?.direction === 'away' ? 'weak' : 'neutral',
+          away: signals.form?.direction === 'away' ? 'strong' : signals.form?.direction === 'home' ? 'weak' : 'neutral',
+          label: signals.form?.label || 'Form',
+        },
+        edge: {
+          direction: signals.edge?.direction || 'even',
+          percentage: signals.edge?.score || 50,
+          label: signals.edge?.label || 'Edge',
+        },
+        tempo: {
+          level: signals.tempo?.score >= 75 ? 'high' : signals.tempo?.score <= 40 ? 'low' : 'medium',
+          label: signals.tempo?.label || 'Tempo',
+        },
+        efficiency: {
+          winner: signals.efficiency?.direction || null,
+          aspect: 'overall',
+          label: signals.efficiency?.label || 'Efficiency',
+        },
+        availability: {
+          level: availabilityLevel,
+          note: signals.availability?.label || null,
+          label: signals.availability?.label || 'Low',
+          homeInjuries: homeInjuries,
+          awayInjuries: awayInjuries,
+        },
+      },
+    };
+  }
+  
+  // Return as-is if neither format matches
+  return signals;
+}
+
 // League name to API-Sports ID mapping
 const LEAGUE_NAME_TO_ID: Record<string, { id: number; sport: 'soccer' | 'basketball' | 'hockey' | 'nfl' }> = {
   // Soccer
@@ -1026,27 +1108,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
           {data.universalSignals && (
             <div className="mt-4 sm:mt-5">
               <UniversalSignalsDisplay
-                signals={
-                  // Merge separate injuries field into universalSignals if display.availability doesn't have them
-                  data.universalSignals.display 
-                    ? {
-                        ...data.universalSignals,
-                        display: {
-                          ...data.universalSignals.display,
-                          availability: {
-                            ...data.universalSignals.display.availability,
-                            // Use injuries from universalSignals first, fallback to separate injuries field
-                            homeInjuries: data.universalSignals.display.availability?.homeInjuries?.length 
-                              ? data.universalSignals.display.availability.homeInjuries 
-                              : data.injuries?.home || [],
-                            awayInjuries: data.universalSignals.display.availability?.awayInjuries?.length 
-                              ? data.universalSignals.display.availability.awayInjuries 
-                              : data.injuries?.away || [],
-                          },
-                        },
-                      }
-                    : data.universalSignals
-                }
+                signals={normalizeSignalsWithInjuries(data.universalSignals, data.injuries)}
                 homeTeam={data.matchInfo.homeTeam}
                 awayTeam={data.matchInfo.awayTeam}
                 homeForm={data.viralStats?.form?.home || '-----'}

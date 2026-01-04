@@ -48,6 +48,11 @@ export interface DemoMatch {
       availability: { score: number; label: string };
       clarityScore: number;
     };
+    // Injuries data for expandable availability section
+    injuries?: {
+      home: Array<{ player: string; position?: string; reason?: string; details?: string }>;
+      away: Array<{ player: string; position?: string; reason?: string; details?: string }>;
+    };
     viralStats?: {
       h2h: { headline: string; favors: string };
       form: { home: string; away: string };
@@ -131,6 +136,18 @@ export const DEMO_MATCHES: DemoMatch[] = [
         { icon: '⚔️', text: 'Title race implications', favors: 'neutral', viral: true },
         { icon: '📊', text: 'Over 2.5 goals in 8 of last 10 H2H', favors: 'neutral' },
       ],
+      // Injuries for expandable availability section
+      injuries: {
+        home: [
+          { player: 'Diogo Jota', position: 'Forward', reason: 'injury', details: 'Muscle injury' },
+          { player: 'Harvey Elliott', position: 'Midfielder', reason: 'injury', details: 'Foot fracture' },
+        ],
+        away: [
+          { player: 'Rodri', position: 'Midfielder', reason: 'injury', details: 'ACL - Season ending' },
+          { player: 'Oscar Bobb', position: 'Midfielder', reason: 'injury', details: 'Leg fracture' },
+          { player: 'Nathan Ake', position: 'Defender', reason: 'doubtful', details: 'Hamstring' },
+        ],
+      },
     },
   },
 
