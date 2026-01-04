@@ -1511,6 +1511,8 @@ async function generateAIAnalysis(data: {
   // Generate Universal Signals (the core of the system)
   const universalSignals = normalizeToUniversalSignals(signalInput);
   
+  console.log(`[Match-Preview] UniversalSignals availability - homeInjuries: ${universalSignals.display?.availability?.homeInjuries?.length || 0}, awayInjuries: ${universalSignals.display?.availability?.awayInjuries?.length || 0}`);
+  
   // For no-draw sports, don't include draw option in prompt
   const favoredOptions = sportConfig.hasDraw ? '"home" | "away" | "draw"' : '"home" | "away"';
   
