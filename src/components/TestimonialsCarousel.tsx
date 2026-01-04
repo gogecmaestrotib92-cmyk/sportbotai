@@ -166,18 +166,20 @@ export default function TestimonialsCarousel() {
         </div>
 
         {/* Dots Navigation */}
-        <div className="flex justify-center gap-2 mt-8">
+        <div className="flex justify-center gap-1 mt-8">
           {testimonials.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`h-2 rounded-full transition-all duration-300 ${
+              className={`p-3 group`}
+              aria-label={`Go to testimonial ${index + 1}`}
+            >
+              <span className={`block h-2 rounded-full transition-all duration-300 ${
                 index === currentIndex
                   ? 'w-8 bg-accent'
-                  : 'w-2 bg-gray-600 hover:bg-gray-500'
-              }`}
-              aria-label={`Go to testimonial ${index + 1}`}
-            />
+                  : 'w-2 bg-gray-600 group-hover:bg-gray-500'
+              }`} />
+            </button>
           ))}
         </div>
       </div>

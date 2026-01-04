@@ -306,19 +306,21 @@ export default function VideoTestimonialsCarousel() {
         </div>
 
         {/* Navigation dots */}
-        <div className="flex justify-center gap-2 mt-6">
+        <div className="flex justify-center gap-1 mt-6">
           {TESTIMONIALS.map((_, index) => (
             <button
               key={index}
               onClick={() => setActiveIndex(index)}
-              className={`
-                w-2 h-2 rounded-full transition-all duration-300
+              className="p-3 group"
+              aria-label={`Go to testimonial ${index + 1}`}
+            >
+              <span className={`
+                block h-2 rounded-full transition-all duration-300
                 ${index === activeIndex 
                   ? 'w-6 bg-accent' 
-                  : 'bg-white/30 hover:bg-white/50'}
-              `}
-              aria-label={`Go to testimonial ${index + 1}`}
-            />
+                  : 'w-2 bg-white/30 group-hover:bg-white/50'}
+              `} />
+            </button>
           ))}
         </div>
 

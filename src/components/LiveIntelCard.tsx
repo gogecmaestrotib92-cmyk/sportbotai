@@ -138,7 +138,7 @@ export default function LiveIntelCard() {
               <span className="text-base sm:text-lg">🧠</span>
             </div>
             <div>
-              <h3 className="text-white font-semibold text-xs sm:text-sm">Live Intel</h3>
+              <span className="text-white font-semibold text-xs sm:text-sm block">Live Intel</span>
               <p className="text-zinc-500 text-[9px] sm:text-[10px] flex items-center gap-1">
                 <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-emerald-400 rounded-full animate-pulse" />
                 Auto-updating
