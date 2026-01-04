@@ -205,14 +205,23 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
                                !['basketball', 'nba', 'americanfootball', 'nfl', 'icehockey', 'nhl', 'hockey', 'baseball', 'mlb', 'mma', 'ufc']
                                  .some(s => storedSport?.toLowerCase()?.includes(s));
         
-        const storedHomeInjuries = responseData.injuries?.home?.length || 0;
-        const storedAwayInjuries = responseData.injuries?.away?.length || 0;
-        const signalHomeInjuries = responseData.universalSignals?.display?.availability?.homeInjuries?.length || 0;
-        const signalAwayInjuries = responseData.universalSignals?.display?.availability?.awayInjuries?.length || 0;
-        const hasAnyInjuries = storedHomeInjuries > 0 || storedAwayInjuries > 0 || signalHomeInjuries > 0 || signalAwayInjuries > 0;
+        // Helper to check if injuries are in proper structured format (objects with player/reason/details)
+        // Old format was strings: ["Player Name"], new format is: [{ player: "Name", reason: "injury", details: "..." }]
+        const isStructuredInjuryDB = (inj: any) => inj && typeof inj === 'object' && typeof inj.player === 'string';
+        const hasValidStructuredInjuriesDB = (arr: any[]) => Array.isArray(arr) && arr.length > 0 && arr.some(isStructuredInjuryDB);
         
-        if (isSoccerStored && !hasAnyInjuries) {
-          console.log(`[Match-Preview] DB stored analysis has no injuries - fetching fresh for soccer match...`);
+        const storedHomeInjuries = responseData.injuries?.home || [];
+        const storedAwayInjuries = responseData.injuries?.away || [];
+        const signalHomeInjuries = responseData.universalSignals?.display?.availability?.homeInjuries || [];
+        const signalAwayInjuries = responseData.universalSignals?.display?.availability?.awayInjuries || [];
+        
+        const hasValidStoredInjuries = hasValidStructuredInjuriesDB(storedHomeInjuries) || hasValidStructuredInjuriesDB(storedAwayInjuries);
+        const hasValidSignalInjuries = hasValidStructuredInjuriesDB(signalHomeInjuries) || hasValidStructuredInjuriesDB(signalAwayInjuries);
+        const hasValidInjuries = hasValidStoredInjuries || hasValidSignalInjuries;
+        
+        if (isSoccerStored && !hasValidInjuries) {
+          console.log(`[Match-Preview] DB stored analysis has no valid structured injuries - fetching fresh for soccer match...`);
+          console.log(`[Match-Preview] Old format check: stored=${JSON.stringify(storedHomeInjuries.slice(0, 2))}, signal=${JSON.stringify(signalHomeInjuries.slice(0, 2))}`);
           try {
             const freshInjuries = await getMatchInjuries(
               responseData.matchInfo?.homeTeam || matchInfo.homeTeam,
@@ -370,7 +379,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         
         // CRITICAL: Ensure injuries are merged into universalSignals.display.availability
         // This handles old cached data that may have injuries separately from universalSignals
-        // Also fetch FRESH injuries if cache has none (fixes bug where old cache had stale data)
+        // Also fetch FRESH injuries if cache has stale/wrong format data
         const existingHomeInjuries = responseData.universalSignals?.display?.availability?.homeInjuries || [];
         const existingAwayInjuries = responseData.universalSignals?.display?.availability?.awayInjuries || [];
         const topLevelHomeInjuries = responseData.injuries?.home || [];
@@ -381,11 +390,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         const isSoccerCached = !['basketball', 'basketball_nba', 'nba', 'americanfootball', 'nfl', 'icehockey', 'nhl', 'hockey', 'baseball', 'mlb', 'mma', 'ufc']
           .includes(cachedSport?.toLowerCase() || '');
         
-        // If NO injuries in cache and it's soccer, try fetching fresh
-        if (isSoccerCached && 
-            existingHomeInjuries.length === 0 && existingAwayInjuries.length === 0 &&
-            topLevelHomeInjuries.length === 0 && topLevelAwayInjuries.length === 0) {
-          console.log(`[Match-Preview] Cache has no injuries - fetching fresh injury data...`);
+        // Helper to check if injuries are in proper structured format (objects with player/reason/details)
+        // Old cache format was strings: ["Player Name"], new format is: [{ player: "Name", reason: "injury", details: "..." }]
+        const isStructuredInjury = (inj: any) => inj && typeof inj === 'object' && typeof inj.player === 'string';
+        const hasValidStructuredInjuries = (arr: any[]) => arr.length > 0 && arr.some(isStructuredInjury);
+        
+        const hasValidExistingInjuries = hasValidStructuredInjuries(existingHomeInjuries) || hasValidStructuredInjuries(existingAwayInjuries);
+        const hasValidTopLevelInjuries = hasValidStructuredInjuries(topLevelHomeInjuries) || hasValidStructuredInjuries(topLevelAwayInjuries);
+        
+        // If NO valid structured injuries in cache and it's soccer, fetch fresh
+        if (isSoccerCached && !hasValidExistingInjuries && !hasValidTopLevelInjuries) {
+          console.log(`[Match-Preview] Cache has no valid structured injuries - fetching fresh injury data...`);
+          console.log(`[Match-Preview] Old format check: topLevel=${JSON.stringify(topLevelHomeInjuries.slice(0, 2))}, existing=${JSON.stringify(existingHomeInjuries.slice(0, 2))}`);
           try {
             const freshInjuries = await getMatchInjuries(
               responseData.matchInfo?.homeTeam || matchInfo.homeTeam,
