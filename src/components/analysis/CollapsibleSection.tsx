@@ -66,9 +66,9 @@ export function CollapsibleSection({
           </span>
         </div>
         
-        {/* Badge */}
+        {/* Badge - matches AIvsMarketHero PRO style */}
         {badge !== undefined && (
-          <span className="px-2 py-0.5 text-xs bg-zinc-800 text-zinc-400 rounded-full">
+          <span className="text-[10px] px-2.5 py-0.5 text-violet-400/60 rounded-full border border-violet-500/20 font-medium uppercase tracking-wider">
             {badge}
           </span>
         )}
