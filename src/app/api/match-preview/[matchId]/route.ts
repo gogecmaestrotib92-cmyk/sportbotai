@@ -742,10 +742,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           home: injuries.home.map(i => ({
             player: i.player || 'Unknown player',
             reason: i.reason,
+            details: i.details,
+            position: i.position,
           })),
           away: injuries.away.map(i => ({
             player: i.player || 'Unknown player',
             reason: i.reason,
+            details: i.details,
+            position: i.position,
           })),
         },
       },
@@ -1462,7 +1466,7 @@ async function generateAIAnalysis(data: {
     homeFormDetails?: Array<{ result: 'W' | 'L' | 'D'; opponent: string; score: string }> | null;
     awayFormDetails?: Array<{ result: 'W' | 'L' | 'D'; opponent: string; score: string }> | null;
     h2hMatches?: Array<{ homeTeam: string; awayTeam: string; homeScore: number; awayScore: number; date: string }> | null;
-    injuryDetails?: { home: Array<{ player: string; reason?: string }>; away: Array<{ player: string; reason?: string }> };
+    injuryDetails?: { home: Array<{ player: string; reason?: string; details?: string; position?: string }>; away: Array<{ player: string; reason?: string; details?: string; position?: string }> };
   };
 }) {
   const sportConfig = getSportConfig(data.sport);
@@ -1501,6 +1505,8 @@ async function generateAIAnalysis(data: {
     homeInjuryDetails: data.enrichedContext?.injuryDetails?.home || [],
     awayInjuryDetails: data.enrichedContext?.injuryDetails?.away || [],
   };
+  
+  console.log(`[Match-Preview] SignalInput injuries - home: ${signalInput.homeInjuryDetails?.length || 0}, away: ${signalInput.awayInjuryDetails?.length || 0}`);
   
   // Generate Universal Signals (the core of the system)
   const universalSignals = normalizeToUniversalSignals(signalInput);
