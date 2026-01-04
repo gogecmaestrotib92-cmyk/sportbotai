@@ -543,8 +543,8 @@ async function runQuickAnalysis(
   marketIntel: MarketIntel | null;
   // Include structured injuries for UI availability section
   injuries: {
-    home: Array<{ player: string; type: string; reason: string; photo?: string }>;
-    away: Array<{ player: string; type: string; reason: string; photo?: string }>;
+    home: Array<{ player: string; position: string; reason: 'injury' | 'suspension' | 'doubtful'; details: string; expectedReturn?: string }>;
+    away: Array<{ player: string; position: string; reason: 'injury' | 'suspension' | 'doubtful'; details: string; expectedReturn?: string }>;
   };
   // NEW: Include enriched data for building rich UI components
   enrichedData: {
