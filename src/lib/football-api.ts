@@ -525,16 +525,10 @@ const TEAM_NAME_MAPPINGS: Record<string, { id?: number; leagueId?: number; searc
 
   // ============================================
   // EREDIVISIE (league 88) - Netherlands
+  // (Ajax, PSV, Feyenoord, AZ Alkmaar, FC Twente already defined in Champions League section)
   // ============================================
-  'Ajax': { id: 194, leagueId: 88 },
-  'AFC Ajax': { id: 194, leagueId: 88 },
-  'PSV': { id: 197, leagueId: 88 },
-  'PSV Eindhoven': { id: 197, leagueId: 88 },
-  'Feyenoord': { id: 215, leagueId: 88 },
   'Feyenoord Rotterdam': { id: 215, leagueId: 88 },
   'AZ': { id: 201, leagueId: 88 },
-  'AZ Alkmaar': { id: 201, leagueId: 88 },
-  'FC Twente': { id: 195, leagueId: 88 },
   'Twente': { id: 195, leagueId: 88 },
   'FC Utrecht': { id: 196, leagueId: 88 },
   'Utrecht': { id: 196, leagueId: 88 },
@@ -560,16 +554,9 @@ const TEAM_NAME_MAPPINGS: Record<string, { id?: number; leagueId?: number; searc
 
   // ============================================
   // PRIMEIRA LIGA (league 94) - Portugal
+  // (Benfica, Porto, Sporting CP, Braga already defined in Champions League section)
   // ============================================
-  'Benfica': { id: 211, leagueId: 94 },
-  'SL Benfica': { id: 211, leagueId: 94 },
-  'Porto': { id: 212, leagueId: 94 },
-  'FC Porto': { id: 212, leagueId: 94 },
-  'Sporting CP': { id: 228, leagueId: 94 },
-  'Sporting Lisbon': { id: 228, leagueId: 94 },
   'Sporting': { id: 228, leagueId: 94 },
-  'Braga': { id: 217, leagueId: 94 },
-  'SC Braga': { id: 217, leagueId: 94 },
   'Vitoria Guimaraes': { id: 222, leagueId: 94 },
   'Vitória SC': { id: 222, leagueId: 94 },
   'Boavista': { id: 214, leagueId: 94 },
@@ -598,11 +585,9 @@ const TEAM_NAME_MAPPINGS: Record<string, { id?: number; leagueId?: number; searc
 
   // ============================================
   // SUPER LIG (league 203) - Turkey
+  // (Galatasaray, Fenerbahce, Besiktas already defined in Champions League section)
   // ============================================
-  'Galatasaray': { id: 645, leagueId: 203 },
-  'Fenerbahce': { id: 611, leagueId: 203 },
   'Fenerbahçe': { id: 611, leagueId: 203 },
-  'Besiktas': { id: 549, leagueId: 203 },
   'Beşiktaş': { id: 549, leagueId: 203 },
   'Trabzonspor': { id: 607, leagueId: 203 },
   'Basaksehir': { id: 549, leagueId: 203 },
@@ -627,18 +612,15 @@ const TEAM_NAME_MAPPINGS: Record<string, { id?: number; leagueId?: number; searc
 
   // ============================================
   // BELGIAN PRO LEAGUE (league 144)
+  // (Club Brugge, Anderlecht, KAA Gent, Standard Liege already defined in Champions League section)
   // ============================================
-  'Club Brugge': { id: 569, leagueId: 144 },
   'Club Bruges': { id: 569, leagueId: 144 },
-  'Anderlecht': { id: 554, leagueId: 144 },
   'RSC Anderlecht': { id: 554, leagueId: 144 },
-  'KAA Gent': { id: 559, leagueId: 144 },
   'Gent': { id: 559, leagueId: 144 },
   'Union Saint-Gilloise': { id: 571, leagueId: 144 },
   'Union SG': { id: 571, leagueId: 144 },
   'Antwerp': { id: 556, leagueId: 144 },
   'Royal Antwerp': { id: 556, leagueId: 144 },
-  'Standard Liege': { id: 560, leagueId: 144 },
   'Standard': { id: 560, leagueId: 144 },
   'Genk': { id: 564, leagueId: 144 },
   'KRC Genk': { id: 564, leagueId: 144 },
@@ -661,11 +643,8 @@ const TEAM_NAME_MAPPINGS: Record<string, { id?: number; leagueId?: number; searc
 
   // ============================================
   // SCOTTISH PREMIERSHIP (league 179)
+  // (Celtic, Rangers already defined in Champions League section)
   // ============================================
-  'Celtic': { id: 247, leagueId: 179 },
-  'Celtic FC': { id: 247, leagueId: 179 },
-  'Rangers': { id: 257, leagueId: 179 },
-  'Rangers FC': { id: 257, leagueId: 179 },
   'Aberdeen': { id: 248, leagueId: 179 },
   'Aberdeen FC': { id: 248, leagueId: 179 },
   'Hearts': { id: 250, leagueId: 179 },
