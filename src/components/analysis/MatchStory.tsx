@@ -43,10 +43,14 @@ export default function MatchStory({
 
   const favoredTeam = favored === 'home' ? homeTeam : favored === 'away' ? awayTeam : 'Draw';
   
+  // RESTRAINED COLOR SYSTEM:
+  // - Strong: subtle emerald (only when there's real edge)
+  // - Moderate: neutral zinc
+  // - Slight: neutral zinc (no color for weak signals)
   const confidenceLabel = {
-    strong: { text: 'Strong lean', color: 'text-green-400', bg: 'bg-green-500/20' },
-    moderate: { text: 'Moderate lean', color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
-    slight: { text: 'Slight lean', color: 'text-orange-400', bg: 'bg-orange-500/20' },
+    strong: { text: 'Strong lean', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    moderate: { text: 'Moderate lean', color: 'text-zinc-400', bg: 'bg-zinc-500/10' },
+    slight: { text: 'Slight lean', color: 'text-zinc-500', bg: 'bg-zinc-500/10' },
   }[confidence];
 
   const handlePlayAudio = () => {
@@ -67,17 +71,17 @@ export default function MatchStory({
   };
 
   return (
-    <div className="bg-gradient-to-br from-[#0F1114] via-[#12151A] to-[#0F1114] rounded-2xl border border-white/10 overflow-hidden">
+    <div className="bg-gradient-to-br from-zinc-900/80 via-zinc-900/60 to-zinc-900/80 rounded-2xl border border-zinc-800/50 overflow-hidden">
       {/* Header with verdict */}
-      <div className="px-5 py-4 border-b border-white/5">
+      <div className="px-6 py-5 border-b border-zinc-800/50">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-accent/30 to-primary/30 rounded-xl flex items-center justify-center">
-              <span className="text-2xl">🎯</span>
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-gradient-to-br from-violet-500/20 to-violet-600/10 rounded-xl flex items-center justify-center">
+              <span className="text-3xl">🎯</span>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">AI Match Analysis</h2>
-              <p className="text-sm text-text-muted">Why we think this match will play out</p>
+              <h2 className="text-xl font-bold text-white">AI Match Analysis</h2>
+              <p className="text-sm text-zinc-400">Why we think this match will play out</p>
             </div>
           </div>
           
@@ -85,11 +89,11 @@ export default function MatchStory({
           {audioUrl && (
             <button
               onClick={handlePlayAudio}
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
+              className="flex items-center gap-2 px-5 py-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
             >
               {isPlaying ? (
                 <span className="w-5 h-5 flex items-center justify-center">
-                  <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                  <span className="w-2.5 h-2.5 bg-violet-400 rounded-full animate-pulse" />
                 </span>
               ) : (
                 <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -105,30 +109,30 @@ export default function MatchStory({
       </div>
 
       {/* The Verdict Banner */}
-      <div className="px-5 py-4 bg-gradient-to-r from-accent/10 via-accent/5 to-transparent border-b border-white/5">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">
+      <div className="px-6 py-5 bg-zinc-900/70 border-b border-zinc-800/50">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <span className="text-3xl">
               {favored === 'draw' ? '🤝' : favored === 'home' ? '🏠' : '✈️'}
             </span>
             <div>
-              <p className="text-xs text-text-muted uppercase tracking-wider">Our Analysis Points To</p>
-              <h3 className="text-xl font-bold text-white">
+              <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Our Analysis Points To</p>
+              <h3 className="text-2xl font-bold text-white mt-1">
                 {favored === 'draw' ? 'A Draw' : `${favoredTeam} Win`}
               </h3>
             </div>
           </div>
-          <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${confidenceLabel.bg} ${confidenceLabel.color}`}>
+          <span className={`px-4 py-2 rounded-full text-sm font-medium ${confidenceLabel.bg} ${confidenceLabel.color}`}>
             {confidenceLabel.text}
           </span>
         </div>
       </div>
 
       {/* The Narrative */}
-      <div className="p-5">
-        <div className="prose prose-invert prose-sm max-w-none">
+      <div className="p-6">
+        <div className="prose prose-invert max-w-none">
           {narrative.split('\n\n').map((paragraph, index) => (
-            <p key={index} className="text-text-secondary leading-relaxed mb-4 last:mb-0 text-[15px]">
+            <p key={index} className="text-stone-300 leading-relaxed mb-5 last:mb-0 text-base">
               {paragraph}
             </p>
           ))}
@@ -136,20 +140,20 @@ export default function MatchStory({
 
         {/* Supporting Stats */}
         {supportingStats && supportingStats.length > 0 && (
-          <div className="mt-6 pt-4 border-t border-white/5">
-            <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-3">
+          <div className="mt-8 pt-6 border-t border-zinc-800/50">
+            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">
               Data Behind This Analysis
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {supportingStats.map((stat, index) => (
                 <div 
                   key={index}
-                  className="flex items-start gap-3 p-3 bg-white/[0.03] rounded-xl border border-white/5"
+                  className="flex items-start gap-4 p-4 bg-zinc-900/50 rounded-xl border border-zinc-800/50"
                 >
-                  <span className="text-xl">{stat.icon}</span>
+                  <span className="text-2xl">{stat.icon}</span>
                   <div>
-                    <p className="text-sm font-semibold text-white">{stat.stat}</p>
-                    <p className="text-xs text-text-muted">{stat.context}</p>
+                    <p className="text-base font-semibold text-white">{stat.stat}</p>
+                    <p className="text-sm text-zinc-500 mt-0.5">{stat.context}</p>
                   </div>
                 </div>
               ))}
@@ -159,8 +163,8 @@ export default function MatchStory({
       </div>
 
       {/* Disclaimer */}
-      <div className="px-5 py-3 bg-white/[0.02] border-t border-white/5">
-        <p className="text-[10px] text-text-muted text-center">
+      <div className="px-6 py-4 bg-zinc-900/30 border-t border-zinc-800/50">
+        <p className="text-xs text-zinc-500 text-center">
           This is AI-generated analysis for educational purposes • Not betting advice • Football is unpredictable
         </p>
       </div>

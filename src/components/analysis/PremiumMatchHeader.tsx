@@ -246,13 +246,13 @@ export default function PremiumMatchHeader({
         <div className="flex items-center justify-center gap-6 sm:gap-12">
           {/* Home Team */}
           <div className="flex flex-col items-center text-center flex-1 max-w-[140px] sm:max-w-[180px]">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 mb-3 relative">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 mb-4 relative">
               <TeamLogo teamName={homeTeam} sport={sport} league={league} size="xl" className="object-contain" />
             </div>
-            <h2 className="text-base sm:text-lg font-semibold text-white leading-tight">
+            <h2 className="text-lg sm:text-xl font-bold text-white leading-tight">
               {homeTeam}
             </h2>
-            <span className="text-[10px] uppercase tracking-widest text-zinc-600 mt-1">Home</span>
+            <span className="text-xs uppercase tracking-widest text-zinc-500 mt-1.5 font-medium">Home</span>
           </div>
 
           {/* VS Divider OR Live Score */}
@@ -261,39 +261,39 @@ export default function PremiumMatchHeader({
               /* Live/Final Score Display */
               <div className="flex flex-col items-center">
                 <div className="flex items-center gap-3 mb-1">
-                  <span className={`text-3xl sm:text-4xl font-bold font-mono ${
-                    liveScore.homeScore > liveScore.awayScore ? 'text-green-400' : 'text-white'
+                  <span className={`text-4xl sm:text-5xl font-bold font-mono ${
+                    liveScore.homeScore > liveScore.awayScore ? 'text-emerald-400' : 'text-white'
                   }`}>
                     {liveScore.homeScore}
                   </span>
-                  <span className="text-xl text-zinc-600">-</span>
-                  <span className={`text-3xl sm:text-4xl font-bold font-mono ${
-                    liveScore.awayScore > liveScore.homeScore ? 'text-green-400' : 'text-white'
+                  <span className="text-2xl text-zinc-600">-</span>
+                  <span className={`text-4xl sm:text-5xl font-bold font-mono ${
+                    liveScore.awayScore > liveScore.homeScore ? 'text-emerald-400' : 'text-white'
                   }`}>
                     {liveScore.awayScore}
                   </span>
                 </div>
                 {isLive && liveScore.status.long && (
-                  <span className="text-xs text-zinc-500">{liveScore.status.long}</span>
+                  <span className="text-sm text-zinc-500">{liveScore.status.long}</span>
                 )}
               </div>
             ) : (
               /* VS Badge for upcoming matches */
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/[0.02] border border-white/[0.06] flex items-center justify-center">
-                <span className="text-lg sm:text-xl font-bold text-zinc-500">VS</span>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/[0.03] border border-white/[0.08] flex items-center justify-center">
+                <span className="text-xl sm:text-2xl font-bold text-zinc-400">VS</span>
               </div>
             )}
           </div>
 
           {/* Away Team */}
           <div className="flex flex-col items-center text-center flex-1 max-w-[140px] sm:max-w-[180px]">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 mb-3 relative">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 mb-4 relative">
               <TeamLogo teamName={awayTeam} sport={sport} league={league} size="xl" className="object-contain" />
             </div>
-            <h2 className="text-base sm:text-lg font-semibold text-white leading-tight">
+            <h2 className="text-lg sm:text-xl font-bold text-white leading-tight">
               {awayTeam}
             </h2>
-            <span className="text-[10px] uppercase tracking-widest text-zinc-600 mt-1">Away</span>
+            <span className="text-xs uppercase tracking-widest text-zinc-500 mt-1.5 font-medium">Away</span>
           </div>
         </div>
 

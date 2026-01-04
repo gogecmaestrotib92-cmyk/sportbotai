@@ -62,11 +62,11 @@ export function ProSection({
   // PRO users see full content
   if (isPro) {
     return (
-      <div className={`rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-4 sm:p-5 ${className}`}>
-        <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-          {icon}
+      <div className={`rounded-2xl bg-gradient-to-br from-violet-500/5 to-transparent border border-violet-500/10 p-5 sm:p-6 ${className}`}>
+        <h3 className="text-sm font-semibold text-violet-300 uppercase tracking-wide mb-5 flex items-center gap-3">
+          <span className="text-base">{icon}</span>
           {title}
-          <span className="ml-auto text-[9px] px-2 py-0.5 bg-violet-500/10 text-violet-400 rounded-full border border-violet-500/20">
+          <span className="ml-auto text-[10px] px-2.5 py-1 bg-violet-500/15 text-violet-300 rounded-full border border-violet-500/25 font-medium">
             PRO
           </span>
         </h3>
@@ -77,24 +77,24 @@ export function ProSection({
 
   // FREE users see collapsed teaser
   return (
-    <div className={`rounded-2xl bg-[#0a0a0b] border border-zinc-800/50 p-4 sm:p-5 ${className}`}>
+    <div className={`rounded-2xl bg-zinc-900/50 border border-zinc-800/60 p-5 sm:p-6 ${className}`}>
       {/* Header */}
-      <h3 className="text-[10px] font-medium text-zinc-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-        <span className="opacity-50">{icon}</span>
-        <span className="text-zinc-500">{title}</span>
-        <span className="ml-auto text-[9px] px-2 py-0.5 bg-zinc-800/50 text-zinc-500 rounded-full border border-zinc-700/30">
+      <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wide mb-4 flex items-center gap-3">
+        <span className="opacity-60 text-base">{icon}</span>
+        <span>{title}</span>
+        <span className="ml-auto text-[10px] px-2.5 py-1 bg-zinc-800/70 text-zinc-400 rounded-full border border-zinc-700/40 font-medium">
           🔒 PRO
         </span>
       </h3>
 
       {/* Teaser content */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {/* Teaser bullets */}
         {teaserBullets && teaserBullets.length > 0 && (
-          <ul className="space-y-1.5">
+          <ul className="space-y-2">
             {teaserBullets.map((bullet, index) => (
-              <li key={index} className="flex items-center gap-2 text-xs text-zinc-600">
-                <span className="w-1 h-1 rounded-full bg-zinc-700 flex-shrink-0" />
+              <li key={index} className="flex items-center gap-3 text-sm text-zinc-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 flex-shrink-0" />
                 {bullet}
               </li>
             ))}
@@ -104,7 +104,7 @@ export function ProSection({
         {/* Teaser text with fade */}
         {teaserText && (
           <div className="relative">
-            <p className="text-sm text-zinc-500 leading-relaxed line-clamp-2">
+            <p className="text-base text-zinc-400 leading-relaxed line-clamp-2">
               {teaserText}
             </p>
             <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#0a0a0b] to-transparent" />

@@ -114,6 +114,15 @@ export function EdgeBar({ direction, percentage, homeTeam, awayTeam, canSeeExact
   
   const clampedPosition = Math.max(15, Math.min(85, position));
   
+  // RESTRAINED COLORS: Only show accent color when edge is meaningful (>5%)
+  const hasSignificantEdge = percentage > 5;
+  const indicatorColor = hasSignificantEdge 
+    ? (direction === 'home' ? 'bg-emerald-500' : direction === 'away' ? 'bg-emerald-500' : 'bg-zinc-500')
+    : 'bg-zinc-500';
+  const textColor = hasSignificantEdge 
+    ? 'text-zinc-300'
+    : 'text-zinc-500';
+  
   return (
     <div className="space-y-2">
       {/* Team labels */}
@@ -124,8 +133,8 @@ export function EdgeBar({ direction, percentage, homeTeam, awayTeam, canSeeExact
       
       {/* Bar container */}
       <div className="relative h-2 bg-zinc-800/50 rounded-full overflow-hidden">
-        {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-zinc-700/20 to-blue-500/20" />
+        {/* Gradient background - more subtle */}
+        <div className="absolute inset-0 bg-gradient-to-r from-zinc-700/30 via-zinc-800/30 to-zinc-700/30" />
         
         {/* Center line */}
         <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-600" />
@@ -135,21 +144,13 @@ export function EdgeBar({ direction, percentage, homeTeam, awayTeam, canSeeExact
           className="absolute top-0 bottom-0 w-4 -ml-2 transition-all duration-500 ease-out"
           style={{ left: `${clampedPosition}%` }}
         >
-          <div className={`
-            w-full h-full rounded-full
-            ${direction === 'home' ? 'bg-emerald-500' : direction === 'away' ? 'bg-blue-500' : 'bg-zinc-500'}
-            shadow-lg
-          `} />
+          <div className={`w-full h-full rounded-full ${indicatorColor} shadow-lg`} />
         </div>
       </div>
       
-      {/* Edge label */}
+      {/* Edge label - neutral unless significant edge */}
       <div className="text-center">
-        <span className={`text-xs font-medium ${
-          direction === 'home' ? 'text-emerald-400' : 
-          direction === 'away' ? 'text-blue-400' : 
-          'text-zinc-500'
-        }`}>
+        <span className={`text-xs font-medium ${textColor}`}>
           {direction === 'even' 
             ? 'Even' 
             : canSeeExactNumbers 
@@ -178,10 +179,11 @@ export function ConfidenceRing({ score, confidence, size = 80 }: ConfidenceRingP
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (score / 100) * circumference;
   
+  // RESTRAINED COLORS: Only high confidence gets accent color
   const colors = {
     high: { stroke: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', text: 'text-emerald-400' },
-    medium: { stroke: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', text: 'text-amber-400' },
-    low: { stroke: '#71717a', bg: 'rgba(113, 113, 122, 0.1)', text: 'text-zinc-400' },
+    medium: { stroke: '#71717a', bg: 'rgba(113, 113, 122, 0.1)', text: 'text-zinc-400' },
+    low: { stroke: '#52525b', bg: 'rgba(82, 82, 91, 0.1)', text: 'text-zinc-500' },
   };
   
   const color = colors[confidence];
@@ -261,6 +263,7 @@ interface TempoIndicatorProps {
 export function TempoIndicator({ level }: TempoIndicatorProps) {
   const bars = level === 'high' ? 3 : level === 'medium' ? 2 : 1;
   
+  // RESTRAINED: Use neutral zinc colors for tempo (it's informational, not edge)
   return (
     <div className="flex items-end gap-0.5 h-4">
       {[1, 2, 3].map((i) => (
@@ -268,7 +271,7 @@ export function TempoIndicator({ level }: TempoIndicatorProps) {
           key={i}
           className={`w-1 rounded-sm transition-all ${
             i <= bars 
-              ? level === 'high' ? 'bg-amber-500' : level === 'medium' ? 'bg-zinc-400' : 'bg-blue-500'
+              ? 'bg-zinc-400'
               : 'bg-zinc-800'
           }`}
           style={{ height: `${i * 33}%` }}
@@ -291,10 +294,13 @@ interface VerdictBadgeProps {
 }
 
 export function VerdictBadge({ favored, confidence, edgePercentage, canSeeExactNumbers = false }: VerdictBadgeProps) {
+  // RESTRAINED COLOR SYSTEM:
+  // - High confidence (edge >5%): subtle emerald accent
+  // - Medium/Low: neutral zinc - no color unless there's a clear edge
   const colors = {
-    high: 'from-emerald-500/20 to-emerald-500/5 border-emerald-500/30 text-emerald-400',
-    medium: 'from-amber-500/20 to-amber-500/5 border-amber-500/30 text-amber-400',
-    low: 'from-zinc-500/20 to-zinc-500/5 border-zinc-500/30 text-zinc-400',
+    high: 'from-emerald-500/10 to-emerald-500/5 border-emerald-500/20',
+    medium: 'from-zinc-800/50 to-zinc-900/50 border-zinc-700/30',
+    low: 'from-zinc-800/50 to-zinc-900/50 border-zinc-700/30',
   };
 
   // PRO users see "Strong Signal", FREE users see "Directional Signal"
@@ -307,6 +313,9 @@ export function VerdictBadge({ favored, confidence, edgePercentage, canSeeExactN
     medium: 'Model Lean',
     low: 'Slight Lean',
   };
+
+  // Accent color for the label: only emerald for high, neutral for rest
+  const labelColor = confidence === 'high' ? 'text-emerald-400' : 'text-zinc-500';
 
   // For low confidence matches, show "Slight edge to X (52%)" instead of "No Clear Edge"
   const isNoEdge = !favored || favored === 'No Clear Edge' || favored === 'Nema Jasne Prednosti';
@@ -321,19 +330,19 @@ export function VerdictBadge({ favored, confidence, edgePercentage, canSeeExactN
 
   return (
     <div className={`
-      relative overflow-hidden rounded-2xl p-6
-      bg-gradient-to-br ${colors[confidence].split(' ').slice(0, 2).join(' ')}
-      border ${colors[confidence].split(' ')[2]}
+      relative overflow-hidden rounded-2xl p-6 sm:p-8
+      bg-gradient-to-br ${colors[confidence]} border
     `}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">
+          <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">
             Analysis Points To
           </p>
-          <p className="text-xl font-semibold text-white">
+          {/* PRIMARY VERDICT: Near-white, bold - this is the main takeaway */}
+          <p className="text-2xl sm:text-3xl font-bold text-white">
             {displayText}
             {showPercentage && (
-              <span className="text-sm font-normal text-zinc-400 ml-2">
+              <span className="text-lg font-normal text-zinc-400 ml-3">
                 ({edgePercentage}%)
               </span>
             )}
@@ -344,7 +353,7 @@ export function VerdictBadge({ favored, confidence, edgePercentage, canSeeExactN
             </p>
           )}
         </div>
-        <div className={`text-right ${colors[confidence].split(' ')[3]}`}>
+        <div className={`text-right ${labelColor}`}>
           <p className="text-sm font-medium">{confidenceLabels[confidence]}</p>
         </div>
       </div>

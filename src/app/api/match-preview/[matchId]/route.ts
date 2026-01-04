@@ -48,6 +48,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const startTime = Date.now();
   console.log(`[Match-Preview] === REQUEST RECEIVED at ${new Date().toISOString()} ===`);
   
+  // Check for forceRefresh query param to bypass cache
+  const forceRefresh = request.nextUrl.searchParams.get('forceRefresh') === 'true';
+  if (forceRefresh) {
+    console.log(`[Match-Preview] Force refresh requested - will bypass cache`);
+  }
+  
   try {
     // ==========================================
     // CHECK SESSION FIRST - Fast path for anonymous users
@@ -259,7 +265,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Live matches (negative minutes) should STILL use cache to show pre-match analysis
     const isLive = minutesUntilKickoff < 0;
     const isAboutToStart = minutesUntilKickoff >= 0 && minutesUntilKickoff < 30;
-    const shouldSkipCache = isAboutToStart; // Only skip for matches about to start, NOT for live matches
+    const shouldSkipCache = isAboutToStart || forceRefresh; // Skip cache if about to start OR force refresh requested
     
     if (isLive) {
       console.log(`[Match-Preview] Match is LIVE (${Math.abs(Math.round(minutesUntilKickoff))} min into game) - checking cache for pre-match analysis`);

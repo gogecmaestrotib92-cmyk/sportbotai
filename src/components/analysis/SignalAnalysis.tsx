@@ -52,32 +52,32 @@ export default function SignalAnalysis({
         {/* Subtle gradient accent */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent" />
         
-        <div className="relative p-6">
+        <div className="relative p-7">
           {/* Verdict Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-7">
             <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl bg-white/[0.04] ring-1 ${confidenceConfig.ring} flex items-center justify-center`}>
-                <span className="text-2xl">
+              <div className={`w-14 h-14 rounded-xl bg-white/[0.04] ring-1 ${confidenceConfig.ring} flex items-center justify-center`}>
+                <span className="text-3xl">
                   {favored === 'draw' ? '⚖️' : favored === 'home' ? '🏠' : '✈️'}
                 </span>
               </div>
               <div>
-                <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest mb-0.5">
+                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-1">
                   Analysis Points To
                 </p>
-                <h2 className="text-xl font-semibold text-white">
+                <h2 className="text-2xl font-bold text-white">
                   {favored === 'draw' ? 'Draw' : `${favoredTeam}`}
                 </h2>
               </div>
             </div>
-            <span className={`text-xs font-medium ${confidenceConfig.color}`}>
+            <span className={`text-sm font-semibold ${confidenceConfig.color}`}>
               {confidenceConfig.label}
             </span>
           </div>
 
           {/* Normalized Signals Grid - The Universal Framework */}
           {signals && (
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-7">
               <SignalPill label="Form" value={signals.formLabel} />
               <SignalPill label="Edge" value={signals.strengthEdgeLabel} />
               <SignalPill label="Tempo" value={signals.tempoLabel} />
@@ -90,15 +90,15 @@ export default function SignalAnalysis({
 
       {/* Match Snapshot - The Key Insights */}
       {snapshot && snapshot.length > 0 && (
-        <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-6">
-          <h3 className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest mb-4">
+        <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-7">
+          <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-5">
             Match Snapshot
           </h3>
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {snapshot.slice(0, 5).map((insight, index) => (
               <li key={index} className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-white/40 mt-2 flex-shrink-0" />
-                <span className="text-[15px] text-zinc-300 leading-relaxed">{insight}</span>
+                <span className="w-2 h-2 rounded-full bg-white/40 mt-2 flex-shrink-0" />
+                <span className="text-base text-zinc-300 leading-relaxed">{insight}</span>
               </li>
             ))}
           </ul>
@@ -107,11 +107,11 @@ export default function SignalAnalysis({
 
       {/* Game Flow - How it unfolds */}
       {gameFlow && (
-        <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-6">
-          <h3 className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest mb-4">
+        <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-7">
+          <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-5">
             Game Flow Expectation
           </h3>
-          <p className="text-[15px] text-zinc-300 leading-relaxed">
+          <p className="text-base text-zinc-300 leading-relaxed">
             {gameFlow}
           </p>
         </div>
@@ -119,16 +119,16 @@ export default function SignalAnalysis({
 
       {/* Risk Factors - What could change */}
       {riskFactors && riskFactors.length > 0 && (
-        <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-6">
-          <h3 className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-            <span className="text-amber-500">⚠</span>
+        <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-7">
+          <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-5 flex items-center gap-2">
+            <span className="text-amber-500 text-lg">⚠</span>
             Risk Factors
           </h3>
-          <ul className="space-y-2">
+          <ul className="space-y-3">
             {riskFactors.map((risk, index) => (
               <li key={index} className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500/50 mt-2 flex-shrink-0" />
-                <span className="text-[15px] text-zinc-400 leading-relaxed">{risk}</span>
+                <span className="w-2 h-2 rounded-full bg-amber-500/50 mt-2 flex-shrink-0" />
+                <span className="text-base text-zinc-400 leading-relaxed">{risk}</span>
               </li>
             ))}
           </ul>
@@ -136,7 +136,7 @@ export default function SignalAnalysis({
       )}
 
       {/* Disclaimer - Always present */}
-      <p className="text-[11px] text-zinc-600 text-center px-4">
+      <p className="text-sm text-zinc-500 text-center px-4">
         This analysis is for informational purposes only. Not betting advice.
       </p>
     </div>
@@ -154,11 +154,11 @@ function SignalPill({ label, value }: { label: string; value: string }) {
     .trim();
 
   return (
-    <div className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.04]">
-      <p className="text-[10px] font-medium text-zinc-600 uppercase tracking-wider mb-0.5">
+    <div className="px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.04]">
+      <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
         {label}
       </p>
-      <p className="text-xs font-medium text-zinc-300 truncate" title={displayValue}>
+      <p className="text-sm font-semibold text-zinc-300 truncate" title={displayValue}>
         {displayValue}
       </p>
     </div>

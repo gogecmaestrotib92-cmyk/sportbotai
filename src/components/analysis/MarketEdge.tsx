@@ -84,8 +84,8 @@ export function ValueBadge({ valueEdge, locale = 'en' }: ValueBadgeProps) {
   
   if (!valueEdge.outcome || valueEdge.strength === 'none') {
     return (
-      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-800/50 text-zinc-500 text-xs">
-        <span className="w-1.5 h-1.5 rounded-full bg-zinc-600"></span>
+      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-zinc-800/50 text-zinc-500 text-sm">
+        <span className="w-2 h-2 rounded-full bg-zinc-600"></span>
         <span>{t.fairPrice}</span>
       </div>
     );
@@ -106,9 +106,9 @@ export function ValueBadge({ valueEdge, locale = 'en' }: ValueBadgeProps) {
   };
 
   return (
-    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border ${colorMap[valueEdge.strength]}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${dotColor[valueEdge.strength]}`}></span>
-      <span className="text-xs font-medium">{valueEdge.label}</span>
+    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded border ${colorMap[valueEdge.strength]}`}>
+      <span className={`w-2 h-2 rounded-full ${dotColor[valueEdge.strength]}`}></span>
+      <span className="text-sm font-semibold">{valueEdge.label}</span>
     </div>
   );
 }
@@ -133,19 +133,19 @@ export function ProbabilityCompare({ modelProb, marketProb, label, teamName, loc
   const isOverpriced = diff < -3;
 
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center text-sm">
-        <span className="text-gray-400">{teamName || label}</span>
-        <div className="flex items-center gap-3">
+    <div className="space-y-3">
+      <div className="flex justify-between items-center">
+        <span className="text-gray-400 text-base font-medium">{teamName || label}</span>
+        <div className="flex items-center gap-4">
           {canSeeExactNumbers ? (
             <>
-              <span className="text-gray-500 text-xs">{t.market}: {marketProb}%</span>
-              <span className={`font-medium ${isValue ? 'text-green-400' : isOverpriced ? 'text-red-400' : 'text-white'}`}>
+              <span className="text-gray-500 text-sm">{t.market}: {marketProb}%</span>
+              <span className={`font-bold text-base ${isValue ? 'text-green-400' : isOverpriced ? 'text-red-400' : 'text-white'}`}>
                 {t.model}: {modelProb}%
               </span>
             </>
           ) : (
-            <span className={`font-medium ${isValue ? 'text-green-400' : isOverpriced ? 'text-red-400' : 'text-zinc-400'}`}>
+            <span className={`font-semibold text-base ${isValue ? 'text-green-400' : isOverpriced ? 'text-red-400' : 'text-zinc-400'}`}>
               {isValue ? 'Value detected' : isOverpriced ? 'Overpriced' : 'Fair price'}
             </span>
           )}
@@ -153,7 +153,7 @@ export function ProbabilityCompare({ modelProb, marketProb, label, teamName, loc
       </div>
       
       {/* Comparison bar */}
-      <div className="relative h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+      <div className="relative h-2 bg-zinc-800 rounded-full overflow-hidden">
         {/* Market probability (gray) */}
         <div 
           className="absolute top-0 left-0 h-full bg-zinc-700 rounded-full"
@@ -170,7 +170,7 @@ export function ProbabilityCompare({ modelProb, marketProb, label, teamName, loc
 
       {/* Edge indicator - PRO only */}
       {canSeeExactNumbers && Math.abs(diff) > 3 && (
-        <div className={`text-xs ${isValue ? 'text-green-400' : 'text-red-400'}`}>
+        <div className={`text-sm font-semibold ${isValue ? 'text-green-400' : 'text-red-400'}`}>
           {isValue ? `+${diff.toFixed(1)}% ${t.value}` : `${diff.toFixed(1)}% ${t.overpriced}`}
         </div>
       )}
@@ -257,8 +257,8 @@ export function OddsDisplay({ odds, homeTeam, awayTeam, hasDraw = true, locale =
   
   if (!hasValidOdds) {
     return (
-      <div className="p-3 bg-zinc-800/30 rounded-lg text-center">
-        <p className="text-zinc-500 text-sm">
+      <div className="p-4 bg-zinc-800/30 rounded-lg text-center">
+        <p className="text-zinc-500 text-base">
           {locale === 'sr' ? 'Kvote trenutno nedostupne' : 'Odds currently unavailable'}
         </p>
       </div>
@@ -266,22 +266,22 @@ export function OddsDisplay({ odds, homeTeam, awayTeam, hasDraw = true, locale =
   }
   
   return (
-    <div className="flex items-center justify-between gap-1.5 sm:gap-2 text-sm">
-      <div className="flex-1 text-center p-2 bg-zinc-800/40 rounded-lg min-w-0">
-        <div className="text-zinc-500 text-[10px] sm:text-xs mb-1 truncate">{homeTeam}</div>
-        <div className="text-zinc-300 font-mono font-medium text-sm sm:text-base">{formatOdds(odds.homeOdds)}</div>
+    <div className="flex items-center justify-between gap-2 sm:gap-3">
+      <div className="flex-1 text-center p-3 bg-zinc-800/40 rounded-xl min-w-0">
+        <div className="text-zinc-500 text-xs sm:text-sm mb-1.5 truncate font-medium">{homeTeam}</div>
+        <div className="text-zinc-200 font-mono font-bold text-base sm:text-lg">{formatOdds(odds.homeOdds)}</div>
       </div>
       
       {hasDraw && odds.drawOdds && (
-        <div className="flex-1 text-center p-2 bg-zinc-800/40 rounded-lg min-w-0">
-          <div className="text-zinc-500 text-[10px] sm:text-xs mb-1">{t.draw}</div>
-          <div className="text-zinc-300 font-mono font-medium text-sm sm:text-base">{formatOdds(odds.drawOdds)}</div>
+        <div className="flex-1 text-center p-3 bg-zinc-800/40 rounded-xl min-w-0">
+          <div className="text-zinc-500 text-xs sm:text-sm mb-1.5 font-medium">{t.draw}</div>
+          <div className="text-zinc-200 font-mono font-bold text-base sm:text-lg">{formatOdds(odds.drawOdds)}</div>
         </div>
       )}
       
-      <div className="flex-1 text-center p-2 bg-zinc-800/40 rounded-lg min-w-0">
-        <div className="text-zinc-500 text-[10px] sm:text-xs mb-1 truncate">{awayTeam}</div>
-        <div className="text-zinc-300 font-mono font-medium text-sm sm:text-base">{formatOdds(odds.awayOdds)}</div>
+      <div className="flex-1 text-center p-3 bg-zinc-800/40 rounded-xl min-w-0">
+        <div className="text-zinc-500 text-xs sm:text-sm mb-1.5 truncate font-medium">{awayTeam}</div>
+        <div className="text-zinc-200 font-mono font-bold text-base sm:text-lg">{formatOdds(odds.awayOdds)}</div>
       </div>
     </div>
   );
@@ -302,24 +302,24 @@ export function RecommendationCard({ marketIntel, locale = 'en' }: Recommendatio
   const badgeLabel = getRecommendationLabel(marketIntel.recommendation);
 
   return (
-    <div className="p-4 bg-zinc-900/50 border border-zinc-800/50 rounded-lg space-y-3">
+    <div className="p-5 bg-zinc-900/50 border border-zinc-800/50 rounded-xl space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-zinc-500 text-[10px] uppercase tracking-wider">{t.marketVerdict}</span>
-        <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${badgeColor}`}>
+        <span className="text-zinc-400 text-xs uppercase tracking-wider font-semibold">{t.marketVerdict}</span>
+        <span className={`px-3 py-1 rounded text-xs font-bold ${badgeColor}`}>
           {badgeLabel}
         </span>
       </div>
       
-      <p className="text-zinc-400 text-sm leading-relaxed">
+      <p className="text-zinc-300 text-base leading-relaxed">
         {marketIntel.summary}
       </p>
       
       {/* Conflict Explanation - explains when value is on non-favored team */}
       {marketIntel.conflictExplanation && (
-        <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-          <div className="flex items-start gap-2">
-            <span className="text-amber-400 text-sm">💡</span>
-            <p className="text-amber-200/90 text-sm leading-relaxed">
+        <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+          <div className="flex items-start gap-3">
+            <span className="text-amber-400 text-base">💡</span>
+            <p className="text-amber-200/90 text-base leading-relaxed">
               {marketIntel.conflictExplanation}
             </p>
           </div>
@@ -327,9 +327,9 @@ export function RecommendationCard({ marketIntel, locale = 'en' }: Recommendatio
       )}
       
       {marketIntel.impliedProbability.margin && (
-        <div className="flex items-center gap-2 text-xs text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-gray-500">
           <span>{t.bookmakerMargin}:</span>
-          <span className="font-mono">{marketIntel.impliedProbability.margin}%</span>
+          <span className="font-mono font-medium">{marketIntel.impliedProbability.margin}%</span>
         </div>
       )}
     </div>
@@ -366,34 +366,34 @@ export function MarketIntelSection({
   // Guest: Show teaser skeleton (no real numbers rendered at all)
   if (!canSeeAnalysis) {
     return (
-      <div className="space-y-6 p-6 bg-[#0a1a0a] border border-[#1a3a1a] rounded-xl">
+      <div className="space-y-6 p-7 bg-[#0a1a0a] border border-[#1a3a1a] rounded-2xl">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-white font-semibold flex items-center gap-2">
-            <span className="text-lg">📊</span>
+          <h3 className="text-white text-lg font-bold flex items-center gap-3">
+            <span className="text-xl">📊</span>
             {t.marketEdge}
           </h3>
-          <span className="px-3 py-1.5 rounded-full bg-[#1a2a1a] text-gray-500 text-sm">
+          <span className="px-4 py-2 rounded-full bg-[#1a2a1a] text-gray-400 text-sm font-medium">
             🔒 {locale === 'sr' ? 'Zaključano' : 'Locked'}
           </span>
         </div>
         
         {/* Teaser skeleton - no real data */}
         <div className="space-y-4">
-          <div className="h-12 bg-[#1a2a1a] rounded-lg animate-pulse" />
-          <div className="h-20 bg-[#1a2a1a] rounded-lg animate-pulse" />
-          <div className="h-16 bg-[#1a2a1a] rounded-lg animate-pulse" />
+          <div className="h-14 bg-[#1a2a1a] rounded-xl animate-pulse" />
+          <div className="h-24 bg-[#1a2a1a] rounded-xl animate-pulse" />
+          <div className="h-20 bg-[#1a2a1a] rounded-xl animate-pulse" />
         </div>
         
         {/* CTA */}
-        <div className="text-center py-4">
-          <p className="text-gray-400 text-sm mb-3">{t.seeWhereMarketWrong}</p>
+        <div className="text-center py-5">
+          <p className="text-gray-300 text-base mb-4">{t.seeWhereMarketWrong}</p>
           <a 
             href="/auth/signin" 
-            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl text-base font-semibold transition-colors"
           >
             {locale === 'sr' ? 'Prijavi se besplatno' : 'Sign in free'}
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </a>

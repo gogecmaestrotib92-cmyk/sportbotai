@@ -137,11 +137,7 @@ export default function UniversalSignalsDisplay({
           icon="📊" 
           label={t.form}
           rightContent={
-            <span className={`text-xs font-medium ${
-              display.form.trend === 'home_better' ? 'text-emerald-400' :
-              display.form.trend === 'away_better' ? 'text-blue-400' :
-              'text-zinc-400'
-            }`}>
+            <span className="text-sm font-medium text-zinc-200">
               {display.form.label}
             </span>
           }
@@ -168,38 +164,30 @@ export default function UniversalSignalsDisplay({
         {/* Tempo + Efficiency Row */}
         <div className="grid grid-cols-2 gap-3">
           {/* Tempo */}
-          <div className="p-4 rounded-xl bg-[#0a0a0b] border border-white/[0.04]">
-            <div className="flex items-center justify-between mb-2">
+          <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="text-sm">🎯</span>
-                <span className="text-[10px] text-zinc-500 uppercase tracking-wider">{t.tempo}</span>
+                <span className="text-lg">🎯</span>
+                <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">{t.tempo}</span>
               </div>
               <TempoIndicator level={display.tempo.level} />
             </div>
-            <p className={`text-sm font-medium ${
-              display.tempo.level === 'high' ? 'text-amber-400' :
-              display.tempo.level === 'low' ? 'text-blue-400' :
-              'text-zinc-300'
-            }`}>
+            <p className="text-base font-medium text-stone-200">
               {display.tempo.label}
             </p>
           </div>
 
           {/* Efficiency */}
-          <div className="p-4 rounded-xl bg-[#0a0a0b] border border-white/[0.04]">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm">📈</span>
-              <span className="text-[10px] text-zinc-500 uppercase tracking-wider">{t.efficiency}</span>
+          <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg">📈</span>
+              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">{t.efficiency}</span>
             </div>
-            <p className={`text-sm font-medium ${
-              display.efficiency.winner === 'home' ? 'text-emerald-400' :
-              display.efficiency.winner === 'away' ? 'text-blue-400' :
-              'text-zinc-400'
-            }`}>
+            <p className="text-base font-medium text-stone-200">
               {display.efficiency.label}
             </p>
             {display.efficiency.aspect && (
-              <p className="text-[10px] text-zinc-600 mt-0.5">
+              <p className="text-xs text-zinc-500 mt-1">
                 {display.efficiency.aspect} {t.advantage}
               </p>
             )}
@@ -253,22 +241,22 @@ function ExpandableAvailability({
   });
 
   return (
-    <div className="p-4 rounded-xl bg-[#0a0a0b] border border-white/[0.04]">
+    <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
       <button
         onClick={() => hasInjuries && setExpanded(!expanded)}
         className={`w-full flex items-center justify-between ${hasInjuries ? 'cursor-pointer' : 'cursor-default'}`}
         disabled={!hasInjuries}
       >
-        <div className="flex items-center gap-2">
-          <span className="text-sm">🏥</span>
-          <span className="text-[10px] text-zinc-500 uppercase tracking-wider">{t.availabilityImpact}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-lg">🏥</span>
+          <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">{t.availabilityImpact}</span>
           {hasInjuries && (
-            <span className="text-[9px] text-zinc-600">
+            <span className="text-xs text-zinc-500">
               ({homeInjuries.length + awayInjuries.length} {t.players})
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <AvailabilityDots level={display.availability.level} />
           {hasInjuries && (
             <svg
@@ -363,11 +351,11 @@ function SignalCard({
   rightContent?: React.ReactNode;
 }) {
   return (
-    <div className="p-4 rounded-xl bg-[#0a0a0b] border border-white/[0.04]">
+    <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm">{icon}</span>
-          <span className="text-[10px] text-zinc-500 uppercase tracking-wider">{label}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-lg">{icon}</span>
+          <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">{label}</span>
         </div>
         {rightContent}
       </div>
@@ -378,6 +366,7 @@ function SignalCard({
 
 /**
  * Compact Signal Pills - For summary/header areas
+ * Uses restrained colors: only emerald for positive edge, neutral otherwise
  */
 export function SignalPills({ signals, locale = 'en' }: { signals: UniversalSignals; locale?: 'en' | 'sr' }) {
   const t = signalTranslations[locale];
@@ -386,12 +375,16 @@ export function SignalPills({ signals, locale = 'en' }: { signals: UniversalSign
   // Handle undefined display or edge
   const edgeDirection = display?.edge?.direction || 'even';
   const tempoLevel = display?.tempo?.level || 'medium';
+  const edgePercentage = display?.edge?.percentage || 50;
+  
+  // Only show color if there's a meaningful edge (>5% from neutral)
+  const hasSignificantEdge = Math.abs(edgePercentage - 50) > 5;
   
   // Convert clarity score to user-friendly label
   const getDataQualityLabel = (score: number): { label: string; color: 'emerald' | 'amber' | 'zinc' } => {
-    if (score >= 75) return { label: t.rich, color: 'emerald' };
+    if (score >= 75) return { label: t.rich, color: 'zinc' }; // Even good data = neutral
     if (score >= 50) return { label: t.standard, color: 'zinc' };
-    return { label: t.limited, color: 'amber' };
+    return { label: t.limited, color: 'zinc' }; // Neutral for all
   };
   
   const dataQuality = getDataQualityLabel(signals.clarity_score);
@@ -401,12 +394,12 @@ export function SignalPills({ signals, locale = 'en' }: { signals: UniversalSign
       <Pill 
         label={t.edge} 
         value={signals.strength_edge}
-        color={edgeDirection === 'home' ? 'emerald' : edgeDirection === 'away' ? 'blue' : 'zinc'}
+        color={hasSignificantEdge ? 'emerald' : 'zinc'}
       />
       <Pill 
         label={t.tempo} 
         value={signals.tempo}
-        color={tempoLevel === 'high' ? 'amber' : 'zinc'}
+        color="zinc" // Tempo is neutral - no color needed
       />
       <Pill 
         label={t.data} 

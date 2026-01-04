@@ -1121,16 +1121,16 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
 
           {/* Risk Factors - Free with registration */}
           {riskFactors && riskFactors.length > 0 && (
-            <div className="mt-3 sm:mt-4 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-4 sm:p-5">
-              <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span className="text-amber-500/80">⚠</span>
+            <div className="mt-4 sm:mt-6 rounded-2xl bg-gradient-to-br from-amber-500/5 to-transparent border border-amber-500/10 p-5 sm:p-6">
+              <h3 className="text-xs font-semibold text-amber-400/90 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <span className="text-base">⚠️</span>
                 {t.riskFactors}
               </h3>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {riskFactors.map((risk, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <span className="w-1 h-1 rounded-full bg-amber-500/40 mt-2 flex-shrink-0" />
-                    <span className="text-sm text-zinc-500 leading-relaxed">{risk}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500/60 mt-2 flex-shrink-0" />
+                    <span className="text-base text-zinc-300 leading-relaxed">{risk}</span>
                   </li>
                 ))}
               </ul>
@@ -1166,11 +1166,11 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
               locale={locale}
               className="mt-3 sm:mt-4"
             >
-              <ul className="space-y-2.5">
+              <ul className="space-y-4">
                 {snapshot.slice(0, 4).map((insight, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <span className="w-1 h-1 rounded-full bg-white/30 mt-2 flex-shrink-0" />
-                    <span className="text-sm text-zinc-300 leading-relaxed">{insight}</span>
+                    <span className="w-2 h-2 rounded-full bg-violet-500/40 mt-2 flex-shrink-0" />
+                    <span className="text-base text-stone-200 leading-relaxed">{insight}</span>
                   </li>
                 ))}
               </ul>
@@ -1186,7 +1186,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
               locale={locale}
               className="mt-3 sm:mt-4"
             >
-              <p className="text-sm text-zinc-400 leading-relaxed">
+              <p className="text-base text-stone-300 leading-relaxed">
                 {gameFlow}
               </p>
             </ProSection>
@@ -1230,8 +1230,8 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
           
           return (
             <div className="mt-6">
-              <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span>📊</span>
+              <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wide mb-4 flex items-center gap-3">
+                <span className="text-lg">📊</span>
                 {t.whereTheyStand}
               </h3>
               <StandingsTable

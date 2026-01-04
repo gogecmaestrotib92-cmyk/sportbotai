@@ -98,13 +98,20 @@ button:focus-visible {
   --color-bg-glass: rgba(18, 18, 18, 0.7);
   --color-bg-light: #F8FAFC;
   
-  /* Text Colors */
-  --color-text-primary: #FFFFFF;
-  --color-text-secondary: #B5BDC7;
-  --color-text-muted: #7A838D;
+  /* Text Colors - 4-tier semantic hierarchy */
+  --color-text-primary: #F5F5F4;      /* Verdict/decision text - warm near-white */
+  --color-text-secondary: #9CA3AF;    /* Explanatory text - cool muted gray (70-80% of text) */
+  --color-text-muted: #6B7280;        /* Labels/meta - darker gray */
+  --color-text-dim: #4B5563;          /* Structural text - very dark */
+  
+  /* Accent Colors - Data-driven, use sparingly */
+  --color-edge-positive: #22C55E;     /* Green - only for meaningful edge (>5%) */
+  --color-edge-negative: #EF4444;     /* Red - only for meaningful overpriced */
+  --color-edge-neutral: #6366F1;      /* Indigo - discipline/no-edge signals */
+  --color-edge-caution: #F59E0B;      /* Amber - slight edge, proceed with caution */
   
   /* Semantic Colors */
-  --color-success: #2AF6A0;
+  --color-success: #22C55E;
   --color-warning: #FACC15;
   --color-danger: #F87171;
   --color-info: #38BDF8;

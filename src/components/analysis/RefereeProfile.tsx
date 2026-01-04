@@ -39,11 +39,11 @@ const StatBar = ({
   const pct = Math.min((value / max) * 100, 100);
   return (
     <div>
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-xs text-text-muted">{label}</span>
-        <span className="text-xs font-bold text-white">{value.toFixed(1)}</span>
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-sm text-text-muted font-medium">{label}</span>
+        <span className="text-sm font-bold text-white">{value.toFixed(1)}</span>
       </div>
-      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+      <div className="h-2 bg-white/10 rounded-full overflow-hidden">
         <div 
           className={`h-full ${color} rounded-full transition-all`}
           style={{ width: `${pct}%` }}
@@ -75,75 +75,75 @@ export default function RefereeProfile({
   return (
     <div className="bg-[#0F1114] rounded-2xl border border-white/10 overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-xl flex items-center justify-center">
-            <span className="text-xl">🎯</span>
+      <div className="px-6 py-5 border-b border-white/5">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-xl flex items-center justify-center">
+            <span className="text-2xl">🎯</span>
           </div>
           <div className="flex-1">
-            <h3 className="font-bold text-white">Match Official</h3>
-            <p className="text-xs text-text-muted">Referee stats this season</p>
+            <h3 className="text-lg font-bold text-white">Match Official</h3>
+            <p className="text-sm text-text-muted">Referee stats this season</p>
           </div>
         </div>
       </div>
 
       {/* Referee info */}
-      <div className="p-5">
-        <div className="flex items-center gap-4 mb-5">
+      <div className="p-6">
+        <div className="flex items-center gap-4 mb-6">
           {/* Referee avatar */}
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
             {referee.photo ? (
               <img src={referee.photo} alt={referee.name} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-2xl">👨‍⚖️</span>
+              <span className="text-3xl">👨‍⚖️</span>
             )}
           </div>
           <div>
-            <h4 className="font-bold text-white text-lg">{referee.name}</h4>
-            <p className="text-xs text-text-muted">{referee.matchesThisSeason} matches this season</p>
+            <h4 className="font-bold text-white text-xl">{referee.name}</h4>
+            <p className="text-sm text-text-muted">{referee.matchesThisSeason} matches this season</p>
           </div>
         </div>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-2 gap-4 mb-5">
-          <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-yellow-400 text-sm">🟨</span>
-              <span className="text-xs text-text-muted">Yellows/game</span>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-yellow-400 text-base">🟨</span>
+              <span className="text-sm text-text-muted font-medium">Yellows/game</span>
             </div>
-            <p className={`text-xl font-bold ${referee.avgYellowCards >= 4.5 ? 'text-yellow-400' : 'text-white'}`}>
+            <p className={`text-2xl font-bold ${referee.avgYellowCards >= 4.5 ? 'text-yellow-400' : 'text-white'}`}>
               {referee.avgYellowCards.toFixed(1)}
             </p>
           </div>
-          <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-red-400 text-sm">🟥</span>
-              <span className="text-xs text-text-muted">Reds/game</span>
+          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-red-400 text-base">🟥</span>
+              <span className="text-sm text-text-muted font-medium">Reds/game</span>
             </div>
-            <p className={`text-xl font-bold ${referee.avgRedCards >= 0.3 ? 'text-red-400' : 'text-white'}`}>
+            <p className={`text-2xl font-bold ${referee.avgRedCards >= 0.3 ? 'text-red-400' : 'text-white'}`}>
               {referee.avgRedCards.toFixed(2)}
             </p>
           </div>
-          <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm">⚽</span>
-              <span className="text-xs text-text-muted">Penalties</span>
+          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">⚽</span>
+              <span className="text-sm text-text-muted font-medium">Penalties</span>
             </div>
-            <p className="text-xl font-bold text-white">{referee.penaltiesAwarded}</p>
+            <p className="text-2xl font-bold text-white">{referee.penaltiesAwarded}</p>
           </div>
-          <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm">🏠</span>
-              <span className="text-xs text-text-muted">Home win %</span>
+          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">🏠</span>
+              <span className="text-sm text-text-muted font-medium">Home win %</span>
             </div>
-            <p className={`text-xl font-bold ${referee.homeWinRate >= 55 ? 'text-green-400' : 'text-white'}`}>
+            <p className={`text-2xl font-bold ${referee.homeWinRate >= 55 ? 'text-green-400' : 'text-white'}`}>
               {referee.homeWinRate.toFixed(0)}%
             </p>
           </div>
         </div>
 
         {/* Visual bars */}
-        <div className="space-y-3 mb-5">
+        <div className="space-y-4 mb-6">
           <StatBar 
             value={referee.avgYellowCards} 
             max={6} 
@@ -166,11 +166,11 @@ export default function RefereeProfile({
 
         {/* Insights */}
         {insights.length > 0 && (
-          <div className="space-y-2">
-            <h5 className="text-xs font-semibold text-white uppercase tracking-wider">Key Insights</h5>
-            <div className="space-y-1.5">
+          <div className="space-y-3">
+            <h5 className="text-sm font-bold text-white uppercase tracking-wider">Key Insights</h5>
+            <div className="space-y-2">
               {insights.map((insight, i) => (
-                <div key={i} className="flex items-start gap-2 text-xs text-text-secondary">
+                <div key={i} className="flex items-start gap-2 text-sm text-text-secondary">
                   <span className="text-accent mt-0.5">•</span>
                   <span>{insight}</span>
                 </div>
@@ -181,8 +181,8 @@ export default function RefereeProfile({
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 bg-white/[0.02] border-t border-white/5">
-        <p className="text-[10px] text-text-muted text-center">
+      <div className="px-6 py-4 bg-white/[0.02] border-t border-white/5">
+        <p className="text-xs text-text-muted text-center">
           Stats from {referee.matchesThisSeason} matches officiated this season
         </p>
       </div>
