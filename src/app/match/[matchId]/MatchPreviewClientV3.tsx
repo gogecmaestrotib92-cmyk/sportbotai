@@ -247,6 +247,11 @@ interface MatchPreviewData {
     keyAbsence: { player: string; team: string; impact: string } | null;
     streak: { text: string; team: string } | null;
   };
+  // Separate injuries data (in case universalSignals doesn't have it)
+  injuries?: {
+    home: Array<{ player: string; position?: string; reason?: string; details?: string }>;
+    away: Array<{ player: string; position?: string; reason?: string; details?: string }>;
+  };
   headlines?: Array<{
     icon: string;
     text: string;
@@ -1021,7 +1026,23 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
           {data.universalSignals && (
             <div className="mt-4 sm:mt-5">
               <UniversalSignalsDisplay
-                signals={data.universalSignals}
+                signals={{
+                  ...data.universalSignals,
+                  // Merge separate injuries field into universalSignals if display.availability doesn't have them
+                  display: data.universalSignals.display ? {
+                    ...data.universalSignals.display,
+                    availability: {
+                      ...data.universalSignals.display.availability,
+                      // Use injuries from universalSignals first, fallback to separate injuries field
+                      homeInjuries: data.universalSignals.display.availability?.homeInjuries?.length 
+                        ? data.universalSignals.display.availability.homeInjuries 
+                        : data.injuries?.home || [],
+                      awayInjuries: data.universalSignals.display.availability?.awayInjuries?.length 
+                        ? data.universalSignals.display.availability.awayInjuries 
+                        : data.injuries?.away || [],
+                    },
+                  } : undefined,
+                }}
                 homeTeam={data.matchInfo.homeTeam}
                 awayTeam={data.matchInfo.awayTeam}
                 homeForm={data.viralStats?.form?.home || '-----'}

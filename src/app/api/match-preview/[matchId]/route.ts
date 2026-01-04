@@ -298,6 +298,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             story: cachedPreview.story,
             signals: cachedPreview.signals,
             universalSignals: cachedPreview.universalSignals || cachedPreview.signals,
+            // Include injuries if available (may be separate from universalSignals in older cache)
+            injuries: cachedPreview.injuries || { home: [], away: [] },
             headlines: cachedPreview.headlines,
             probabilities: cachedPreview.probabilities,
             marketIntel: cachedPreview.marketIntel,
