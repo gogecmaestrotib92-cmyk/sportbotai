@@ -596,6 +596,11 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
   const [error, setError] = useState<string | null>(null);
   const [usageLimit, setUsageLimit] = useState<UsageLimitData | null>(null);
   
+  // Check for forceRefresh in URL (for cache bypass)
+  const forceRefresh = typeof window !== 'undefined' 
+    ? new URLSearchParams(window.location.search).get('forceRefresh') === 'true'
+    : false;
+  
   // Parse matchId immediately to show header while loading
   const parsedMatch = useMemo(() => parseMatchIdClient(matchId), [matchId]);
 
@@ -641,7 +646,13 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
         }, 30000); // 30 second timeout
         
         // Add cache-busting timestamp to force fresh fetch (no browser cache)
-        const response = await fetch(`/api/match-preview/${matchId}?_t=${Date.now()}`, {
+        // Also pass forceRefresh if present in URL to bypass server cache
+        const queryParams = new URLSearchParams();
+        queryParams.set('_t', Date.now().toString());
+        if (forceRefresh) {
+          queryParams.set('forceRefresh', 'true');
+        }
+        const response = await fetch(`/api/match-preview/${matchId}?${queryParams.toString()}`, {
           credentials: 'include', // Ensure cookies are sent
           cache: 'no-store', // Don't use browser cache
         });

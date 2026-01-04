@@ -316,6 +316,32 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           };
         }
         
+        // CRITICAL: Ensure injuries are merged into universalSignals.display.availability
+        // This handles old cached data that may have injuries separately from universalSignals
+        if (responseData.universalSignals?.display?.availability && responseData.injuries) {
+          const existingHomeInjuries = responseData.universalSignals.display.availability.homeInjuries || [];
+          const existingAwayInjuries = responseData.universalSignals.display.availability.awayInjuries || [];
+          const topLevelHomeInjuries = responseData.injuries.home || [];
+          const topLevelAwayInjuries = responseData.injuries.away || [];
+          
+          // Use whichever has more data
+          if (topLevelHomeInjuries.length > existingHomeInjuries.length || 
+              topLevelAwayInjuries.length > existingAwayInjuries.length) {
+            console.log(`[Match-Preview] Merging injuries into universalSignals: top-level has ${topLevelHomeInjuries.length}/${topLevelAwayInjuries.length}, existing has ${existingHomeInjuries.length}/${existingAwayInjuries.length}`);
+            responseData.universalSignals = {
+              ...responseData.universalSignals,
+              display: {
+                ...responseData.universalSignals.display,
+                availability: {
+                  ...responseData.universalSignals.display.availability,
+                  homeInjuries: topLevelHomeInjuries.length > existingHomeInjuries.length ? topLevelHomeInjuries : existingHomeInjuries,
+                  awayInjuries: topLevelAwayInjuries.length > existingAwayInjuries.length ? topLevelAwayInjuries : existingAwayInjuries,
+                },
+              },
+            };
+          }
+        }
+
         // Transform old story format (verdict/narrative/confidence number → favored/narrative/snapshot/riskFactors)
         if (responseData.story && !responseData.story.favored && (responseData.story.verdict || typeof responseData.story.confidence === 'number')) {
           console.log(`[Match-Preview] Transforming old story format to new format`);
