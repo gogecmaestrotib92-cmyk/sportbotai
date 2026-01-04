@@ -71,7 +71,6 @@ export default function MatchesPage({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <span className="text-violet-light text-xs font-semibold uppercase tracking-wider mb-2 block">Match Intelligence</span>
                 <h1 className="text-2xl md:text-3xl font-extrabold text-white mb-1 tracking-tight">
                   Browse Matches
                 </h1>
