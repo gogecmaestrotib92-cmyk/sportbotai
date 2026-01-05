@@ -565,7 +565,9 @@ export async function getMatchInjuriesViaPerplexity(
 
   // Determine sport label
   let sportLabel = 'NBA';
-  if (sport.includes('hockey') || sport.includes('nhl')) {
+  if (sport.includes('euroleague')) {
+    sportLabel = 'Euroleague';
+  } else if (sport.includes('hockey') || sport.includes('nhl')) {
     sportLabel = 'NHL';
   } else if (sport.includes('football') || sport.includes('nfl')) {
     sportLabel = 'NFL';
