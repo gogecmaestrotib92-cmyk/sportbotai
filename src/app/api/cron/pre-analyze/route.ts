@@ -26,7 +26,7 @@ import { prisma } from '@/lib/prisma';
 import { theOddsClient, OddsApiEvent } from '@/lib/theOdds';
 import { generateMatchPreview } from '@/lib/blog/match-generator';
 import { cacheSet, cacheGet, CACHE_TTL, CACHE_KEYS } from '@/lib/cache';
-import { analyzeMarket, type MarketIntel, type OddsData, oddsToImpliedProb, calculateModelProbability } from '@/lib/value-detection';
+import { analyzeMarket, type MarketIntel, type OddsData, oddsToImpliedProb } from '@/lib/value-detection';
 import { normalizeSport, getMatchRostersV2 } from '@/lib/data-layer/bridge';
 import { getMatchInjuriesViaPerplexity } from '@/lib/perplexity';
 import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee, getMatchFixtureInfo } from '@/lib/football-api';
@@ -37,7 +37,8 @@ import {
   type MatchIdentifier,
   type OddsInfo,
 } from '@/lib/unified-match-service';
-import { applyConvictionCap } from '@/lib/accuracy-core/types';
+import { applyConvictionCap, type BookmakerOdds } from '@/lib/accuracy-core/types';
+import { runAccuracyPipeline, type PipelineInput } from '@/lib/accuracy-core';
 import OpenAI from 'openai';
 
 export const maxDuration = 300; // 5 minute timeout for batch processing
@@ -1223,56 +1224,95 @@ export async function GET(request: NextRequest) {
             const matchDate = new Date(event.commence_time);
             
             // ============================================
-            // USE CALCULATED MODEL PROBABILITIES (not AI guesses)
+            // USE FULL ACCURACY-CORE PIPELINE
             // ============================================
-            // calculateModelProbability uses:
-            // - League-specific calibration (draw rates, home advantage)
-            // - Form weights and efficiency signals
-            // - Steam move detection (sharp money)
-            // - Proper normalization and bounds
+            // This uses REAL mathematical models:
+            // - Soccer: Poisson / Dixon-Coles (expected goals)
+            // - Basketball: Elo-based with point differential
+            // - Football: Elo with home field adjustment
+            // - Hockey: Elo-conservative (high parity adjustment)
             //
-            // This replaces the overconfident GPT-4o-mini guesses.
-            const hasDraw = consensus.draw !== null && consensus.draw !== undefined;
-            const universalSignals = analysis.universalSignals;
+            // Plus ensemble blending with market probabilities!
             
-            if (!universalSignals) {
-              console.log(`[Pre-Analyze] Skipped: ${matchRef} (no signals available)`);
-              continue;
-            }
+            // Build odds array for pipeline
+            const pipelineOdds: BookmakerOdds[] = [{
+              bookmaker: 'consensus',
+              homeOdds: consensus.home,
+              awayOdds: consensus.away,
+              drawOdds: consensus.draw || undefined,
+            }];
             
-            const modelProbs = calculateModelProbability(
-              universalSignals,
-              hasDraw,
-              sport.league,
-              undefined // steamMove - we don't have this in pre-analyze yet
-            );
+            // Get enriched data from analysis
+            const analysisEnrichedData = analysis.enrichedData;
             
-            // Convert from percentages (0-100) to decimals (0-1)
-            const normProbs = {
-              home: modelProbs.home / 100,
-              away: modelProbs.away / 100,
-              draw: modelProbs.draw !== undefined ? modelProbs.draw / 100 : null,
+            // Build pipeline input
+            const pipelineInput: PipelineInput = {
+              matchId: event.id,
+              sport: sport.key,
+              league: sport.league,
+              homeTeam: event.home_team,
+              awayTeam: event.away_team,
+              kickoff: matchDate,
+              homeStats: {
+                played: analysisEnrichedData?.homeStats?.played || 0,
+                wins: analysisEnrichedData?.homeStats?.wins || 0,
+                draws: analysisEnrichedData?.homeStats?.draws || 0,
+                losses: analysisEnrichedData?.homeStats?.losses || 0,
+                scored: analysisEnrichedData?.homeStats?.goalsScored || analysisEnrichedData?.homeStats?.pointsScored || 0,
+                conceded: analysisEnrichedData?.homeStats?.goalsConceded || analysisEnrichedData?.homeStats?.pointsConceded || 0,
+              },
+              awayStats: {
+                played: analysisEnrichedData?.awayStats?.played || 0,
+                wins: analysisEnrichedData?.awayStats?.wins || 0,
+                draws: analysisEnrichedData?.awayStats?.draws || 0,
+                losses: analysisEnrichedData?.awayStats?.losses || 0,
+                scored: analysisEnrichedData?.awayStats?.goalsScored || analysisEnrichedData?.awayStats?.pointsScored || 0,
+                conceded: analysisEnrichedData?.awayStats?.goalsConceded || analysisEnrichedData?.awayStats?.pointsConceded || 0,
+              },
+              homeForm: homeFormStr,
+              awayForm: awayFormStr,
+              h2h: analysisEnrichedData?.h2h ? {
+                total: analysisEnrichedData.h2h.total || 0,
+                homeWins: analysisEnrichedData.h2h.homeWins || 0,
+                awayWins: analysisEnrichedData.h2h.awayWins || 0,
+                draws: analysisEnrichedData.h2h.draws || 0,
+              } : undefined,
+              odds: pipelineOdds,
+              config: {
+                logPredictions: false, // We'll log separately
+                minEdgeToShow: 0.02,
+              },
             };
             
-            // Calculate implied probabilities from odds (raw, with vig)
+            // Run the full pipeline
+            const pipelineResult = await runAccuracyPipeline(pipelineInput);
+            
+            // Extract probabilities from pipeline (these are from Poisson/Elo models!)
+            const calibratedProbs = pipelineResult.details.calibratedProbabilities;
+            const normProbs = {
+              home: calibratedProbs.home,
+              away: calibratedProbs.away,
+              draw: calibratedProbs.draw || null,
+            };
+            
+            // Get edges from pipeline (properly calculated with quality checks)
+            const pipelineEdge = pipelineResult.details.edge;
+            const edges = {
+              home: pipelineEdge.home * 100, // Convert to percentage
+              away: pipelineEdge.away * 100,
+              draw: pipelineEdge.draw !== undefined ? pipelineEdge.draw * 100 : -999,
+            };
+            
+            // Calculate implied probabilities from odds (for storage)
             const impliedProbs = {
               home: 1 / consensus.home,
               away: 1 / consensus.away,
               draw: consensus.draw ? 1 / consensus.draw : null,
             };
             
-            // Calculate edges: model probability vs market implied probability
-            // Positive edge = model thinks outcome is MORE likely than market
-            const edges = {
-              home: (normProbs.home - impliedProbs.home) * 100,
-              away: (normProbs.away - impliedProbs.away) * 100,
-              draw: normProbs.draw && impliedProbs.draw 
-                ? (normProbs.draw - impliedProbs.draw) * 100 
-                : -999,
-            };
-            
-            // Log for monitoring
-            console.log(`[Pre-Analyze] Model probs: ${matchRef} | Home: ${modelProbs.home}%, Away: ${modelProbs.away}%${modelProbs.draw ? `, Draw: ${modelProbs.draw}%` : ''} | Edges: H${edges.home.toFixed(1)}% A${edges.away.toFixed(1)}%`);
+            // Log model info
+            const modelMethod = pipelineResult.details.rawProbabilities.method;
+            console.log(`[Pre-Analyze] ${modelMethod.toUpperCase()} model: ${matchRef} | Home: ${(normProbs.home*100).toFixed(1)}%, Away: ${(normProbs.away*100).toFixed(1)}%${normProbs.draw ? `, Draw: ${(normProbs.draw*100).toFixed(1)}%` : ''} | Edge: ${pipelineEdge.primaryEdge.outcome} ${pipelineEdge.primaryEdge.value > 0 ? '+' : ''}${(pipelineEdge.primaryEdge.value*100).toFixed(1)}% (${pipelineEdge.primaryEdge.quality})`);
             
             // ============================================
             // VALUE BET SELECTION (SIMPLIFIED)
