@@ -494,14 +494,14 @@ function ProbabilityCard({ label, modelProb, marketProb, t, isBestValue = false 
           </div>
         </div>
         
-        {/* Bars row - taller container, better scaling */}
+        {/* Bars row - contained within fixed height, scaled to max 100% */}
         <div className="flex justify-center items-end gap-3 h-16">
-          {/* Market Bar */}
+          {/* Market Bar - height scaled: max bar = 64px when prob = 100% */}
           <div 
             className="w-12 bg-zinc-700/50 rounded-t-sm transition-all duration-300 ease-out"
-            style={{ height: `${Math.max(marketProb * 1.1, 8)}px` }}
+            style={{ height: `${Math.max((marketProb / 100) * 64, 8)}px` }}
           />
-          {/* Model Bar */}
+          {/* Model Bar - height scaled: max bar = 64px when prob = 100% */}
           <div 
             className={`w-12 rounded-t-sm transition-all duration-300 ease-out ${
               isValue 
@@ -510,7 +510,7 @@ function ProbabilityCard({ label, modelProb, marketProb, t, isBestValue = false 
                   ? 'bg-red-400/50'
                   : 'bg-slate-400'
             }`}
-            style={{ height: `${Math.max(modelProb * 1.1, 8)}px` }}
+            style={{ height: `${Math.max((modelProb / 100) * 64, 8)}px` }}
           />
         </div>
         

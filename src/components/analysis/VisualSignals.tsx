@@ -112,7 +112,8 @@ export function EdgeBar({ direction, percentage, homeTeam, awayTeam, canSeeExact
       ? 50 - (percentage * 2.5)  // Move left for home advantage
       : 50 + (percentage * 2.5); // Move right for away advantage
   
-  const clampedPosition = Math.max(15, Math.min(85, position));
+  // Clamp to prevent indicator from going beyond edges where labels are
+  const clampedPosition = Math.max(20, Math.min(80, position));
   
   // RESTRAINED COLORS: Only show accent color when edge is meaningful (>5%)
   const hasSignificantEdge = percentage > 5;
@@ -127,8 +128,8 @@ export function EdgeBar({ direction, percentage, homeTeam, awayTeam, canSeeExact
     <div className="space-y-2">
       {/* Team labels */}
       <div className="flex justify-between text-[10px] text-zinc-500 uppercase tracking-wider">
-        <span>{homeTeam}</span>
-        <span>{awayTeam}</span>
+        <span className="truncate max-w-[40%]">{homeTeam}</span>
+        <span className="truncate max-w-[40%] text-right">{awayTeam}</span>
       </div>
       
       {/* Bar container */}
@@ -148,7 +149,7 @@ export function EdgeBar({ direction, percentage, homeTeam, awayTeam, canSeeExact
         </div>
       </div>
       
-      {/* Edge label - neutral unless significant edge */}
+      {/* Edge label - positioned below bar, never overlaps */}
       <div className="text-center">
         <span className={`text-xs font-medium ${textColor}`}>
           {direction === 'even' 
