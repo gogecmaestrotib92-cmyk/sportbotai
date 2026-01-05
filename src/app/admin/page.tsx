@@ -109,8 +109,8 @@ export default async function AdminPage() {
     // Agent posts count
     getAgentPostsCount(),
     
-    // AI Prediction stats (Prediction model from pre-analyze)
-    getAIPredictionStats(),
+    // Edge Performance Tracking (new prediction stats)
+    getEdgePerformanceStats(),
   ]);
 
   // Calculate MRR (Monthly Recurring Revenue)
@@ -140,7 +140,7 @@ export default async function AdminPage() {
       recentUsers={recentUsers}
       recentAnalyses={recentAnalyses}
       chatAnalytics={chatAnalytics}
-      aiPredictionStats={aiPredictionStats}
+      edgePerformanceStats={aiPredictionStats}
     />
   );
 }
@@ -237,313 +237,470 @@ async function getAgentPostsCount() {
 }
 
 /**
- * Get AI Prediction stats from the Prediction model (pre-analyzed matches)
- * Only shows v2 (new model) stats - legacy v1 predictions are excluded
+ * ================================================================
+ * EDGE PERFORMANCE TRACKING SYSTEM
+ * ================================================================
+ * 
+ * Purpose: Measure whether model-identified value edges are 
+ * directionally correct, well-calibrated, and outperform market
+ * expectations over time.
+ * 
+ * This system is strictly for INTERNAL EVALUATION, model improvement,
+ * and quality control — NOT for user-facing betting claims.
+ * 
+ * Core Definitions:
+ * - P_model: model-estimated probability at prediction time
+ * - P_market_fair: vig-removed market probability
+ * - Edge: P_model − P_market_fair
+ * - binaryOutcome: 1 = selection won, 0 = selection lost
+ * 
+ * Edge Buckets:
+ * - NO_EDGE: |edge| < 2%
+ * - SMALL: 2-5%
+ * - MEDIUM: 5-8%
+ * - HIGH: >8%
+ * ================================================================
  */
-async function getAIPredictionStats() {
+
+interface EdgeBucketStats {
+  bucket: string;
+  count: number;
+  wins: number;
+  winRate: number;
+  avgEdge: number;
+  avgModelProb: number;
+  avgMarketProb: number;
+  vsMarket: number; // Win rate - market implied win rate
+}
+
+interface CalibrationBand {
+  band: string;        // e.g., "60-70%"
+  minProb: number;
+  maxProb: number;
+  count: number;
+  avgModelProb: number;
+  actualWinRate: number;
+  calibrationError: number; // avgModelProb - actualWinRate
+}
+
+interface CLVStats {
+  totalWithCLV: number;
+  avgCLV: number;
+  positiveCLVCount: number;
+  positiveCLVPercent: number;
+  bySport: Array<{ sport: string; avgCLV: number; count: number }>;
+}
+
+interface ROISimulation {
+  // ROI simulation is for internal model evaluation only
+  totalBets: number;
+  totalStaked: number; // 1 unit per bet
+  totalReturn: number;
+  netProfit: number;
+  roi: number; // percentage
+  byEdgeBucket: Array<{ bucket: string; bets: number; profit: number; roi: number }>;
+  bySport: Array<{ sport: string; bets: number; profit: number; roi: number }>;
+}
+
+interface EdgePerformanceStats {
+  // Overview
+  totalPredictions: number;
+  evaluatedPredictions: number;
+  pendingPredictions: number;
+  overallWinRate: number;
+  
+  // Edge bucket performance (CORE)
+  byEdgeBucket: EdgeBucketStats[];
+  
+  // Calibration analysis
+  calibration: CalibrationBand[];
+  calibrationMSE: number; // Mean squared error
+  
+  // CLV tracking
+  clvStats: CLVStats;
+  
+  // ROI simulation (internal only)
+  roiSimulation: ROISimulation;
+  
+  // Segmentation
+  bySport: Array<{ sport: string; count: number; wins: number; winRate: number; avgEdge: number }>;
+  byLeague: Array<{ league: string; count: number; wins: number; winRate: number; avgEdge: number }>;
+  
+  // Recent predictions for raw data view
+  recentPredictions: Array<{
+    id: string;
+    matchName: string;
+    sport: string;
+    league: string;
+    kickoff: Date;
+    selection: string | null;
+    modelProbability: number | null;
+    marketProbabilityFair: number | null;
+    edgeValue: number | null;
+    edgeBucket: string | null;
+    marketOddsAtPrediction: number | null;
+    binaryOutcome: number | null;
+    clvValue: number | null;
+  }>;
+}
+
+async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
   try {
-    const modelVersionFilter = { modelVersion: 'v2' };
+    // Get all v2 predictions with edge data
+    const predictions = await prisma.prediction.findMany({
+      where: { modelVersion: 'v2' },
+      select: {
+        id: true,
+        matchName: true,
+        sport: true,
+        league: true,
+        kickoff: true,
+        selection: true,
+        modelProbability: true,
+        marketProbabilityFair: true,
+        edgeValue: true,
+        edgeBucket: true,
+        marketOddsAtPrediction: true,
+        binaryOutcome: true,
+        clvValue: true,
+        closingProbabilityFair: true,
+        outcome: true,
+        // Legacy fallbacks
+        valueBetEdge: true,
+        odds: true,
+        prediction: true,
+      },
+      orderBy: { kickoff: 'desc' },
+    });
+
+    const total = predictions.length;
+    const evaluated = predictions.filter(p => p.binaryOutcome !== null).length;
+    const pending = total - evaluated;
     
-    const [
-      totalPredictions,
-      pendingPredictions,
-      hitPredictions,
-      missPredictions,
-      recentPredictions,
-      byLeague,
-      bySport,
-      byConviction,
-      byType,
-      valueBetStats,
-      // Also get legacy stats for comparison
-      legacyStats,
-    ] = await Promise.all([
-      // Total predictions (v2 only)
-      prisma.prediction.count({ where: modelVersionFilter }),
-      
-      // Pending (not yet validated)
-      prisma.prediction.count({ where: { ...modelVersionFilter, outcome: 'PENDING' } }),
-      
-      // Hits
-      prisma.prediction.count({ where: { ...modelVersionFilter, outcome: 'HIT' } }),
-      
-      // Misses
-      prisma.prediction.count({ where: { ...modelVersionFilter, outcome: 'MISS' } }),
-      
-      // Recent 50 predictions (v2 only)
-      prisma.prediction.findMany({
-        where: modelVersionFilter,
-        take: 50,
-        orderBy: { kickoff: 'desc' },
-        select: {
-          id: true,
-          matchName: true,
-          sport: true,
-          league: true,
-          kickoff: true,
-          prediction: true,
-          conviction: true,
-          odds: true,
-          outcome: true,
-          actualResult: true,
-          createdAt: true,
-          valueBetSide: true,
-          valueBetOdds: true,
-          valueBetEdge: true,
-          valueBetOutcome: true,
-          valueBetProfit: true,
-          modelVersion: true,
-        },
-      }),
-      
-      // By league (v2 only)
-      prisma.prediction.groupBy({
-        by: ['league'],
-        where: { ...modelVersionFilter, outcome: { not: 'PENDING' } },
-        _count: { id: true },
-      }).then(async (leagues) => {
-        return Promise.all(
-          leagues.map(async (l) => {
-            const hits = await prisma.prediction.count({
-              where: { ...modelVersionFilter, league: l.league, outcome: 'HIT' },
-            });
-            return {
-              league: l.league,
-              total: l._count.id,
-              hits,
-              accuracy: l._count.id > 0 ? Math.round((hits / l._count.id) * 100) : 0,
-            };
-          })
-        );
-      }),
-      
-      // By sport (v2 only)
-      prisma.prediction.groupBy({
-        by: ['sport'],
-        where: { ...modelVersionFilter, outcome: { not: 'PENDING' } },
-        _count: { id: true },
-      }).then(async (sports) => {
-        return Promise.all(
-          sports.map(async (s) => {
-            const hits = await prisma.prediction.count({
-              where: { ...modelVersionFilter, sport: s.sport, outcome: 'HIT' },
-            });
-            return {
-              sport: s.sport,
-              total: s._count.id,
-              hits,
-              accuracy: s._count.id > 0 ? Math.round((hits / s._count.id) * 100) : 0,
-            };
-          })
-        );
-      }),
-      
-      // By conviction level (grouped into Low: 1-3, Medium: 4-6, High: 7-10)
-      getConvictionStats('v2'),
-      
-      // By prediction type (HOME, AWAY, DRAW)
-      getTypeStats('v2'),
-      
-      // Value bet ROI stats
-      getValueBetStats('v2'),
-      
-      // Legacy v1 stats for comparison
-      getLegacyStats(),
-    ]);
+    // ============================================
+    // EDGE BUCKET PERFORMANCE
+    // ============================================
+    const buckets = {
+      'HIGH': { count: 0, wins: 0, totalEdge: 0, totalModelProb: 0, totalMarketProb: 0 },
+      'MEDIUM': { count: 0, wins: 0, totalEdge: 0, totalModelProb: 0, totalMarketProb: 0 },
+      'SMALL': { count: 0, wins: 0, totalEdge: 0, totalModelProb: 0, totalMarketProb: 0 },
+      'NO_EDGE': { count: 0, wins: 0, totalEdge: 0, totalModelProb: 0, totalMarketProb: 0 },
+    };
     
-    const evaluatedCount = hitPredictions + missPredictions;
-    const overallAccuracy = evaluatedCount > 0 
-      ? Math.round((hitPredictions / evaluatedCount) * 100) 
+    for (const p of predictions) {
+      if (p.binaryOutcome === null) continue;
+      
+      // Determine bucket - use stored bucket or calculate from edge
+      let bucket = p.edgeBucket as keyof typeof buckets;
+      if (!bucket && p.edgeValue !== null) {
+        const absEdge = Math.abs(p.edgeValue);
+        if (absEdge >= 8) bucket = 'HIGH';
+        else if (absEdge >= 5) bucket = 'MEDIUM';
+        else if (absEdge >= 2) bucket = 'SMALL';
+        else bucket = 'NO_EDGE';
+      } else if (!bucket && p.valueBetEdge !== null) {
+        // Fallback to legacy valueBetEdge
+        const absEdge = Math.abs(p.valueBetEdge);
+        if (absEdge >= 8) bucket = 'HIGH';
+        else if (absEdge >= 5) bucket = 'MEDIUM';
+        else if (absEdge >= 2) bucket = 'SMALL';
+        else bucket = 'NO_EDGE';
+      }
+      
+      if (!bucket) continue;
+      
+      const b = buckets[bucket];
+      b.count++;
+      if (p.binaryOutcome === 1) b.wins++;
+      b.totalEdge += p.edgeValue ?? p.valueBetEdge ?? 0;
+      b.totalModelProb += p.modelProbability ?? 0;
+      b.totalMarketProb += p.marketProbabilityFair ?? 0;
+    }
+    
+    const byEdgeBucket: EdgeBucketStats[] = Object.entries(buckets)
+      .filter(([_, b]) => b.count > 0)
+      .map(([bucket, b]) => ({
+        bucket,
+        count: b.count,
+        wins: b.wins,
+        winRate: Math.round((b.wins / b.count) * 100),
+        avgEdge: Math.round((b.totalEdge / b.count) * 10) / 10,
+        avgModelProb: Math.round((b.totalModelProb / b.count) * 10) / 10,
+        avgMarketProb: Math.round((b.totalMarketProb / b.count) * 10) / 10,
+        vsMarket: Math.round(((b.wins / b.count) * 100) - (b.totalMarketProb / b.count)),
+      }))
+      .sort((a, b) => {
+        const order = { 'HIGH': 0, 'MEDIUM': 1, 'SMALL': 2, 'NO_EDGE': 3 };
+        return (order[a.bucket as keyof typeof order] ?? 4) - (order[b.bucket as keyof typeof order] ?? 4);
+      });
+
+    // ============================================
+    // CALIBRATION ANALYSIS
+    // ============================================
+    const calibrationBands: Record<string, { count: number; wins: number; totalProb: number }> = {};
+    const bandRanges = [
+      { band: '0-10%', min: 0, max: 10 },
+      { band: '10-20%', min: 10, max: 20 },
+      { band: '20-30%', min: 20, max: 30 },
+      { band: '30-40%', min: 30, max: 40 },
+      { band: '40-50%', min: 40, max: 50 },
+      { band: '50-60%', min: 50, max: 60 },
+      { band: '60-70%', min: 60, max: 70 },
+      { band: '70-80%', min: 70, max: 80 },
+      { band: '80-90%', min: 80, max: 90 },
+      { band: '90-100%', min: 90, max: 100 },
+    ];
+    
+    for (const range of bandRanges) {
+      calibrationBands[range.band] = { count: 0, wins: 0, totalProb: 0 };
+    }
+    
+    for (const p of predictions) {
+      if (p.binaryOutcome === null || p.modelProbability === null) continue;
+      
+      const prob = p.modelProbability;
+      const range = bandRanges.find(r => prob >= r.min && prob < r.max);
+      if (range) {
+        calibrationBands[range.band].count++;
+        calibrationBands[range.band].totalProb += prob;
+        if (p.binaryOutcome === 1) calibrationBands[range.band].wins++;
+      }
+    }
+    
+    let totalCalibError = 0;
+    let calibCount = 0;
+    const calibration: CalibrationBand[] = bandRanges
+      .filter(r => calibrationBands[r.band].count > 0)
+      .map(r => {
+        const b = calibrationBands[r.band];
+        const avgProb = b.totalProb / b.count;
+        const actualRate = (b.wins / b.count) * 100;
+        const error = avgProb - actualRate;
+        totalCalibError += error * error;
+        calibCount++;
+        return {
+          band: r.band,
+          minProb: r.min,
+          maxProb: r.max,
+          count: b.count,
+          avgModelProb: Math.round(avgProb * 10) / 10,
+          actualWinRate: Math.round(actualRate * 10) / 10,
+          calibrationError: Math.round(error * 10) / 10,
+        };
+      });
+    
+    const calibrationMSE = calibCount > 0 ? Math.round(Math.sqrt(totalCalibError / calibCount) * 10) / 10 : 0;
+
+    // ============================================
+    // CLV (CLOSING LINE VALUE) STATS
+    // ============================================
+    const predictionsWithCLV = predictions.filter(p => p.clvValue !== null);
+    const avgCLV = predictionsWithCLV.length > 0
+      ? predictionsWithCLV.reduce((sum, p) => sum + (p.clvValue ?? 0), 0) / predictionsWithCLV.length
       : 0;
+    const positiveCLV = predictionsWithCLV.filter(p => (p.clvValue ?? 0) > 0);
     
+    // CLV by sport
+    const clvBySport: Record<string, { total: number; count: number }> = {};
+    for (const p of predictionsWithCLV) {
+      if (!clvBySport[p.sport]) clvBySport[p.sport] = { total: 0, count: 0 };
+      clvBySport[p.sport].total += p.clvValue ?? 0;
+      clvBySport[p.sport].count++;
+    }
+    
+    const clvStats: CLVStats = {
+      totalWithCLV: predictionsWithCLV.length,
+      avgCLV: Math.round(avgCLV * 100) / 100,
+      positiveCLVCount: positiveCLV.length,
+      positiveCLVPercent: predictionsWithCLV.length > 0 
+        ? Math.round((positiveCLV.length / predictionsWithCLV.length) * 100) 
+        : 0,
+      bySport: Object.entries(clvBySport).map(([sport, data]) => ({
+        sport,
+        avgCLV: Math.round((data.total / data.count) * 100) / 100,
+        count: data.count,
+      })),
+    };
+
+    // ============================================
+    // ROI SIMULATION (INTERNAL ONLY)
+    // This is for internal model evaluation only.
+    // Flat 1 unit stake per prediction where edge >= 2%.
+    // ============================================
+    const roiBuckets: Record<string, { bets: number; profit: number }> = {
+      'HIGH': { bets: 0, profit: 0 },
+      'MEDIUM': { bets: 0, profit: 0 },
+      'SMALL': { bets: 0, profit: 0 },
+    };
+    const roiSports: Record<string, { bets: number; profit: number }> = {};
+    let totalBets = 0;
+    let totalReturn = 0;
+    
+    for (const p of predictions) {
+      if (p.binaryOutcome === null) continue;
+      
+      // Only stake when edge >= 2%
+      const edge = p.edgeValue ?? p.valueBetEdge ?? 0;
+      if (Math.abs(edge) < 2) continue;
+      
+      const odds = p.marketOddsAtPrediction ?? p.odds ?? 0;
+      if (odds <= 1) continue;
+      
+      totalBets++;
+      const profit = p.binaryOutcome === 1 ? (odds - 1) : -1; // 1 unit stake
+      totalReturn += p.binaryOutcome === 1 ? odds : 0;
+      
+      // By bucket
+      let bucket: string;
+      if (Math.abs(edge) >= 8) bucket = 'HIGH';
+      else if (Math.abs(edge) >= 5) bucket = 'MEDIUM';
+      else bucket = 'SMALL';
+      
+      roiBuckets[bucket].bets++;
+      roiBuckets[bucket].profit += profit;
+      
+      // By sport
+      if (!roiSports[p.sport]) roiSports[p.sport] = { bets: 0, profit: 0 };
+      roiSports[p.sport].bets++;
+      roiSports[p.sport].profit += profit;
+    }
+    
+    const netProfit = totalReturn - totalBets;
+    const roiSimulation: ROISimulation = {
+      totalBets,
+      totalStaked: totalBets, // 1 unit per bet
+      totalReturn: Math.round(totalReturn * 100) / 100,
+      netProfit: Math.round(netProfit * 100) / 100,
+      roi: totalBets > 0 ? Math.round((netProfit / totalBets) * 1000) / 10 : 0,
+      byEdgeBucket: Object.entries(roiBuckets)
+        .filter(([_, d]) => d.bets > 0)
+        .map(([bucket, d]) => ({
+          bucket,
+          bets: d.bets,
+          profit: Math.round(d.profit * 100) / 100,
+          roi: Math.round((d.profit / d.bets) * 1000) / 10,
+        })),
+      bySport: Object.entries(roiSports)
+        .filter(([_, d]) => d.bets > 0)
+        .map(([sport, d]) => ({
+          sport,
+          bets: d.bets,
+          profit: Math.round(d.profit * 100) / 100,
+          roi: Math.round((d.profit / d.bets) * 1000) / 10,
+        })),
+    };
+
+    // ============================================
+    // SPORT & LEAGUE SEGMENTATION
+    // ============================================
+    const sportStats: Record<string, { count: number; wins: number; totalEdge: number }> = {};
+    const leagueStats: Record<string, { count: number; wins: number; totalEdge: number }> = {};
+    
+    for (const p of predictions) {
+      if (p.binaryOutcome === null) continue;
+      
+      // Sport
+      if (!sportStats[p.sport]) sportStats[p.sport] = { count: 0, wins: 0, totalEdge: 0 };
+      sportStats[p.sport].count++;
+      if (p.binaryOutcome === 1) sportStats[p.sport].wins++;
+      sportStats[p.sport].totalEdge += p.edgeValue ?? p.valueBetEdge ?? 0;
+      
+      // League
+      if (!leagueStats[p.league]) leagueStats[p.league] = { count: 0, wins: 0, totalEdge: 0 };
+      leagueStats[p.league].count++;
+      if (p.binaryOutcome === 1) leagueStats[p.league].wins++;
+      leagueStats[p.league].totalEdge += p.edgeValue ?? p.valueBetEdge ?? 0;
+    }
+    
+    const bySport = Object.entries(sportStats)
+      .map(([sport, d]) => ({
+        sport,
+        count: d.count,
+        wins: d.wins,
+        winRate: Math.round((d.wins / d.count) * 100),
+        avgEdge: Math.round((d.totalEdge / d.count) * 10) / 10,
+      }))
+      .sort((a, b) => b.count - a.count);
+    
+    const byLeague = Object.entries(leagueStats)
+      .map(([league, d]) => ({
+        league,
+        count: d.count,
+        wins: d.wins,
+        winRate: Math.round((d.wins / d.count) * 100),
+        avgEdge: Math.round((d.totalEdge / d.count) * 10) / 10,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 15);
+
+    // Overall win rate
+    const totalWins = predictions.filter(p => p.binaryOutcome === 1).length;
+    const overallWinRate = evaluated > 0 ? Math.round((totalWins / evaluated) * 100) : 0;
+
+    // Recent predictions for raw data view
+    const recentPredictions = predictions.slice(0, 50).map(p => ({
+      id: p.id,
+      matchName: p.matchName,
+      sport: p.sport,
+      league: p.league,
+      kickoff: p.kickoff,
+      selection: p.selection ?? p.prediction,
+      modelProbability: p.modelProbability,
+      marketProbabilityFair: p.marketProbabilityFair,
+      edgeValue: p.edgeValue ?? p.valueBetEdge,
+      edgeBucket: p.edgeBucket,
+      marketOddsAtPrediction: p.marketOddsAtPrediction ?? p.odds,
+      binaryOutcome: p.binaryOutcome,
+      clvValue: p.clvValue,
+    }));
+
     return {
-      totalPredictions,
-      pendingPredictions,
-      hitPredictions,
-      missPredictions,
-      evaluatedCount,
-      overallAccuracy,
+      totalPredictions: total,
+      evaluatedPredictions: evaluated,
+      pendingPredictions: pending,
+      overallWinRate,
+      byEdgeBucket,
+      calibration,
+      calibrationMSE,
+      clvStats,
+      roiSimulation,
+      bySport,
+      byLeague,
       recentPredictions,
-      byLeague: byLeague.sort((a, b) => b.total - a.total).slice(0, 10),
-      bySport: bySport.sort((a, b) => b.total - a.total),
-      byConviction,
-      byType,
-      valueBetStats,
-      legacyStats,
     };
   } catch (error) {
-    console.error('Error fetching AI prediction stats:', error);
-    return {
-      totalPredictions: 0,
-      pendingPredictions: 0,
-      hitPredictions: 0,
-      missPredictions: 0,
-      evaluatedCount: 0,
-      overallAccuracy: 0,
-      recentPredictions: [],
-      byLeague: [],
+    console.error('Error fetching edge performance stats:', error);
+    return getDefaultEdgePerformanceStats();
+  }
+}
+
+function getDefaultEdgePerformanceStats(): EdgePerformanceStats {
+  return {
+    totalPredictions: 0,
+    evaluatedPredictions: 0,
+    pendingPredictions: 0,
+    overallWinRate: 0,
+    byEdgeBucket: [],
+    calibration: [],
+    calibrationMSE: 0,
+    clvStats: {
+      totalWithCLV: 0,
+      avgCLV: 0,
+      positiveCLVCount: 0,
+      positiveCLVPercent: 0,
       bySport: [],
-      byConviction: [],
-      byType: [],
-      valueBetStats: { totalBets: 0, hits: 0, misses: 0, totalProfit: 0, roi: 0 },
-      legacyStats: { total: 0, hits: 0, accuracy: 0 },
-    };
-  }
-}
-
-/**
- * Get legacy v1 stats for comparison
- */
-async function getLegacyStats() {
-  try {
-    const total = await prisma.prediction.count({
-      where: { modelVersion: 'v1', outcome: { not: 'PENDING' } }
-    });
-    const hits = await prisma.prediction.count({
-      where: { modelVersion: 'v1', outcome: 'HIT' }
-    });
-    return {
-      total,
-      hits,
-      accuracy: total > 0 ? Math.round((hits / total) * 100) : 0,
-    };
-  } catch {
-    return { total: 0, hits: 0, accuracy: 0 };
-  }
-}
-
-/**
- * Get accuracy stats grouped by conviction level
- */
-async function getConvictionStats(modelVersion: string = 'v2') {
-  try {
-    // Get all evaluated predictions with conviction
-    const predictions = await prisma.prediction.findMany({
-      where: { modelVersion, outcome: { not: 'PENDING' } },
-      select: { conviction: true, outcome: true },
-    });
-    
-    // Group by conviction ranges: Low (1-3), Medium (4-6), High (7-10)
-    const groups = {
-      low: { label: 'Low (1-3)', total: 0, hits: 0 },
-      medium: { label: 'Medium (4-6)', total: 0, hits: 0 },
-      high: { label: 'High (7-10)', total: 0, hits: 0 },
-    };
-    
-    for (const p of predictions) {
-      const conv = p.conviction;
-      const isHit = p.outcome === 'HIT';
-      
-      if (conv <= 3) {
-        groups.low.total++;
-        if (isHit) groups.low.hits++;
-      } else if (conv <= 6) {
-        groups.medium.total++;
-        if (isHit) groups.medium.hits++;
-      } else {
-        groups.high.total++;
-        if (isHit) groups.high.hits++;
-      }
-    }
-    
-    return Object.values(groups).map(g => ({
-      level: g.label,
-      total: g.total,
-      hits: g.hits,
-      accuracy: g.total > 0 ? Math.round((g.hits / g.total) * 100) : 0,
-    }));
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Get accuracy stats grouped by prediction type (HOME, AWAY, DRAW)
- */
-async function getTypeStats(modelVersion: string = 'v2') {
-  try {
-    const predictions = await prisma.prediction.findMany({
-      where: { modelVersion, outcome: { not: 'PENDING' } },
-      select: { prediction: true, outcome: true },
-    });
-    
-    const groups = {
-      home: { label: 'Home Win', total: 0, hits: 0 },
-      away: { label: 'Away Win', total: 0, hits: 0 },
-      draw: { label: 'Draw', total: 0, hits: 0 },
-    };
-    
-    for (const p of predictions) {
-      const pred = p.prediction.toLowerCase();
-      const isHit = p.outcome === 'HIT';
-      
-      if (pred.includes('home')) {
-        groups.home.total++;
-        if (isHit) groups.home.hits++;
-      } else if (pred.includes('away')) {
-        groups.away.total++;
-        if (isHit) groups.away.hits++;
-      } else if (pred.includes('draw')) {
-        groups.draw.total++;
-        if (isHit) groups.draw.hits++;
-      }
-    }
-    
-    return Object.values(groups).map(g => ({
-      type: g.label,
-      total: g.total,
-      hits: g.hits,
-      accuracy: g.total > 0 ? Math.round((g.hits / g.total) * 100) : 0,
-    }));
-  } catch {
-    return [];
-  }
-}
-/**
- * Get value bet ROI statistics
- */
-async function getValueBetStats(modelVersion: string = 'v2') {
-  try {
-    // Get all predictions with value bet data that have been evaluated
-    const predictions = await prisma.prediction.findMany({
-      where: { 
-        modelVersion,
-        valueBetOutcome: { not: null },
-        valueBetProfit: { not: null },
-      },
-      select: { 
-        valueBetOutcome: true, 
-        valueBetProfit: true,
-        valueBetOdds: true,
-        valueBetEdge: true,
-      },
-    });
-    
-    const hits = predictions.filter(p => p.valueBetOutcome === 'HIT').length;
-    const misses = predictions.filter(p => p.valueBetOutcome === 'MISS').length;
-    const totalBets = hits + misses;
-    const totalProfit = predictions.reduce((sum, p) => sum + (p.valueBetProfit || 0), 0);
-    const roi = totalBets > 0 ? (totalProfit / totalBets) * 100 : 0; // ROI as percentage
-    
-    // Average odds and edge for winning bets
-    const winningBets = predictions.filter(p => p.valueBetOutcome === 'HIT');
-    const avgWinningOdds = winningBets.length > 0 
-      ? winningBets.reduce((sum, p) => sum + (p.valueBetOdds || 0), 0) / winningBets.length 
-      : 0;
-    const avgEdge = predictions.length > 0
-      ? predictions.reduce((sum, p) => sum + (p.valueBetEdge || 0), 0) / predictions.length
-      : 0;
-    
-    return {
-      totalBets,
-      hits,
-      misses,
-      totalProfit: Math.round(totalProfit * 100) / 100,
-      roi: Math.round(roi * 10) / 10,
-      avgWinningOdds: Math.round(avgWinningOdds * 100) / 100,
-      avgEdge: Math.round(avgEdge * 10) / 10,
-    };
-  } catch {
-    return { totalBets: 0, hits: 0, misses: 0, totalProfit: 0, roi: 0, avgWinningOdds: 0, avgEdge: 0 };
-  }
+    },
+    roiSimulation: {
+      totalBets: 0,
+      totalStaked: 0,
+      totalReturn: 0,
+      netProfit: 0,
+      roi: 0,
+      byEdgeBucket: [],
+      bySport: [],
+    },
+    bySport: [],
+    byLeague: [],
+    recentPredictions: [],
+  };
 }

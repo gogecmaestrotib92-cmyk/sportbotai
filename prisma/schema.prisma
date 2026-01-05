@@ -345,6 +345,21 @@ model SportExpertise {
   @@index([sport])
 }
 
+// Edge bucket classification for predictions
+enum EdgeBucket {
+  NO_EDGE     // |edge| < 2%
+  SMALL       // 2-5%
+  MEDIUM      // 5-8%
+  HIGH        // >8%
+}
+
+// Market types for predictions
+enum MarketType {
+  MONEYLINE   // 1X2 / H2H
+  SPREAD      // Point spread / Handicap
+  TOTALS      // Over/Under
+}
+
 model Prediction {
   id                String           @id @default(cuid())
   matchId           String
@@ -353,40 +368,72 @@ model Prediction {
   league            String
   kickoff           DateTime
   type              CallType
-  prediction        String
+  prediction        String           // Legacy: "Home Win", "Away Win", etc.
   reasoning         String
   conviction        Int
-  odds              Float?
-  impliedProb       Float?
+  
+  // === LEGACY FIELDS (kept for backward compatibility) ===
+  odds              Float?           // Legacy: bookmaker odds
+  impliedProb       Float?           // Legacy: implied probability
   tweetId           String?
   validationTweetId String?
   outcome           CallOutcome      @default(PENDING)
   actualResult      String?
   validatedAt       DateTime?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
   actualScore       String?
   source            PredictionSource @default(PRE_ANALYZE)
-  closingOdds       Float?
-  clvFetched        Boolean          @default(false)
-  clvPercentage     Float?
   openingOdds       Float?
   valueBetEdge      Float?
   valueBetOdds      Float?
   valueBetOutcome   CallOutcome?
   valueBetProfit    Float?
   valueBetSide      String?
-  modelVersion      String           @default("v2")  // v1 = legacy, v2 = new model
+  modelVersion      String           @default("v2")
+  
+  // === NEW EDGE PERFORMANCE TRACKING FIELDS ===
+  // Core probabilities (immutable snapshot at prediction time)
+  modelProbability      Float?       // P_model: model-estimated probability (0-100)
+  marketProbabilityRaw  Float?       // P_market_raw: bookmaker implied prob with vig
+  marketProbabilityFair Float?       // P_market_fair: vig-removed market probability
+  marketOddsAtPrediction Float?      // Decimal odds at prediction time
+  
+  // Edge calculation
+  edgeValue             Float?       // P_model - P_market_fair (can be negative)
+  edgeBucket            EdgeBucket?  // Classified bucket for fast aggregation
+  
+  // Selection details
+  selection             String?      // "home" | "away" | "draw" | "over" | "under"
+  marketType            MarketType?  // Type of market
+  
+  // Closing line value (CLV)
+  closingOdds           Float?       // Odds just before match start
+  closingProbabilityFair Float?      // Fair probability from closing odds
+  clvValue              Float?       // P_closing_fair - P_opening_fair
+  clvFetched            Boolean      @default(false)
+  clvPercentage         Float?       // Legacy field
+  
+  // Binary outcome for clean analysis
+  binaryOutcome         Int?         // 1 = selection won, 0 = selection lost, null = pending
+  
+  // Timestamps
+  predictionTimestamp   DateTime?    // When prediction was made
+  resultTimestamp       DateTime?    // When result was recorded
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
 
   @@index([matchId])
   @@index([outcome])
   @@index([sport])
+  @@index([league])
   @@index([source])
   @@index([createdAt])
   @@index([conviction])
   @@index([clvFetched])
   @@index([valueBetOutcome])
   @@index([modelVersion])
+  @@index([edgeBucket])
+  @@index([binaryOutcome])
+  @@index([marketType])
 }
 
 model ScheduledPost {

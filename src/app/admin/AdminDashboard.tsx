@@ -57,47 +57,76 @@ interface ChatAnalytics {
   agentPostsCount: number;
 }
 
-interface ValueBetStats {
-  totalBets: number;
-  hits: number;
-  misses: number;
-  totalProfit: number;
-  roi: number;
-  avgWinningOdds?: number;
-  avgEdge?: number;
+// ================================================================
+// EDGE PERFORMANCE TRACKING INTERFACES
+// ================================================================
+
+interface EdgeBucketStats {
+  bucket: string;
+  count: number;
+  wins: number;
+  winRate: number;
+  avgEdge: number;
+  avgModelProb: number;
+  avgMarketProb: number;
+  vsMarket: number;
 }
 
-interface AIPredictionStats {
+interface CalibrationBand {
+  band: string;
+  minProb: number;
+  maxProb: number;
+  count: number;
+  avgModelProb: number;
+  actualWinRate: number;
+  calibrationError: number;
+}
+
+interface CLVStats {
+  totalWithCLV: number;
+  avgCLV: number;
+  positiveCLVCount: number;
+  positiveCLVPercent: number;
+  bySport: Array<{ sport: string; avgCLV: number; count: number }>;
+}
+
+interface ROISimulation {
+  totalBets: number;
+  totalStaked: number;
+  totalReturn: number;
+  netProfit: number;
+  roi: number;
+  byEdgeBucket: Array<{ bucket: string; bets: number; profit: number; roi: number }>;
+  bySport: Array<{ sport: string; bets: number; profit: number; roi: number }>;
+}
+
+interface EdgePerformanceStats {
   totalPredictions: number;
+  evaluatedPredictions: number;
   pendingPredictions: number;
-  hitPredictions: number;
-  missPredictions: number;
-  evaluatedCount: number;
-  overallAccuracy: number;
+  overallWinRate: number;
+  byEdgeBucket: EdgeBucketStats[];
+  calibration: CalibrationBand[];
+  calibrationMSE: number;
+  clvStats: CLVStats;
+  roiSimulation: ROISimulation;
+  bySport: Array<{ sport: string; count: number; wins: number; winRate: number; avgEdge: number }>;
+  byLeague: Array<{ league: string; count: number; wins: number; winRate: number; avgEdge: number }>;
   recentPredictions: Array<{
     id: string;
     matchName: string;
     sport: string;
     league: string;
     kickoff: Date;
-    prediction: string;
-    conviction: number;
-    odds: number | null;
-    outcome: string;
-    actualResult: string | null;
-    createdAt: Date;
-    valueBetSide?: string | null;
-    valueBetOdds?: number | null;
-    valueBetEdge?: number | null;
-    valueBetOutcome?: string | null;
-    valueBetProfit?: number | null;
+    selection: string | null;
+    modelProbability: number | null;
+    marketProbabilityFair: number | null;
+    edgeValue: number | null;
+    edgeBucket: string | null;
+    marketOddsAtPrediction: number | null;
+    binaryOutcome: number | null;
+    clvValue: number | null;
   }>;
-  byLeague: Array<{ league: string; total: number; hits: number; accuracy: number }>;
-  bySport: Array<{ sport: string; total: number; hits: number; accuracy: number }>;
-  byConviction?: Array<{ level: string; total: number; hits: number; accuracy: number }>;
-  byType?: Array<{ type: string; total: number; hits: number; accuracy: number }>;
-  valueBetStats?: ValueBetStats;
-  legacyStats?: { total: number; hits: number; accuracy: number };
 }
 
 interface AdminDashboardProps {
@@ -105,10 +134,11 @@ interface AdminDashboardProps {
   recentUsers: RecentUser[];
   recentAnalyses: RecentAnalysis[];
   chatAnalytics?: ChatAnalytics;
-  aiPredictionStats?: AIPredictionStats;
+  edgePerformanceStats?: EdgePerformanceStats;
 }
 
 type TabType = 'overview' | 'users' | 'chat' | 'predictions';
+type PredictionSubTab = 'overview' | 'calibration' | 'clv' | 'roi' | 'raw';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -117,9 +147,10 @@ export default function AdminDashboard({
   recentUsers, 
   recentAnalyses,
   chatAnalytics,
-  aiPredictionStats,
+  edgePerformanceStats,
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [predictionSubTab, setPredictionSubTab] = useState<PredictionSubTab>('overview');
   const [showUserManagement, setShowUserManagement] = useState(false);
   
   // Pagination states
@@ -138,8 +169,8 @@ export default function AdminDashboard({
   const paginatedQueries = chatAnalytics?.recentQueries.slice((chatPage - 1) * ITEMS_PER_PAGE, chatPage * ITEMS_PER_PAGE) || [];
   const totalChatPages = Math.ceil((chatAnalytics?.recentQueries.length || 0) / ITEMS_PER_PAGE);
   
-  const paginatedPredictions = aiPredictionStats?.recentPredictions.slice((predictionsPage - 1) * ITEMS_PER_PAGE, predictionsPage * ITEMS_PER_PAGE) || [];
-  const totalPredictionsPages = Math.ceil((aiPredictionStats?.recentPredictions.length || 0) / ITEMS_PER_PAGE);
+  const paginatedPredictions = edgePerformanceStats?.recentPredictions.slice((predictionsPage - 1) * ITEMS_PER_PAGE, predictionsPage * ITEMS_PER_PAGE) || [];
+  const totalPredictionsPages = Math.ceil((edgePerformanceStats?.recentPredictions.length || 0) / ITEMS_PER_PAGE);
 
   return (
     <div className="min-h-screen bg-bg-primary">
@@ -167,7 +198,7 @@ export default function AdminDashboard({
           <QuickStat label="Analyses" value={stats.totalAnalyses} />
           <QuickStat label="Today" value={stats.todayAnalyses} />
           <QuickStat label="Chat" value={chatAnalytics?.totalQueries || 0} />
-          <QuickStat label="Accuracy" value={`${aiPredictionStats?.overallAccuracy || 0}%`} color="green" />
+          <QuickStat label="Win Rate" value={`${edgePerformanceStats?.overallWinRate || 0}%`} color="green" />
         </div>
 
         {/* Tabs - Simplified */}
@@ -233,18 +264,18 @@ export default function AdminDashboard({
 
               {/* Predictions Summary */}
               <div className="card p-5">
-                <h3 className="text-sm font-medium text-text-secondary mb-3">AI Predictions</h3>
+                <h3 className="text-sm font-medium text-text-secondary mb-3">Edge Performance</h3>
                 <div className="flex gap-4">
                   <div className="flex-1 text-center">
-                    <div className="text-2xl font-bold text-green-400">{aiPredictionStats?.hitPredictions || 0}</div>
-                    <div className="text-xs text-text-secondary">Hits</div>
+                    <div className="text-2xl font-bold text-green-400">{edgePerformanceStats?.overallWinRate || 0}%</div>
+                    <div className="text-xs text-text-secondary">Win Rate</div>
                   </div>
                   <div className="flex-1 text-center">
-                    <div className="text-2xl font-bold text-red-400">{aiPredictionStats?.missPredictions || 0}</div>
-                    <div className="text-xs text-text-secondary">Miss</div>
+                    <div className="text-2xl font-bold text-blue-400">{edgePerformanceStats?.evaluatedPredictions || 0}</div>
+                    <div className="text-xs text-text-secondary">Evaluated</div>
                   </div>
                   <div className="flex-1 text-center">
-                    <div className="text-2xl font-bold text-yellow-400">{aiPredictionStats?.pendingPredictions || 0}</div>
+                    <div className="text-2xl font-bold text-yellow-400">{edgePerformanceStats?.pendingPredictions || 0}</div>
                     <div className="text-xs text-text-secondary">Pending</div>
                   </div>
                 </div>
@@ -293,137 +324,457 @@ export default function AdminDashboard({
         )}
 
         {/* ============================================ */}
-        {/* PREDICTIONS TAB - Redesigned */}
+        {/* EDGE PERFORMANCE TRACKING - Complete Redesign */}
+        {/* Internal model evaluation only - NOT for user-facing claims */}
         {/* ============================================ */}
-        {activeTab === 'predictions' && aiPredictionStats && (
+        {activeTab === 'predictions' && edgePerformanceStats && (
           <div className="space-y-6">
-            {/* Accuracy Summary - Compact */}
+            {/* Internal Notice */}
+            <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+              <p className="text-xs text-yellow-400">
+                ⚠️ <strong>Internal Only</strong> — Edge performance tracking for model evaluation. Not for user-facing claims.
+              </p>
+            </div>
+
+            {/* Overview Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div className="card p-4 text-center border-blue-500/30 bg-blue-500/5">
+                <div className="text-3xl font-bold text-blue-400">{edgePerformanceStats.totalPredictions}</div>
+                <div className="text-xs text-text-secondary">Total</div>
+              </div>
               <div className="card p-4 text-center border-green-500/30 bg-green-500/5">
-                <div className="text-3xl font-bold text-green-400">{aiPredictionStats.overallAccuracy}%</div>
-                <div className="text-xs text-text-secondary">Accuracy</div>
+                <div className="text-3xl font-bold text-green-400">{edgePerformanceStats.overallWinRate}%</div>
+                <div className="text-xs text-text-secondary">Win Rate</div>
               </div>
               <div className="card p-4 text-center">
-                <div className="text-3xl font-bold text-green-400">{aiPredictionStats.hitPredictions}</div>
-                <div className="text-xs text-text-secondary">Hits ✓</div>
+                <div className="text-3xl font-bold text-text-primary">{edgePerformanceStats.evaluatedPredictions}</div>
+                <div className="text-xs text-text-secondary">Evaluated</div>
               </div>
               <div className="card p-4 text-center">
-                <div className="text-3xl font-bold text-red-400">{aiPredictionStats.missPredictions}</div>
-                <div className="text-xs text-text-secondary">Misses ✗</div>
-              </div>
-              <div className="card p-4 text-center">
-                <div className="text-3xl font-bold text-yellow-400">{aiPredictionStats.pendingPredictions}</div>
+                <div className="text-3xl font-bold text-yellow-400">{edgePerformanceStats.pendingPredictions}</div>
                 <div className="text-xs text-text-secondary">Pending</div>
               </div>
               <div className="card p-4 text-center">
-                <div className={`text-3xl font-bold ${(aiPredictionStats.valueBetStats?.roi || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {(aiPredictionStats.valueBetStats?.roi || 0) >= 0 ? '+' : ''}{aiPredictionStats.valueBetStats?.roi || 0}%
+                <div className={`text-3xl font-bold ${edgePerformanceStats.roiSimulation.roi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {edgePerformanceStats.roiSimulation.roi >= 0 ? '+' : ''}{edgePerformanceStats.roiSimulation.roi}%
                 </div>
-                <div className="text-xs text-text-secondary">Value ROI</div>
+                <div className="text-xs text-text-secondary">Sim ROI</div>
               </div>
             </div>
 
-            {/* Breakdown Charts */}
-            <div className="grid md:grid-cols-2 gap-4">
-              {/* By Sport */}
-              <div className="card p-5">
-                <h3 className="text-sm font-medium text-text-secondary mb-3">By Sport</h3>
-                {aiPredictionStats.bySport.length > 0 ? (
-                  <div className="space-y-2">
-                    {aiPredictionStats.bySport.map((sport) => (
-                      <div key={sport.sport} className="flex items-center gap-2">
-                        <span className="text-xs text-text-primary w-20 truncate">{sport.sport}</span>
-                        <div className="flex-1 h-4 bg-bg-tertiary rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full ${sport.accuracy >= 50 ? 'bg-green-500' : 'bg-red-500'}`}
-                            style={{ width: `${sport.accuracy}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-text-secondary w-16 text-right">{sport.accuracy}% ({sport.hits}/{sport.total})</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : <div className="text-text-muted text-sm">No data</div>}
-              </div>
-
-              {/* By Conviction */}
-              <div className="card p-5">
-                <h3 className="text-sm font-medium text-text-secondary mb-3">By Conviction</h3>
-                {aiPredictionStats.byConviction && aiPredictionStats.byConviction.length > 0 ? (
-                  <div className="space-y-2">
-                    {aiPredictionStats.byConviction.map((conv) => (
-                      <div key={conv.level} className="flex items-center gap-2">
-                        <span className="text-xs text-text-primary w-20 truncate">{conv.level}</span>
-                        <div className="flex-1 h-4 bg-bg-tertiary rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full ${conv.accuracy >= 50 ? 'bg-green-500' : 'bg-yellow-500'}`}
-                            style={{ width: `${conv.accuracy}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-text-secondary w-16 text-right">{conv.accuracy}% ({conv.hits}/{conv.total})</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : <div className="text-text-muted text-sm">No data</div>}
-              </div>
+            {/* Sub-tabs for detailed views */}
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              <SubTabButton active={predictionSubTab === 'overview'} onClick={() => setPredictionSubTab('overview')}>
+                📊 Edge Buckets
+              </SubTabButton>
+              <SubTabButton active={predictionSubTab === 'calibration'} onClick={() => setPredictionSubTab('calibration')}>
+                🎯 Calibration
+              </SubTabButton>
+              <SubTabButton active={predictionSubTab === 'clv'} onClick={() => setPredictionSubTab('clv')}>
+                📈 CLV
+              </SubTabButton>
+              <SubTabButton active={predictionSubTab === 'roi'} onClick={() => setPredictionSubTab('roi')}>
+                💰 ROI Sim
+              </SubTabButton>
+              <SubTabButton active={predictionSubTab === 'raw'} onClick={() => setPredictionSubTab('raw')}>
+                📋 Raw Data
+              </SubTabButton>
             </div>
 
-            {/* Recent Predictions Table */}
-            <div className="card overflow-hidden">
-              <div className="px-4 py-3 border-b border-border-primary flex items-center justify-between">
-                <h3 className="text-sm font-medium text-text-primary">Recent Predictions</h3>
-                <span className="text-xs text-text-muted">{aiPredictionStats.recentPredictions.length} total</span>
+            {/* ===== EDGE BUCKET OVERVIEW ===== */}
+            {predictionSubTab === 'overview' && (
+              <div className="space-y-6">
+                {/* Edge Bucket Performance Table - CORE */}
+                <div className="card overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border-primary">
+                    <h3 className="text-sm font-medium text-text-primary">Edge Bucket Performance</h3>
+                    <p className="text-xs text-text-muted mt-1">Higher edge → Higher expected accuracy</p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-bg-tertiary">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Bucket</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Count</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Win Rate</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Avg Edge</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">vs Market</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border-primary">
+                        {edgePerformanceStats.byEdgeBucket.length > 0 ? (
+                          edgePerformanceStats.byEdgeBucket.map((bucket) => (
+                            <tr key={bucket.bucket} className="hover:bg-bg-tertiary/50">
+                              <td className="px-4 py-3">
+                                <EdgeBucketBadge bucket={bucket.bucket} />
+                              </td>
+                              <td className="px-4 py-3 text-text-secondary">
+                                {bucket.count} <span className="text-text-muted">({bucket.wins}W)</span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`font-medium ${bucket.winRate >= 50 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {bucket.winRate}%
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-text-secondary">+{bucket.avgEdge}%</td>
+                              <td className="px-4 py-3">
+                                <span className={`font-medium ${bucket.vsMarket >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {bucket.vsMarket >= 0 ? '+' : ''}{bucket.vsMarket}%
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5} className="px-4 py-8 text-center text-text-muted">
+                              No edge data yet. Predictions need modelProbability and marketProbabilityFair.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Sport & League Breakdown */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="card p-5">
+                    <h3 className="text-sm font-medium text-text-secondary mb-3">By Sport</h3>
+                    {edgePerformanceStats.bySport.length > 0 ? (
+                      <div className="space-y-2">
+                        {edgePerformanceStats.bySport.slice(0, 6).map((sport) => (
+                          <div key={sport.sport} className="flex items-center gap-2">
+                            <span className="text-xs text-text-primary w-24 truncate">{sport.sport}</span>
+                            <div className="flex-1 h-4 bg-bg-tertiary rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full ${sport.winRate >= 50 ? 'bg-green-500' : 'bg-red-500'}`}
+                                style={{ width: `${Math.min(sport.winRate, 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-text-secondary w-24 text-right">
+                              {sport.winRate}% ({sport.wins}/{sport.count})
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <div className="text-text-muted text-sm">No data</div>}
+                  </div>
+
+                  <div className="card p-5">
+                    <h3 className="text-sm font-medium text-text-secondary mb-3">By League (Top 6)</h3>
+                    {edgePerformanceStats.byLeague.length > 0 ? (
+                      <div className="space-y-2">
+                        {edgePerformanceStats.byLeague.slice(0, 6).map((league) => (
+                          <div key={league.league} className="flex items-center gap-2">
+                            <span className="text-xs text-text-primary w-24 truncate" title={league.league}>{league.league}</span>
+                            <div className="flex-1 h-4 bg-bg-tertiary rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full ${league.winRate >= 50 ? 'bg-blue-500' : 'bg-red-500'}`}
+                                style={{ width: `${Math.min(league.winRate, 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-text-secondary w-24 text-right">
+                              {league.winRate}% ({league.wins}/{league.count})
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <div className="text-text-muted text-sm">No data</div>}
+                  </div>
+                </div>
               </div>
-              
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-bg-tertiary">
-                    <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Match</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Prediction</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Odds</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Conv</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Result</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Kickoff</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border-primary">
-                    {paginatedPredictions.map((pred) => (
-                      <tr key={pred.id} className="hover:bg-bg-tertiary/50">
-                        <td className="px-3 py-2">
-                          <div className="text-text-primary truncate max-w-[200px]">{pred.matchName}</div>
-                          <div className="text-xs text-text-muted">{pred.league}</div>
-                        </td>
-                        <td className="px-3 py-2 text-text-secondary">{pred.prediction}</td>
-                        <td className="px-3 py-2 text-text-secondary">{pred.odds?.toFixed(2) || '-'}</td>
-                        <td className="px-3 py-2">
-                          <span className={`px-1.5 py-0.5 rounded text-xs ${
-                            pred.conviction >= 7 ? 'bg-green-500/20 text-green-400' :
-                            pred.conviction >= 4 ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-gray-500/20 text-gray-400'
-                          }`}>
-                            {pred.conviction}/10
-                          </span>
-                        </td>
-                        <td className="px-3 py-2">
-                          <OutcomeBadge outcome={pred.outcome} />
-                        </td>
-                        <td className="px-3 py-2 text-xs text-text-secondary">
-                          {formatDate(new Date(pred.kickoff))}
-                        </td>
+            )}
+
+            {/* ===== CALIBRATION ANALYSIS ===== */}
+            {predictionSubTab === 'calibration' && (
+              <div className="space-y-6">
+                <div className="card overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border-primary">
+                    <h3 className="text-sm font-medium text-text-primary">Model Calibration</h3>
+                    <p className="text-xs text-text-muted mt-1">
+                      If model says 70% → actual win rate should be ~70%. MSE: {edgePerformanceStats.calibrationMSE}
+                    </p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-bg-tertiary">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Prob Band</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Count</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Avg Model Prob</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Actual Win Rate</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Error</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border-primary">
+                        {edgePerformanceStats.calibration.length > 0 ? (
+                          edgePerformanceStats.calibration.map((band) => (
+                            <tr key={band.band} className="hover:bg-bg-tertiary/50">
+                              <td className="px-4 py-3 text-text-primary">{band.band}</td>
+                              <td className="px-4 py-3 text-text-secondary">{band.count}</td>
+                              <td className="px-4 py-3 text-text-secondary">{band.avgModelProb}%</td>
+                              <td className="px-4 py-3">
+                                <span className={band.actualWinRate >= 50 ? 'text-green-400' : 'text-text-secondary'}>
+                                  {band.actualWinRate}%
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`${Math.abs(band.calibrationError) <= 5 ? 'text-green-400' : Math.abs(band.calibrationError) <= 10 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                  {band.calibrationError >= 0 ? '+' : ''}{band.calibrationError}%
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5} className="px-4 py-8 text-center text-text-muted">
+                              No calibration data. Predictions need modelProbability field.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Calibration Legend */}
+                <div className="card p-4">
+                  <h4 className="text-sm font-medium text-text-primary mb-2">How to Read</h4>
+                  <div className="text-xs text-text-muted space-y-1">
+                    <p>• <span className="text-green-400">Green error (±5%)</span> = Well calibrated</p>
+                    <p>• <span className="text-yellow-400">Yellow error (±10%)</span> = Slight miscalibration</p>
+                    <p>• <span className="text-red-400">Red error (&gt;10%)</span> = Needs attention</p>
+                    <p>• Positive error = Model overconfident, Negative = Model underconfident</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== CLV (CLOSING LINE VALUE) ===== */}
+            {predictionSubTab === 'clv' && (
+              <div className="space-y-6">
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div className="card p-4 text-center">
+                    <div className="text-2xl font-bold text-text-primary">{edgePerformanceStats.clvStats.totalWithCLV}</div>
+                    <div className="text-xs text-text-secondary">Predictions w/ CLV</div>
+                  </div>
+                  <div className="card p-4 text-center border-blue-500/30 bg-blue-500/5">
+                    <div className={`text-2xl font-bold ${edgePerformanceStats.clvStats.avgCLV >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {edgePerformanceStats.clvStats.avgCLV >= 0 ? '+' : ''}{edgePerformanceStats.clvStats.avgCLV}%
+                    </div>
+                    <div className="text-xs text-text-secondary">Avg CLV</div>
+                  </div>
+                  <div className="card p-4 text-center">
+                    <div className="text-2xl font-bold text-green-400">{edgePerformanceStats.clvStats.positiveCLVCount}</div>
+                    <div className="text-xs text-text-secondary">Positive CLV</div>
+                  </div>
+                  <div className="card p-4 text-center">
+                    <div className="text-2xl font-bold text-text-primary">{edgePerformanceStats.clvStats.positiveCLVPercent}%</div>
+                    <div className="text-xs text-text-secondary">+CLV Rate</div>
+                  </div>
+                </div>
+
+                {edgePerformanceStats.clvStats.bySport.length > 0 && (
+                  <div className="card overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border-primary">
+                      <h3 className="text-sm font-medium text-text-primary">CLV by Sport</h3>
+                    </div>
+                    <div className="p-4">
+                      <div className="space-y-2">
+                        {edgePerformanceStats.clvStats.bySport.map((sport) => (
+                          <div key={sport.sport} className="flex items-center justify-between py-2 border-b border-border-primary last:border-0">
+                            <span className="text-sm text-text-primary">{sport.sport}</span>
+                            <div className="flex items-center gap-4">
+                              <span className="text-xs text-text-muted">{sport.count} predictions</span>
+                              <span className={`text-sm font-medium ${sport.avgCLV >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {sport.avgCLV >= 0 ? '+' : ''}{sport.avgCLV}%
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {edgePerformanceStats.clvStats.totalWithCLV === 0 && (
+                  <div className="card p-8 text-center">
+                    <p className="text-text-muted">No CLV data available. Need closing odds to calculate CLV.</p>
+                    <p className="text-xs text-text-muted mt-2">CLV = Closing probability - Opening probability</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ===== ROI SIMULATION (Internal Only) ===== */}
+            {predictionSubTab === 'roi' && (
+              <div className="space-y-6">
+                <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                  <p className="text-xs text-purple-400">
+                    💡 <strong>Simulation Rules:</strong> Flat 1 unit stake per prediction where edge ≥ 2%. No compounding.
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-5 gap-4">
+                  <div className="card p-4 text-center">
+                    <div className="text-2xl font-bold text-text-primary">{edgePerformanceStats.roiSimulation.totalBets}</div>
+                    <div className="text-xs text-text-secondary">Total Bets</div>
+                  </div>
+                  <div className="card p-4 text-center">
+                    <div className="text-2xl font-bold text-text-primary">{edgePerformanceStats.roiSimulation.totalStaked}u</div>
+                    <div className="text-xs text-text-secondary">Total Staked</div>
+                  </div>
+                  <div className="card p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-400">{edgePerformanceStats.roiSimulation.totalReturn.toFixed(1)}u</div>
+                    <div className="text-xs text-text-secondary">Total Return</div>
+                  </div>
+                  <div className="card p-4 text-center">
+                    <div className={`text-2xl font-bold ${edgePerformanceStats.roiSimulation.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {edgePerformanceStats.roiSimulation.netProfit >= 0 ? '+' : ''}{edgePerformanceStats.roiSimulation.netProfit.toFixed(1)}u
+                    </div>
+                    <div className="text-xs text-text-secondary">Net P/L</div>
+                  </div>
+                  <div className={`card p-4 text-center ${edgePerformanceStats.roiSimulation.roi >= 0 ? 'border-green-500/30 bg-green-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
+                    <div className={`text-2xl font-bold ${edgePerformanceStats.roiSimulation.roi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {edgePerformanceStats.roiSimulation.roi >= 0 ? '+' : ''}{edgePerformanceStats.roiSimulation.roi}%
+                    </div>
+                    <div className="text-xs text-text-secondary">ROI</div>
+                  </div>
+                </div>
+
+                {edgePerformanceStats.roiSimulation.byEdgeBucket.length > 0 && (
+                  <div className="card overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border-primary">
+                      <h3 className="text-sm font-medium text-text-primary">ROI by Edge Bucket</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-bg-tertiary">
+                          <tr>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Bucket</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Bets</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Profit</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">ROI</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border-primary">
+                          {edgePerformanceStats.roiSimulation.byEdgeBucket.map((bucket) => (
+                            <tr key={bucket.bucket} className="hover:bg-bg-tertiary/50">
+                              <td className="px-4 py-3"><EdgeBucketBadge bucket={bucket.bucket} /></td>
+                              <td className="px-4 py-3 text-text-secondary">{bucket.bets}</td>
+                              <td className="px-4 py-3">
+                                <span className={bucket.profit >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                  {bucket.profit >= 0 ? '+' : ''}{bucket.profit}u
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={bucket.roi >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                  {bucket.roi >= 0 ? '+' : ''}{bucket.roi}%
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {edgePerformanceStats.roiSimulation.bySport.length > 0 && (
+                  <div className="card overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border-primary">
+                      <h3 className="text-sm font-medium text-text-primary">ROI by Sport</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-bg-tertiary">
+                          <tr>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Sport</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Bets</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Profit</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">ROI</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border-primary">
+                          {edgePerformanceStats.roiSimulation.bySport.map((sport) => (
+                            <tr key={sport.sport} className="hover:bg-bg-tertiary/50">
+                              <td className="px-4 py-3 text-text-primary">{sport.sport}</td>
+                              <td className="px-4 py-3 text-text-secondary">{sport.bets}</td>
+                              <td className="px-4 py-3">
+                                <span className={sport.profit >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                  {sport.profit >= 0 ? '+' : ''}{sport.profit}u
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={sport.roi >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                  {sport.roi >= 0 ? '+' : ''}{sport.roi}%
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ===== RAW DATA ===== */}
+            {predictionSubTab === 'raw' && (
+              <div className="card overflow-hidden">
+                <div className="px-4 py-3 border-b border-border-primary flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-text-primary">Recent Predictions (Raw)</h3>
+                  <span className="text-xs text-text-muted">{edgePerformanceStats.recentPredictions.length} shown</span>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-bg-tertiary">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Match</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Selection</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">P_model</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">P_market</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Edge</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Odds</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Result</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-border-primary">
+                      {paginatedPredictions.map((pred) => (
+                        <tr key={pred.id} className="hover:bg-bg-tertiary/50">
+                          <td className="px-3 py-2">
+                            <div className="text-text-primary truncate max-w-[180px]">{pred.matchName}</div>
+                            <div className="text-xs text-text-muted">{pred.league}</div>
+                          </td>
+                          <td className="px-3 py-2 text-text-secondary text-xs">{pred.selection || '-'}</td>
+                          <td className="px-3 py-2 text-text-secondary">{pred.modelProbability?.toFixed(1) || '-'}%</td>
+                          <td className="px-3 py-2 text-text-secondary">{pred.marketProbabilityFair?.toFixed(1) || '-'}%</td>
+                          <td className="px-3 py-2">
+                            {pred.edgeValue !== null ? (
+                              <span className={pred.edgeValue >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                {pred.edgeValue >= 0 ? '+' : ''}{pred.edgeValue.toFixed(1)}%
+                              </span>
+                            ) : '-'}
+                          </td>
+                          <td className="px-3 py-2 text-text-secondary">{pred.marketOddsAtPrediction?.toFixed(2) || '-'}</td>
+                          <td className="px-3 py-2">
+                            <BinaryOutcomeBadge outcome={pred.binaryOutcome} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                <Pagination 
+                  currentPage={predictionsPage} 
+                  totalPages={totalPredictionsPages} 
+                  onPageChange={setPredictionsPage} 
+                />
               </div>
-              
-              {/* Pagination */}
-              <Pagination 
-                currentPage={predictionsPage} 
-                totalPages={totalPredictionsPages} 
-                onPageChange={setPredictionsPage} 
-              />
-            </div>
+            )}
           </div>
         )}
 
@@ -751,6 +1102,56 @@ function Pagination({ currentPage, totalPages, onPageChange }: {
       </div>
     </div>
   );
+}
+
+function SubTabButton({ active, onClick, children }: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap ${
+        active
+          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+          : 'bg-bg-tertiary text-text-muted hover:text-text-secondary'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function EdgeBucketBadge({ bucket }: { bucket: string }) {
+  const styles: Record<string, string> = {
+    HIGH: 'bg-green-500/20 text-green-400 border border-green-500/30',
+    MEDIUM: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
+    SMALL: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
+    NO_EDGE: 'bg-gray-500/20 text-gray-400',
+  };
+  const labels: Record<string, string> = {
+    HIGH: '🔥 High (>8%)',
+    MEDIUM: '📈 Medium (5-8%)',
+    SMALL: '📊 Small (2-5%)',
+    NO_EDGE: '— No Edge (<2%)',
+  };
+
+  return (
+    <span className={`px-2 py-0.5 rounded text-xs font-medium ${styles[bucket] || styles.NO_EDGE}`}>
+      {labels[bucket] || bucket}
+    </span>
+  );
+}
+
+function BinaryOutcomeBadge({ outcome }: { outcome: number | null }) {
+  if (outcome === null) {
+    return <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-500/20 text-gray-400">⏳ Pending</span>;
+  }
+  if (outcome === 1) {
+    return <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">✓ Win</span>;
+  }
+  return <span className="px-2 py-0.5 rounded text-xs font-medium bg-red-500/20 text-red-400">✗ Loss</span>;
 }
 
 function formatTimeAgo(date: Date): string {
