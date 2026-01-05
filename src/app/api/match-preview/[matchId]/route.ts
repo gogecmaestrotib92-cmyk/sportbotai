@@ -1377,16 +1377,28 @@ function parseMatchId(matchId: string) {
     
     // Map sport code to sport key (e.g., "nba" -> "basketball_nba")
     const sportCode = parsed.sportCode;
-    const sportType = detectSportFromLeague(sportCode.toUpperCase()) || 
-      (sportCode.includes('nba') || sportCode.includes('euroleague') ? 'basketball' : 
-       sportCode.includes('nfl') ? 'americanfootball' :
-       sportCode.includes('nhl') ? 'icehockey' : 'soccer');
+    
+    // detectSportFromLeague may return full sport key (basketball_nba) or just type (basketball)
+    const detectedSport = detectSportFromLeague(sportCode.toUpperCase());
+    
+    // If detectSportFromLeague returns a full key (contains underscore), use it directly
+    // Otherwise, build it from type + code
+    let finalSport: string;
+    if (detectedSport && detectedSport.includes('_')) {
+      finalSport = detectedSport;
+    } else {
+      const sportType = detectedSport || 
+        (sportCode.includes('nba') || sportCode.includes('euroleague') ? 'basketball' : 
+         sportCode.includes('nfl') ? 'americanfootball' :
+         sportCode.includes('nhl') ? 'icehockey' : 'soccer');
+      finalSport = `${sportType}_${sportCode}`;
+    }
     
     return {
       homeTeam: toDisplayName(parsed.homeSlug),
       awayTeam: toDisplayName(parsed.awaySlug),
       league: sportCode.toUpperCase(),
-      sport: `${sportType}_${sportCode}`,
+      sport: finalSport,
       kickoff: parsed.date ? `${parsed.date}T12:00:00Z` : new Date().toISOString(),
       venue: null,
     };
