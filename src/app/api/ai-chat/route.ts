@@ -16,6 +16,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import OpenAI from 'openai';
 import { getPerplexityClient } from '@/lib/perplexity';
 import { detectChatMode, buildSystemPrompt, type BrainMode } from '@/lib/sportbot-brain';
@@ -30,6 +31,7 @@ import {
   formatVerifiedTeamStats,
   SeasonNormalizer 
 } from '@/lib/verified-nba-stats';
+import { authOptions, canUserChat, incrementChatCount, CHAT_LIMITS } from '@/lib/auth';
 
 // ============================================
 // TYPES
@@ -1641,6 +1643,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check authentication and credits
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { 
+          error: 'Authentication required',
+          requiresAuth: true,
+          message: 'Please sign in to use AI Chat'
+        },
+        { status: 401 }
+      );
+    }
+
+    // Check chat credits
+    const creditCheck = await canUserChat(session.user.id);
+    
+    if (!creditCheck.allowed) {
+      const limit = CHAT_LIMITS[creditCheck.plan as keyof typeof CHAT_LIMITS];
+      
+      if (limit === 0) {
+        // FREE users have no chat access
+        return NextResponse.json(
+          { 
+            error: 'Chat not available on free plan',
+            requiresUpgrade: true,
+            message: 'Upgrade to Pro to access AI Chat with 50 questions per month'
+          },
+          { status: 403 }
+        );
+      }
+      
+      // PRO users out of credits
+      return NextResponse.json(
+        { 
+          error: 'Chat credits exhausted',
+          requiresUpgrade: true,
+          remaining: 0,
+          limit: creditCheck.limit,
+          message: `You've used all ${creditCheck.limit} chat questions this billing period. Upgrade to Premium for unlimited access.`
+        },
+        { status: 403 }
+      );
+    }
+
     // Check if OpenAI is configured
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
@@ -1686,6 +1733,10 @@ export async function POST(request: NextRequest) {
           request
         );
         
+        // Increment chat credits for match analysis via chat
+        await incrementChatCount(session.user.id);
+        const updatedCredits = await canUserChat(session.user.id);
+        
         return NextResponse.json({
           success: true,
           response: analysisResult.response,
@@ -1694,6 +1745,10 @@ export async function POST(request: NextRequest) {
           routingDecision: 'match-analysis',
           model: 'analyze-api',
           isMatchAnalysis: true,
+          credits: {
+            remaining: updatedCredits.remaining,
+            limit: updatedCredits.limit,
+          },
         });
       }
     }
@@ -2010,6 +2065,9 @@ Please answer the user's question using the real-time data above. Cite sources i
       citations,
     }).catch(err => console.error('[AI-Chat] Knowledge save failed:', err));
 
+    // Increment chat credits (after successful response)
+    await incrementChatCount(session.user.id);
+
     // Determine routing decision for response metadata
     let routingDecision = 'gpt-only';
     let model = 'gpt-4o-mini';
@@ -2021,6 +2079,9 @@ Please answer the user's question using the real-time data above. Cite sources i
       model = 'gpt-4o-mini + sonar-pro';
     }
 
+    // Get updated credits for response
+    const updatedCredits = await canUserChat(session.user.id);
+
     return NextResponse.json({
       success: true,
       response,
@@ -2029,6 +2090,10 @@ Please answer the user's question using the real-time data above. Cite sources i
       usedDataLayer,
       routingDecision,
       model,
+      credits: {
+        remaining: updatedCredits.remaining,
+        limit: updatedCredits.limit,
+      },
     });
 
   } catch (error) {

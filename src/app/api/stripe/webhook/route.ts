@@ -122,18 +122,30 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   try {
-    // Update user's plan in database
+    // Get subscription details to find billing period end
+    let periodEnd: Date | undefined;
+    if (session.subscription) {
+      const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+      periodEnd = new Date(subscription.current_period_end * 1000);
+    }
+    
+    // Update user's plan in database with credit reset
     await prisma.user.update({
       where: { email: customerEmail },
       data: {
         plan: planType,
         stripeCustomerId: session.customer as string,
         stripeSubscriptionId: session.subscription as string,
-        analysisCount: 0, // Reset count on upgrade
+        stripeCurrentPeriodEnd: periodEnd,
+        // Reset all credits for new subscription
+        analysisCount: 0,
+        chatCount: 0,
+        lastAnalysisDate: null,
+        lastChatDate: null,
       },
     });
     
-    console.log(`[Stripe Webhook] User ${customerEmail} upgraded to ${planType}`);
+    console.log(`[Stripe Webhook] User ${customerEmail} upgraded to ${planType}, credits reset`);
     
     // Send welcome email to customer
     await sendWelcomeEmail(customerEmail, planType);
@@ -165,14 +177,26 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   try {
     // Update user's plan based on subscription status
     if (status === 'active') {
+      // Check if this is a renewal (period changed)
+      const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+      
+      // Reset credits on subscription renewal/update
       await prisma.user.update({
         where: { email: customer.email },
-        data: { plan },
+        data: { 
+          plan,
+          stripeCurrentPeriodEnd: currentPeriodEnd,
+          // Reset credits for new billing period
+          analysisCount: 0,
+          chatCount: 0,
+          lastAnalysisDate: null,
+          lastChatDate: null,
+        },
       });
       
       const nextBillingDate = new Date(subscription.current_period_end * 1000);
       await sendRenewalEmail(customer.email, plan, nextBillingDate);
-      console.log(`[Stripe Webhook] User ${customer.email} subscription renewed - ${plan}`);
+      console.log(`[Stripe Webhook] User ${customer.email} subscription renewed - ${plan}, credits reset`);
     } else if (status === 'past_due' || status === 'unpaid') {
       // Keep plan but note the issue
       console.log(`[Stripe Webhook] User ${customer.email} subscription ${status}`);

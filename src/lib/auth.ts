@@ -3,6 +3,11 @@
  * 
  * Centralized auth configuration for SportBot AI.
  * Supports Google and GitHub OAuth providers.
+ * 
+ * CREDITS SYSTEM:
+ * - FREE: 1 analysis/day, no chat
+ * - PRO: 10 analyses/billing period, 50 chats/billing period
+ * - PREMIUM: Unlimited
  */
 
 import { NextAuthOptions } from 'next-auth';
@@ -13,12 +18,22 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
 
-// Plan limits
-export const PLAN_LIMITS = {
-  FREE: 1,      // 1 analysis per day
-  PRO: 30,      // 30 analyses per day
-  PREMIUM: -1,  // Unlimited (-1 = no limit)
+// Plan limits for ANALYSIS (per billing period for PRO, daily for FREE)
+export const ANALYSIS_LIMITS = {
+  FREE: 1,       // 1 analysis per day
+  PRO: 10,       // 10 analyses per billing period
+  PREMIUM: -1,   // Unlimited (-1 = no limit)
 } as const;
+
+// Plan limits for CHAT (per billing period for PRO, none for FREE)
+export const CHAT_LIMITS = {
+  FREE: 0,       // No chat for free users
+  PRO: 50,       // 50 chats per billing period
+  PREMIUM: -1,   // Unlimited
+} as const;
+
+// Legacy export for backwards compatibility
+export const PLAN_LIMITS = ANALYSIS_LIMITS;
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
@@ -206,7 +221,9 @@ export const authOptions: NextAuthOptions = {
 
 /**
  * Check if user can perform analysis based on their plan
- * All plans have DAILY limits that reset at midnight
+ * - FREE: Daily limit (resets at midnight)
+ * - PRO: Billing period limit (resets on stripeCurrentPeriodEnd)
+ * - PREMIUM: Unlimited
  */
 export async function canUserAnalyze(userId: string): Promise<{
   allowed: boolean;
@@ -220,6 +237,7 @@ export async function canUserAnalyze(userId: string): Promise<{
       plan: true,
       analysisCount: true,
       lastAnalysisDate: true,
+      stripeCurrentPeriodEnd: true,
     },
   });
 
@@ -227,28 +245,43 @@ export async function canUserAnalyze(userId: string): Promise<{
     return { allowed: false, remaining: 0, limit: 0, plan: 'FREE' };
   }
 
-  const limit = PLAN_LIMITS[user.plan as keyof typeof PLAN_LIMITS];
+  const limit = ANALYSIS_LIMITS[user.plan as keyof typeof ANALYSIS_LIMITS];
   
   // Unlimited plan (PREMIUM)
   if (limit === -1) {
     return { allowed: true, remaining: -1, limit: -1, plan: user.plan };
   }
 
-  // Daily limit check (applies to FREE and PRO)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const lastAnalysis = user.lastAnalysisDate;
-  const lastAnalysisDay = lastAnalysis ? new Date(lastAnalysis) : null;
-  if (lastAnalysisDay) {
-    lastAnalysisDay.setHours(0, 0, 0, 0);
+  // FREE: Daily limit (resets at midnight)
+  if (user.plan === 'FREE') {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const lastAnalysis = user.lastAnalysisDate;
+    const lastAnalysisDay = lastAnalysis ? new Date(lastAnalysis) : null;
+    if (lastAnalysisDay) {
+      lastAnalysisDay.setHours(0, 0, 0, 0);
+    }
+
+    // Reset count if it's a new day
+    const count = lastAnalysisDay && lastAnalysisDay.getTime() === today.getTime()
+      ? user.analysisCount
+      : 0;
+
+    const remaining = Math.max(0, limit - count);
+    return { allowed: remaining > 0, remaining, limit, plan: user.plan };
   }
 
-  // Reset count if it's a new day
-  const count = lastAnalysisDay && lastAnalysisDay.getTime() === today.getTime()
-    ? user.analysisCount
-    : 0;
-
+  // PRO: Billing period limit (resets when subscription renews)
+  // If no billing period set, use monthly default
+  const periodEnd = user.stripeCurrentPeriodEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const periodStart = new Date(periodEnd.getTime() - 30 * 24 * 60 * 60 * 1000);
+  
+  // Check if last analysis was in current billing period
+  const lastAnalysis = user.lastAnalysisDate;
+  const isCurrentPeriod = lastAnalysis && lastAnalysis >= periodStart;
+  
+  const count = isCurrentPeriod ? user.analysisCount : 0;
   const remaining = Math.max(0, limit - count);
   
   return {
@@ -261,33 +294,160 @@ export async function canUserAnalyze(userId: string): Promise<{
 
 /**
  * Increment user's analysis count
- * All plans use daily count that resets at midnight
+ * - FREE: Daily count
+ * - PRO: Billing period count
  */
 export async function incrementAnalysisCount(userId: string): Promise<void> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { lastAnalysisDate: true, analysisCount: true },
+    select: { 
+      plan: true,
+      lastAnalysisDate: true, 
+      analysisCount: true,
+      stripeCurrentPeriodEnd: true,
+    },
   });
 
   if (!user) return;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const lastAnalysis = user.lastAnalysisDate;
-  const lastAnalysisDay = lastAnalysis ? new Date(lastAnalysis) : null;
-  if (lastAnalysisDay) {
-    lastAnalysisDay.setHours(0, 0, 0, 0);
+  // FREE: Daily reset
+  if (user.plan === 'FREE') {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const lastAnalysis = user.lastAnalysisDate;
+    const lastAnalysisDay = lastAnalysis ? new Date(lastAnalysis) : null;
+    if (lastAnalysisDay) {
+      lastAnalysisDay.setHours(0, 0, 0, 0);
+    }
+
+    const isNewDay = !lastAnalysisDay || lastAnalysisDay.getTime() !== today.getTime();
+    
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        analysisCount: isNewDay ? 1 : { increment: 1 },
+        lastAnalysisDate: new Date(),
+      },
+    });
+    return;
   }
 
-  // If new day, reset count to 1; otherwise increment
-  const isNewDay = !lastAnalysisDay || lastAnalysisDay.getTime() !== today.getTime();
+  // PRO/PREMIUM: Billing period count (or just increment)
+  const periodEnd = user.stripeCurrentPeriodEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const periodStart = new Date(periodEnd.getTime() - 30 * 24 * 60 * 60 * 1000);
+  
+  const lastAnalysis = user.lastAnalysisDate;
+  const isCurrentPeriod = lastAnalysis && lastAnalysis >= periodStart;
   
   await prisma.user.update({
     where: { id: userId },
     data: {
-      analysisCount: isNewDay ? 1 : { increment: 1 },
+      analysisCount: isCurrentPeriod ? { increment: 1 } : 1,
       lastAnalysisDate: new Date(),
+    },
+  });
+}
+
+/**
+ * Check if user can use AI chat based on their plan
+ * - FREE: No chat access
+ * - PRO: 50 chats per billing period
+ * - PREMIUM: Unlimited
+ */
+export async function canUserChat(userId: string): Promise<{
+  allowed: boolean;
+  remaining: number;
+  limit: number;
+  plan: string;
+}> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      plan: true,
+      chatCount: true,
+      lastChatDate: true,
+      stripeCurrentPeriodEnd: true,
+    },
+  });
+
+  if (!user) {
+    return { allowed: false, remaining: 0, limit: 0, plan: 'FREE' };
+  }
+
+  const limit = CHAT_LIMITS[user.plan as keyof typeof CHAT_LIMITS];
+  
+  // FREE: No chat access
+  if (limit === 0) {
+    return { allowed: false, remaining: 0, limit: 0, plan: user.plan };
+  }
+  
+  // Unlimited plan (PREMIUM)
+  if (limit === -1) {
+    return { allowed: true, remaining: -1, limit: -1, plan: user.plan };
+  }
+
+  // PRO: Billing period limit
+  const periodEnd = user.stripeCurrentPeriodEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const periodStart = new Date(periodEnd.getTime() - 30 * 24 * 60 * 60 * 1000);
+  
+  const lastChat = user.lastChatDate;
+  const isCurrentPeriod = lastChat && lastChat >= periodStart;
+  
+  const count = isCurrentPeriod ? (user.chatCount || 0) : 0;
+  const remaining = Math.max(0, limit - count);
+  
+  return {
+    allowed: remaining > 0,
+    remaining,
+    limit,
+    plan: user.plan,
+  };
+}
+
+/**
+ * Increment user's chat count
+ */
+export async function incrementChatCount(userId: string): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { 
+      plan: true,
+      lastChatDate: true, 
+      chatCount: true,
+      stripeCurrentPeriodEnd: true,
+    },
+  });
+
+  if (!user) return;
+
+  // PRO/PREMIUM: Billing period count
+  const periodEnd = user.stripeCurrentPeriodEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const periodStart = new Date(periodEnd.getTime() - 30 * 24 * 60 * 60 * 1000);
+  
+  const lastChat = user.lastChatDate;
+  const isCurrentPeriod = lastChat && lastChat >= periodStart;
+  
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      chatCount: isCurrentPeriod ? { increment: 1 } : 1,
+      lastChatDate: new Date(),
+    },
+  });
+}
+
+/**
+ * Reset user credits (called on subscription renewal via Stripe webhook)
+ */
+export async function resetUserCredits(userId: string): Promise<void> {
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      analysisCount: 0,
+      chatCount: 0,
+      lastAnalysisDate: null,
+      lastChatDate: null,
     },
   });
 }

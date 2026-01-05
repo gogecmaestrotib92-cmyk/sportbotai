@@ -49,8 +49,12 @@ model User {
   stripeSubscriptionId   String?        @unique
   stripePriceId          String?
   stripeCurrentPeriodEnd DateTime?
+  // Analysis credits (per billing period for PRO, reset on subscription renewal)
   analysisCount          Int            @default(0)
   lastAnalysisDate       DateTime?
+  // Chat credits (per billing period for PRO)
+  chatCount              Int            @default(0)
+  lastChatDate           DateTime?
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
   referralCampaign       String?
