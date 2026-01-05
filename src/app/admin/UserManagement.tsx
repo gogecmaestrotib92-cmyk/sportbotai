@@ -35,6 +35,9 @@ interface RecentAnalysis {
   match: string;
   sport: string;
   league: string;
+  edge: string | null;
+  outcome: 'PENDING' | 'HIT' | 'MISS' | 'PUSH' | 'VOID';
+  actualScore: string | null;
   date: string;
 }
 
@@ -411,6 +414,27 @@ export default function UserManagement() {
                               <span className="font-medium">{analysis.match}</span>
                               <span className="text-text-muted">•</span>
                               <span className="text-text-muted">{analysis.league || analysis.sport}</span>
+                              {analysis.edge && (
+                                <>
+                                  <span className="text-text-muted">•</span>
+                                  <span className="text-blue-400">Edge: {analysis.edge}</span>
+                                </>
+                              )}
+                              <span className="text-text-muted">•</span>
+                              <span className={`font-medium ${
+                                analysis.outcome === 'HIT' ? 'text-green-400' :
+                                analysis.outcome === 'MISS' ? 'text-red-400' :
+                                analysis.outcome === 'PUSH' ? 'text-yellow-400' :
+                                analysis.outcome === 'VOID' ? 'text-gray-400' :
+                                'text-text-muted'
+                              }`}>
+                                {analysis.outcome === 'PENDING' ? '⏳ Pending' :
+                                 analysis.outcome === 'HIT' ? '✅ Hit' :
+                                 analysis.outcome === 'MISS' ? '❌ Miss' :
+                                 analysis.outcome === 'PUSH' ? '🔄 Push' :
+                                 '⊘ Void'}
+                                {analysis.actualScore && ` (${analysis.actualScore})`}
+                              </span>
                               <span className="text-text-muted">•</span>
                               <span className="text-text-muted">
                                 {formatDistanceToNow(new Date(analysis.date), { addSuffix: true })}

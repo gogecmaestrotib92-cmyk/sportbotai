@@ -79,7 +79,7 @@ model VerificationToken {
 }
 
 model Analysis {
-  id            String    @id @default(cuid())
+  id            String       @id @default(cuid())
   userId        String
   sport         String
   league        String
@@ -94,11 +94,16 @@ model Analysis {
   riskLevel     String?
   bestValueSide String?
   fullResponse  Json?
-  createdAt     DateTime  @default(now())
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime     @default(now())
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Outcome tracking
+  outcome       CallOutcome  @default(PENDING)
+  actualScore   String?
+  validatedAt   DateTime?
 
   @@index([userId])
   @@index([createdAt])
+  @@index([outcome])
 }
 
 model BlogKeyword {
