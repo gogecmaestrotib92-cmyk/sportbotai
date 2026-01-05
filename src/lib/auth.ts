@@ -167,8 +167,9 @@ export const authOptions: NextAuthOptions = {
         token.analysisCount = (user as any).analysisCount || 0;
       }
       
-      // When session is updated (e.g., from update() call), refresh from DB
-      if (trigger === 'update' && token.id) {
+      // Always refresh plan from DB to catch admin changes
+      // This runs on every request but is a fast indexed query
+      if (token.id) {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.id as string },
