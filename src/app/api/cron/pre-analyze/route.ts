@@ -28,6 +28,7 @@ import { generateMatchPreview } from '@/lib/blog/match-generator';
 import { cacheSet, cacheGet, CACHE_TTL, CACHE_KEYS } from '@/lib/cache';
 import { analyzeMarket, type MarketIntel, type OddsData, oddsToImpliedProb } from '@/lib/value-detection';
 import { normalizeSport, getMatchRostersV2 } from '@/lib/data-layer/bridge';
+import { getMatchInjuriesViaPerplexity } from '@/lib/perplexity';
 import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee, getMatchFixtureInfo } from '@/lib/football-api';
 import { normalizeToUniversalSignals, formatSignalsForAI, getSignalSummary, type RawMatchInput } from '@/lib/universal-signals';
 import { ANALYSIS_PERSONALITY } from '@/lib/sportbot-brain';
@@ -260,6 +261,9 @@ async function getRosterContextCached(
 /**
  * Fetch and format injury data for a match
  * Returns a formatted string for AI prompt, or null if unavailable
+ * 
+ * - Soccer: Uses API-Sports (reliable structured data)
+ * - Basketball/NHL/NFL: Uses Perplexity (real-time web search)
  */
 async function getInjuryInfo(
   homeTeam: string,
@@ -268,32 +272,67 @@ async function getInjuryInfo(
   league: string
 ): Promise<string | null> {
   try {
-    // Only soccer has reliable injury data via API-Sports
-    if (!sport.startsWith('soccer_')) {
-      return null;
+    // Soccer: Use API-Sports (structured data)
+    if (sport.startsWith('soccer_')) {
+      const injuries = await getMatchInjuries(homeTeam, awayTeam, league);
+      
+      if (!injuries || (injuries.home.length === 0 && injuries.away.length === 0)) {
+        return null;
+      }
+      
+      const formatInjuries = (team: string, list: any[]): string => {
+        if (list.length === 0) return '';
+        const top = list.slice(0, 3); // Limit to top 3 injuries per team
+        const names = top.map(inj => `${inj.playerName} (${inj.type || inj.reason || 'injured'})`).join(', ');
+        return `${team}: ${names}${list.length > 3 ? ` +${list.length - 3} more` : ''}`;
+      };
+      
+      const parts: string[] = [];
+      const homeStr = formatInjuries(homeTeam, injuries.home);
+      const awayStr = formatInjuries(awayTeam, injuries.away);
+      
+      if (homeStr) parts.push(homeStr);
+      if (awayStr) parts.push(awayStr);
+      
+      return parts.length > 0 ? parts.join(' | ') : null;
     }
     
-    const injuries = await getMatchInjuries(homeTeam, awayTeam, league);
-    
-    if (!injuries || (injuries.home.length === 0 && injuries.away.length === 0)) {
-      return null;
+    // Basketball/NHL/NFL: Use Perplexity (real-time web search)
+    if (sport.includes('basketball') || sport.includes('hockey') || sport.includes('nhl') || 
+        sport.includes('football') || sport.includes('nfl')) {
+      console.log(`[Pre-Analyze] Fetching injuries via Perplexity for ${homeTeam} vs ${awayTeam} (${sport})`);
+      
+      const result = await getMatchInjuriesViaPerplexity(homeTeam, awayTeam, sport);
+      
+      if (!result.success || (result.home.length === 0 && result.away.length === 0)) {
+        console.log(`[Pre-Analyze] No injuries found via Perplexity for ${homeTeam} vs ${awayTeam}`);
+        return null;
+      }
+      
+      const formatInjuries = (team: string, list: typeof result.home): string => {
+        if (list.length === 0) return '';
+        const top = list.slice(0, 4); // Show up to 4 injuries for US sports (rosters are bigger)
+        const names = top.map(inj => `${inj.playerName} (${inj.injury} - ${inj.status})`).join(', ');
+        return `${team}: ${names}${list.length > 4 ? ` +${list.length - 4} more` : ''}`;
+      };
+      
+      const parts: string[] = [];
+      const homeStr = formatInjuries(homeTeam, result.home);
+      const awayStr = formatInjuries(awayTeam, result.away);
+      
+      if (homeStr) parts.push(homeStr);
+      if (awayStr) parts.push(awayStr);
+      
+      const injuryContext = parts.length > 0 ? parts.join(' | ') : null;
+      
+      if (injuryContext) {
+        console.log(`[Pre-Analyze] Perplexity injuries: ${injuryContext}`);
+      }
+      
+      return injuryContext;
     }
     
-    const formatInjuries = (team: string, list: any[]): string => {
-      if (list.length === 0) return '';
-      const top = list.slice(0, 3); // Limit to top 3 injuries per team
-      const names = top.map(inj => `${inj.playerName} (${inj.type || inj.reason || 'injured'})`).join(', ');
-      return `${team}: ${names}${list.length > 3 ? ` +${list.length - 3} more` : ''}`;
-    };
-    
-    const parts: string[] = [];
-    const homeStr = formatInjuries(homeTeam, injuries.home);
-    const awayStr = formatInjuries(awayTeam, injuries.away);
-    
-    if (homeStr) parts.push(homeStr);
-    if (awayStr) parts.push(awayStr);
-    
-    return parts.length > 0 ? parts.join(' | ') : null;
+    return null;
   } catch (error) {
     console.warn(`[Pre-Analyze] Failed to fetch injuries for ${homeTeam} vs ${awayTeam}:`, error);
     return null;
@@ -572,18 +611,33 @@ async function runQuickAnalysis(
     
     // Get enriched match data through UNIFIED SERVICE (consistent 4-layer data across app)
     // Also get injuries, referee, and roster context in parallel
-    // For soccer: fetch STRUCTURED injuries (for UI) AND string format (for AI prompt)
+    // For soccer: fetch via API-Sports, for NBA/NHL/NFL: fetch via Perplexity
     const isSoccerMatch = sport.startsWith('soccer_');
-    const [unifiedData, injuryInfo, structuredInjuries, refereeContext, rosterContext] = await Promise.all([
+    const isUSAorBasketball = sport.includes('basketball') || sport.includes('hockey') || sport.includes('nhl') || 
+                               sport.includes('football') || sport.includes('nfl');
+    
+    const [unifiedData, injuryInfo, structuredInjuries, perplexityInjuries, refereeContext, rosterContext] = await Promise.all([
       getUnifiedMatchData(matchId, { odds: oddsInfo, includeOdds: false }),
       getInjuryInfo(homeTeam, awayTeam, sport, league),
       isSoccerMatch ? getMatchInjuries(homeTeam, awayTeam, league) : Promise.resolve({ home: [], away: [] }),
+      isUSAorBasketball ? getMatchInjuriesViaPerplexity(homeTeam, awayTeam, sport) : Promise.resolve({ success: false, home: [], away: [] }),
       getRefereeContext(homeTeam, awayTeam, sport, league),
       // Fetch real-time roster context for NBA/NHL/NFL to avoid outdated AI training data
       rosterSport ? getRosterContextCached(homeTeam, awayTeam, rosterSport, league) : Promise.resolve(null),
     ]);
     
-    console.log(`[Pre-Analyze] Structured injuries fetched - home: ${structuredInjuries?.home?.length || 0}, away: ${structuredInjuries?.away?.length || 0}`);
+    // Merge injuries from soccer API or Perplexity
+    const finalInjuries = {
+      home: isSoccerMatch 
+        ? (structuredInjuries?.home || []) 
+        : (perplexityInjuries?.home?.map(i => ({ player: i.playerName, reason: `${i.injury} - ${i.status}` })) || []),
+      away: isSoccerMatch 
+        ? (structuredInjuries?.away || [])
+        : (perplexityInjuries?.away?.map(i => ({ player: i.playerName, reason: `${i.injury} - ${i.status}` })) || []),
+    };
+    
+    console.log(`[Pre-Analyze] Injuries fetched - home: ${finalInjuries.home.length}, away: ${finalInjuries.away.length} (source: ${isSoccerMatch ? 'API-Sports' : 'Perplexity'})`);
+    
     
     // Use enriched data from unified service for cross-sport compatibility
     const enrichedData = unifiedData.enrichedData as any;
@@ -625,15 +679,15 @@ async function runQuickAnalysis(
         draws: enrichedData.h2h?.draws || 0,
       },
       // Include structured injury data for availability signals
-      homeInjuries: structuredInjuries?.home?.map((i: any) => i.player) || [],
-      awayInjuries: structuredInjuries?.away?.map((i: any) => i.player) || [],
-      homeInjuryDetails: structuredInjuries?.home?.map((i: any) => ({
+      homeInjuries: finalInjuries.home.map((i: any) => i.player) || [],
+      awayInjuries: finalInjuries.away.map((i: any) => i.player) || [],
+      homeInjuryDetails: finalInjuries.home.map((i: any) => ({
         player: i.player || 'Unknown',
         reason: i.reason,
         details: i.details,
         position: i.position,
       })) || [],
-      awayInjuryDetails: structuredInjuries?.away?.map((i: any) => ({
+      awayInjuryDetails: finalInjuries.away.map((i: any) => ({
         player: i.player || 'Unknown',
         reason: i.reason,
         details: i.details,
@@ -813,8 +867,8 @@ ${!hasDraw ? 'NO DRAWS in this sport. Pick a winner.' : ''}`;
       universalSignals: signals,
       // Include structured injuries for UI availability section
       injuries: {
-        home: structuredInjuries?.home || [],
-        away: structuredInjuries?.away || [],
+        home: finalInjuries.home as any[] || [],
+        away: finalInjuries.away as any[] || [],
       },
       // Include headlines
       headlines: [

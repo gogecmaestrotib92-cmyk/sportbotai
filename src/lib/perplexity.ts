@@ -519,5 +519,237 @@ export default {
   quickMatchResearch,
   deepMatchAnalysis,
   getTeamRosterContext,
+  getMatchInjuriesViaPerplexity,
   SEARCH_TEMPLATES,
 };
+
+// ============================================
+// INJURY DATA VIA PERPLEXITY (for non-soccer sports)
+// ============================================
+
+interface InjuryData {
+  playerName: string;
+  injury: string;
+  status: 'Out' | 'Doubtful' | 'Questionable' | 'Probable' | 'GTD' | 'Unknown';
+  expectedReturn?: string;
+}
+
+interface MatchInjuriesResult {
+  success: boolean;
+  home: InjuryData[];
+  away: InjuryData[];
+  source?: string;
+  error?: string;
+}
+
+/**
+ * Fetch real-time injury data for NBA/NHL/NFL matches via Perplexity
+ * 
+ * This uses Perplexity's real-time search to find current injury reports
+ * from sources like ESPN, NBA.com, official team injury reports.
+ * 
+ * @param homeTeam - Home team name
+ * @param awayTeam - Away team name
+ * @param sport - Sport key (basketball_nba, icehockey_nhl, americanfootball_nfl)
+ */
+export async function getMatchInjuriesViaPerplexity(
+  homeTeam: string,
+  awayTeam: string,
+  sport: string
+): Promise<MatchInjuriesResult> {
+  const client = getPerplexityClient();
+  
+  if (!client.isConfigured()) {
+    return { success: false, home: [], away: [], error: 'Perplexity not configured' };
+  }
+
+  // Determine sport label
+  let sportLabel = 'NBA';
+  if (sport.includes('hockey') || sport.includes('nhl')) {
+    sportLabel = 'NHL';
+  } else if (sport.includes('football') || sport.includes('nfl')) {
+    sportLabel = 'NFL';
+  }
+
+  const today = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const systemPrompt = `You are a sports injury reporter. Today is ${today}.
+
+Your task is to find CURRENT injury reports for both teams in this ${sportLabel} matchup.
+
+REQUIREMENTS:
+1. Only report injuries that are ACTIVE/CURRENT (not past injuries)
+2. Focus on players who are OUT, DOUBTFUL, QUESTIONABLE, or PROBABLE for today's game
+3. Use official injury reports from NBA.com, ESPN, team sources
+4. If a team has no reported injuries, say "No active injuries reported"
+
+RESPONSE FORMAT (JSON):
+{
+  "homeTeam": {
+    "name": "${homeTeam}",
+    "injuries": [
+      { "player": "Player Name", "injury": "Injury Type", "status": "Out/Doubtful/Questionable/Probable/GTD" }
+    ]
+  },
+  "awayTeam": {
+    "name": "${awayTeam}",
+    "injuries": [
+      { "player": "Player Name", "injury": "Injury Type", "status": "Out/Doubtful/Questionable/Probable/GTD" }
+    ]
+  }
+}
+
+Return ONLY the JSON, no other text.`;
+
+  try {
+    const query = `${homeTeam} vs ${awayTeam} ${sportLabel} injury report today current injuries both teams status`;
+    
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'sonar-pro',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: query },
+        ],
+        max_tokens: 800,
+        temperature: 0.1,
+        search_recency_filter: 'day',
+        return_citations: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error(`[Perplexity Injuries] API error: ${response.status}`, error);
+      return { success: false, home: [], away: [], error: `API error: ${response.status}` };
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const citations = data.citations || [];
+
+    // Try to parse JSON from response
+    let parsed: any = null;
+    
+    // Extract JSON from response (might be wrapped in markdown code blocks)
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        parsed = JSON.parse(jsonMatch[0]);
+      } catch {
+        console.warn('[Perplexity Injuries] Failed to parse JSON response');
+      }
+    }
+
+    if (!parsed) {
+      // Fallback: try to extract injury info from text
+      console.log('[Perplexity Injuries] Using text fallback parsing');
+      return parseInjuriesFromText(content, homeTeam, awayTeam, citations[0]);
+    }
+
+    // Convert parsed data to our format
+    const homeInjuries: InjuryData[] = (parsed.homeTeam?.injuries || []).map((inj: any) => ({
+      playerName: inj.player || inj.name || 'Unknown',
+      injury: inj.injury || inj.type || 'Unknown',
+      status: normalizeStatus(inj.status),
+      expectedReturn: inj.expectedReturn,
+    }));
+
+    const awayInjuries: InjuryData[] = (parsed.awayTeam?.injuries || []).map((inj: any) => ({
+      playerName: inj.player || inj.name || 'Unknown',
+      injury: inj.injury || inj.type || 'Unknown',
+      status: normalizeStatus(inj.status),
+      expectedReturn: inj.expectedReturn,
+    }));
+
+    console.log(`[Perplexity Injuries] Found: ${homeTeam} (${homeInjuries.length}), ${awayTeam} (${awayInjuries.length})`);
+
+    return {
+      success: true,
+      home: homeInjuries,
+      away: awayInjuries,
+      source: citations[0],
+    };
+
+  } catch (error) {
+    console.error('[Perplexity Injuries] Error:', error);
+    return { success: false, home: [], away: [], error: String(error) };
+  }
+}
+
+/**
+ * Normalize injury status to our format
+ */
+function normalizeStatus(status: string): InjuryData['status'] {
+  const s = (status || '').toLowerCase();
+  if (s.includes('out')) return 'Out';
+  if (s.includes('doubtful')) return 'Doubtful';
+  if (s.includes('questionable')) return 'Questionable';
+  if (s.includes('probable')) return 'Probable';
+  if (s.includes('gtd') || s.includes('game time') || s.includes('day-to-day')) return 'GTD';
+  return 'Unknown';
+}
+
+/**
+ * Fallback: parse injuries from text response
+ */
+function parseInjuriesFromText(
+  text: string,
+  homeTeam: string,
+  awayTeam: string,
+  source?: string
+): MatchInjuriesResult {
+  const homeInjuries: InjuryData[] = [];
+  const awayInjuries: InjuryData[] = [];
+
+  // Simple regex patterns to find injury mentions
+  const injuryPattern = /([A-Z][a-z]+ [A-Z][a-z]+)\s*[-–—]\s*([^-–—]+)\s*[-–—]\s*(Out|Doubtful|Questionable|Probable|GTD)/gi;
+  
+  const lines = text.split('\n');
+  let currentTeam: 'home' | 'away' | null = null;
+
+  for (const line of lines) {
+    const lowerLine = line.toLowerCase();
+    
+    // Detect which team section we're in
+    if (lowerLine.includes(homeTeam.toLowerCase())) {
+      currentTeam = 'home';
+    } else if (lowerLine.includes(awayTeam.toLowerCase())) {
+      currentTeam = 'away';
+    }
+
+    // Find injury mentions using exec loop (ES5 compatible)
+    let match: RegExpExecArray | null;
+    const regex = new RegExp(injuryPattern.source, injuryPattern.flags);
+    while ((match = regex.exec(line)) !== null) {
+      const injury: InjuryData = {
+        playerName: match[1],
+        injury: match[2].trim(),
+        status: normalizeStatus(match[3]),
+      };
+
+      if (currentTeam === 'home') {
+        homeInjuries.push(injury);
+      } else if (currentTeam === 'away') {
+        awayInjuries.push(injury);
+      }
+    }
+  }
+
+  return {
+    success: homeInjuries.length > 0 || awayInjuries.length > 0,
+    home: homeInjuries,
+    away: awayInjuries,
+    source,
+  };
+}
