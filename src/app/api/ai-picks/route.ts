@@ -79,15 +79,17 @@ export async function GET(request: NextRequest) {
     // Transform to AI Picks format
     const aiPicks: AIPick[] = predictions.map(p => {
       // Generate short AI reason for display
-      let aiReason = 'AI Flagged';
+      // IMPORTANT: Don't reveal exact edge - that's the premium insight!
+      // Tease the value to drive clicks, not give away the analysis
+      let aiReason = 'Value opportunity detected';
       if (p.valueBetEdge && p.valueBetEdge >= 8) {
-        aiReason = `🎯 ${p.valueBetSide} +${p.valueBetEdge.toFixed(1)}% edge`;
+        aiReason = '🎯 Strong value signal detected';
       } else if (p.valueBetEdge && p.valueBetEdge >= 5) {
-        aiReason = `📊 ${p.valueBetSide} +${p.valueBetEdge.toFixed(1)}% edge`;
+        aiReason = '📊 Market mispricing detected';
       } else if (p.valueBetEdge && p.valueBetEdge >= MIN_VALUE_EDGE) {
-        aiReason = `📈 ${p.valueBetSide} +${p.valueBetEdge.toFixed(1)}% edge`;
+        aiReason = '📈 Edge opportunity found';
       } else if (p.conviction >= MIN_CONVICTION + 10) {
-        aiReason = `💪 High conviction (${p.conviction}%)`;
+        aiReason = '💪 High confidence pick';
       }
       
       return {

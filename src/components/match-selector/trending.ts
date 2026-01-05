@@ -499,24 +499,25 @@ function calculateValueScore(
 
 /**
  * Generate AI reason for flagging
+ * IMPORTANT: Don't reveal exact edge - that's the premium insight!
  */
 function generateAIReason(
   valueBet: ValueFlaggedMatch['valueBet'],
   marketAnomaly: ValueFlaggedMatch['marketAnomaly']
 ): string {
   if (valueBet.strength === 'strong') {
-    return `Strong edge: ${valueBet.label}`;
+    return 'Strong value signal detected';
   }
   if (valueBet.strength === 'moderate') {
-    return `Moderate edge on ${valueBet.outcome}`;
+    return 'Market mispricing detected';
   }
   if (marketAnomaly.hasDisagreement) {
-    return `Bookmaker disagreement detected`;
+    return 'Bookmaker disagreement detected';
   }
   if (valueBet.strength === 'slight') {
-    return `Slight value opportunity`;
+    return 'Edge opportunity found';
   }
-  return 'Market analysis flagged';
+  return 'Value opportunity detected';
 }
 
 /**
@@ -564,19 +565,21 @@ export function getValueFlaggedMatches(
 
 /**
  * Get value context line for display
+ * IMPORTANT: Don't reveal exact edge - that's the premium insight!
+ * Tease the value to drive clicks, not give away the analysis
  */
 export function getValueContextLine(match: ValueFlaggedMatch): string {
   if (match.valueBet.strength === 'strong') {
-    return `🎯 ${match.valueBet.label}`;
+    return '🎯 Strong value signal detected';
   }
   if (match.valueBet.strength === 'moderate') {
-    return `📊 ${match.valueBet.label}`;
+    return '📊 Market mispricing detected';
   }
   if (match.marketAnomaly.hasDisagreement) {
-    return `⚡ Odds spread: ${match.marketAnomaly.oddsSpread.toFixed(2)}`;
+    return '⚡ Bookmaker disagreement found';
   }
   if (match.valueBet.strength === 'slight') {
-    return `📈 ${match.valueBet.label}`;
+    return '📈 Edge opportunity found';
   }
-  return match.aiReason;
+  return 'Value opportunity detected';
 }
