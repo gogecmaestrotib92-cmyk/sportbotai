@@ -81,6 +81,18 @@ export async function GET(request: NextRequest) {
           accounts: {
             select: { provider: true },
           },
+          analyses: {
+            select: {
+              id: true,
+              homeTeam: true,
+              awayTeam: true,
+              sport: true,
+              league: true,
+              createdAt: true,
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 5, // Last 5 analyses per user
+          },
           _count: {
             select: { 
               analyses: true,
@@ -98,6 +110,13 @@ export async function GET(request: NextRequest) {
       authProviders: user.accounts?.map((a: any) => a.provider) || [],
       analysesCount: user._count?.analyses || 0,
       favoriteTeamsCount: user._count?.favoriteTeams || 0,
+      recentAnalyses: user.analyses?.map((a: any) => ({
+        id: a.id,
+        match: `${a.homeTeam} vs ${a.awayTeam}`,
+        sport: a.sport,
+        league: a.league,
+        date: a.createdAt,
+      })) || [],
       hasActiveSubscription: user.stripeCurrentPeriodEnd 
         ? new Date(user.stripeCurrentPeriodEnd) > new Date() 
         : false,

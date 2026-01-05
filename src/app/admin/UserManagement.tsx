@@ -12,7 +12,7 @@
  * - Export data
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { 
   Search, 
@@ -29,6 +29,14 @@ import {
   X,
   AlertTriangle,
 } from 'lucide-react';
+
+interface RecentAnalysis {
+  id: string;
+  match: string;
+  sport: string;
+  league: string;
+  date: string;
+}
 
 interface User {
   id: string;
@@ -52,6 +60,7 @@ interface User {
   analysesCount: number;
   favoriteTeamsCount: number;
   hasActiveSubscription: boolean;
+  recentAnalyses: RecentAnalysis[];
 }
 
 const planColors = {
@@ -74,6 +83,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [planFilter, setPlanFilter] = useState<string>('');
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -234,7 +244,8 @@ export default function UserManagement() {
             </thead>
             <tbody>
               {users.map((user) => (
-                <tr key={user.id} className="border-b border-white/5 hover:bg-white/5">
+                <React.Fragment key={user.id}>
+                <tr className="border-b border-white/5 hover:bg-white/5">
                   {/* User Info */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
@@ -300,11 +311,18 @@ export default function UserManagement() {
                     </div>
                   </td>
 
-                  {/* Activity */}
+                  {/* Activity - Clickable to expand */}
                   <td className="px-4 py-3">
-                    <div className="text-xs">
-                      <div className="text-text-secondary">
+                    <button
+                      onClick={() => setExpandedUser(expandedUser === user.id ? null : user.id)}
+                      className="text-xs text-left hover:bg-white/5 rounded p-1 -m-1 transition-colors"
+                      title={user.analysesCount > 0 ? 'Click to see recent analyses' : undefined}
+                    >
+                      <div className="text-text-secondary flex items-center gap-1">
                         {user.analysesCount} analyses
+                        {user.analysesCount > 0 && (
+                          <span className={`transition-transform ${expandedUser === user.id ? 'rotate-180' : ''}`}>▼</span>
+                        )}
                       </div>
                       <div className="text-text-muted">
                         {user.lastActiveAt 
@@ -312,7 +330,7 @@ export default function UserManagement() {
                           : 'Never'
                         }
                       </div>
-                    </div>
+                    </button>
                   </td>
 
                   {/* Credits */}
@@ -379,7 +397,33 @@ export default function UserManagement() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                
+                {/* Expanded row for recent analyses */}
+                {expandedUser === user.id && user.recentAnalyses?.length > 0 && (
+                  <tr className="bg-bg-tertiary/50">
+                    <td colSpan={8} className="px-4 py-3">
+                      <div className="text-xs">
+                        <div className="text-text-muted mb-2 font-medium">Recent Analyses:</div>
+                        <div className="space-y-1.5">
+                          {user.recentAnalyses.map((analysis) => (
+                            <div key={analysis.id} className="flex items-center gap-3 text-text-secondary">
+                              <span className="text-accent">⚽</span>
+                              <span className="font-medium">{analysis.match}</span>
+                              <span className="text-text-muted">•</span>
+                              <span className="text-text-muted">{analysis.league || analysis.sport}</span>
+                              <span className="text-text-muted">•</span>
+                              <span className="text-text-muted">
+                                {formatDistanceToNow(new Date(analysis.date), { addSuffix: true })}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            ))}
             </tbody>
           </table>
         </div>
