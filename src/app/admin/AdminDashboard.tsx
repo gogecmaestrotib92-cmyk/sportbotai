@@ -42,6 +42,7 @@ interface ChatQuery {
   team: string | null;
   usedRealTimeSearch: boolean;
   createdAt: Date;
+  user?: { email: string | null; name: string | null } | null;
 }
 
 interface ChatAnalytics {
@@ -384,6 +385,7 @@ export default function AdminDashboard({
                   <thead className="bg-bg-tertiary">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">Query</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">User</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">Category</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">Mode</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">Search</th>
@@ -400,6 +402,11 @@ export default function AdminDashboard({
                           {q.team && (
                             <div className="text-xs text-text-muted mt-1">Team: {q.team}</div>
                           )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-xs text-text-secondary truncate max-w-[120px]" title={q.user?.email || 'Anonymous'}>
+                            {q.user?.email || <span className="text-text-muted">Anonymous</span>}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           {q.category ? (

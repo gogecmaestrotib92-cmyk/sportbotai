@@ -215,6 +215,12 @@ async function getRecentQueries() {
         team: true,
         usedRealTimeSearch: true,
         createdAt: true,
+        user: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
       },
     });
   } catch {
