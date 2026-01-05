@@ -401,6 +401,9 @@ export function calculateMargin(homeOdds: number, awayOdds: number, drawOdds?: n
 /**
  * Remove vig from implied probabilities by normalizing to 100%
  * This gives the "fair" market probability without bookmaker margin
+ * 
+ * CRITICAL: For 2-way markets (NBA/NHL/NFL), home + away MUST equal exactly 100%
+ * For 3-way markets (soccer), home + draw + away MUST equal exactly 100%
  */
 export function removeVig(
   homeOdds: number, 
@@ -413,12 +416,18 @@ export function removeVig(
   
   const total = rawHome + rawAway + rawDraw;
   
-  // Normalize to 100%
-  return {
-    home: Math.round((rawHome / total) * 1000) / 10,
-    away: Math.round((rawAway / total) * 1000) / 10,
-    draw: drawOdds ? Math.round((rawDraw / total) * 1000) / 10 : undefined,
-  };
+  if (drawOdds) {
+    // 3-way market: Calculate home and draw, derive away to ensure exact 100%
+    const home = Math.round((rawHome / total) * 1000) / 10;
+    const draw = Math.round((rawDraw / total) * 1000) / 10;
+    const away = Math.round((100 - home - draw) * 10) / 10; // Ensure exact sum
+    return { home, away, draw };
+  } else {
+    // 2-way market: Calculate home, derive away to ensure exact 100%
+    const home = Math.round((rawHome / total) * 1000) / 10;
+    const away = Math.round((100 - home) * 10) / 10; // Ensure exact sum
+    return { home, away, draw: undefined };
+  }
 }
 
 // ============================================
