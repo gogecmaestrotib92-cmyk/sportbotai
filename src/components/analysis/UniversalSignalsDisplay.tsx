@@ -240,14 +240,27 @@ function ExpandableAvailability({
 
   // Get status badge styling
   const getStatusStyle = (reason: string) => {
-    if (reason === 'suspension') return 'bg-red-500/20 text-red-400 border-red-500/30';
-    if (reason === 'doubtful') return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+    const r = reason.toLowerCase();
+    if (r.includes('suspend')) return 'bg-red-500/20 text-red-400 border-red-500/30';
+    if (r.includes('doubtful') || r.includes('questionable')) return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+    if (r.includes('probable') || r.includes('gtd') || r.includes('day-to-day')) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+    if (r.includes('out')) return 'bg-red-500/20 text-red-400 border-red-500/30';
     return 'bg-zinc-600/20 text-zinc-400 border-zinc-600/30';
   };
 
   const getStatusLabel = (injury: { reason?: string; details?: string }) => {
-    if (injury.reason === 'suspension') return locale === 'sr' ? 'Suspendovan' : 'Suspended';
-    if (injury.reason === 'doubtful') return locale === 'sr' ? 'Neizvestan' : 'Doubtful';
+    // For Perplexity injuries, reason contains the full info like "Right Ankle Sprain - Out"
+    const reason = injury.reason || '';
+    
+    // If it contains injury details (e.g., "Knee - Out"), show it
+    if (reason && reason.length > 3 && !['injury', 'doubtful', 'suspension'].includes(reason.toLowerCase())) {
+      // Truncate if too long
+      return reason.length > 25 ? reason.slice(0, 22) + '...' : reason;
+    }
+    
+    // Legacy soccer format
+    if (reason === 'suspension') return locale === 'sr' ? 'Suspendovan' : 'Suspended';
+    if (reason === 'doubtful') return locale === 'sr' ? 'Neizvestan' : 'Doubtful';
     return injury.details || (locale === 'sr' ? 'Ne igra' : 'Out');
   };
 
