@@ -31,6 +31,7 @@ interface QueryMetadata {
   responseLength?: number;
   hadCitations?: boolean;
   citations?: string[];      // Store citations for reuse
+  userId?: string;           // User who submitted the query (optional)
 }
 
 interface AgentPostData {
@@ -299,6 +300,7 @@ export async function trackQuery(metadata: QueryMetadata): Promise<void> {
           responseLength: metadata.responseLength,
           hadCitations: metadata.hadCitations ?? false,
           expiresAt,
+          userId: metadata.userId,
         },
       });
     }

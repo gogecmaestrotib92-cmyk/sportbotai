@@ -68,6 +68,7 @@ model User {
   analyses               Analysis[]
   favoriteTeams          FavoriteTeam[]
   sessions               Session[]
+  chatQueries            ChatQuery[]
 }
 
 model VerificationToken {
@@ -218,6 +219,10 @@ model ChatQuery {
   answer             String?
   citations          Json?
   expiresAt          DateTime?
+  
+  // User who submitted the query (optional - anonymous queries have no user)
+  userId             String?
+  user               User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([category])
   @@index([sport])
@@ -225,6 +230,7 @@ model ChatQuery {
   @@index([queryHash])
   @@index([createdAt])
   @@index([expiresAt])
+  @@index([userId])
 }
 
 model TrendingTopic {

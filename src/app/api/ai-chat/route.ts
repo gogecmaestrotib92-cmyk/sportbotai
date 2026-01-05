@@ -2052,6 +2052,7 @@ Please answer the user's question using the real-time data above. Cite sources i
       usedRealTimeSearch: usedPerplexity || usedDataLayer,
       responseLength: response.length,
       hadCitations: citations.length > 0,
+      userId: session.user.id,
     }).catch(err => console.error('[AI-Chat] Memory tracking failed:', err));
 
     // Save to knowledge base for learning (async, don't block response)

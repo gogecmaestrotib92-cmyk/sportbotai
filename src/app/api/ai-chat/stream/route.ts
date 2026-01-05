@@ -1300,6 +1300,7 @@ RESPONSE FORMAT:
             responseLength: fullResponse.length,
             hadCitations: citations.length > 0,
             citations,  // Save citations for reuse
+            userId,     // Track who submitted the query
           }).catch(() => {});
 
           saveKnowledge({
