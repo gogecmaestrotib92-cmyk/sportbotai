@@ -1103,6 +1103,26 @@ export async function GET(request: NextRequest) {
             contextFactors: null, // Could add later
             keyPlayerBattle: null, // Requires specific API call
             referee: null, // Requires specific API call
+            // CRITICAL: Include momentumAndForm for UI to display form data!
+            momentumAndForm: {
+              homeMomentumScore: null,
+              awayMomentumScore: null,
+              homeTrend: homeFormStr.includes('W') ? (homeFormStr.startsWith('WW') ? 'up' : 'stable') : 'down',
+              awayTrend: awayFormStr.includes('W') ? (awayFormStr.startsWith('WW') ? 'up' : 'stable') : 'down',
+              keyFormFactors: analysis.riskFactors || [],
+              homeForm: enrichedData.homeForm || [],
+              awayForm: enrichedData.awayForm || [],
+              formDataSource: 'API_SPORTS',
+              headToHead: enrichedData.headToHead || [],
+              h2hSummary: {
+                totalMatches: h2h.total,
+                homeWins: h2h.homeWins,
+                awayWins: h2h.awayWins,
+                draws: h2h.draws,
+              },
+              homeStats,
+              awayStats,
+            },
             preAnalyzed: true,
             preAnalyzedAt: new Date().toISOString(),
           };
