@@ -63,7 +63,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const isAnonymous = !session?.user;
     
     const { matchId } = await params;
-    console.log(`[Match-Preview] Starting preview for: ${matchId.substring(0, 50)}... (anonymous: ${isAnonymous}, user: ${session?.user?.email || 'none'})`);
+    console.log(`[Match-Preview] === SESSION DEBUG ===`);
+    console.log(`[Match-Preview] Session exists: ${!!session}`);
+    console.log(`[Match-Preview] Session user: ${session?.user?.email || 'none'}`);
+    console.log(`[Match-Preview] Session user id: ${session?.user?.id || 'none'}`);
+    console.log(`[Match-Preview] Is anonymous: ${isAnonymous}`);
+    console.log(`[Match-Preview] Starting preview for: ${matchId.substring(0, 50)}...`);
 
     // Parse match ID to extract teams
     const matchInfo = parseMatchId(matchId);
