@@ -133,54 +133,73 @@ export function ProbabilityCompare({ modelProb, marketProb, label, teamName, loc
   const isOverpriced = diff < -3;
 
   return (
-    <div className="p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
-      {/* Team/Outcome Name */}
-      <div className="text-sm font-semibold text-zinc-200 mb-3">{teamName || label}</div>
+    <div className="flex flex-col min-h-[160px] p-3 sm:p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
+      {/* Team/Outcome Name - Fixed height header, centered */}
+      <div className="h-10 sm:h-11 mb-3 flex items-center justify-center">
+        <p 
+          className="text-sm sm:text-base font-semibold text-zinc-200 leading-tight line-clamp-2 text-center"
+          title={teamName || label}
+        >
+          {teamName || label}
+        </p>
+      </div>
       
-      {/* Vertical Stack: Market → Model */}
-      <div className="space-y-2">
-        {/* Market Row */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-zinc-500 uppercase tracking-wide">{t.market}</span>
-          <span className="text-sm font-mono text-zinc-400">
-            {canSeeExactNumbers ? `${marketProb}%` : '—'}
-          </span>
+      {/* Probability Block - Stacked vertically */}
+      <div className="space-y-3">
+        {/* MARKET */}
+        <div className="text-center">
+          <div className="text-base font-medium tabular-nums text-white">
+            {canSeeExactNumbers ? `${marketProb.toFixed(1)}%` : '—'}
+          </div>
+          <div className="text-[10px] uppercase tracking-wide text-white/40 mt-0.5">
+            {t.market}
+          </div>
         </div>
-        
-        {/* Model Row */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-zinc-500 uppercase tracking-wide">{t.model}</span>
-          <span className={`text-sm font-mono font-bold ${
-            isValue ? 'text-emerald-400' : isOverpriced ? 'text-red-400' : 'text-zinc-200'
-          }`}>
-            {canSeeExactNumbers ? `${modelProb}%` : (isValue ? '▲' : isOverpriced ? '▼' : '—')}
-          </span>
+
+        {/* MODEL */}
+        <div className="text-center">
+          <div className="text-lg font-bold tabular-nums text-gradient-gold">
+            {canSeeExactNumbers ? `${modelProb.toFixed(1)}%` : (isValue ? '▲' : isOverpriced ? '▼' : '—')}
+          </div>
+          <div className="text-[10px] uppercase tracking-wide text-white/40 mt-0.5">
+            {t.model}
+          </div>
         </div>
       </div>
       
-      {/* Edge Badge */}
-      {canSeeExactNumbers && Math.abs(diff) > 3 && (
-        <div className={`mt-3 pt-3 border-t border-zinc-700/30 text-center`}>
-          <span className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full ${
-            isValue 
-              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-              : 'bg-red-500/20 text-red-400 border border-red-500/30'
-          }`}>
-            {isValue ? `+${diff.toFixed(1)}% value` : `${diff.toFixed(1)}% overpriced`}
-          </span>
-        </div>
-      )}
-      
-      {/* Direction indicator for non-PRO */}
-      {!canSeeExactNumbers && (
-        <div className={`mt-3 pt-3 border-t border-zinc-700/30 text-center`}>
-          <span className={`text-xs font-medium ${
-            isValue ? 'text-emerald-400' : isOverpriced ? 'text-red-400' : 'text-zinc-500'
-          }`}>
-            {isValue ? 'Value detected' : isOverpriced ? 'Overpriced' : 'Fair price'}
-          </span>
-        </div>
-      )}
+      {/* Edge Badge - Pinned to bottom, contained */}
+      <div className="mt-auto pt-3">
+        {canSeeExactNumbers && Math.abs(diff) > 3 ? (
+          <div 
+            className={`px-2 py-1 rounded-md border text-center text-[10px] font-semibold truncate ${
+              isValue 
+                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
+                : 'bg-zinc-800/50 text-red-400/60 border-zinc-700/40'
+            }`}
+            title={isValue 
+              ? `+${diff.toFixed(1)}% value - model probability exceeds market by ${diff.toFixed(1)}%`
+              : `${diff.toFixed(1)}% overpriced - market probability exceeds model by ${Math.abs(diff).toFixed(1)}%`
+            }
+          >
+            {isValue ? `+${diff.toFixed(0)}% value` : `−${Math.abs(diff).toFixed(0)}% over`}
+          </div>
+        ) : !canSeeExactNumbers ? (
+          <div className="text-center border-t border-zinc-700/30 pt-3">
+            <span className={`text-xs font-medium ${
+              isValue ? 'text-emerald-400' : isOverpriced ? 'text-red-400/70' : 'text-zinc-500'
+            }`}>
+              {isValue ? 'Value detected' : isOverpriced ? 'Overpriced' : 'Fair price'}
+            </span>
+          </div>
+        ) : (
+          <div 
+            className="px-2 py-1 rounded-md border text-center text-[10px] font-semibold bg-zinc-700/30 text-zinc-400 border-zinc-600/30 truncate"
+            title="Fair price - no significant edge detected"
+          >
+            Fair price
+          </div>
+        )}
+      </div>
     </div>
   );
 }

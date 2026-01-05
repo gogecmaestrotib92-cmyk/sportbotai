@@ -398,6 +398,29 @@ export function calculateMargin(homeOdds: number, awayOdds: number, drawOdds?: n
   return Math.round(margin * 10) / 10;
 }
 
+/**
+ * Remove vig from implied probabilities by normalizing to 100%
+ * This gives the "fair" market probability without bookmaker margin
+ */
+export function removeVig(
+  homeOdds: number, 
+  awayOdds: number, 
+  drawOdds?: number
+): { home: number; away: number; draw?: number } {
+  const rawHome = 1 / homeOdds * 100;
+  const rawAway = 1 / awayOdds * 100;
+  const rawDraw = drawOdds ? 1 / drawOdds * 100 : 0;
+  
+  const total = rawHome + rawAway + rawDraw;
+  
+  // Normalize to 100%
+  return {
+    home: Math.round((rawHome / total) * 1000) / 10,
+    away: Math.round((rawAway / total) * 1000) / 10,
+    draw: drawOdds ? Math.round((rawDraw / total) * 1000) / 10 : undefined,
+  };
+}
+
 // ============================================
 // MODEL PROBABILITY CALCULATION
 // ============================================
@@ -591,30 +614,21 @@ function getBookmakerTier(bookmaker?: string): 'sharp' | 'mid' | 'soft' {
 }
 
 /**
- * Detect value by comparing model probability to implied odds
+ * Detect value by comparing model probability to implied odds (vig-removed)
  * 
- * Now includes bookmaker quality weighting:
- * - Sharp bookmakers (Pinnacle, Betfair) = more trusted implied probs
- * - Soft bookmakers = implied probs regressed toward prior
- * 
- * CALIBRATION FIX: Higher edge requirements for sharp books
+ * Uses simple vig removal for consistent math display.
+ * Edge = Model Probability - Fair Market Probability (no vig)
  */
 export function detectValue(
   modelProb: ModelProbability,
   odds: OddsData,
   hasDraw: boolean = true
 ): ValueEdge {
-  // Calculate implied probabilities from odds
-  const rawImpliedHome = oddsToImpliedProb(odds.homeOdds);
-  const rawImpliedAway = oddsToImpliedProb(odds.awayOdds);
-  const rawImpliedDraw = odds.drawOdds ? oddsToImpliedProb(odds.drawOdds) : null;
-  
-  // Adjust for bookmaker quality (sharp books trusted more)
-  const impliedHome = adjustForBookmakerQuality(rawImpliedHome, odds.bookmaker, hasDraw);
-  const impliedAway = adjustForBookmakerQuality(rawImpliedAway, odds.bookmaker, hasDraw);
-  const impliedDraw = rawImpliedDraw 
-    ? adjustForBookmakerQuality(rawImpliedDraw, odds.bookmaker, hasDraw)
-    : null;
+  // Remove vig from implied probabilities for fair comparison
+  const noVigProbs = removeVig(odds.homeOdds, odds.awayOdds, odds.drawOdds);
+  const impliedHome = noVigProbs.home;
+  const impliedAway = noVigProbs.away;
+  const impliedDraw = noVigProbs.draw ?? null;
   
   // Calculate edge for each outcome (model - implied = positive means value)
   const homeEdge = modelProb.home - impliedHome;
@@ -623,9 +637,8 @@ export function detectValue(
     ? modelProb.draw - impliedDraw 
     : -999;
   
-  // Get minimum edge requirement based on bookmaker quality
-  const bookmakerTier = getBookmakerTier(odds.bookmaker);
-  const minEdge = MIN_EDGE_BY_BOOKMAKER_QUALITY[bookmakerTier];
+  // Minimum edge threshold (3% for any meaningful value)
+  const minEdge = 3;
   
   // Find best edge (must exceed minimum threshold)
   let bestOutcome: 'home' | 'away' | 'draw' | null = null;
@@ -644,19 +657,11 @@ export function detectValue(
     bestOutcome = 'draw';
   }
   
-  // Determine strength (adjusted thresholds based on bookmaker tier)
+  // Determine strength based on edge magnitude
   let strength: ValueEdge['strength'] = 'none';
-  if (bookmakerTier === 'sharp') {
-    // Against sharp books, need bigger edges for same confidence
-    if (bestEdge >= 15) strength = 'strong';
-    else if (bestEdge >= 10) strength = 'moderate';
-    else if (bestEdge >= 8) strength = 'slight';
-  } else {
-    // Standard thresholds for softer books
-    if (bestEdge >= 10) strength = 'strong';
-    else if (bestEdge >= 6) strength = 'moderate';
-    else if (bestEdge >= 3) strength = 'slight';
-  }
+  if (bestEdge >= 10) strength = 'strong';
+  else if (bestEdge >= 6) strength = 'moderate';
+  else if (bestEdge >= 3) strength = 'slight';
   
   // Build label
   let label = 'No clear value';
@@ -693,11 +698,15 @@ export function analyzeMarket(
   // This will be recalculated if we detect steam moves
   const modelProbInitial = calculateModelProbability(signals, hasDraw, league);
   
-  // Calculate implied probabilities (raw, before quality adjustment)
-  const impliedHome = oddsToImpliedProb(odds.homeOdds);
-  const impliedAway = oddsToImpliedProb(odds.awayOdds);
-  const impliedDraw = odds.drawOdds ? oddsToImpliedProb(odds.drawOdds) : undefined;
+  // Calculate margin for display
   const margin = calculateMargin(odds.homeOdds, odds.awayOdds, odds.drawOdds);
+  
+  // Remove vig from implied probabilities - this is what we display AND use for edge calculation
+  // This ensures the visual math (modelProb - marketProb) matches the edge percentage
+  const noVigProbs = removeVig(odds.homeOdds, odds.awayOdds, odds.drawOdds);
+  const impliedHome = noVigProbs.home;
+  const impliedAway = noVigProbs.away;
+  const impliedDraw = noVigProbs.draw;
   
   // Analyze line movement if we have previous odds
   let lineMovement: LineMovement | undefined;

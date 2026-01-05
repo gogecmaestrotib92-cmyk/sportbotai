@@ -458,67 +458,87 @@ function ProbabilityCard({ label, modelProb, marketProb, t, isBestValue = false 
       ? 'bg-green-500/20 text-green-400 border-green-500/30' 
       : 'bg-green-500/10 text-green-400/70 border-green-500/20'
     : isOverpriced 
-      ? 'bg-zinc-800/50 text-red-400/50 border-zinc-700/40' // Calmer - "avoid quietly"
+      ? 'bg-zinc-800/50 text-red-400/60 border-zinc-700/40'
       : 'bg-zinc-700/30 text-zinc-400 border-zinc-600/30';
   
   // Card styling - best value gets strong glow, others dimmed
   const cardClass = isBestValue
     ? 'bg-zinc-900/70 border-green-500/40 shadow-[0_0_30px_rgba(34,197,94,0.2),0_0_60px_rgba(34,197,94,0.1)] ring-1 ring-green-500/20'
-    : 'bg-zinc-900/40 border-zinc-800/40 opacity-[0.65]'; // Noticeably dimmed
+    : 'bg-zinc-900/40 border-zinc-800/40 opacity-[0.65]';
   
   return (
-    <div className={`flex flex-col p-4 rounded-xl border ${cardClass}`}>
+    <div className={`flex flex-col min-h-[200px] p-3 sm:p-4 rounded-xl border ${cardClass}`}>
       {/* Team/Outcome Name - Header */}
-      <p className="text-sm font-semibold text-white mb-3 truncate">{label}</p>
-      
-      {/* Market Row */}
-      <div className="flex justify-between items-center py-2 border-b border-zinc-800/50">
-        <span className="text-xs text-zinc-500">Market</span>
-        <span className="text-base font-medium text-zinc-400">{marketProb.toFixed(1)}%</span>
+      <div className="h-10 sm:h-11 mb-2 flex items-center justify-center">
+        <p 
+          className="text-sm sm:text-base font-semibold text-white leading-tight line-clamp-2 text-center"
+          title={label}
+        >
+          {label}
+        </p>
       </div>
       
-      {/* Model Row */}
-      <div className="flex justify-between items-center py-2">
-        <span className="text-xs text-zinc-500">Model Est.</span>
-        <span className="text-base font-bold text-white">{modelProb.toFixed(1)}%</span>
-      </div>
-      
-      {/* Grouped Bar Chart - Market vs Model */}
-      <div className="mt-4 mb-3">
-        {/* Labels instead of numbers */}
-        <div className="flex justify-center gap-3 mb-1.5">
-          <span className="text-[9px] text-zinc-600 uppercase tracking-wider">Market</span>
-          <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-medium">Model</span>
+      {/* Bar Chart with Percentages Above Each Bar */}
+      <div className="flex-1 flex flex-col justify-center">
+        {/* Percentages row - aligned with bars below */}
+        <div className="flex justify-center gap-3 mb-1">
+          <div className="w-12 text-center">
+            <span className="text-xs font-medium tabular-nums text-white whitespace-nowrap">
+              {marketProb.toFixed(1)}%
+            </span>
+          </div>
+          <div className="w-12 text-center">
+            <span className="text-sm font-bold tabular-nums text-gradient-gold whitespace-nowrap">
+              {modelProb.toFixed(1)}%
+            </span>
+          </div>
         </div>
-        {/* Bars - model dominant, market muted */}
-        <div className="flex justify-center items-end gap-2 h-20">
-          {/* Market Bar - Very muted reference */}
+        
+        {/* Bars row - taller container, better scaling */}
+        <div className="flex justify-center items-end gap-3 h-16">
+          {/* Market Bar */}
           <div 
-            className="w-4 bg-zinc-700/35 transition-all duration-300 ease-out"
-            style={{ height: `${Math.max(marketProb * 0.75, 4)}px` }}
+            className="w-12 bg-zinc-700/50 rounded-t-sm transition-all duration-300 ease-out"
+            style={{ height: `${Math.max(marketProb * 1.1, 8)}px` }}
           />
-          {/* Model Bar - Dominant, wider, rounded, colored based on edge */}
+          {/* Model Bar */}
           <div 
-            className={`w-6 rounded-sm transition-all duration-300 ease-out ${
+            className={`w-12 rounded-t-sm transition-all duration-300 ease-out ${
               isValue 
                 ? isBestValue ? 'bg-green-500' : 'bg-green-500/70'
                 : isOverpriced 
-                  ? 'bg-red-400/45' // Calmer red - "avoid quietly"
+                  ? 'bg-red-400/50'
                   : 'bg-slate-400'
             }`}
-            style={{ height: `${Math.max(modelProb * 0.85, 4)}px` }}
+            style={{ height: `${Math.max(modelProb * 1.1, 8)}px` }}
           />
+        </div>
+        
+        {/* Labels row - below bars */}
+        <div className="flex justify-center gap-3 mt-1">
+          <span className="w-12 text-center text-[10px] uppercase tracking-wide text-white/40">Market</span>
+          <span className="w-12 text-center text-[10px] uppercase tracking-wide text-white/50 font-medium">Model</span>
         </div>
       </div>
       
-      {/* Edge Badge - Footer */}
-      <div className={`px-2 py-1.5 rounded-lg border text-center text-xs font-semibold ${edgeBadgeClass}`}>
-        {isNeutral 
-          ? 'Fair price' 
-          : isValue 
-            ? `+${diff.toFixed(1)}% ${t.value}`
-            : `${diff.toFixed(1)}% overpriced`
-        }
+      {/* Edge Badge - Footer, contained within card */}
+      <div className="mt-3 pt-2 border-t border-white/5">
+        <div 
+          className={`px-2 py-1 rounded-md border text-center text-[10px] font-semibold truncate ${edgeBadgeClass}`}
+          title={isNeutral 
+            ? 'Fair price - no significant edge detected' 
+            : isValue 
+              ? `+${diff.toFixed(1)}% value - model probability exceeds market by ${diff.toFixed(1)}%`
+              : `${diff.toFixed(1)}% overpriced - market probability exceeds model by ${Math.abs(diff).toFixed(1)}%`
+          }
+        >
+          {isNeutral 
+            ? 'Fair price' 
+            : isValue 
+              ? `+${diff.toFixed(0)}% value`
+              : `−${Math.abs(diff).toFixed(0)}% over`
+          }
+        </div>
       </div>
     </div>
   );

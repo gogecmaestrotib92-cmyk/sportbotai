@@ -34,7 +34,7 @@ const matchCardTranslations = {
     hot: 'HOT',
     watchLive: 'Watch Live',
     viewRecap: 'View Recap',
-    analyze: 'Analyze',
+    viewInsights: 'View Insights',
     tomorrow: 'Tomorrow',
   },
   sr: {
@@ -44,7 +44,7 @@ const matchCardTranslations = {
     hot: 'HOT',
     watchLive: 'Gledaj Uživo',
     viewRecap: 'Pogledaj Rezime',
-    analyze: 'Analiziraj',
+    viewInsights: 'Pogledaj',
     tomorrow: 'Sutra',
   },
 };
@@ -59,6 +59,10 @@ interface MatchCardI18nProps {
   hotScore?: number;
   tags?: string[];
   locale: Locale;
+  /** Optional badge to display (e.g., "🔥 Hottest", "📊 Trending") */
+  badge?: string;
+  /** Optional context line to show under teams */
+  contextLine?: string;
 }
 
 export default function MatchCardI18n({
@@ -70,6 +74,8 @@ export default function MatchCardI18n({
   hotScore = 0,
   tags = [],
   locale,
+  badge,
+  contextLine,
 }: MatchCardI18nProps) {
   const t = matchCardTranslations[locale];
   const localePath = locale === 'sr' ? '/sr' : '';
@@ -194,8 +200,15 @@ export default function MatchCardI18n({
         </div>
       )}
       
-      {/* Hot Score Badge (only if not live or finished) */}
-      {!isLive && !isFinished && hotScore >= 8 && (
+      {/* Custom Badge (e.g., "🔥 Hottest", "📊 Trending") - takes priority over HOT */}
+      {!isLive && !isFinished && badge && (
+        <div className="absolute -top-2 -right-2 px-2.5 py-0.5 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full text-[10px] font-bold text-white shadow-lg shadow-orange-500/30">
+          {badge}
+        </div>
+      )}
+      
+      {/* Hot Score Badge (fallback if no custom badge and hotScore >= 8) */}
+      {!isLive && !isFinished && !badge && hotScore >= 8 && (
         <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-accent rounded-full text-[10px] font-bold text-white shadow-lg shadow-accent/30">
           {t.hot}
         </div>
@@ -224,10 +237,10 @@ export default function MatchCardI18n({
       <div className="flex items-center justify-between">
         {/* Home Team */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="transition-transform duration-300 group-hover:scale-110">
+          <div className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
             <TeamLogo teamName={homeTeam} sport={sportKey} league={league} size="md" />
           </div>
-          <span className="text-sm font-bold text-white truncate">{homeTeam}</span>
+          <span className="text-xs sm:text-sm font-bold text-white truncate" title={homeTeam}>{homeTeam}</span>
         </div>
 
         {/* Score Display - Live or Finished */}
@@ -255,12 +268,21 @@ export default function MatchCardI18n({
 
         {/* Away Team */}
         <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-          <span className="text-sm font-bold text-white truncate text-right">{awayTeam}</span>
-          <div className="transition-transform duration-300 group-hover:scale-110">
+          <span className="text-xs sm:text-sm font-bold text-white truncate text-right" title={awayTeam}>{awayTeam}</span>
+          <div className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
             <TeamLogo teamName={awayTeam} sport={sportKey} league={league} size="md" />
           </div>
         </div>
       </div>
+
+      {/* Context Line - Shows market signals/intelligence */}
+      {contextLine && (
+        <div className="mt-2 px-1">
+          <p className="text-[11px] text-amber-400/80 truncate">
+            {contextLine}
+          </p>
+        </div>
+      )}
 
       {/* Tags */}
       {tags.length > 0 && (
@@ -301,7 +323,7 @@ export default function MatchCardI18n({
         ) : (
           <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-accent/15 text-accent border border-accent/30 rounded-full group-hover:bg-accent group-hover:text-white group-hover:border-accent transition-all">
             <span className="w-1.5 h-1.5 bg-accent rounded-full group-hover:bg-white animate-pulse"></span>
-            {t.analyze}
+            {t.viewInsights}
             <svg className="w-3 h-3 opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>

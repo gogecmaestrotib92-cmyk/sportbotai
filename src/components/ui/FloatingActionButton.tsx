@@ -112,11 +112,17 @@ export default function FloatingActionButton({
           {icon}
         </Link>
       ) : (
-        <button onClick={handleClick} className={buttonClasses} aria-label={label}>
-          <span className={`transition-transform duration-200 ${isExpanded ? 'rotate-45' : ''}`}>
-            {icon}
+        <div className="flex flex-col items-center gap-1">
+          <button onClick={handleClick} className={buttonClasses} aria-label={label}>
+            <span className={`transition-transform duration-200 ${isExpanded ? 'rotate-45' : ''}`}>
+              {icon}
+            </span>
+          </button>
+          {/* Mini label when closed */}
+          <span className={`text-[10px] font-medium text-white/80 transition-opacity ${isExpanded ? 'opacity-0' : 'opacity-100'}`}>
+            Menu
           </span>
-        </button>
+        </div>
       )}
     </>
   );

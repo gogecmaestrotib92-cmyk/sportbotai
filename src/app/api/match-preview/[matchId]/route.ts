@@ -534,6 +534,52 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         dataSource: 'UNAVAILABLE',
       };
     }
+    
+    // ==========================================
+    // FALLBACK: If form data unavailable (match started/in-progress), use cached pre-match data
+    // ==========================================
+    if (!enrichedData.homeForm || enrichedData.homeForm.length === 0) {
+      console.log(`[Match-Preview] Form data unavailable - checking for cached pre-match analysis...`);
+      try {
+        const cachedPreview = await cacheGet<any>(cacheKey);
+        if (cachedPreview?.viralStats?.form) {
+          console.log(`[Match-Preview] Found cached pre-match form data, using as fallback`);
+          // Extract form data from cached viral stats
+          const cachedHomeForm = cachedPreview.viralStats.form.home || '';
+          const cachedAwayForm = cachedPreview.viralStats.form.away || '';
+          
+          if (cachedHomeForm && cachedHomeForm !== '-----') {
+            // Convert form string back to form array for consistency
+            enrichedData.homeForm = cachedHomeForm.split('').map((result: string) => ({
+              result: result as 'W' | 'L' | 'D',
+              opponent: 'Previous Match',
+              score: '-',
+              date: new Date().toISOString(),
+            }));
+          }
+          if (cachedAwayForm && cachedAwayForm !== '-----') {
+            enrichedData.awayForm = cachedAwayForm.split('').map((result: string) => ({
+              result: result as 'W' | 'L' | 'D',
+              opponent: 'Previous Match',
+              score: '-',
+              date: new Date().toISOString(),
+            }));
+          }
+          
+          // Also use cached H2H if available and we don't have it
+          if (!enrichedData.headToHead && cachedPreview.viralStats?.h2h) {
+            enrichedData.h2hSummary = cachedPreview.viralStats.h2h;
+          }
+          
+          if (enrichedData.homeForm || enrichedData.awayForm) {
+            enrichedData.dataSource = 'CACHE';
+            console.log(`[Match-Preview] Fallback form data restored: home=${cachedHomeForm}, away=${cachedAwayForm}`);
+          }
+        }
+      } catch (fallbackError) {
+        console.error(`[Match-Preview] Fallback cache lookup failed:`, fallbackError);
+      }
+    }
 
     // Soccer-specific: fetch extra data (injuries, goal timing, key players, referee)
     if (isSoccer) {

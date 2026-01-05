@@ -87,12 +87,12 @@ export default function LeagueScroll() {
           <div className="marquee-container">
             <div className="marquee-track">
               {leagues.map((league) => (
-                <LeagueItem key={`a-\${league.key}`} league={league} />
+                <LeagueItem key={`a-${league.key}`} league={league} />
               ))}
             </div>
             <div className="marquee-track">
               {leagues.map((league) => (
-                <LeagueItem key={`b-\${league.key}`} league={league} />
+                <LeagueItem key={`b-${league.key}`} league={league} />
               ))}
             </div>
           </div>

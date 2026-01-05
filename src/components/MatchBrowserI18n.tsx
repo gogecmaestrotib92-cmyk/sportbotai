@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { MatchData } from '@/types';
 import MatchCardI18n from '@/components/MatchCardI18n';
 import { StaggeredItem } from '@/components/ui';
@@ -17,6 +17,17 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { Locale, getTranslations } from '@/lib/i18n/translations';
 import SportLeagueSelectorI18n from '@/components/SportLeagueSelectorI18n';
+import { 
+  getTrendingMatches, 
+  TrendingMatch, 
+  getValueFlaggedMatches, 
+  ValueFlaggedMatch,
+  getValueContextLine 
+} from '@/components/match-selector/trending';
+
+// View mode type
+type ViewMode = 'ai-picks' | 'all';
+type TimeFilter = 'today' | 'tomorrow' | 'later';
 
 interface MatchBrowserI18nProps {
   initialSport?: string;
@@ -85,16 +96,56 @@ const SEASONAL_LEAGUES = [
   'americanfootball_ncaaf',
 ];
 
+// Generate context line based on match hot factors
+function getMatchContext(match: TrendingMatch): string {
+  const factors = match.hotFactors;
+  
+  if (factors.derbyScore >= 10) {
+    return 'Rivalry match • High market interest';
+  }
+  if (factors.proximityScore >= 8) {
+    return 'Starting soon • Market active';
+  }
+  if (factors.marketScore >= 7) {
+    return 'Multiple markets available';
+  }
+  if (factors.bookmakerScore >= 6) {
+    return 'High bookmaker coverage';
+  }
+  if (factors.leagueScore >= 8) {
+    return 'Top-tier fixture';
+  }
+  return 'Market signals detected';
+}
+
+// Type for AI picks data from API
+interface AiPickData {
+  aiReason: string;
+  valueBetEdge: number | null;
+  conviction: number;
+}
+
 export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatches = 12, locale }: MatchBrowserI18nProps) {
   const t = getTranslations(locale);
   const SPORTS = getSports(locale);
   
   const [selectedSport, setSelectedSport] = useState(initialSport || 'soccer');
   const [selectedLeague, setSelectedLeague] = useState(initialLeague || SPORTS[0].leagues[0].key);
-  const [matches, setMatches] = useState<MatchData[] | null>(null);
+  const [matches, setMatches] = useState<MatchData[]>([]);
   const [leagueMatchCounts, setLeagueMatchCounts] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // AI Picks from pre-analyzed predictions (real AI data)
+  // Using plain objects instead of Set/Map to avoid hydration issues
+  const [aiPicksData, setAiPicksData] = useState<{
+    flaggedMatchIds: Record<string, boolean>;
+    aiPicksMap: Record<string, AiPickData>;
+  }>({ flaggedMatchIds: {}, aiPicksMap: {} });
+  
+  // New state for filters
+  const [viewMode, setViewMode] = useState<ViewMode>('ai-picks');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('today');
 
   // Get locale path prefix for links
   const localePath = locale === 'sr' ? '/sr' : '';
@@ -157,6 +208,41 @@ export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatch
     fetchLeagueCounts();
   }, []); // Fetch once on mount for all leagues
 
+  // Fetch AI Picks from pre-analyzed predictions (real AI data)
+  const fetchAiPicks = useCallback(async () => {
+    try {
+      const response = await fetch('/api/ai-picks?limit=50');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.aiPicks) {
+          const flaggedIds: Record<string, boolean> = {};
+          const picksMap: Record<string, AiPickData> = {};
+          
+          for (const id of (data.flaggedMatchIds || [])) {
+            flaggedIds[id] = true;
+          }
+          
+          for (const pick of data.aiPicks) {
+            picksMap[pick.matchId] = {
+              aiReason: pick.aiReason,
+              valueBetEdge: pick.valueBetEdge,
+              conviction: pick.conviction,
+            };
+          }
+          
+          setAiPicksData({ flaggedMatchIds: flaggedIds, aiPicksMap: picksMap });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch AI picks:', err);
+    }
+  }, []);
+
+  // Fetch AI picks once on mount
+  useEffect(() => {
+    fetchAiPicks();
+  }, [fetchAiPicks]);
+
   const fetchMatches = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -171,6 +257,113 @@ export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatch
       setIsLoading(false);
     }
   }, [selectedLeague]);
+
+  // Calculate hot matches for the selected league
+  const hotMatches = useMemo(() => {
+    if (!matches || matches.length === 0) return [];
+    return getTrendingMatches(matches, 3);
+  }, [matches]);
+
+  // Get hot match IDs for badge display
+  const hotMatchIds = useMemo(() => {
+    return new Set(hotMatches.map(m => m.matchId));
+  }, [hotMatches]);
+
+  // Filter matches by time
+  const filterMatchesByTime = useCallback((matchList: MatchData[], filter: TimeFilter): MatchData[] => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayAfterTomorrow = new Date(today);
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+
+    return matchList.filter(match => {
+      const matchDate = new Date(match.commenceTime);
+      if (filter === 'today') {
+        return matchDate >= today && matchDate < tomorrow;
+      } else if (filter === 'tomorrow') {
+        return matchDate >= tomorrow && matchDate < dayAfterTomorrow;
+      } else {
+        return matchDate >= dayAfterTomorrow;
+      }
+    });
+  }, []);
+
+  // AI-flagged matches: Use REAL pre-analyzed data from /api/ai-picks
+  const aiFlaggedMatches = useMemo(() => {
+    if (!matches || matches.length === 0) return [];
+    
+    // Primary: Use real AI picks from pre-analyze cron (stored in DB)
+    const hasFlaggedData = Object.keys(aiPicksData.flaggedMatchIds).length > 0;
+    if (hasFlaggedData) {
+      const flagged = matches.filter(m => aiPicksData.flaggedMatchIds[m.matchId]);
+      return flagged.sort((a, b) => {
+        const aData = aiPicksData.aiPicksMap[a.matchId];
+        const bData = aiPicksData.aiPicksMap[b.matchId];
+        const aScore = (aData?.valueBetEdge || 0) + (aData?.conviction || 0) / 10;
+        const bScore = (bData?.valueBetEdge || 0) + (bData?.conviction || 0) / 10;
+        return bScore - aScore;
+      });
+    }
+    
+    // Fallback: client-side heuristic
+    return getValueFlaggedMatches(matches, Math.min(10, matches.length));
+  }, [matches, aiPicksData]);
+
+  // Create a map for quick lookup of value data
+  const valueFlaggedMap = useMemo(() => {
+    const map = new Map<string, ValueFlaggedMatch>();
+    // Only use fallback if no API data
+    const hasFlaggedData = Object.keys(aiPicksData.flaggedMatchIds).length > 0;
+    if (!hasFlaggedData) {
+      const fallback = getValueFlaggedMatches(matches, Math.min(10, matches.length));
+      fallback.forEach(m => map.set(m.matchId, m));
+    }
+    return map;
+  }, [matches, aiPicksData.flaggedMatchIds]);
+
+  // Apply filters to get final match list
+  const filteredMatches = useMemo(() => {
+    let result = matches;
+    
+    // Apply time filter first
+    result = filterMatchesByTime(result, timeFilter);
+    
+    // Apply view mode filter
+    // Only filter to AI picks if there are flagged matches in this time period
+    if (viewMode === 'ai-picks') {
+      const flaggedIds = new Set(aiFlaggedMatches.map(m => m.matchId));
+      const aiPicksInTimeFilter = result.filter(m => flaggedIds.has(m.matchId));
+      
+      // Only apply filter if there are AI picks in this time period
+      // Otherwise show all matches (graceful degradation)
+      if (aiPicksInTimeFilter.length > 0) {
+        result = aiPicksInTimeFilter;
+      }
+    }
+    
+    return result;
+  }, [matches, timeFilter, viewMode, aiFlaggedMatches, filterMatchesByTime]);
+
+  // Count matches per time period
+  const matchCountsByTime = useMemo(() => {
+    return {
+      today: filterMatchesByTime(matches, 'today').length,
+      tomorrow: filterMatchesByTime(matches, 'tomorrow').length,
+      later: filterMatchesByTime(matches, 'later').length,
+    };
+  }, [matches, filterMatchesByTime]);
+
+  // Count AI-flagged matches per time period
+  const flaggedCountsByTime = useMemo(() => {
+    const flaggedIds = new Set(aiFlaggedMatches.map(m => m.matchId));
+    return {
+      today: filterMatchesByTime(matches, 'today').filter(m => flaggedIds.has(m.matchId)).length,
+      tomorrow: filterMatchesByTime(matches, 'tomorrow').filter(m => flaggedIds.has(m.matchId)).length,
+      later: filterMatchesByTime(matches, 'later').filter(m => flaggedIds.has(m.matchId)).length,
+    };
+  }, [matches, aiFlaggedMatches, filterMatchesByTime]);
 
   useEffect(() => {
     fetchMatches();
@@ -203,13 +396,173 @@ export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatch
           locale={locale}
         />
 
+        {/* AI Picks / All Toggle + Time Filter */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 py-4 border-b border-white/5">
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 bg-bg-elevated rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('ai-picks')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                viewMode === 'ai-picks'
+                  ? 'bg-accent text-bg-primary shadow-sm'
+                  : 'text-text-muted hover:text-white'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+              </svg>
+              {t.matches.aiPicks}
+              {viewMode === 'ai-picks' && aiFlaggedMatches.length > 0 && (
+                <span className="text-xs bg-bg-primary/30 px-1.5 py-0.5 rounded">
+                  {flaggedCountsByTime[timeFilter]}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setViewMode('all')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                viewMode === 'all'
+                  ? 'bg-white/10 text-white shadow-sm'
+                  : 'text-text-muted hover:text-white'
+              }`}
+            >
+              {t.matches.allMatches}
+              {viewMode === 'all' && (
+                <span className="text-xs bg-white/10 px-1.5 py-0.5 rounded">
+                  {matchCountsByTime[timeFilter]}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Time Filter Tabs */}
+          <div className="flex items-center gap-1 bg-bg-elevated rounded-lg p-1">
+            <button
+              onClick={() => setTimeFilter('today')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                timeFilter === 'today'
+                  ? 'bg-white/10 text-white'
+                  : 'text-text-muted hover:text-white'
+              }`}
+            >
+              {t.matches.today}
+              <span className={`text-xs px-1.5 py-0.5 rounded ${
+                timeFilter === 'today' ? 'bg-accent/20 text-accent' : 'bg-white/5'
+              }`}>
+                {viewMode === 'ai-picks' ? flaggedCountsByTime.today : matchCountsByTime.today}
+              </span>
+            </button>
+            <button
+              onClick={() => setTimeFilter('tomorrow')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                timeFilter === 'tomorrow'
+                  ? 'bg-white/10 text-white'
+                  : 'text-text-muted hover:text-white'
+              }`}
+            >
+              {t.matches.tomorrow}
+              <span className={`text-xs px-1.5 py-0.5 rounded ${
+                timeFilter === 'tomorrow' ? 'bg-accent/20 text-accent' : 'bg-white/5'
+              }`}>
+                {viewMode === 'ai-picks' ? flaggedCountsByTime.tomorrow : matchCountsByTime.tomorrow}
+              </span>
+            </button>
+            <button
+              onClick={() => setTimeFilter('later')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                timeFilter === 'later'
+                  ? 'bg-white/10 text-white'
+                  : 'text-text-muted hover:text-white'
+              }`}
+            >
+              {t.matches.later}
+              <span className={`text-xs px-1.5 py-0.5 rounded ${
+                timeFilter === 'later' ? 'bg-accent/20 text-accent' : 'bg-white/5'
+              }`}>
+                {viewMode === 'ai-picks' ? flaggedCountsByTime.later : matchCountsByTime.later}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* 🔥 Hot Matches Section - Only show in All mode */}
+        {!isLoading && !error && hotMatches.length > 0 && viewMode === 'all' && (
+          <div className="mb-6 -mx-4 sm:mx-0 relative">
+            <div className="flex items-center justify-between px-4 sm:px-0 mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🔥</span>
+                <span className="text-sm font-semibold text-white">{t.matches.hotIn} {currentLeague.name}</span>
+                <span className="text-xs text-accent bg-accent/10 px-2 py-0.5 rounded-full">{hotMatches.length} {t.matches.signals}</span>
+              </div>
+              {/* Navigation arrows - visible when more than 1 card */}
+              {hotMatches.length > 1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => {
+                      const container = document.getElementById('hot-matches-scroll-sr');
+                      if (container) container.scrollBy({ left: -320, behavior: 'smooth' });
+                    }}
+                    className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+                    aria-label="Prethodno"
+                  >
+                    <svg className="w-4 h-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const container = document.getElementById('hot-matches-scroll-sr');
+                      if (container) container.scrollBy({ left: 320, behavior: 'smooth' });
+                    }}
+                    className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+                    aria-label="Sledeće"
+                  >
+                    <svg className="w-4 h-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </div>
+            <div 
+              id="hot-matches-scroll-sr"
+              className="flex gap-4 overflow-x-auto pb-3 px-[calc(50%-140px)] sm:px-[calc(50%-160px)] scrollbar-hide snap-x snap-mandatory overflow-y-visible pt-3 scroll-px-[calc(50%-140px)] sm:scroll-px-[calc(50%-160px)]"
+            >
+              {hotMatches.map((match, index) => (
+                <div 
+                  key={match.matchId} 
+                  className="flex-shrink-0 w-[280px] sm:w-[320px] snap-center"
+                >
+                  <MatchCardI18n
+                    matchId={match.matchId}
+                    homeTeam={match.homeTeam}
+                    awayTeam={match.awayTeam}
+                    league={currentLeague.name}
+                    sportKey={selectedLeague}
+                    commenceTime={match.commenceTime}
+                    locale={locale}
+                    badge={index === 0 ? '🔥 Hottest' : '📊 Trending'}
+                    contextLine={getMatchContext(match)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Current League Header */}
         <div className="flex items-center gap-3 mb-4 py-3 border-t border-white/5">
           <LeagueLogo leagueName={currentLeague.name} sport={selectedLeague} size="md" />
           <div>
             <h3 className="text-lg font-bold text-white tracking-tight">{currentLeague.name}</h3>
             <p className="text-sm text-text-muted">
-              {isLoading ? t.matches.loadingMatches : `${matches?.length || 0} ${t.matches.upcomingMatches}`}
+              {isLoading ? t.matches.loadingMatches : (
+                viewMode === 'ai-picks' 
+                  ? flaggedCountsByTime[timeFilter] > 0
+                    ? `${flaggedCountsByTime[timeFilter]} ${t.matches.aiFlaggedMatches}`
+                    : `${filteredMatches.length} ${t.matches.matchesText} • ${locale === 'sr' ? 'Nema AI izbora za' : 'No AI picks for'} ${timeFilter}`
+                  : `${filteredMatches.length} ${t.matches.of} ${matches?.length || 0} ${t.matches.matchesText}`
+              )}
             </p>
           </div>
         </div>
@@ -274,21 +627,99 @@ export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatch
         )}
 
         {/* Matches Grid */}
-        {!isLoading && !error && matches && matches.length > 0 && (
+        {!isLoading && !error && filteredMatches && filteredMatches.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {matches.slice(0, maxMatches).map((match, index) => (
-              <StaggeredItem key={match.matchId} index={index} staggerDelay={50} initialDelay={80}>
-                <MatchCardI18n
-                  matchId={match.matchId}
-                  homeTeam={match.homeTeam}
-                  awayTeam={match.awayTeam}
-                  league={currentLeague.name}
-                  sportKey={selectedLeague}
-                  commenceTime={match.commenceTime}
-                  locale={locale}
-                />
-              </StaggeredItem>
-            ))}
+            {filteredMatches.slice(0, maxMatches).map((match, index) => {
+              // Get AI data from real API or fallback heuristic
+              const aiPickData = aiPicksData.aiPicksMap[match.matchId];
+              const valueFlagged = valueFlaggedMap.get(match.matchId);
+              const trendingMatch = hotMatches.find(m => m.matchId === match.matchId);
+              
+              // Determine badge and context based on view mode
+              let badge: string | undefined;
+              let contextLine: string | undefined;
+              
+              if (viewMode === 'ai-picks') {
+                badge = `🎯 ${t.matches.aiFlagged}`;
+                // Priority: Real AI reason > fallback heuristic > generic
+                if (aiPickData) {
+                  contextLine = aiPickData.aiReason;
+                } else if (valueFlagged) {
+                  contextLine = getValueContextLine(valueFlagged);
+                }
+              } else if (trendingMatch) {
+                contextLine = getMatchContext(trendingMatch);
+              }
+              
+              return (
+                <StaggeredItem key={match.matchId} index={index} staggerDelay={50} initialDelay={80}>
+                  <MatchCardI18n
+                    matchId={match.matchId}
+                    homeTeam={match.homeTeam}
+                    awayTeam={match.awayTeam}
+                    league={currentLeague.name}
+                    sportKey={selectedLeague}
+                    commenceTime={match.commenceTime}
+                    locale={locale}
+                    badge={badge}
+                    contextLine={contextLine}
+                  />
+                </StaggeredItem>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Empty State - No matches after filters */}
+        {!isLoading && !error && filteredMatches.length === 0 && matches.length > 0 && (
+          <div className="text-center py-12 bg-gradient-to-b from-accent/5 to-transparent rounded-2xl border border-accent/10">
+            <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center">
+              <svg className="w-7 h-7 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">
+              {matchCountsByTime[timeFilter] === 0 
+                ? (locale === 'sr' 
+                    ? `Nema utakmica ${timeFilter === 'today' ? 'danas' : timeFilter === 'tomorrow' ? 'sutra' : 'ove nedelje'}`
+                    : `No matches ${timeFilter === 'today' ? 'today' : timeFilter === 'tomorrow' ? 'tomorrow' : 'this week'}`)
+                : t.matches.noAiPicksForTimeframe
+              }
+            </h3>
+            <p className="text-gray-400 mb-4 max-w-sm mx-auto text-sm">
+              {matchCountsByTime[timeFilter] === 0
+                ? (locale === 'sr'
+                    ? `Nema zakazanih utakmica. Probajte drugi dan.`
+                    : `No matches scheduled. Check another day.`)
+                : `${t.matches.noAiPicksForTimeframe}. ${t.matches.viewAllMatches}`
+              }
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {viewMode === 'ai-picks' && matchCountsByTime[timeFilter] > 0 && (
+                <button
+                  onClick={() => setViewMode('all')}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  {t.matches.viewAllMatches}
+                </button>
+              )}
+              {timeFilter !== 'tomorrow' && matchCountsByTime.tomorrow > 0 && (
+                <button
+                  onClick={() => setTimeFilter('tomorrow')}
+                  className="px-4 py-2 bg-accent/10 hover:bg-accent/20 text-accent rounded-lg text-sm font-medium transition-colors"
+                >
+                  {t.matches.checkTomorrow} ({matchCountsByTime.tomorrow})
+                </button>
+              )}
+              {timeFilter !== 'later' && matchCountsByTime.later > 0 && (
+                <button
+                  onClick={() => setTimeFilter('later')}
+                  className="px-4 py-2 bg-accent/10 hover:bg-accent/20 text-accent rounded-lg text-sm font-medium transition-colors"
+                >
+                  {locale === 'sr' ? 'Pogledaj kasnije' : 'Check Later'} ({matchCountsByTime.later})
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -335,10 +766,11 @@ export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatch
         )}
 
         {/* Show More */}
-        {!isLoading && matches && matches.length > maxMatches && (
+        {!isLoading && filteredMatches && filteredMatches.length > maxMatches && (
           <div className="text-center mt-6">
             <p className="text-sm text-text-muted">
-              {t.matches.showingOf} {maxMatches} {t.matches.of} {matches?.length || 0} {t.matches.matchesText}
+              {t.matches.showingOf} {maxMatches} {t.matches.of} {filteredMatches.length} {t.matches.matchesText}
+              {viewMode === 'ai-picks' && ` (${matches.length} total)`}
             </p>
           </div>
         )}

@@ -277,6 +277,20 @@ export const translations = {
       noMatches: 'No matches',
       noUpcoming: 'No upcoming',
       leaguesCount: 'leagues',
+      // New AI Picks translations
+      aiPicks: 'AI Picks',
+      allMatches: 'All Matches',
+      today: 'Today',
+      tomorrow: 'Tomorrow',
+      later: 'Later',
+      aiFlaggedMatches: 'AI-flagged matches',
+      noAiPicksForTimeframe: 'No AI Picks for this timeframe',
+      noMatchesFound: 'No matches found',
+      viewAllMatches: 'View All Matches',
+      checkTomorrow: 'Check Tomorrow',
+      hotIn: 'Hot in',
+      signals: 'signals',
+      aiFlagged: 'AI Flagged',
       sports: {
         soccer: 'Soccer',
         basketball: 'Basketball',
@@ -619,6 +633,20 @@ export const translations = {
       noMatches: 'Nema mečeva',
       noUpcoming: 'Nema predstojećih',
       leaguesCount: 'liga',
+      // New AI Picks translations
+      aiPicks: 'AI Izbori',
+      allMatches: 'Svi Mečevi',
+      today: 'Danas',
+      tomorrow: 'Sutra',
+      later: 'Kasnije',
+      aiFlaggedMatches: 'AI-označenih mečeva',
+      noAiPicksForTimeframe: 'Nema AI izbora za ovaj period',
+      noMatchesFound: 'Mečevi nisu pronađeni',
+      viewAllMatches: 'Prikaži Sve Mečeve',
+      checkTomorrow: 'Proveri Sutra',
+      hotIn: 'Popularno u',
+      signals: 'signala',
+      aiFlagged: 'AI Označeno',
       sports: {
         soccer: 'Fudbal',
         basketball: 'Košarka',
@@ -853,6 +881,20 @@ export type TranslationsType = {
     noMatches: string;
     noUpcoming: string;
     leaguesCount: string;
+    // New AI Picks translations
+    aiPicks: string;
+    allMatches: string;
+    today: string;
+    tomorrow: string;
+    later: string;
+    aiFlaggedMatches: string;
+    noAiPicksForTimeframe: string;
+    noMatchesFound: string;
+    viewAllMatches: string;
+    checkTomorrow: string;
+    hotIn: string;
+    signals: string;
+    aiFlagged: string;
     sports: {
       soccer: string;
       basketball: string;
