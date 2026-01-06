@@ -237,13 +237,13 @@ function getAngleGuidance(angle: NarrativeAngle): string {
  * Uses normalizeToUniversalSignals() to build proper signals,
  * then analyzeMarket() to get computed probabilities with form weighting.
  */
-function computeProbabilities(
+async function computeProbabilities(
   enrichedData: MultiSportEnrichedData | null,
   odds: { home: number; away: number; draw?: number | null },
   sport: string,
   homeTeam: string,
   awayTeam: string
-): ComputedProbabilities | null {
+): Promise<ComputedProbabilities | null> {
   // Need minimum data to compute
   if (!enrichedData?.homeStats || !enrichedData?.awayStats) {
     console.log('[Pipeline] Insufficient stats data for computed probabilities');
@@ -343,10 +343,12 @@ function computeProbabilities(
   // Same as pre-analyze cron job for consistency
   
   const pipelineInput = {
+    matchId: `live_${homeTeam}_${awayTeam}`.replace(/\s+/g, '_'),
     sport,
+    league: sport.includes('_') ? sport.split('_').slice(-1)[0] : sport,
     homeTeam,
     awayTeam,
-    kickoff: new Date().toISOString(), // Live analysis - kickoff time not critical
+    kickoff: new Date(), // Live analysis - kickoff time not critical
     homeStats: {
       played: rawInput.homeStats.played,
       wins: rawInput.homeStats.wins,
@@ -366,7 +368,12 @@ function computeProbabilities(
     homeForm,
     awayForm,
     h2h: rawInput.h2h,
-    odds: oddsData,
+    odds: [{
+      bookmaker: 'input',
+      homeOdds: oddsData.homeOdds,
+      awayOdds: oddsData.awayOdds,
+      drawOdds: oddsData.drawOdds,
+    }],
     config: {
       logPredictions: false,
       minEdgeToShow: 0.02,
@@ -1178,7 +1185,7 @@ export async function POST(request: NextRequest) {
       // COMPUTE PROBABILITIES (Data-2 Layer)
       // Uses mathematical models instead of LLM guessing
       // ========================================
-      const computedProbs = computeProbabilities(
+      const computedProbs = await computeProbabilities(
         enrichedData,
         normalizedRequest.matchData.odds || { home: 0, away: 0 },
         normalizedRequest.matchData.sport || 'soccer',

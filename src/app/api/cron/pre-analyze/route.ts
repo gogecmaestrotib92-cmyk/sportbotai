@@ -987,12 +987,13 @@ export async function GET(request: NextRequest) {
           }
           
           const matchRef = `${event.home_team} vs ${event.away_team}`;
-          const matchDate = new Date(event.commence_time).toISOString().split('T')[0];
+          const matchDateStr = new Date(event.commence_time).toISOString().split('T')[0];
+          const matchDate = new Date(event.commence_time); // Date object for pipeline
           const cacheKey = CACHE_KEYS.matchPreview(
             event.home_team, 
             event.away_team, 
             sport.key, 
-            matchDate
+            matchDateStr
           );
           
           console.log(`[Pre-Analyze] Analyzing: ${matchRef} | Cache key: ${cacheKey}`);
@@ -1027,7 +1028,7 @@ export async function GET(request: NextRequest) {
           // 3. Prediction creation
           // 
           // SINGLE SOURCE OF TRUTH: All probabilities come from here!
-          const matchDate = new Date(event.commence_time);
+          // Note: matchDate already defined above as new Date(event.commence_time)
           const pipelineOdds: BookmakerOdds[] = [{
             bookmaker: 'consensus',
             homeOdds: consensus.home,
@@ -1438,8 +1439,15 @@ export async function GET(request: NextRequest) {
             }
             
             // Use deterministic ID to prevent duplicates (based on event + date, not timestamp)
-            const matchDateStr = matchDate.toISOString().split('T')[0];
-            const predictionId = `pre_${sport.key}_${event.id}_${matchDateStr}`;
+            const predictionDateStr = matchDate.toISOString().split('T')[0];
+            const predictionId = `pre_${sport.key}_${event.id}_${predictionDateStr}`;
+            
+            // Calculate implied probabilities for storage
+            const impliedProbs = {
+              home: 1 / consensus.home,
+              away: 1 / consensus.away,
+              draw: consensus.draw ? 1 / consensus.draw : 0,
+            };
             
             // Build prediction text from value bet
             const valueTeam = valueBetSide === 'HOME' ? event.home_team :
