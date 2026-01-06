@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   description: META.privacy.description,
   alternates: {
     canonical: '/privacy',
+    languages: {
+      'en': '/privacy',
+      'sr': '/sr/privacy',
+      'x-default': '/privacy',
+    },
   },
   robots: {
     index: true,

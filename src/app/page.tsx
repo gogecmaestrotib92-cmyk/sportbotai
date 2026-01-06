@@ -19,10 +19,15 @@ import LeagueScroll from '@/components/LeagueScroll';
 import TestimonialsCarousel from '@/components/TestimonialsCarousel';
 import { getOrganizationSchema, getWebsiteSchema, getMatchAnalyzerSchema, getAIDeskSchema, getHomepageFAQSchema, getHomeBreadcrumb } from '@/lib/seo';
 
-// Homepage metadata with canonical
+// Homepage metadata with canonical and hreflang
 export const metadata: Metadata = {
   alternates: {
     canonical: '/',
+    languages: {
+      'en': '/',
+      'sr': '/sr',
+      'x-default': '/',
+    },
   },
 };
 

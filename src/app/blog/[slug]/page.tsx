@@ -137,6 +137,11 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     keywords: post.tags.join(', '),
     alternates: {
       canonical: `/blog/${slug}`,
+      languages: {
+        'en': `/blog/${slug}`,
+        'sr': `/sr/blog/${slug}`,
+        'x-default': `/blog/${slug}`,
+      },
     },
     openGraph: {
       title: post.metaTitle || post.title,

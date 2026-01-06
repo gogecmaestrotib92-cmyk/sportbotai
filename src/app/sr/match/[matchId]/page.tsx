@@ -33,6 +33,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: uniqueTitle,
     description: uniqueDescription,
+    alternates: {
+      canonical: `/sr/match/${matchId}`,
+      languages: {
+        'en': `/match/${matchId}`,
+        'sr': `/sr/match/${matchId}`,
+        'x-default': `/match/${matchId}`,
+      },
+    },
     openGraph: {
       title: uniqueTitle,
       description: uniqueDescription,

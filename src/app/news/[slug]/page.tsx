@@ -129,6 +129,11 @@ export async function generateMetadata({ params }: NewsArticlePageProps): Promis
     alternates: {
       // Canonical for news section - Google News indexes this URL
       canonical: `https://www.sportbotai.com/news/${slug}`,
+      languages: {
+        'en': `/news/${slug}`,
+        'sr': `/sr/news/${slug}`,
+        'x-default': `/news/${slug}`,
+      },
     },
     openGraph: {
       title: post.metaTitle || displayTitle,

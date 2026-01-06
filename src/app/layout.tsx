@@ -7,6 +7,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { Suspense } from 'react';
+import { headers } from 'next/headers';
 import './globals.css';
 import HeaderI18n from '@/components/HeaderI18n';
 import FooterI18n from '@/components/FooterI18n';
@@ -147,17 +148,22 @@ export const metadata: Metadata = {
   // },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Detect locale from URL path
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || headersList.get('x-invoke-path') || '';
+  const locale = pathname.startsWith('/sr') ? 'sr' : 'en';
+  
   // Structured data for SEO
   const organizationSchema = getOrganizationSchema();
   const websiteSchema = getWebsiteSchema();
 
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         {/* Critical inline CSS - fallback for slow networks/JS failures */}
         <style dangerouslySetInnerHTML={{ __html: `

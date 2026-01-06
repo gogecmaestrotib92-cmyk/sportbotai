@@ -28,8 +28,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_CONFIG.url}/sr/blog`,
     languages: {
-      'en': `${SITE_CONFIG.url}/blog`,
-      'sr': `${SITE_CONFIG.url}/sr/blog`,
+      'en': '/blog',
+      'sr': '/sr/blog',
+      'x-default': '/blog',
     },
   },
 };

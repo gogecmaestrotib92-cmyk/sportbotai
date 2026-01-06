@@ -25,6 +25,11 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: `${SITE_CONFIG.url}/news`,
+    languages: {
+      'en': '/news',
+      'sr': '/sr/news',
+      'x-default': '/news',
+    },
     types: {
       'application/rss+xml': `${SITE_CONFIG.url}/news/feed.xml`,
     },

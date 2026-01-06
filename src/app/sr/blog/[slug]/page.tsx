@@ -117,8 +117,9 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     alternates: {
       canonical: `${SITE_CONFIG.url}/sr/blog/${slug}`,
       languages: {
-        'en': `${SITE_CONFIG.url}/blog/${slug}`,
-        'sr': `${SITE_CONFIG.url}/sr/blog/${slug}`,
+        'en': `/blog/${slug}`,
+        'sr': `/sr/blog/${slug}`,
+        'x-default': `/blog/${slug}`,
       },
     },
     openGraph: {

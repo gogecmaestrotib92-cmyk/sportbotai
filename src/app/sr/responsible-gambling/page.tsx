@@ -1,18 +1,18 @@
 /**
- * Responsible Gambling Page (/responsible-gambling)
+ * Responsible Gambling Page - Serbian (/sr/responsible-gambling)
  * 
- * Important page promoting responsible gambling.
- * This page is an ethical and regulatory requirement.
+ * Stranica o odgovornom klađenju.
+ * Ova stranica je etički i regulatorni zahtev.
  */
 
 import { Metadata } from 'next';
-import { META } from '@/lib/seo';
+import { SITE_CONFIG } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: META.responsibleGambling.title,
-  description: META.responsibleGambling.description,
+  title: 'Odgovorno Klađenje | SportBot AI',
+  description: 'Klađenje treba da bude zabava, ne problem. Saznajte kako se kladiti odgovorno i prepoznajte znake problematičnog kockanja.',
   alternates: {
-    canonical: '/responsible-gambling',
+    canonical: '/sr/responsible-gambling',
     languages: {
       'en': '/responsible-gambling',
       'sr': '/sr/responsible-gambling',
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ResponsibleGamblingPage() {
+export default function ResponsibleGamblingPageSr() {
   return (
     <div className="bg-bg min-h-screen">
       {/* Header */}
@@ -36,9 +36,9 @@ export default function ResponsibleGamblingPage() {
               <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">Responsible Gambling</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">Odgovorno Klađenje</h1>
           <p className="text-xl text-text-secondary">
-            Betting should be fun, not a problem. Here&apos;s how to gamble responsibly.
+            Klađenje treba da bude zabava, ne problem. Evo kako se kladiti odgovorno.
           </p>
         </div>
       </section>
@@ -48,21 +48,21 @@ export default function ResponsibleGamblingPage() {
         <div className="max-w-4xl mx-auto">
           {/* Introduction */}
           <div className="card mb-8">
-            <h2 className="text-xl font-bold text-white mb-4">Our Commitment</h2>
+            <h2 className="text-xl font-bold text-white mb-4">Naša Posvećenost</h2>
             <p className="text-text-secondary leading-relaxed mb-4">
-              SportBot AI is committed to promoting responsible gambling. Our tool is designed 
-              to help you make informed decisions, but <strong className="text-white">you should never bet more than 
-              you can afford to lose</strong>.
+              SportBot AI je posvećen promovisanju odgovornog klađenja. Naš alat je dizajniran 
+              da vam pomogne da donosite informisane odluke, ali <strong className="text-white">nikada ne treba da se kladite 
+              više nego što možete da priuštite da izgubite</strong>.
             </p>
             <p className="text-text-secondary leading-relaxed">
-              Sports betting carries inherent risk. Even the best analysis cannot guarantee 
-              a win. Always gamble responsibly and recognize the signs of problem gambling.
+              Sportsko klađenje nosi inherentni rizik. Čak ni najbolja analiza ne može garantovati 
+              pobedu. Uvek se kladite odgovorno i prepoznajte znake problematičnog kockanja.
             </p>
           </div>
 
           {/* Tips */}
           <div className="card mb-8">
-            <h2 className="text-xl font-bold text-white mb-4">Tips for Responsible Gambling</h2>
+            <h2 className="text-xl font-bold text-white mb-4">Saveti za Odgovorno Klađenje</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -71,8 +71,8 @@ export default function ResponsibleGamblingPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">Set a Budget</h3>
-                  <p className="text-text-secondary text-sm">Set a monthly limit for betting and stick to it strictly.</p>
+                  <h3 className="font-semibold text-white">Postavite Budžet</h3>
+                  <p className="text-text-secondary text-sm">Postavite mesečni limit za klađenje i strogo ga se pridržavajte.</p>
                 </div>
               </div>
 
@@ -83,8 +83,8 @@ export default function ResponsibleGamblingPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">Limit Your Time</h3>
-                  <p className="text-text-secondary text-sm">Don&apos;t spend too much time betting. Set a timer.</p>
+                  <h3 className="font-semibold text-white">Ograničite Vreme</h3>
+                  <p className="text-text-secondary text-sm">Ne trošite previše vremena na klađenje. Postavite tajmer.</p>
                 </div>
               </div>
 
@@ -95,8 +95,8 @@ export default function ResponsibleGamblingPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">Don&apos;t Chase Losses</h3>
-                  <p className="text-text-secondary text-sm">If you lose, don&apos;t try to recover with bigger bets.</p>
+                  <h3 className="font-semibold text-white">Ne Jurite Gubitke</h3>
+                  <p className="text-text-secondary text-sm">Ako izgubite, ne pokušavajte da nadoknadite većim opkladama.</p>
                 </div>
               </div>
 
@@ -107,8 +107,8 @@ export default function ResponsibleGamblingPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">Bet Sober</h3>
-                  <p className="text-text-secondary text-sm">Never bet under the influence of alcohol or emotions.</p>
+                  <h3 className="font-semibold text-white">Kladite se Trezni</h3>
+                  <p className="text-text-secondary text-sm">Nikada se ne kladite pod uticajem alkohola ili emocija.</p>
                 </div>
               </div>
 
@@ -119,8 +119,8 @@ export default function ResponsibleGamblingPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">Recognize the Signs</h3>
-                  <p className="text-text-secondary text-sm">Be aware of addiction signs and react in time.</p>
+                  <h3 className="font-semibold text-white">Prepoznajte Znake</h3>
+                  <p className="text-text-secondary text-sm">Budite svesni znakova zavisnosti i reagujte na vreme.</p>
                 </div>
               </div>
 
@@ -131,8 +131,8 @@ export default function ResponsibleGamblingPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">Entertainment, Not Income</h3>
-                  <p className="text-text-secondary text-sm">Betting is not a way to make money. Treat it as entertainment.</p>
+                  <h3 className="font-semibold text-white">Zabava, Ne Prihod</h3>
+                  <p className="text-text-secondary text-sm">Klađenje nije način za zaradu. Tretirajte ga kao zabavu.</p>
                 </div>
               </div>
             </div>
@@ -144,44 +144,44 @@ export default function ResponsibleGamblingPage() {
               <svg className="w-6 h-6 text-danger" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
-              Signs of Problem Gambling
+              Znaci Problematičnog Kockanja
             </h2>
             <p className="text-text-secondary mb-4">
-              If you recognize any of these signs, it may be time to seek help:
+              Ako prepoznate bilo koji od ovih znakova, možda je vreme da potražite pomoć:
             </p>
             <ul className="space-y-2 text-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-danger">•</span>
-                Betting money meant for bills or basic needs
+                Klađenje novca namenjenog za račune ili osnovne potrebe
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-danger">•</span>
-                Lying to family or friends about your betting
+                Laganje porodici ili prijateljima o vašem klađenju
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-danger">•</span>
-                Feeling the need to bet increasingly larger amounts
+                Osećaj potrebe da se kladite na sve veće iznose
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-danger">•</span>
-                Becoming anxious or depressed when you can&apos;t bet
+                Postajanje anksiozni ili depresivni kada ne možete da se kladite
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-danger">•</span>
-                Neglecting work, school, or family because of betting
+                Zanemarivanje posla, škole ili porodice zbog klađenja
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-danger">•</span>
-                Borrowing money or selling things to bet
+                Pozajmljivanje novca ili prodaja stvari da biste se kladili
               </li>
             </ul>
           </div>
 
           {/* Help resources */}
           <div className="card mb-8 bg-primary/10 border-primary/30">
-            <h2 className="text-xl font-bold text-white mb-4">Help Resources</h2>
+            <h2 className="text-xl font-bold text-white mb-4">Resursi za Pomoć</h2>
             <p className="text-text-secondary mb-6">
-              If you or someone you know has a gambling problem, seek help:
+              Ako vi ili neko koga poznajete ima problem sa kockanjem, potražite pomoć:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <a 
@@ -191,7 +191,7 @@ export default function ResponsibleGamblingPage() {
                 className="bg-bg-hover p-4 rounded-lg border border-divider hover:border-primary/50 transition-colors"
               >
                 <h3 className="font-semibold text-primary">Gamblers Anonymous</h3>
-                <p className="text-text-secondary text-sm">International support organization</p>
+                <p className="text-text-secondary text-sm">Međunarodna organizacija za podršku</p>
               </a>
               <a 
                 href="https://www.begambleaware.org" 
@@ -200,7 +200,7 @@ export default function ResponsibleGamblingPage() {
                 className="bg-bg-hover p-4 rounded-lg border border-divider hover:border-primary/50 transition-colors"
               >
                 <h3 className="font-semibold text-primary">BeGambleAware</h3>
-                <p className="text-text-secondary text-sm">Information and support</p>
+                <p className="text-text-secondary text-sm">Informacije i podrška</p>
               </a>
               <a 
                 href="https://www.gamcare.org.uk" 
@@ -209,7 +209,7 @@ export default function ResponsibleGamblingPage() {
                 className="bg-bg-hover p-4 rounded-lg border border-divider hover:border-primary/50 transition-colors"
               >
                 <h3 className="font-semibold text-primary">GamCare</h3>
-                <p className="text-text-secondary text-sm">Free support and counseling</p>
+                <p className="text-text-secondary text-sm">Besplatna podrška i savetovanje</p>
               </a>
               <a 
                 href="https://www.ncpgambling.org" 
@@ -218,25 +218,25 @@ export default function ResponsibleGamblingPage() {
                 className="bg-bg-hover p-4 rounded-lg border border-divider hover:border-primary/50 transition-colors"
               >
                 <h3 className="font-semibold text-primary">NCPG</h3>
-                <p className="text-text-secondary text-sm">National Council on Problem Gambling</p>
+                <p className="text-text-secondary text-sm">Nacionalni savet za problematično kockanje</p>
               </a>
             </div>
           </div>
 
           {/* Self-exclusion */}
           <div className="card">
-            <h2 className="text-xl font-bold text-white mb-4">Self-Exclusion</h2>
+            <h2 className="text-xl font-bold text-white mb-4">Samoiskljičenje</h2>
             <p className="text-text-secondary leading-relaxed mb-4">
-              If you feel like you&apos;re losing control, most bookmakers offer self-exclusion options:
+              Ako osećate da gubite kontrolu, većina kladionica nudi opcije samoiskljičenja:
             </p>
             <ul className="list-disc list-inside text-text-secondary space-y-2 mb-4">
-              <li>Daily/weekly/monthly deposit limits</li>
-              <li>Loss limits</li>
-              <li>Temporary account freeze (cooling-off period)</li>
-              <li>Permanent self-exclusion</li>
+              <li>Dnevni/nedeljni/mesečni limiti depozita</li>
+              <li>Limiti gubitaka</li>
+              <li>Privremeno zamrzavanje naloga (period hlađenja)</li>
+              <li>Trajno samoiskljičenje</li>
             </ul>
             <p className="text-text-secondary leading-relaxed">
-              Contact your bookmaker for more information about these options.
+              Kontaktirajte vašu kladionicu za više informacija o ovim opcijama.
             </p>
           </div>
         </div>

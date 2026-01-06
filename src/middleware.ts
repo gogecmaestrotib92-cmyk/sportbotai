@@ -16,15 +16,23 @@ const SERBIAN_COUNTRIES = ['RS', 'BA', 'ME', 'HR', 'MK', 'XK'];
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Skip middleware for API routes, static files, Serbian routes, etc.
+  // Always add pathname header for locale detection in layout
+  const response = NextResponse.next();
+  response.headers.set('x-pathname', pathname);
+  
+  // Skip rest of middleware for API routes, static files
   if (
     pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
-    pathname.startsWith('/sr') || // IMPORTANT: Skip middleware for Serbian pages
     pathname.includes('.')
   ) {
-    return NextResponse.next();
+    return response;
+  }
+  
+  // For Serbian routes, just return with the pathname header
+  if (pathname.startsWith('/sr')) {
+    return response;
   }
   
   // Get JWT token (works with jwt session strategy)
@@ -42,7 +50,9 @@ export async function middleware(request: NextRequest) {
   
   // Redirect to analyzer if accessing auth route while logged in
   if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL('/analyzer', request.url));
+    const redirectResponse = NextResponse.redirect(new URL('/analyzer', request.url));
+    redirectResponse.headers.set('x-pathname', pathname);
+    return redirectResponse;
   }
   
   // Geo-based language redirect (only for homepage)
@@ -54,10 +64,12 @@ export async function middleware(request: NextRequest) {
       if (preferredLocale) {
         // User has already chosen a language, respect it
         if (preferredLocale === 'sr') {
-          return NextResponse.redirect(new URL('/sr', request.url));
+          const redirectResponse = NextResponse.redirect(new URL('/sr', request.url));
+          redirectResponse.headers.set('x-pathname', '/sr');
+          return redirectResponse;
         }
         // If English, stay on /
-        return NextResponse.next();
+        return response;
       }
       
       // No preference cookie - check geo location
@@ -65,17 +77,17 @@ export async function middleware(request: NextRequest) {
       
       if (SERBIAN_COUNTRIES.includes(country)) {
         // Set cookie to remember this choice and redirect to Serbian
-        const response = NextResponse.redirect(new URL('/sr', request.url));
-        response.cookies.set('preferred-locale', 'sr', {
+        const redirectResponse = NextResponse.redirect(new URL('/sr', request.url));
+        redirectResponse.headers.set('x-pathname', '/sr');
+        redirectResponse.cookies.set('preferred-locale', 'sr', {
           maxAge: 60 * 60 * 24 * 365, // 1 year
           path: '/',
           sameSite: 'lax',
         });
-        return response;
+        return redirectResponse;
       }
       
       // Set English as default for non-Serbian countries
-      const response = NextResponse.next();
       response.cookies.set('preferred-locale', 'en', {
         maxAge: 60 * 60 * 24 * 365, // 1 year
         path: '/',
@@ -85,17 +97,22 @@ export async function middleware(request: NextRequest) {
     } catch (error) {
       // If geo-detection fails, just serve English homepage
       console.error('Middleware geo-detection error:', error);
-      return NextResponse.next();
+      return response;
     }
   }
   
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
   matcher: [
-    '/',
-    '/login',
-    '/register',
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder files (images, etc.)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|json|webmanifest)$).*)',
   ],
 };

@@ -31,8 +31,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_CONFIG.url}/sr/pricing`,
     languages: {
-      'en': `${SITE_CONFIG.url}/pricing`,
-      'sr': `${SITE_CONFIG.url}/sr/pricing`,
+      'en': '/pricing',
+      'sr': '/sr/pricing',
+      'x-default': '/pricing',
     },
   },
 };

@@ -36,6 +36,11 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: `${SITE_CONFIG.url}/matches`,
+    languages: {
+      'en': '/matches',
+      'sr': '/sr/matches',
+      'x-default': '/matches',
+    },
   },
 };
 

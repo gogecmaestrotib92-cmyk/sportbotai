@@ -34,6 +34,11 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: `${SITE_CONFIG.url}/blog`,
+    languages: {
+      'en': '/blog',
+      'sr': '/sr/blog',
+      'x-default': '/blog',
+    },
   },
 };
 

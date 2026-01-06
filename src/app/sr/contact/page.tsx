@@ -1,7 +1,7 @@
 /**
- * Contact Page - SportBot AI
+ * Contact Page - Serbian (/sr/contact)
  * 
- * Contact form with email submission
+ * Kontakt stranica sa formom za slanje poruka
  */
 
 import type { Metadata } from 'next';
@@ -9,10 +9,10 @@ import ContactForm from '@/components/ContactForm';
 import { SITE_CONFIG } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'Contact Us',
-  description: 'Get in touch with SportBot AI. Questions, feedback, or partnership inquiries - we\'d love to hear from you.',
+  title: 'Kontaktirajte Nas | SportBot AI',
+  description: 'Stupite u kontakt sa SportBot AI timom. Pitanja, povratne informacije ili poslovni upiti - rado ćemo vas čuti.',
   alternates: {
-    canonical: '/contact',
+    canonical: '/sr/contact',
     languages: {
       'en': '/contact',
       'sr': '/sr/contact',
@@ -21,17 +21,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ContactPage() {
+export default function ContactPageSr() {
   return (
     <main className="min-h-screen bg-bg py-16 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-text-primary mb-4">
-            Contact Us
+            Kontaktirajte Nas
           </h1>
           <p className="text-text-secondary text-lg">
-            Have a question, feedback, or business inquiry? We&apos;d love to hear from you.
+            Imate pitanje, povratnu informaciju ili poslovni upit? Rado ćemo vas čuti.
           </p>
         </div>
 
@@ -44,7 +44,7 @@ export default function ContactPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-text-primary font-semibold mb-2">Email Us</h3>
+            <h3 className="text-text-primary font-semibold mb-2">Pišite nam</h3>
             <a 
               href={`mailto:${SITE_CONFIG.email}`}
               className="text-accent hover:text-accent-hover transition-colors"
@@ -60,9 +60,9 @@ export default function ContactPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-text-primary font-semibold mb-2">Response Time</h3>
+            <h3 className="text-text-primary font-semibold mb-2">Vreme odgovora</h3>
             <p className="text-text-secondary text-sm">
-              We typically respond within 24-48 hours
+              Obično odgovaramo u roku od 24-48 sati
             </p>
           </div>
         </div>
@@ -70,7 +70,7 @@ export default function ContactPage() {
         {/* Contact Form */}
         <div className="card p-8">
           <h2 className="text-2xl font-semibold text-text-primary mb-6">
-            Send us a message
+            Pošaljite nam poruku
           </h2>
           <ContactForm />
         </div>
@@ -78,13 +78,13 @@ export default function ContactPage() {
         {/* FAQ Link */}
         <div className="text-center mt-8">
           <p className="text-text-muted text-sm">
-            Looking for quick answers? Check our{' '}
-            <a href="/terms" className="text-accent hover:text-accent-hover transition-colors">
-              Terms of Service
+            Tražite brze odgovore? Pogledajte naše{' '}
+            <a href="/sr/terms" className="text-accent hover:text-accent-hover transition-colors">
+              Uslove korišćenja
             </a>
-            {' '}or{' '}
-            <a href="/privacy" className="text-accent hover:text-accent-hover transition-colors">
-              Privacy Policy
+            {' '}ili{' '}
+            <a href="/sr/privacy" className="text-accent hover:text-accent-hover transition-colors">
+              Politiku privatnosti
             </a>
           </p>
         </div>

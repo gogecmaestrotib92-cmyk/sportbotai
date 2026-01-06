@@ -62,6 +62,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // Fetch published blog posts for dynamic sitemap
+  // Exclude match previews - those go to /news instead
   let blogEntries: MetadataRoute.Sitemap = [];
   let serbianBlogEntries: MetadataRoute.Sitemap = [];
   try {
@@ -69,6 +70,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { 
         status: 'PUBLISHED',
         publishedAt: { not: null },
+        // Exclude match previews and news - they go to /news section
+        NOT: {
+          OR: [
+            { category: 'Match Previews' },
+            { postType: 'MATCH_PREVIEW' },
+            { postType: 'NEWS' },
+          ],
+        },
       },
       select: {
         slug: true,
@@ -111,7 +120,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: {
         status: 'PUBLISHED',
         publishedAt: { not: null },
-        postType: { in: ['MATCH_PREVIEW', 'NEWS'] },
+        // News = Match Previews category OR MATCH_PREVIEW/NEWS postType
+        OR: [
+          { category: 'Match Previews' },
+          { postType: 'MATCH_PREVIEW' },
+          { postType: 'NEWS' },
+        ],
       },
       select: {
         slug: true,

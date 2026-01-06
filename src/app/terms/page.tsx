@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   description: META.terms.description,
   alternates: {
     canonical: '/terms',
+    languages: {
+      'en': '/terms',
+      'sr': '/sr/terms',
+      'x-default': '/terms',
+    },
   },
   robots: {
     index: true,

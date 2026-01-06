@@ -38,6 +38,11 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: `${SITE_CONFIG.url}/ai-desk`,
+    languages: {
+      'en': '/ai-desk',
+      'sr': '/sr/ai-desk',
+      'x-default': '/ai-desk',
+    },
   },
 };
 

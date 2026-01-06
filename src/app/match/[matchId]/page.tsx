@@ -23,6 +23,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `Match Analysis | SportBot AI`,
     description: 'Premium match intelligence powered by AI. Find where the market is wrong.',
+    alternates: {
+      canonical: `/match/${matchId}`,
+      languages: {
+        'en': `/match/${matchId}`,
+        'sr': `/sr/match/${matchId}`,
+        'x-default': `/match/${matchId}`,
+      },
+    },
     openGraph: {
       title: `Match Analysis | SportBot AI`,
       description: 'Premium match intelligence powered by AI',

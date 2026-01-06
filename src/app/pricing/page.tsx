@@ -28,6 +28,11 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: `${SITE_CONFIG.url}/pricing`,
+    languages: {
+      'en': '/pricing',
+      'sr': '/sr/pricing',
+      'x-default': '/pricing',
+    },
   },
 };
 

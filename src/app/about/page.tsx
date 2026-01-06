@@ -16,6 +16,11 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: `${SITE_CONFIG.url}/about`,
+    languages: {
+      'en': '/about',
+      'sr': '/sr/about',
+      'x-default': '/about',
+    },
   },
 };
 

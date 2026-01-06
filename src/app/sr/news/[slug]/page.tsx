@@ -129,8 +129,9 @@ export async function generateMetadata({ params }: NewsArticlePageProps): Promis
     alternates: {
       canonical: `${SITE_CONFIG.url}/sr/news/${slug}`,
       languages: {
-        'en': `${SITE_CONFIG.url}/news/${slug}`,
-        'sr': `${SITE_CONFIG.url}/sr/news/${slug}`,
+        'en': `/news/${slug}`,
+        'sr': `/sr/news/${slug}`,
+        'x-default': `/news/${slug}`,
       },
     },
     openGraph: {
