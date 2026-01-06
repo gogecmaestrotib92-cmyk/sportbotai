@@ -159,6 +159,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Critical inline CSS - fallback for slow networks/JS failures */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          html{background:#0D0D12;color:#fff;font-family:system-ui,-apple-system,sans-serif}
+          body{margin:0;min-height:100vh}
+          a{color:#8B5CF6}
+          .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+        `}} />
+        
         {/* Preconnect to Google Analytics - improves script load time */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://www.google-analytics.com" />
@@ -199,6 +207,13 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
+        {/* Fallback for users with JavaScript disabled */}
+        <noscript>
+          <div style={{background:'#1a1a2e',color:'#fff',padding:'20px',textAlign:'center',borderBottom:'1px solid #333'}}>
+            <strong>JavaScript Required</strong> - Please enable JavaScript for the best experience on SportBot AI.
+          </div>
+        </noscript>
+        
         <AuthProvider>
           <FavoritesProvider>
             <ToastProvider>
