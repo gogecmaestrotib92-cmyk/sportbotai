@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getBlogPostBreadcrumb, SITE_CONFIG } from '@/lib/seo';
 import ViewTracker from '@/components/ViewTracker';
+import FeaturedBadgeSnippet from '@/components/FeaturedBadgeSnippet';
 import { autoLinkTeamsSimple } from '@/lib/team-linker';
 
 // Allow dynamic rendering for new blog posts not in generateStaticParams
@@ -384,6 +385,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   </div>
                 </div>
               </div>
+
+              {/* Featured Badge Snippet - Only for tool reviews */}
+              {post.slug.endsWith('-review') && (
+                <FeaturedBadgeSnippet 
+                  toolName={post.title.replace(' Review', '').replace(' review', '')}
+                  reviewUrl={`${SITE_CONFIG.url}/blog/${post.slug}`}
+                />
+              )}
             </div>
           </div>
         </section>

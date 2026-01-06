@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { SITE_CONFIG } from '@/lib/seo';
 import ViewTracker from '@/components/ViewTracker';
+import FeaturedBadgeSnippet from '@/components/FeaturedBadgeSnippet';
 import { autoLinkTeamsSimple } from '@/lib/team-linker';
 
 export const dynamicParams = true;
@@ -457,6 +458,14 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
                   </div>
                 </div>
               </div>
+
+              {/* Featured Badge Snippet - Only for tool reviews */}
+              {post.slug.endsWith('-review') && (
+                <FeaturedBadgeSnippet 
+                  toolName={post.title.replace(' Review', '').replace(' review', '')}
+                  reviewUrl={`${SITE_CONFIG.url}/blog/${post.slug}`}
+                />
+              )}
             </div>
           </div>
         </section>
