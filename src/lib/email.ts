@@ -12,7 +12,7 @@ import { SITE_CONFIG } from './seo';
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const FROM_EMAIL = 'contact@sportbotai.com';
-const FROM_NAME = 'Goran';
+const FROM_NAME = 'Stefan';
 const SUPPORT_EMAIL = SITE_CONFIG.email;
 
 interface SendEmailOptions {
