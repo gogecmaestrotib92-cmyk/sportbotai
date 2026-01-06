@@ -53,25 +53,20 @@ export default function FeaturedBadgeSnippet({ toolName, reviewUrl }: FeaturedBa
         </a>
       </div>
 
-      {/* Code snippet */}
-      <div className="relative">
-        <pre className="p-4 bg-slate-900 rounded-lg text-xs text-emerald-400 overflow-x-auto whitespace-pre-wrap break-all">
-          <code>{snippet}</code>
-        </pre>
-        <button
-          onClick={handleCopy}
-          className={`absolute top-2 right-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-            copied 
-              ? 'bg-emerald-600 text-white' 
-              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-          }`}
-        >
-          {copied ? '✓ Copied!' : 'Copy'}
-        </button>
-      </div>
+      {/* Copy button */}
+      <button
+        onClick={handleCopy}
+        className={`w-full py-3 rounded-lg text-sm font-medium transition-all ${
+          copied 
+            ? 'bg-emerald-600 text-white' 
+            : 'bg-slate-900 text-white hover:bg-slate-800'
+        }`}
+      >
+        {copied ? '✓ Copied!' : 'Copy Badge Code'}
+      </button>
 
-      <p className="mt-3 text-xs text-slate-500">
-        Copy this HTML and paste it on your website to link back to your review.
+      <p className="mt-3 text-xs text-slate-500 text-center">
+        Paste this HTML on your website to display the badge
       </p>
     </div>
   );
