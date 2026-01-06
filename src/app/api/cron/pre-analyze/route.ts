@@ -1282,7 +1282,6 @@ export async function GET(request: NextRequest) {
               situational: (() => {
                 // Calculate rest days for NBA/NHL/NFL
                 const isFatigueSport = sport.key.includes('basketball') || sport.key.includes('hockey') || sport.key.includes('football');
-                if (!isFatigueSport) return undefined;
                 
                 const matchTime = new Date(event.commence_time).getTime();
                 const oneDayMs = 24 * 60 * 60 * 1000;
@@ -1300,19 +1299,52 @@ export async function GET(request: NextRequest) {
                 const homeRestDays = getRestDays(analysis.enrichedData?.homeForm);
                 const awayRestDays = getRestDays(analysis.enrichedData?.awayForm);
                 
+                // ========================================
+                // INJURY COUNTS FOR EDGE ADJUSTMENT
+                // ========================================
+                // Parse injury status to count OUT vs DOUBTFUL/QUESTIONABLE
+                const countInjuries = (injuries: any[]) => {
+                  let outCount = 0;
+                  let doubtfulCount = 0;
+                  for (const inj of injuries || []) {
+                    const reason = (inj.reason || inj.status || '').toLowerCase();
+                    if (reason.includes('out') || reason.includes('injury') && !reason.includes('questionable') && !reason.includes('doubtful') && !reason.includes('probable')) {
+                      outCount++;
+                    } else if (reason.includes('doubtful') || reason.includes('questionable') || reason.includes('gtd')) {
+                      doubtfulCount++;
+                    }
+                  }
+                  return { outCount, doubtfulCount };
+                };
+                
+                const homeInjuryCounts = countInjuries(analysis.injuries?.home || []);
+                const awayInjuryCounts = countInjuries(analysis.injuries?.away || []);
+                
+                // Log injury impact
+                if (homeInjuryCounts.outCount > 0 || awayInjuryCounts.outCount > 0) {
+                  console.log(`[Pre-Analyze] Injuries affecting edge: ${event.home_team} (${homeInjuryCounts.outCount} OUT, ${homeInjuryCounts.doubtfulCount} doubtful) vs ${event.away_team} (${awayInjuryCounts.outCount} OUT, ${awayInjuryCounts.doubtfulCount} doubtful)`);
+                }
+                
+                // For soccer, injuries always matter
+                // For fatigue sports (NBA/NHL/NFL), include fatigue factors too
                 return {
-                  homeRestDays,
-                  awayRestDays,
-                  isHomeBackToBack: homeRestDays <= 1,
-                  isAwayBackToBack: awayRestDays <= 1,
-                  homeGamesLast7Days: (analysis.enrichedData?.homeForm || []).filter((g: any) => {
+                  homeRestDays: isFatigueSport ? homeRestDays : 3,
+                  awayRestDays: isFatigueSport ? awayRestDays : 3,
+                  isHomeBackToBack: isFatigueSport ? homeRestDays <= 1 : false,
+                  isAwayBackToBack: isFatigueSport ? awayRestDays <= 1 : false,
+                  homeGamesLast7Days: isFatigueSport ? (analysis.enrichedData?.homeForm || []).filter((g: any) => {
                     const gameTime = new Date(g.date).getTime();
                     return gameTime > (matchTime - 7 * oneDayMs) && gameTime < matchTime;
-                  }).length,
-                  awayGamesLast7Days: (analysis.enrichedData?.awayForm || []).filter((g: any) => {
+                  }).length : 0,
+                  awayGamesLast7Days: isFatigueSport ? (analysis.enrichedData?.awayForm || []).filter((g: any) => {
                     const gameTime = new Date(g.date).getTime();
                     return gameTime > (matchTime - 7 * oneDayMs) && gameTime < matchTime;
-                  }).length,
+                  }).length : 0,
+                  // NEW: Injury factors
+                  homeInjuriesOut: homeInjuryCounts.outCount,
+                  awayInjuriesOut: awayInjuryCounts.outCount,
+                  homeInjuriesDoubtful: homeInjuryCounts.doubtfulCount,
+                  awayInjuriesDoubtful: awayInjuryCounts.doubtfulCount,
                 };
               })(),
               config: {

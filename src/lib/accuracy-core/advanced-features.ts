@@ -27,6 +27,14 @@ export interface SituationalFactors {
   motivationLevel?: 'high' | 'normal' | 'low'; // Playoff race, nothing to play for, etc.
   isPlayoffs?: boolean;
   isDerby?: boolean; // Local rivalry
+  
+  // Injury factors (NEW) - optional since not all sources provide this
+  homeInjuriesOut?: number; // Players confirmed OUT
+  awayInjuriesOut?: number;
+  homeInjuriesDoubtful?: number; // Players DOUBTFUL/QUESTIONABLE
+  awayInjuriesDoubtful?: number;
+  homeKeyPlayerOut?: boolean; // Star player injured
+  awayKeyPlayerOut?: boolean;
 }
 
 /**
@@ -48,6 +56,10 @@ export const SITUATIONAL_ADJUSTMENTS: Record<string, Record<string, number>> = {
     playoffBoost: 0.02, // +2% for home team in playoffs
     revengeGame: 0.015, // +1.5% for revenge
     endOfSeason: -0.02, // -2% if eliminated from playoffs (low motivation)
+    // Injury adjustments (per player OUT)
+    injuryPerPlayerOut: -0.025, // -2.5% per player confirmed OUT
+    injuryPerPlayerDoubtful: -0.01, // -1% per doubtful player
+    injuryKeyPlayer: -0.06, // -6% if star player out (additive)
   },
   hockey: {
     backToBack: -0.04, // -4% for B2B (less than NBA)
@@ -55,6 +67,10 @@ export const SITUATIONAL_ADJUSTMENTS: Record<string, Record<string, number>> = {
     restAdvantage3Plus: 0.025, // +2.5% rest advantage
     playoffBoost: 0.03, // +3% (playoff intensity matters more in NHL)
     revengeGame: 0.01, // +1%
+    // Injury adjustments (less impactful than NBA due to shorter shifts)
+    injuryPerPlayerOut: -0.015, // -1.5% per player OUT
+    injuryPerPlayerDoubtful: -0.005, // -0.5% per doubtful
+    injuryKeyPlayer: -0.04, // -4% if star out (goalies matter more)
   },
   soccer: {
     backToBack: 0, // Rarely happens in soccer
@@ -62,6 +78,10 @@ export const SITUATIONAL_ADJUSTMENTS: Record<string, Record<string, number>> = {
     derbyBoost: 0.03, // +3% home boost in derbies (crowd factor)
     cupFatigue: -0.02, // -2% after midweek cup game
     revengeGame: 0.01, // +1%
+    // Injury adjustments
+    injuryPerPlayerOut: -0.02, // -2% per player OUT
+    injuryPerPlayerDoubtful: -0.008, // -0.8% per doubtful
+    injuryKeyPlayer: -0.05, // -5% if star player out
   },
   football: {
     shortWeek: -0.04, // -4% for Thursday games (less than a week rest)
@@ -69,6 +89,10 @@ export const SITUATIONAL_ADJUSTMENTS: Record<string, Record<string, number>> = {
     travelFatigue3000Plus: -0.02, // -2% for cross-country travel
     playoffHome: 0.04, // +4% home playoff boost (huge in NFL)
     revengeGame: 0.01, // +1%
+    // NFL injury adjustments (QB/star matters a lot)
+    injuryPerPlayerOut: -0.01, // -1% per player OUT (large rosters)
+    injuryPerPlayerDoubtful: -0.005, // -0.5% per doubtful
+    injuryKeyPlayer: -0.08, // -8% if QB/star out (massive in NFL)
   },
 };
 
@@ -141,6 +165,49 @@ export function calculateSituationalAdjustment(
       // Apply negative adjustment to team with low motivation
       reasons.push('Low motivation detected (eliminated/nothing to play for)');
     }
+  }
+  
+  // ========================================
+  // INJURY ADJUSTMENTS (NEW)
+  // ========================================
+  const injuryPerOut = adjustments.injuryPerPlayerOut || -0.02;
+  const injuryPerDoubtful = adjustments.injuryPerPlayerDoubtful || -0.01;
+  const injuryKeyPlayer = adjustments.injuryKeyPlayer || -0.05;
+  
+  // Home team injuries
+  const homeOutCount = factors.homeInjuriesOut || 0;
+  const homeDoubtfulCount = factors.homeInjuriesDoubtful || 0;
+  if (homeOutCount > 0) {
+    const outAdjust = homeOutCount * injuryPerOut;
+    homeAdjust += outAdjust;
+    reasons.push(`Home has ${homeOutCount} player(s) OUT (${(outAdjust * 100).toFixed(1)}%)`);
+  }
+  if (homeDoubtfulCount > 0) {
+    const doubtAdjust = homeDoubtfulCount * injuryPerDoubtful;
+    homeAdjust += doubtAdjust;
+    reasons.push(`Home has ${homeDoubtfulCount} doubtful/questionable`);
+  }
+  if (factors.homeKeyPlayerOut) {
+    homeAdjust += injuryKeyPlayer;
+    reasons.push(`Home key player OUT (${(injuryKeyPlayer * 100).toFixed(0)}%)`);
+  }
+  
+  // Away team injuries
+  const awayOutCount = factors.awayInjuriesOut || 0;
+  const awayDoubtfulCount = factors.awayInjuriesDoubtful || 0;
+  if (awayOutCount > 0) {
+    const outAdjust = awayOutCount * injuryPerOut;
+    awayAdjust += outAdjust;
+    reasons.push(`Away has ${awayOutCount} player(s) OUT (${(outAdjust * 100).toFixed(1)}%)`);
+  }
+  if (awayDoubtfulCount > 0) {
+    const doubtAdjust = awayDoubtfulCount * injuryPerDoubtful;
+    awayAdjust += doubtAdjust;
+    reasons.push(`Away has ${awayDoubtfulCount} doubtful/questionable`);
+  }
+  if (factors.awayKeyPlayerOut) {
+    awayAdjust += injuryKeyPlayer;
+    reasons.push(`Away key player OUT (${(injuryKeyPlayer * 100).toFixed(0)}%)`);
   }
   
   return { homeAdjust, awayAdjust, reasons };

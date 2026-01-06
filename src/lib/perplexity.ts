@@ -587,7 +587,7 @@ Your task is to find CURRENT injury reports for both teams in this ${sportLabel}
 REQUIREMENTS:
 1. Only report injuries that are ACTIVE/CURRENT (not past injuries)
 2. Focus on players who are OUT, DOUBTFUL, QUESTIONABLE, or PROBABLE for today's game
-3. Use official injury reports from NBA.com, ESPN, team sources
+3. Use official injury reports from ${sportLabel === 'NBA' ? 'NBA.com' : sportLabel === 'NHL' ? 'NHL.com' : sportLabel === 'NFL' ? 'NFL.com' : 'official league sources'}, ESPN, team sources
 4. If a team has no reported injuries, say "No active injuries reported"
 
 RESPONSE FORMAT (JSON):
