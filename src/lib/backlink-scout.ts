@@ -492,7 +492,8 @@ export async function scrapeBetaList(searchTerm: string): Promise<DiscoveredTool
     const html = await response.text();
     
     // BetaList structure: look for startup cards
-    const startupMatches = Array.from(html.matchAll(/<a[^>]*href="\/startups\/([^"]+)"[^>]*>.*?<h3[^>]*>([^<]+)<\/h3>/gis));
+    // Note: Using [\s\S] instead of . with 's' flag for ES2017 compatibility
+    const startupMatches = Array.from(html.matchAll(/<a[^>]*href="\/startups\/([^"]+)"[^>]*>[\s\S]*?<h3[^>]*>([^<]+)<\/h3>/gi));
     
     for (const match of startupMatches) {
       const slug = match[1];
