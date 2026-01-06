@@ -443,7 +443,7 @@ export async function scrapeAlternativeTo(searchTerm: string): Promise<Discovere
     
     // Parse results - AlternativeTo uses server-side rendering
     // Look for app cards with links
-    const appMatches = html.matchAll(/<a[^>]*href="\/software\/([^"\/]+)\/"[^>]*class="[^"]*app-name[^"]*"[^>]*>([^<]+)<\/a>/gi);
+    const appMatches = Array.from(html.matchAll(/<a[^>]*href="\/software\/([^"\/]+)\/"[^>]*class="[^"]*app-name[^"]*"[^>]*>([^<]+)<\/a>/gi));
     
     for (const match of appMatches) {
       const slug = match[1];
@@ -492,7 +492,7 @@ export async function scrapeBetaList(searchTerm: string): Promise<DiscoveredTool
     const html = await response.text();
     
     // BetaList structure: look for startup cards
-    const startupMatches = html.matchAll(/<a[^>]*href="\/startups\/([^"]+)"[^>]*>.*?<h3[^>]*>([^<]+)<\/h3>/gis);
+    const startupMatches = Array.from(html.matchAll(/<a[^>]*href="\/startups\/([^"]+)"[^>]*>.*?<h3[^>]*>([^<]+)<\/h3>/gis));
     
     for (const match of startupMatches) {
       const slug = match[1];
