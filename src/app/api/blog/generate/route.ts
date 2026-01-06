@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Generate tool reviews only at 8am and 6pm UTC (2 per day total)
-    const currentHour = new Date().getUTCHours();
+    // Note: currentHour already defined above for discovery check
     const isReviewHour = currentHour === 8 || currentHour === 18; // 8am or 6pm UTC
     
     const toolsReady = await getToolsReadyForReview();
