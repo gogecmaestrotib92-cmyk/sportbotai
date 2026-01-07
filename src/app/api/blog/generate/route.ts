@@ -115,19 +115,16 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Generate tool reviews at 8am, 12pm, and 6pm UTC (3 per day total)
-    // Note: currentHour already defined above for discovery check
-    const isReviewHour = currentHour === 8 || currentHour === 12 || currentHour === 18; // 8am, noon, or 6pm UTC
-    
+    // Generate tool reviews every run (cron runs every 2 hours = 12 runs/day)
+    // Generate 2 per run for faster backlog clearing
+    // Only tools with contact emails are processed (for outreach)
     const toolsReady = await getToolsReadyForReview();
     
-    if (isReviewHour && toolsReady > 0) {
-      console.log(`[Blog Cron] Review hour (${currentHour}:00 UTC), ${toolsReady} tools ready, generating 1...`);
-      toolReviewResults = await generateToolReviewPosts(1); // 1 per run = 2 per day
+    if (toolsReady > 0) {
+      console.log(`[Blog Cron] ${toolsReady} tools ready for review, generating 2...`);
+      toolReviewResults = await generateToolReviewPosts(2); // 2 per run = ~24 per day max
       const toolSuccessful = toolReviewResults.filter(r => r.success).length;
       console.log(`[Blog Cron] Tool reviews: ${toolSuccessful} generated`);
-    } else if (toolsReady > 0) {
-      console.log(`[Blog Cron] Skipping reviews (hour ${currentHour}, not review hour). ${toolsReady} tools waiting.`);
     }
 
     // Revalidate blog pages

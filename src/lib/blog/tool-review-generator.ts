@@ -78,14 +78,19 @@ export async function generateToolReviewPosts(count: number = 1): Promise<ToolRe
       // Capture screenshot of tool's homepage for featured image
       let featuredImage = '/sports/football.jpg';
       try {
+        console.log(`[ToolReview] Capturing screenshot of ${tool.toolUrl}...`);
         featuredImage = await captureScreenshotWithFallback(
           tool.toolUrl,
           tool.toolName,
           '/sports/football.jpg'
         );
-        console.log(`[ToolReview] Screenshot captured: ${featuredImage}`);
+        if (featuredImage.includes('blob.vercel-storage.com')) {
+          console.log(`[ToolReview] ✅ Screenshot captured: ${featuredImage.substring(0, 80)}...`);
+        } else {
+          console.log(`[ToolReview] ⚠️ Using fallback image (screenshot failed silently)`);
+        }
       } catch (imgErr) {
-        console.log(`[ToolReview] Screenshot failed, using fallback: ${imgErr}`);
+        console.error(`[ToolReview] ❌ Screenshot error for ${tool.toolName}:`, imgErr);
       }
       
       // Check if slug exists
