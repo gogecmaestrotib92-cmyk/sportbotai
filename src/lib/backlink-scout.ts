@@ -817,55 +817,93 @@ export async function generateToolReview(
   toolName: string,
   toolUrl: string,
   toolDescription: string,
-  websiteContent: string
+  websiteContent: string = ''
 ): Promise<{ title: string; content: string; slug: string }> {
   
   // Let GPT output markdown naturally - it's what it's trained for
-  const prompt = `Write a comprehensive review of ${toolName} for SportBot AI blog.
+  const prompt = `Write a comprehensive, in-depth review of ${toolName} for SportBot AI blog.
 
 **Tool:** ${toolName}
 **URL:** ${toolUrl}
 **Description:** ${toolDescription}
 **Website content:** ${websiteContent.substring(0, 6000)}
 
-Write 800-1000 words with this structure:
+IMPORTANT: Write 4000-5000 words. This should be an exhaustive, SEO-optimized article. Go deep on every section.
+
+Structure:
 
 ## Introduction
-2-3 sentences about what the tool does and who it's for.
+3-4 paragraphs introducing the tool, the problem it solves, who it's for, and why readers should care. Include context about the sports betting landscape.
 
-## Key Features
+## What is ${toolName}?
+Detailed explanation of what the tool is, its history/background, the company behind it, and its core mission. 3-4 paragraphs.
+
+## Key Features (In-Depth Analysis)
 ### 1. [Feature Name]
-Description of the feature and why it matters.
+2-3 paragraphs explaining the feature, how it works, and real-world benefits. Include use cases.
 
 ### 2. [Feature Name]
-Description of the feature and why it matters.
+2-3 paragraphs with same depth.
 
 ### 3. [Feature Name]
-Description of the feature and why it matters.
+2-3 paragraphs with same depth.
 
-## Who It's For
-Target audience - beginners, professionals, specific sports bettors, etc.
+### 4. [Feature Name]
+2-3 paragraphs with same depth.
+
+### 5. [Feature Name]
+2-3 paragraphs with same depth.
+
+## How to Get Started
+Step-by-step guide: signing up, setting up an account, first steps. 3-4 paragraphs.
+
+## User Experience & Interface
+Detailed analysis of the UI/UX, mobile experience, ease of use. 2-3 paragraphs.
+
+## Who Should Use ${toolName}?
+### Beginners
+Why it works (or doesn't) for beginners. 1-2 paragraphs.
+
+### Intermediate Bettors
+1-2 paragraphs.
+
+### Professional/Sharp Bettors
+1-2 paragraphs.
+
+## ${toolName} vs Competitors
+Compare to 2-3 similar tools briefly. What makes this one different?
 
 ## Pros and Cons
 ### Pros
-- **[Pro title]:** Description
-- **[Pro title]:** Description
-- **[Pro title]:** Description
+- **[Pro title]:** 2-3 sentence explanation
+- **[Pro title]:** 2-3 sentence explanation
+- **[Pro title]:** 2-3 sentence explanation
+- **[Pro title]:** 2-3 sentence explanation
+- **[Pro title]:** 2-3 sentence explanation
 
 ### Cons
-- **[Con title]:** Description
-- **[Con title]:** Description
+- **[Con title]:** 2-3 sentence explanation
+- **[Con title]:** 2-3 sentence explanation
+- **[Con title]:** 2-3 sentence explanation
 
-## Pricing
-Pricing info from their website, or "Visit their website for current pricing details."
+## Pricing & Value
+Detailed pricing breakdown, comparison to competitors, value analysis. 2-3 paragraphs.
 
-## Verdict
-1-2 sentence summary - is it worth checking out?
+## Tips for Getting the Most Out of ${toolName}
+3-5 actionable tips with explanations.
+
+## Frequently Asked Questions
+5-6 FAQs with detailed answers.
+
+## Final Verdict
+2-3 paragraphs summarizing the review, who should use it, and final recommendation.
 
 RULES:
-1. Be objective and balanced - don't oversell
-2. Only mention features actually on their website
-3. Write naturally and engagingly
+1. Be objective and balanced - acknowledge limitations
+2. Write naturally and engagingly with varied sentence structure
+3. Include specific details and examples where possible
+4. Use transition sentences between sections
+5. MINIMUM 4000 words - be thorough!
 
 Return JSON:
 {"title": "${toolName} Review: [catchy subtitle]", "slug": "${toolName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-review", "content": "## Introduction\\n...full markdown content..."}`;

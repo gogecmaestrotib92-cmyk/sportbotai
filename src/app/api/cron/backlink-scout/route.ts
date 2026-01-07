@@ -16,7 +16,7 @@ import {
   findContactEmail,
   generateToolReview,
 } from '@/lib/backlink-scout';
-import { generateFeaturedImage } from '@/lib/blog/image-generator';
+import { captureScreenshotWithFallback } from '@/lib/blog/screenshot-generator';
 
 export const maxDuration = 300; // 5 minute timeout
 
@@ -111,18 +111,17 @@ export async function GET(request: NextRequest) {
               tool.contentExtracted || ''
             );
             
-            // Generate featured image
+            // Capture screenshot of tool's homepage for featured image
             let featuredImage = '/sports/football.jpg'; // fallback
             try {
-              const imageResult = await generateFeaturedImage(
-                review.title,
-                tool.toolName.toLowerCase(),
-                'Tools & Resources'
+              featuredImage = await captureScreenshotWithFallback(
+                tool.toolUrl,
+                tool.toolName,
+                '/sports/football.jpg'
               );
-              featuredImage = imageResult.url;
-              console.log(`[BacklinkScout] Generated image: ${featuredImage}`);
+              console.log(`[BacklinkScout] Screenshot captured: ${featuredImage}`);
             } catch (imgErr) {
-              console.log(`[BacklinkScout] Image failed, using fallback`);
+              console.log(`[BacklinkScout] Screenshot failed, using fallback: ${imgErr}`);
             }
             
             // Create blog post

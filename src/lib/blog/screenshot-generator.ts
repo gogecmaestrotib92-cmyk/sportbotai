@@ -1,8 +1,8 @@
 /**
  * Screenshot Generator for Tool Reviews
  * 
- * Captures screenshots of tool homepages for use as featured images.
- * Uses Puppeteer to render the page and capture a high-quality screenshot.
+ * Uses Screenshotone API to capture clean screenshots of websites
+ * with automatic cookie banner and popup blocking.
  */
 
 import { put } from '@vercel/blob';
@@ -14,140 +14,114 @@ interface ScreenshotResult {
 }
 
 /**
- * Capture a screenshot of a website's homepage
- * 
- * @param websiteUrl - The URL to screenshot
- * @param toolName - Name of the tool (used for filename)
- * @returns Object with the Vercel Blob URL of the screenshot
+ * Capture a screenshot using Screenshotone API
+ * Automatically blocks cookie banners, popups, ads, and chat widgets
  */
 export async function captureWebsiteScreenshot(
   websiteUrl: string,
   toolName: string
 ): Promise<ScreenshotResult> {
-  console.log(`[Screenshot] Capturing ${websiteUrl}...`);
+  const apiKey = process.env.SCREENSHOTONE_API_KEY;
   
-  // Dynamic import for Puppeteer (heavy dependency)
-  let browser;
-  try {
-    const puppeteer = await import('puppeteer');
-    browser = await puppeteer.default.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--window-size=1920,1080',
-      ],
-    });
-    
-    const page = await browser.newPage();
-    
-    // Set viewport to desktop size for a nice screenshot
-    await page.setViewport({
-      width: 1920,
-      height: 1080,
-      deviceScaleFactor: 1,
-    });
-    
-    // Set a realistic user agent
-    await page.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    );
-    
-    // Navigate to the page with timeout
-    try {
-      await page.goto(websiteUrl, {
-        waitUntil: 'networkidle2',
-        timeout: 30000,
-      });
-    } catch (navError) {
-      // If networkidle2 times out, try with just load event
-      console.log('[Screenshot] networkidle2 timed out, trying load event...');
-      await page.goto(websiteUrl, {
-        waitUntil: 'load',
-        timeout: 15000,
-      });
-    }
-    
-    // Wait a bit for any animations/lazy loading
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Try to dismiss common cookie banners/popups
-    try {
-      await page.evaluate(() => {
-        // Common cookie consent selectors
-        const selectors = [
-          '[class*="cookie"] button',
-          '[class*="consent"] button',
-          '[id*="cookie"] button',
-          '[id*="consent"] button',
-          '[class*="gdpr"] button',
-          '.cc-btn',
-          '#onetrust-accept-btn-handler',
-          '.accept-cookies',
-          '[aria-label*="Accept"]',
-          '[aria-label*="accept"]',
-        ];
-        
-        for (const selector of selectors) {
-          const btn = document.querySelector(selector) as HTMLElement;
-          if (btn && btn.offsetParent !== null) {
-            btn.click();
-            break;
-          }
-        }
-      });
-      // Wait for popup to close
-      await new Promise(resolve => setTimeout(resolve, 500));
-    } catch {
-      // Ignore popup dismissal errors
-    }
-    
-    // Take the screenshot
-    const screenshotBuffer = await page.screenshot({
-      type: 'png',
-      fullPage: false, // Just the viewport, not full page
-      clip: {
-        x: 0,
-        y: 0,
-        width: 1920,
-        height: 1080,
-      },
-    });
-    
-    // Convert Uint8Array to Buffer for Vercel Blob
-    const buffer = Buffer.from(screenshotBuffer);
-    
-    await browser.close();
-    browser = null;
-    
-    // Generate a clean filename
-    const cleanName = toolName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
-    const filename = `tool-screenshots/${cleanName}-${Date.now()}.png`;
-    
-    // Upload to Vercel Blob
-    console.log('[Screenshot] Uploading to Vercel Blob...');
-    const blob = await put(filename, buffer, {
-      access: 'public',
-      contentType: 'image/png',
-    });
-    
-    console.log(`[Screenshot] ✅ Captured and uploaded: ${blob.url}`);
-    
-    return {
-      url: blob.url,
-      width: 1920,
-      height: 1080,
-    };
-    
-  } catch (error) {
-    if (browser) {
-      await browser.close();
-    }
-    console.error('[Screenshot] Error:', error);
-    throw error;
+  if (!apiKey) {
+    throw new Error('SCREENSHOTONE_API_KEY is not configured');
   }
+  
+  console.log(`[Screenshot] Capturing ${websiteUrl} via Screenshotone...`);
+  
+  // Build Screenshotone API URL
+  // Common selectors for cookie/consent popups to hide
+  const hideSelectors = [
+    '[class*="cookie"]',
+    '[class*="consent"]',
+    '[class*="gdpr"]',
+    '[class*="privacy"]',
+    '[id*="cookie"]',
+    '[id*="consent"]',
+    '[id*="gdpr"]',
+    '[class*="onetrust"]',
+    '[class*="CookieConsent"]',
+    '[class*="cc-window"]',
+    '[class*="cc-banner"]',
+    '[class*="cookie-banner"]',
+    '[class*="cookie-notice"]',
+    '[class*="cookie-policy"]',
+    '[class*="accept-cookies"]',
+    '[aria-label*="cookie"]',
+    '[aria-label*="consent"]',
+    '[data-testid*="cookie"]',
+    '.osano-cm-dialog',
+    '.qc-cmp2-container',
+    '#truste-consent-track',
+    '.evidon-banner',
+  ].join(',');
+
+  // CSS to inject that hides ALL fixed/sticky positioned elements at bottom of page
+  // This catches cookie banners that use non-standard class names
+  const customCSS = `
+    /* Hide all fixed/sticky elements at bottom */
+    [style*="position: fixed"][style*="bottom"],
+    [style*="position:fixed"][style*="bottom"],
+    div[class*="banner"]:not(header *):not(nav *),
+    div[class*="popup"]:not(header *):not(nav *),
+    div[class*="modal"]:not(header *):not(nav *),
+    div[class*="overlay"]:not(header *):not(nav *),
+    div[class*="notice"]:not(header *):not(nav *),
+    div[role="dialog"],
+    div[role="alertdialog"],
+    div[aria-modal="true"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+  `;
+
+  const params = new URLSearchParams({
+    access_key: apiKey,
+    url: websiteUrl,
+    format: 'png',
+    viewport_width: '1920',
+    viewport_height: '1080',
+    block_cookie_banners: 'true',
+    block_banners_by_heuristics: 'true',
+    block_ads: 'true',
+    block_chats: 'true',
+    block_trackers: 'true',
+    hide_selectors: hideSelectors,
+    styles: customCSS,
+    delay: '3', // Wait 3 seconds for page to settle and popups to appear
+    timeout: '30',
+  });
+  
+  const apiUrl = `https://api.screenshotone.com/take?${params.toString()}`;
+  
+  const response = await fetch(apiUrl);
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Screenshotone API error: ${response.status} - ${errorText}`);
+  }
+  
+  const imageBuffer = Buffer.from(await response.arrayBuffer());
+  
+  // Generate a clean filename
+  const cleanName = toolName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+  const filename = `tool-screenshots/${cleanName}-${Date.now()}.png`;
+  
+  // Upload to Vercel Blob
+  console.log('[Screenshot] Uploading to Vercel Blob...');
+  const blob = await put(filename, imageBuffer, {
+    access: 'public',
+    contentType: 'image/png',
+  });
+  
+  console.log(`[Screenshot] ✅ Captured and uploaded: ${blob.url}`);
+  
+  return {
+    url: blob.url,
+    width: 1920,
+    height: 1080,
+  };
 }
 
 /**

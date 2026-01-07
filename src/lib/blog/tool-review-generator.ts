@@ -12,7 +12,7 @@ import {
   scrapeSportsBettingTools,
   isBlockedDomain,
 } from '@/lib/backlink-scout';
-import { generateFeaturedImage } from './image-generator';
+import { captureScreenshotWithFallback } from './screenshot-generator';
 import { generateToolReviewContent } from './content-generator';
 import { sendToolReviewOutreach } from '@/lib/email';
 
@@ -75,18 +75,17 @@ export async function generateToolReviewPosts(count: number = 1): Promise<ToolRe
         tool.contentExtracted || ''
       );
       
-      // Generate featured image
+      // Capture screenshot of tool's homepage for featured image
       let featuredImage = '/sports/football.jpg';
       try {
-        const imageResult = await generateFeaturedImage(
-          review.title,
-          tool.toolName.toLowerCase(),
-          'Tools & Resources'
+        featuredImage = await captureScreenshotWithFallback(
+          tool.toolUrl,
+          tool.toolName,
+          '/sports/football.jpg'
         );
-        featuredImage = imageResult.url;
-        console.log(`[ToolReview] Image generated: ${featuredImage}`);
+        console.log(`[ToolReview] Screenshot captured: ${featuredImage}`);
       } catch (imgErr) {
-        console.log(`[ToolReview] Image failed, using fallback`);
+        console.log(`[ToolReview] Screenshot failed, using fallback: ${imgErr}`);
       }
       
       // Check if slug exists
