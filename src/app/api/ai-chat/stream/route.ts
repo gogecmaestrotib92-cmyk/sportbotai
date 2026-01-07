@@ -31,6 +31,8 @@ import { isNFLStatsQuery, getVerifiedNFLPlayerStats, formatVerifiedNFLPlayerStat
 import { isNHLStatsQuery, getVerifiedNHLPlayerStats, formatVerifiedNHLPlayerStats } from '@/lib/verified-nhl-stats';
 import { isSoccerStatsQuery, getVerifiedSoccerPlayerStats, formatVerifiedSoccerPlayerStats } from '@/lib/verified-soccer-stats';
 import { isEuroleagueStatsQuery, getVerifiedEuroleaguePlayerStats, formatVerifiedEuroleaguePlayerStats } from '@/lib/verified-euroleague-stats';
+// Team match statistics (shots, corners per game, etc.)
+import { isTeamMatchStatsQuery, getVerifiedTeamMatchStats, getOpponentAnalysis, formatTeamMatchStatsContext } from '@/lib/verified-team-match-stats';
 
 // ============================================
 // TYPES
@@ -1292,6 +1294,29 @@ If their favorite team has a match today/tonight, lead with that information.`;
             }
           }
 
+          // Step 1.8: Verified Team Match Statistics (shots, corners per game analysis)
+          let verifiedTeamMatchStatsContext = '';
+          if (isTeamMatchStatsQuery(searchMessage)) {
+            console.log('[AI-Chat-Stream] Team match stats query detected...');
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '📊 Analyzing match statistics...' })}\n\n`));
+            
+            const matchStatsResult = await getVerifiedTeamMatchStats(searchMessage);
+            if (matchStatsResult.success && matchStatsResult.data) {
+              // Also get opponent analysis for comparison queries
+              const opponentAnalysis = await getOpponentAnalysis(searchMessage);
+              verifiedTeamMatchStatsContext = formatTeamMatchStatsContext(matchStatsResult, opponentAnalysis);
+              
+              console.log(`[AI-Chat-Stream] ✅ Got ${matchStatsResult.data.fixtures.length} matches for ${matchStatsResult.data.team.name}`);
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: `✅ Analyzed ${matchStatsResult.data.fixtures.length} matches` })}\n\n`));
+              
+              // Override Perplexity context to use verified data
+              perplexityContext = '';
+              citations = [];
+            } else {
+              console.log('[AI-Chat-Stream] ⚠️ Could not get team match stats:', matchStatsResult.error);
+            }
+          }
+
           // Send status: generating
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: 'Generating response...' })}\n\n`));
 
@@ -1346,11 +1371,32 @@ If their favorite team has a match today/tonight, lead with that information.`;
 
           // Add user message with context
           let userContent = message;
-          const hasContext = perplexityContext || dataLayerContext || verifiedPlayerStatsContext || ourPredictionContext || verifiedStandingsContext;
+          const hasContext = perplexityContext || dataLayerContext || verifiedPlayerStatsContext || ourPredictionContext || verifiedStandingsContext || verifiedTeamMatchStatsContext;
           
           if (hasContext) {
+            // For team match statistics queries (shots, corners per game)
+            if (verifiedTeamMatchStatsContext) {
+              userContent = `USER QUESTION: ${message}
+
+⚠️ CRITICAL: The user is asking about MATCH STATISTICS. Use ONLY the verified data below.
+
+${verifiedTeamMatchStatsContext}
+
+STRICT RULES:
+1. ONLY use the match-by-match statistics provided above - they are VERIFIED from API-Sports
+2. When comparing to averages, use the exact numbers provided
+3. Format your response with clear match-by-match details if asked
+4. Include dates and scores for context
+5. If asked about opponent patterns, analyze how opponents performed compared to their norms
+
+RESPONSE FORMAT:
+- Answer the specific question directly first
+- Use bullet points for match-by-match breakdowns
+- Include the opponent name, date, and specific stats
+- Summarize any patterns you notice
+- Mention this is verified data from official match statistics`;
             // For OUR_PREDICTION queries, use our stored analysis
-            if (queryCategory === 'OUR_PREDICTION' && ourPredictionContext) {
+            } else if (queryCategory === 'OUR_PREDICTION' && ourPredictionContext) {
               userContent = `USER QUESTION: ${message}
 
 The user is asking about SportBot's past prediction/analysis. Here is what we found:
