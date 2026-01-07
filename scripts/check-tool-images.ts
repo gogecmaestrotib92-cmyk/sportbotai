@@ -6,6 +6,18 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
+  // Check specific post
+  const slug = process.argv[2];
+  
+  if (slug) {
+    const post = await prisma.blogPost.findUnique({
+      where: { slug },
+      select: { title: true, featuredImage: true, createdAt: true }
+    });
+    console.log('Post:', JSON.stringify(post, null, 2));
+    return;
+  }
+
   const reviews = await prisma.blogPost.findMany({
     where: { category: 'Tools & Resources' },
     orderBy: { createdAt: 'desc' },
@@ -26,18 +38,17 @@ async function main() {
   console.log('SCREENSHOTONE_API_KEY configured:', !!process.env.SCREENSHOTONE_API_KEY);
   
   // Get URLs for failed tools
-  console.log('\n--- FAILED TOOLS ---');
-  const failedTools = await prisma.toolReview.findMany({
-    where: {
-      OR: [
-        { toolName: { contains: 'Pickswise', mode: 'insensitive' } },
-        { toolName: { contains: 'Killer', mode: 'insensitive' } }
-      ]
+  console.log('\n--- FALLBACK IMAGES ---');
+  const fallbackPosts = await prisma.blogPost.findMany({
+    where: { 
+      category: 'Tools & Resources',
+      featuredImage: '/sports/football.jpg'
     },
-    select: { toolName: true, toolUrl: true }
+    select: { title: true }
   });
-  for (const t of failedTools) {
-    console.log(`${t.toolName}: ${t.toolUrl}`);
+  console.log(`${fallbackPosts.length} posts using fallback image`);
+  for (const p of fallbackPosts) {
+    console.log(`  - ${p.title.substring(0, 50)}...`);
   }
 }
 
