@@ -29,6 +29,9 @@ interface ChatMessage {
   statusMessage?: string;  // Shows "Searching..." or "Generating..." during processing
   feedbackGiven?: 'up' | 'down' | null;
   timestamp: Date;
+  // Data confidence for quality tracking
+  dataConfidenceLevel?: string;
+  dataConfidenceScore?: number;
 }
 
 // Audio playback states
@@ -332,7 +335,12 @@ export default function AIDeskChat() {
     rating: 'up' | 'down',
     query: string,
     response: string,
-    meta?: { usedRealTimeSearch?: boolean; fromCache?: boolean }
+    meta?: { 
+      usedRealTimeSearch?: boolean; 
+      fromCache?: boolean;
+      dataConfidenceLevel?: string;
+      dataConfidenceScore?: number;
+    }
   ) => {
     try {
       const res = await fetch('/api/ai-chat/feedback', {
@@ -345,6 +353,8 @@ export default function AIDeskChat() {
           rating: rating === 'up' ? 5 : 1,
           usedRealTimeSearch: meta?.usedRealTimeSearch,
           fromCache: meta?.fromCache,
+          dataConfidenceLevel: meta?.dataConfidenceLevel,
+          dataConfidenceScore: meta?.dataConfidenceScore,
         }),
       });
 
@@ -446,10 +456,12 @@ export default function AIDeskChat() {
                     streamUsedSearch = data.usedRealTimeSearch;
                     streamFollowUps = data.followUps || [];
                     isFromCache = data.fromCache || false;
+                    const dataConfidenceLevel = data.dataConfidenceLevel;
+                    const dataConfidenceScore = data.dataConfidenceScore;
                     // Clear status message when we get metadata (about to stream content)
                     setMessages(prev => prev.map(m => 
                       m.id === assistantMessageId 
-                        ? { ...m, statusMessage: undefined }
+                        ? { ...m, statusMessage: undefined, dataConfidenceLevel, dataConfidenceScore }
                         : m
                     ));
                   } else if (data.type === 'content') {
@@ -736,6 +748,8 @@ export default function AIDeskChat() {
                               submitFeedback(msg.id, 'up', userMsg?.content || '', msg.content, {
                                 usedRealTimeSearch: msg.usedRealTimeSearch,
                                 fromCache: msg.fromCache,
+                                dataConfidenceLevel: msg.dataConfidenceLevel,
+                                dataConfidenceScore: msg.dataConfidenceScore,
                               });
                             }}
                             className="p-1.5 rounded-lg bg-white/5 text-text-muted hover:bg-green-500/20 hover:text-green-400 transition-all"
@@ -751,6 +765,8 @@ export default function AIDeskChat() {
                               submitFeedback(msg.id, 'down', userMsg?.content || '', msg.content, {
                                 usedRealTimeSearch: msg.usedRealTimeSearch,
                                 fromCache: msg.fromCache,
+                                dataConfidenceLevel: msg.dataConfidenceLevel,
+                                dataConfidenceScore: msg.dataConfidenceScore,
                               });
                             }}
                             className="p-1.5 rounded-lg bg-white/5 text-text-muted hover:bg-red-500/20 hover:text-red-400 transition-all"

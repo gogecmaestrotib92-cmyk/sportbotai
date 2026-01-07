@@ -39,6 +39,7 @@ export default async function AdminPage() {
     topTeams,
     recentQueries,
     agentPostsCount,
+    feedbackStats,
     // Prediction stats
     aiPredictionStats,
   ] = await Promise.all([
@@ -109,6 +110,9 @@ export default async function AdminPage() {
     // Agent posts count
     getAgentPostsCount(),
     
+    // Feedback stats
+    getFeedbackStats(),
+    
     // Edge Performance Tracking (new prediction stats)
     getEdgePerformanceStats(),
   ]);
@@ -132,6 +136,7 @@ export default async function AdminPage() {
     topTeams,
     recentQueries,
     agentPostsCount,
+    feedbackStats,
   };
 
   return (
@@ -233,6 +238,77 @@ async function getAgentPostsCount() {
     return await prisma.agentPost.count();
   } catch {
     return 0;
+  }
+}
+
+async function getFeedbackStats() {
+  try {
+    const allFeedback = await prisma.chatFeedback.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 100, // Last 100 for analysis
+    });
+    
+    const total = allFeedback.length;
+    const positive = allFeedback.filter(f => f.rating >= 4).length;
+    const negative = allFeedback.filter(f => f.rating <= 2).length;
+    const neutral = allFeedback.filter(f => f.rating === 3).length;
+    
+    const avgRating = total > 0 
+      ? (allFeedback.reduce((sum, f) => sum + f.rating, 0) / total)
+      : 0;
+    
+    const satisfactionRate = total > 0 
+      ? Math.round((positive / total) * 100)
+      : 0;
+    
+    // Feedback by confidence level
+    const byConfidence: Record<string, { total: number; positive: number; negative: number }> = {};
+    for (const f of allFeedback) {
+      const level = f.dataConfidenceLevel || 'UNKNOWN';
+      if (!byConfidence[level]) {
+        byConfidence[level] = { total: 0, positive: 0, negative: 0 };
+      }
+      byConfidence[level].total++;
+      if (f.rating >= 4) byConfidence[level].positive++;
+      if (f.rating <= 2) byConfidence[level].negative++;
+    }
+    
+    // Recent negative feedback for review
+    const recentNegative = allFeedback
+      .filter(f => f.rating <= 2)
+      .slice(0, 5)
+      .map(f => ({
+        query: f.query?.substring(0, 100) || 'N/A',
+        rating: f.rating,
+        confidence: f.dataConfidenceLevel,
+        createdAt: f.createdAt,
+      }));
+    
+    return {
+      total,
+      positive,
+      negative,
+      neutral,
+      avgRating: Math.round(avgRating * 100) / 100,
+      satisfactionRate,
+      byConfidence: Object.entries(byConfidence).map(([level, stats]) => ({
+        level,
+        ...stats,
+        satisfactionRate: stats.total > 0 ? Math.round((stats.positive / stats.total) * 100) : 0,
+      })),
+      recentNegative,
+    };
+  } catch {
+    return {
+      total: 0,
+      positive: 0,
+      negative: 0,
+      neutral: 0,
+      avgRating: 0,
+      satisfactionRate: 0,
+      byConfidence: [],
+      recentNegative: [],
+    };
   }
 }
 

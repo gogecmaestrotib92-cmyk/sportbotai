@@ -14,6 +14,149 @@
  */
 
 // ============================================
+// DATA CONFIDENCE SCORING (Anti-Hallucination)
+// ============================================
+
+export type DataCoverageLevel = 'FULL' | 'PARTIAL' | 'MINIMAL' | 'NONE';
+
+export interface DataConfidence {
+  level: DataCoverageLevel;
+  score: number;          // 0-100
+  sources: string[];      // Which data sources provided data
+  missingCritical: string[]; // Critical data that's missing
+  canAnswer: boolean;     // Should we attempt to answer?
+  disclaimer?: string;    // Disclaimer to add if partial
+}
+
+/**
+ * Calculate data confidence based on available sources
+ * This determines if we have enough data to answer confidently
+ */
+export function calculateDataConfidence(params: {
+  hasVerifiedStats?: boolean;
+  hasVerifiedStandings?: boolean;
+  hasVerifiedLineups?: boolean;
+  hasVerifiedPrediction?: boolean;
+  hasVerifiedEvents?: boolean;
+  hasPerplexityData?: boolean;
+  hasDataLayerStats?: boolean;
+  queryCategory: string;
+}): DataConfidence {
+  const sources: string[] = [];
+  const missingCritical: string[] = [];
+  let score = 0;
+  
+  // Add points for each data source
+  if (params.hasVerifiedStats) { sources.push('Verified Stats'); score += 25; }
+  if (params.hasVerifiedStandings) { sources.push('Verified Standings'); score += 20; }
+  if (params.hasVerifiedLineups) { sources.push('Verified Lineups'); score += 15; }
+  if (params.hasVerifiedPrediction) { sources.push('Our Analysis'); score += 25; }
+  if (params.hasVerifiedEvents) { sources.push('Match Events'); score += 20; }
+  if (params.hasPerplexityData) { sources.push('Real-Time Search'); score += 15; }
+  if (params.hasDataLayerStats) { sources.push('DataLayer'); score += 15; }
+  
+  // Cap at 100
+  score = Math.min(100, score);
+  
+  // Determine what's critically missing based on query type
+  const category = params.queryCategory.toUpperCase();
+  
+  if (['STATS', 'COMPARISON'].includes(category)) {
+    if (!params.hasVerifiedStats && !params.hasDataLayerStats) {
+      missingCritical.push('player/team statistics');
+    }
+  }
+  
+  if (category === 'STANDINGS') {
+    if (!params.hasVerifiedStandings) {
+      missingCritical.push('current standings');
+    }
+  }
+  
+  if (['BETTING_ADVICE', 'PLAYER_PROP'].includes(category)) {
+    if (!params.hasVerifiedStats && !params.hasDataLayerStats) {
+      missingCritical.push('statistical data for analysis');
+    }
+    if (!params.hasPerplexityData && !params.hasVerifiedLineups) {
+      missingCritical.push('injury/availability info');
+    }
+  }
+  
+  if (category === 'OUR_PREDICTION') {
+    if (!params.hasVerifiedPrediction) {
+      missingCritical.push('our match analysis');
+    }
+  }
+  
+  // Determine level
+  let level: DataCoverageLevel;
+  if (score >= 70 && missingCritical.length === 0) {
+    level = 'FULL';
+  } else if (score >= 40) {
+    level = 'PARTIAL';
+  } else if (score >= 15) {
+    level = 'MINIMAL';
+  } else {
+    level = 'NONE';
+  }
+  
+  // Can we answer?
+  const canAnswer = level !== 'NONE' && !(missingCritical.length > 0 && score < 30);
+  
+  // Build disclaimer
+  let disclaimer: string | undefined;
+  if (level === 'PARTIAL') {
+    disclaimer = `Note: Analysis based on ${sources.join(', ')}. Some data may be limited.`;
+  } else if (level === 'MINIMAL') {
+    disclaimer = `⚠️ Limited data available. This response is based only on: ${sources.join(', ')}.`;
+  }
+  
+  return { level, score, sources, missingCritical, canAnswer, disclaimer };
+}
+
+/**
+ * Build a "don't answer" instruction based on data confidence
+ */
+export function buildConfidenceInstruction(confidence: DataConfidence): string {
+  if (confidence.level === 'FULL') {
+    return `DATA CONFIDENCE: HIGH (${confidence.score}/100)
+Sources: ${confidence.sources.join(', ')}
+You have strong data backing. Answer confidently using the provided context.`;
+  }
+  
+  if (confidence.level === 'PARTIAL') {
+    return `DATA CONFIDENCE: MODERATE (${confidence.score}/100)
+Sources: ${confidence.sources.join(', ')}
+${confidence.missingCritical.length > 0 ? `Missing: ${confidence.missingCritical.join(', ')}` : ''}
+Answer using available data but acknowledge limitations when relevant.
+DO NOT fill gaps with assumptions or fabricated stats.`;
+  }
+  
+  if (confidence.level === 'MINIMAL') {
+    return `DATA CONFIDENCE: LOW (${confidence.score}/100)
+Sources: ${confidence.sources.join(', ')}
+Missing critical: ${confidence.missingCritical.join(', ')}
+
+⚠️ IMPORTANT: Your data is LIMITED. Be honest about it:
+- Say "Based on limited available data..." or "I don't have complete stats for this..."
+- DO NOT invent statistics, scores, or specific numbers
+- If asked for specific stats you don't have, say "I couldn't find verified data on that"
+- General observations are OK, specific claims without data are NOT`;
+  }
+  
+  // NONE
+  return `DATA CONFIDENCE: INSUFFICIENT (${confidence.score}/100)
+No verified data sources available for this query.
+
+🛑 CRITICAL INSTRUCTION:
+You do NOT have the data needed to answer this question accurately.
+DO NOT attempt to answer with made-up or assumed information.
+Instead, respond honestly:
+"I don't have verified data available to answer this question accurately. 
+Try asking about a specific match, team, or player, or check back later for updated information."`;
+}
+
+// ============================================
 // INTERNAL SIGNALS (computed per match/context)
 // ============================================
 
@@ -1086,12 +1229,21 @@ export function buildSystemPrompt(
     signals?: MatchSignals;
     recentContext?: string; // Summary of recent posts for "memory"
     eventType?: keyof typeof POST_TEMPLATES;
+    dataConfidence?: DataConfidence; // NEW: data confidence scoring
   }
 ): string {
   let prompt = getBrainPrompt(mode);
   
-  // Add real-time data instruction
-  if (context?.hasRealTimeData) {
+  // Add data confidence instruction (NEW - overrides old real-time logic if present)
+  if (context?.dataConfidence) {
+    prompt += `\n\n${buildConfidenceInstruction(context.dataConfidence)}`;
+    
+    // Add disclaimer reminder if needed
+    if (context.dataConfidence.disclaimer) {
+      prompt += `\n\nINCLUDE THIS NOTE IN YOUR RESPONSE: ${context.dataConfidence.disclaimer}`;
+    }
+  } else if (context?.hasRealTimeData) {
+    // Legacy: Add real-time data instruction
     prompt += `\n\nREAL-TIME DATA AVAILABLE:
 You have access to current, live data from web search.
 Use this data as your primary source.

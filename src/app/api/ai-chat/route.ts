@@ -19,7 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import OpenAI from 'openai';
 import { getPerplexityClient } from '@/lib/perplexity';
-import { detectChatMode, buildSystemPrompt, type BrainMode } from '@/lib/sportbot-brain';
+import { detectChatMode, buildSystemPrompt, type BrainMode, calculateDataConfidence, type DataConfidence } from '@/lib/sportbot-brain';
 import { trackQuery } from '@/lib/sportbot-memory';
 import { saveKnowledge, buildLearnedContext, getTerminologyForSport } from '@/lib/sportbot-knowledge';
 import { routeQuery as routeToDataSource } from '@/lib/data-router';
@@ -1870,8 +1870,17 @@ export async function POST(request: NextRequest) {
       console.error('[AI-Chat] Knowledge lookup failed:', err);
     }
     
+    // Calculate data confidence for the response
+    const dataConfidence: DataConfidence = calculateDataConfidence({
+      hasPerplexityData: !!perplexityContext,
+      queryCategory: brainMode,
+    });
+    
+    console.log(`[AI-Chat] Data Confidence: ${dataConfidence.level} (${dataConfidence.score}/100)`);
+    
     const systemPrompt = buildSystemPrompt(brainMode, {
       hasRealTimeData: !!perplexityContext,
+      dataConfidence,
     });
     
     // Enhance system prompt with learned knowledge

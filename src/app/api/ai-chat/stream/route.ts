@@ -17,7 +17,7 @@ import OpenAI from 'openai';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getPerplexityClient } from '@/lib/perplexity';
-import { detectChatMode, buildSystemPrompt, type BrainMode } from '@/lib/sportbot-brain';
+import { detectChatMode, buildSystemPrompt, type BrainMode, calculateDataConfidence, type DataConfidence } from '@/lib/sportbot-brain';
 import { trackQuery, getCachedAnswer, shouldSkipCache } from '@/lib/sportbot-memory';
 import { saveKnowledge, buildLearnedContext, getTerminologyForSport } from '@/lib/sportbot-knowledge';
 import { cacheGet, cacheSet, CACHE_KEYS, hashChatQuery, getChatTTL } from '@/lib/cache';
@@ -25,6 +25,8 @@ import { checkChatRateLimit, getClientIp, CHAT_RATE_LIMITS } from '@/lib/rateLim
 import { prisma } from '@/lib/prisma';
 import { normalizeSport } from '@/lib/data-layer/bridge';
 import { getUnifiedMatchData, type MatchIdentifier } from '@/lib/unified-match-service';
+// Query Intelligence - smarter query understanding
+import { understandQuery, mapIntentToCategory, expandQuery, type QueryUnderstanding, type QueryCategory } from '@/lib/query-intelligence';
 // Verified stats imports for all sports
 import { isStatsQuery, getVerifiedPlayerStats, formatVerifiedPlayerStats } from '@/lib/verified-nba-stats';
 import { isNFLStatsQuery, getVerifiedNFLPlayerStats, formatVerifiedNFLPlayerStats } from '@/lib/verified-nfl-stats';
@@ -90,6 +92,91 @@ function stripMarkdown(text: string): string {
     .trim();
 }
 
+// ============================================
+// CONVERSATION MEMORY: Reference Resolution
+// ============================================
+
+/**
+ * Resolve pronouns and references from conversation history
+ * "his stats" → "LeBron James stats" (if we talked about LeBron)
+ * "that game" → "Lakers vs Warriors" (if we discussed it)
+ * "them" → "Manchester City" (if it was the subject)
+ */
+function resolveConversationReferences(message: string, history: ChatMessage[]): string {
+  const lower = message.toLowerCase();
+  
+  // Check if message has unresolved references
+  const hasPronouns = /\b(his|her|their|them|he|she|they|that|it|the team|the player|the game|the match)\b/i.test(lower);
+  if (!hasPronouns) return message;
+  
+  // Look back through history for entities mentioned
+  let lastPlayer: string | null = null;
+  let lastTeam: string | null = null;
+  let lastMatch: string | null = null;
+  
+  // Process history from oldest to newest (most recent overrides)
+  for (const msg of history.slice(-6)) { // Last 6 messages
+    const content = msg.content;
+    
+    // Extract player names (Capitalized First Last)
+    const playerMatch = content.match(/\b([A-Z][a-z]+\s+[A-Z][a-z]+)\b/);
+    if (playerMatch) {
+      // Verify it's likely a player name (not a team or place)
+      const name = playerMatch[1];
+      const isTeam = /\b(United|City|Real|Madrid|Barcelona|Bayern|Munich|Lakers|Warriors|Celtics|Chiefs|Eagles)\b/i.test(name);
+      if (!isTeam) {
+        lastPlayer = name;
+      }
+    }
+    
+    // Extract team names
+    const teamPatterns = [
+      /\b(Lakers|Warriors|Celtics|Heat|Bucks|Nuggets|Mavericks|76ers|Nets|Knicks|Suns|Clippers)\b/i,
+      /\b(Manchester (United|City)|Liverpool|Chelsea|Arsenal|Tottenham|Real Madrid|Barcelona|Bayern|Juventus|PSG)\b/i,
+      /\b(Chiefs|Eagles|Bills|Cowboys|49ers|Ravens|Bengals|Dolphins|Lions|Vikings)\b/i,
+    ];
+    
+    for (const pattern of teamPatterns) {
+      const match = content.match(pattern);
+      if (match) {
+        lastTeam = match[0];
+      }
+    }
+    
+    // Extract match references (Team vs Team)
+    const matchMatch = content.match(/([A-Z][a-zA-Z\s]+?)\s+(?:vs?\.?|versus|@)\s+([A-Z][a-zA-Z\s]+)/i);
+    if (matchMatch) {
+      lastMatch = `${matchMatch[1].trim()} vs ${matchMatch[2].trim()}`;
+    }
+  }
+  
+  let resolved = message;
+  
+  // Replace player pronouns
+  if (lastPlayer && /\b(his|him|he)\b/i.test(lower)) {
+    resolved = resolved.replace(/\b(his|him|he)\b/gi, lastPlayer);
+    console.log(`[Conversation] Resolved pronoun to player: ${lastPlayer}`);
+  }
+  
+  // Replace team references
+  if (lastTeam && /\b(their|them|they|the team)\b/i.test(lower)) {
+    resolved = resolved.replace(/\b(their|them|they|the team)\b/gi, lastTeam);
+    console.log(`[Conversation] Resolved pronoun to team: ${lastTeam}`);
+  }
+  
+  // Replace match references
+  if (lastMatch && /\b(that game|the game|that match|the match|it)\b/i.test(lower)) {
+    resolved = resolved.replace(/\b(that game|the game|that match|the match)\b/gi, lastMatch);
+    // Only replace "it" if context is clearly about a match
+    if (/\b(about it|for it|in it)\b/i.test(lower)) {
+      resolved = resolved.replace(/\bit\b/gi, lastMatch);
+    }
+    console.log(`[Conversation] Resolved reference to match: ${lastMatch}`);
+  }
+  
+  return resolved;
+}
+
 /**
  * Detect if message is non-English and translate for better search results
  */
@@ -145,9 +232,7 @@ async function translateToEnglish(message: string): Promise<{
   }
 }
 
-type QueryCategory = 'PLAYER' | 'ROSTER' | 'FIXTURE' | 'RESULT' | 'STANDINGS' | 'STATS' | 
-  'INJURY' | 'TRANSFER' | 'MANAGER' | 'ODDS' | 'COMPARISON' | 'HISTORY' | 'BROADCAST' | 
-  'VENUE' | 'PLAYER_PROP' | 'BETTING_ADVICE' | 'OUR_PREDICTION' | 'GENERAL';
+// QueryCategory type is now imported from query-intelligence
 
 function detectQueryCategory(message: string): QueryCategory {
   const msg = message.toLowerCase();
@@ -912,7 +997,7 @@ interface CachedChatResponse {
 export async function POST(request: NextRequest) {
   try {
     const body: ChatRequest = await request.json();
-    const { message, history = [] } = body;
+    let { message, history = [] } = body;
 
     if (!message || typeof message !== 'string') {
       return new Response(JSON.stringify({ error: 'Message is required' }), {
@@ -926,6 +1011,18 @@ export async function POST(request: NextRequest) {
         status: 503,
         headers: { 'Content-Type': 'application/json' }
       });
+    }
+    
+    // ============================================
+    // CONVERSATION MEMORY: Resolve pronouns/references from history
+    // "his stats" → "LeBron James stats" (if we talked about LeBron earlier)
+    // ============================================
+    if (history.length > 0) {
+      const resolvedMessage = resolveConversationReferences(message, history);
+      if (resolvedMessage !== message) {
+        console.log(`[AI-Chat-Stream] Resolved references: "${message}" → "${resolvedMessage}"`);
+        message = resolvedMessage;
+      }
     }
 
     // ==========================================
@@ -995,11 +1092,28 @@ If their favorite team has a match today/tonight, lead with that information.`;
       }
     }
 
+    // ============================================
+    // STEP 0: SMART QUERY UNDERSTANDING
+    // Use LLM-backed classification for better intent detection
+    // ============================================
+    let queryUnderstanding: QueryUnderstanding | null = null;
+    try {
+      queryUnderstanding = await understandQuery(message);
+      console.log(`[AI-Chat-Stream] Query Intelligence: intent=${queryUnderstanding.intent} (${(queryUnderstanding.intentConfidence * 100).toFixed(0)}%), entities=${queryUnderstanding.entities.map(e => e.name).join(', ')}, sport=${queryUnderstanding.sport || 'unknown'}`);
+      
+      if (queryUnderstanding.isAmbiguous) {
+        console.log(`[AI-Chat-Stream] ⚠️ Ambiguous query detected. Alternatives: ${queryUnderstanding.alternativeIntents?.join(', ')}`);
+      }
+    } catch (err) {
+      console.error('[AI-Chat-Stream] Query intelligence failed, using fallback:', err);
+    }
+
     // Check cache first (only for queries without conversation history)
     const queryHash = hashChatQuery(message);
     const cacheKey = CACHE_KEYS.chat(queryHash);
-    const queryCategory = detectQueryCategory(message);
-    const detectedSport = detectSport(message);
+    // Use smart classification if available, fallback to legacy
+    const queryCategory = queryUnderstanding ? mapIntentToCategory(queryUnderstanding.intent) : detectQueryCategory(message);
+    const detectedSport = queryUnderstanding?.sport || detectSport(message);
     
     // Skip cache for player stats queries to ensure verified stats are used
     // This covers NBA, NFL, NHL, and Soccer player stats
@@ -1095,12 +1209,30 @@ If their favorite team has a match today/tonight, lead with that information.`;
 
     // Step 0: Translate if needed
     const translation = await translateToEnglish(message);
-    const searchMessage = translation.englishQuery;
+    let searchMessage = translation.englishQuery;
     const originalLanguage = translation.originalLanguage;
+    
+    // Step 0.5: Expand short queries with player/team context
+    // "LeBron stats" → "LeBron James Los Angeles Lakers NBA stats 2025-26 season"
+    const { expandedQuery, playerContext } = expandQuery(searchMessage);
+    if (expandedQuery !== searchMessage) {
+      console.log(`[AI-Chat-Stream] Query expanded: "${searchMessage}" → "${expandedQuery}"`);
+      searchMessage = expandedQuery;
+    }
     
     let perplexityContext = '';
     let citations: string[] = [];
-    const shouldSearch = needsSearch(searchMessage);
+    
+    // Smart data source selection based on query understanding
+    // If we have verified data sources suggested, try those FIRST before Perplexity
+    const shouldSkipPerplexity = queryUnderstanding && 
+      queryUnderstanding.needsVerifiedStats && 
+      !queryUnderstanding.needsRealTimeData;
+    
+    const shouldSearch = !shouldSkipPerplexity && needsSearch(searchMessage);
+    
+    console.log(`[AI-Chat-Stream] Data strategy: ${shouldSkipPerplexity ? 'VERIFIED-FIRST' : 'PERPLEXITY-FIRST'}, sources: ${queryUnderstanding?.suggestedDataSources?.join(', ') || 'auto'}`);
+    
     // queryCategory already defined above for caching
 
     // Create streaming response early so we can send status updates
@@ -1120,7 +1252,11 @@ If their favorite team has a match today/tonight, lead with that information.`;
         streamController = controller;
         
         try {
-          // Step 1: Perplexity search if needed
+          // ============================================
+          // SMART DATA FETCHING: Verified sources FIRST, Perplexity as fallback
+          // ============================================
+          
+          // Step 1: Perplexity search if needed (skipped if verified data expected)
           if (shouldSearch) {
             const perplexity = getPerplexityClient();
             
@@ -1415,9 +1551,13 @@ If their favorite team has a match today/tonight, lead with that information.`;
           }
 
           // Step 1.13: Our Match Prediction (for upcoming games within 48h)
+          // Triggered by: explicit prediction queries OR Query Intelligence detecting MATCH_PREDICTION/OUR_ANALYSIS intent
           let verifiedMatchPredictionContext = '';
-          if (isMatchPredictionQuery(searchMessage)) {
-            console.log('[AI-Chat-Stream] Match prediction query detected...');
+          const shouldFetchOurPrediction = isMatchPredictionQuery(searchMessage) || 
+            (queryUnderstanding?.needsOurPrediction && queryUnderstanding.entities.length > 0);
+          
+          if (shouldFetchOurPrediction) {
+            console.log('[AI-Chat-Stream] Match prediction query detected (explicit or via query intelligence)...');
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '🎯 Fetching our match analysis...' })}\n\n`));
             
             const predictionResult = await getUpcomingMatchPrediction(searchMessage);
@@ -1437,10 +1577,60 @@ If their favorite team has a match today/tonight, lead with that information.`;
             }
           }
 
+          // ============================================
+          // PERPLEXITY FALLBACK: If we skipped Perplexity but got no verified data
+          // ============================================
+          const hasAnyVerifiedData = verifiedPlayerStatsContext || verifiedTeamMatchStatsContext || 
+            verifiedStandingsContext || verifiedLineupContext || verifiedMatchPredictionContext || 
+            verifiedMatchEventsContext || verifiedLeagueLeadersContext || verifiedCoachContext || 
+            ourPredictionContext;
+          
+          if (shouldSkipPerplexity && !hasAnyVerifiedData && needsSearch(searchMessage)) {
+            console.log('[AI-Chat-Stream] No verified data found, falling back to Perplexity...');
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '🔍 Searching for additional data...' })}\n\n`));
+            
+            const perplexity = getPerplexityClient();
+            if (perplexity.isConfigured()) {
+              try {
+                const searchResult = await perplexity.search(searchMessage, {
+                  recency: 'week',
+                  model: 'sonar-pro',
+                  maxTokens: 1000,
+                });
+                
+                if (searchResult.success && searchResult.content) {
+                  perplexityContext = searchResult.content;
+                  citations = searchResult.citations || [];
+                  console.log('[AI-Chat-Stream] ✅ Perplexity fallback succeeded');
+                }
+              } catch (err) {
+                console.log('[AI-Chat-Stream] Perplexity fallback failed:', err);
+              }
+            }
+          }
+
           // Send status: generating
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: 'Generating response...' })}\n\n`));
 
-          // Step 2: Build system prompt
+          // Step 2: Calculate data confidence and build system prompt
+          const dataConfidence: DataConfidence = calculateDataConfidence({
+            hasVerifiedStats: !!verifiedPlayerStatsContext || !!verifiedTeamMatchStatsContext,
+            hasVerifiedStandings: !!verifiedStandingsContext,
+            hasVerifiedLineups: !!verifiedLineupContext,
+            hasVerifiedPrediction: !!verifiedMatchPredictionContext,
+            hasVerifiedEvents: !!verifiedMatchEventsContext,
+            hasPerplexityData: !!perplexityContext,
+            hasDataLayerStats: !!dataLayerContext,
+            queryCategory: queryCategory,
+          });
+          
+          console.log(`[AI-Chat-Stream] Data Confidence: ${dataConfidence.level} (${dataConfidence.score}/100), sources: ${dataConfidence.sources.join(', ') || 'none'}`);
+          
+          // Log if we're going to refuse to answer
+          if (!dataConfidence.canAnswer) {
+            console.log(`[AI-Chat-Stream] ⚠️ Insufficient data to answer. Missing: ${dataConfidence.missingCritical.join(', ')}`);
+          }
+          
           const brainMode: BrainMode = 
             (queryCategory === 'BETTING_ADVICE' || queryCategory === 'PLAYER_PROP') 
               ? 'betting' 
@@ -1448,6 +1638,7 @@ If their favorite team has a match today/tonight, lead with that information.`;
           
           let systemPrompt = buildSystemPrompt(brainMode, {
             hasRealTimeData: !!perplexityContext,
+            dataConfidence, // NEW: pass confidence scoring
           });
           
           // Enhance system prompt when DataLayer stats are available
@@ -1670,7 +1861,7 @@ RESPONSE FORMAT:
           // Generate quick follow-ups initially (will be replaced by smart ones after response)
           const quickFollowUps = generateQuickFollowUps(message, queryCategory, detectedSport);
           
-          // Send metadata
+          // Send metadata (including data confidence for feedback tracking)
           const metadata = {
             type: 'metadata',
             citations,
@@ -1678,6 +1869,8 @@ RESPONSE FORMAT:
             usedDataLayer: !!dataLayerContext,
             brainMode,
             followUps: quickFollowUps,
+            dataConfidenceLevel: dataConfidence.level,
+            dataConfidenceScore: dataConfidence.score,
           };
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(metadata)}\n\n`));
 
@@ -1717,6 +1910,10 @@ RESPONSE FORMAT:
             hadCitations: citations.length > 0,
             citations,  // Save citations for reuse
             userId,     // Track who submitted the query
+            // NEW: Data confidence metrics for quality tracking
+            dataConfidenceLevel: dataConfidence.level,
+            dataConfidenceScore: dataConfidence.score,
+            dataSources: dataConfidence.sources,
           }).catch(() => {});
 
           saveKnowledge({

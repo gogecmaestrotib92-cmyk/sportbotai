@@ -45,6 +45,32 @@ interface ChatQuery {
   user?: { email: string | null; name: string | null } | null;
 }
 
+interface FeedbackByConfidence {
+  level: string;
+  total: number;
+  positive: number;
+  negative: number;
+  satisfactionRate: number;
+}
+
+interface RecentNegativeFeedback {
+  query: string;
+  rating: number;
+  confidence: string | null;
+  createdAt: Date;
+}
+
+interface FeedbackStats {
+  total: number;
+  positive: number;
+  negative: number;
+  neutral: number;
+  avgRating: number;
+  satisfactionRate: number;
+  byConfidence: FeedbackByConfidence[];
+  recentNegative: RecentNegativeFeedback[];
+}
+
 interface ChatAnalytics {
   totalQueries: number;
   todayQueries: number;
@@ -55,6 +81,7 @@ interface ChatAnalytics {
   topTeams: Array<{ team: string; count: number }>;
   recentQueries: ChatQuery[];
   agentPostsCount: number;
+  feedbackStats: FeedbackStats;
 }
 
 // ================================================================
@@ -861,6 +888,84 @@ export default function AdminDashboard({
                 totalPages={totalChatPages} 
                 onPageChange={setChatPage} 
               />
+            </div>
+
+            {/* User Feedback Analytics */}
+            <div className="card p-5">
+              <h3 className="text-sm font-medium text-text-primary mb-4">💬 User Feedback</h3>
+              
+              {/* Feedback Overview */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                <div className="bg-bg-tertiary rounded-lg p-3">
+                  <div className="text-2xl font-bold text-text-primary">{chatAnalytics.feedbackStats.total}</div>
+                  <div className="text-xs text-text-muted">Total Reviews</div>
+                </div>
+                <div className="bg-bg-tertiary rounded-lg p-3">
+                  <div className="text-2xl font-bold text-green-400">{chatAnalytics.feedbackStats.positive}</div>
+                  <div className="text-xs text-text-muted">Positive (4-5★)</div>
+                </div>
+                <div className="bg-bg-tertiary rounded-lg p-3">
+                  <div className="text-2xl font-bold text-red-400">{chatAnalytics.feedbackStats.negative}</div>
+                  <div className="text-xs text-text-muted">Negative (1-2★)</div>
+                </div>
+                <div className="bg-bg-tertiary rounded-lg p-3">
+                  <div className="text-2xl font-bold text-yellow-400">{chatAnalytics.feedbackStats.avgRating.toFixed(1)}★</div>
+                  <div className="text-xs text-text-muted">Avg Rating</div>
+                </div>
+                <div className="bg-bg-tertiary rounded-lg p-3">
+                  <div className="text-2xl font-bold text-accent">{chatAnalytics.feedbackStats.satisfactionRate}%</div>
+                  <div className="text-xs text-text-muted">Satisfaction</div>
+                </div>
+              </div>
+              
+              {/* Satisfaction by Data Confidence */}
+              {chatAnalytics.feedbackStats.byConfidence.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-xs font-medium text-text-secondary mb-2">Satisfaction by Data Confidence</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {chatAnalytics.feedbackStats.byConfidence.map((conf) => (
+                      <div key={conf.level} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-bg-tertiary">
+                        <span className={`text-sm font-medium ${
+                          conf.level === 'FULL' ? 'text-green-400' :
+                          conf.level === 'PARTIAL' ? 'text-yellow-400' :
+                          conf.level === 'MINIMAL' ? 'text-orange-400' :
+                          conf.level === 'NONE' ? 'text-red-400' :
+                          'text-text-muted'
+                        }`}>
+                          {conf.level}
+                        </span>
+                        <span className="text-xs text-text-muted">({conf.total})</span>
+                        <span className={`text-xs font-medium ${
+                          conf.satisfactionRate >= 80 ? 'text-green-400' :
+                          conf.satisfactionRate >= 60 ? 'text-yellow-400' :
+                          'text-red-400'
+                        }`}>
+                          {conf.satisfactionRate}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Recent Negative Feedback */}
+              {chatAnalytics.feedbackStats.recentNegative.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-medium text-text-secondary mb-2">⚠️ Recent Negative Feedback</h4>
+                  <div className="space-y-2">
+                    {chatAnalytics.feedbackStats.recentNegative.map((f, i) => (
+                      <div key={i} className="p-2 rounded bg-red-500/10 border border-red-500/20">
+                        <div className="text-sm text-text-primary truncate">&quot;{f.query}&quot;</div>
+                        <div className="flex gap-3 mt-1 text-xs text-text-muted">
+                          <span>Rating: {f.rating}★</span>
+                          {f.confidence && <span>Confidence: {f.confidence}</span>}
+                          <span>{formatTimeAgo(new Date(f.createdAt))}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

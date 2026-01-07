@@ -223,6 +223,11 @@ model ChatQuery {
   // User who submitted the query (optional - anonymous queries have no user)
   userId             String?
   user               User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Data confidence metrics (for quality tracking)
+  dataConfidenceLevel String?   // FULL, PARTIAL, MINIMAL, NONE
+  dataConfidenceScore Int?      // 0-100
+  dataSources         Json?     // Array of sources used
 
   @@index([category])
   @@index([sport])
@@ -231,6 +236,7 @@ model ChatQuery {
   @@index([createdAt])
   @@index([expiresAt])
   @@index([userId])
+  @@index([dataConfidenceLevel])
 }
 
 model TrendingTopic {
@@ -255,27 +261,31 @@ model TrendingTopic {
 }
 
 model ChatFeedback {
-  id                 String   @id @default(cuid())
-  messageId          String
-  queryHash          String
-  query              String
-  response           String
-  rating             Int
-  feedback           String?
-  sport              String?
-  category           String?
-  brainMode          String?
-  usedRealTimeSearch Boolean  @default(false)
-  fromCache          Boolean  @default(false)
-  userId             String?
-  userPlan           String?
-  createdAt          DateTime @default(now())
+  id                    String   @id @default(cuid())
+  messageId             String
+  queryHash             String
+  query                 String
+  response              String
+  rating                Int
+  feedback              String?
+  sport                 String?
+  category              String?
+  brainMode             String?
+  usedRealTimeSearch    Boolean  @default(false)
+  fromCache             Boolean  @default(false)
+  userId                String?
+  userPlan              String?
+  createdAt             DateTime @default(now())
+  // Data confidence tracking (correlate quality with feedback)
+  dataConfidenceLevel   String?   // FULL, PARTIAL, MINIMAL, NONE
+  dataConfidenceScore   Int?      // 0-100
 
   @@index([messageId])
   @@index([queryHash])
   @@index([rating])
   @@index([userId])
   @@index([createdAt])
+  @@index([dataConfidenceLevel])
 }
 
 model AgentPost {

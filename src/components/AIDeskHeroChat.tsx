@@ -33,6 +33,9 @@ interface ChatMessage {
   isStreaming?: boolean;
   feedbackGiven?: 'up' | 'down' | null;
   timestamp: Date;
+  // Data confidence for quality tracking
+  dataConfidenceLevel?: string;
+  dataConfidenceScore?: number;
 }
 
 interface ChatResponse {
@@ -340,7 +343,12 @@ export default function AIDeskHeroChat() {
     rating: 'up' | 'down',
     query: string,
     response: string,
-    meta?: { usedRealTimeSearch?: boolean; fromCache?: boolean }
+    meta?: { 
+      usedRealTimeSearch?: boolean; 
+      fromCache?: boolean;
+      dataConfidenceLevel?: string;
+      dataConfidenceScore?: number;
+    }
   ) => {
     try {
       const res = await fetch('/api/ai-chat/feedback', {
@@ -353,6 +361,8 @@ export default function AIDeskHeroChat() {
           rating: rating === 'up' ? 5 : 1,
           usedRealTimeSearch: meta?.usedRealTimeSearch,
           fromCache: meta?.fromCache,
+          dataConfidenceLevel: meta?.dataConfidenceLevel,
+          dataConfidenceScore: meta?.dataConfidenceScore,
         }),
       });
 
@@ -442,6 +452,14 @@ export default function AIDeskHeroChat() {
                     streamUsedSearch = data.usedRealTimeSearch;
                     streamFollowUps = data.followUps || [];
                     isFromCache = data.fromCache || false;
+                    const dataConfidenceLevel = data.dataConfidenceLevel;
+                    const dataConfidenceScore = data.dataConfidenceScore;
+                    // Store confidence in message for feedback
+                    setMessages(prev => prev.map(m => 
+                      m.id === assistantMessageId 
+                        ? { ...m, dataConfidenceLevel, dataConfidenceScore }
+                        : m
+                    ));
                   } else if (data.type === 'content') {
                     streamedContent += data.content;
                     setMessages(prev => prev.map(m => 
@@ -662,6 +680,8 @@ export default function AIDeskHeroChat() {
                               submitFeedback(msg.id, 'up', userMsg?.content || '', msg.content, {
                                 usedRealTimeSearch: msg.usedRealTimeSearch,
                                 fromCache: msg.fromCache,
+                                dataConfidenceLevel: msg.dataConfidenceLevel,
+                                dataConfidenceScore: msg.dataConfidenceScore,
                               });
                             }}
                             className="p-1.5 rounded-lg bg-white/5 text-text-muted hover:bg-green-500/20 hover:text-green-400 transition-all"
@@ -677,6 +697,8 @@ export default function AIDeskHeroChat() {
                               submitFeedback(msg.id, 'down', userMsg?.content || '', msg.content, {
                                 usedRealTimeSearch: msg.usedRealTimeSearch,
                                 fromCache: msg.fromCache,
+                                dataConfidenceLevel: msg.dataConfidenceLevel,
+                                dataConfidenceScore: msg.dataConfidenceScore,
                               });
                             }}
                             className="p-1.5 rounded-lg bg-white/5 text-text-muted hover:bg-red-500/20 hover:text-red-400 transition-all"

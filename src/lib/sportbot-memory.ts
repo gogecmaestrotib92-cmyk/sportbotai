@@ -32,6 +32,10 @@ interface QueryMetadata {
   hadCitations?: boolean;
   citations?: string[];      // Store citations for reuse
   userId?: string;           // User who submitted the query (optional)
+  // NEW: Data confidence metrics
+  dataConfidenceLevel?: 'FULL' | 'PARTIAL' | 'MINIMAL' | 'NONE';
+  dataConfidenceScore?: number;
+  dataSources?: string[];
 }
 
 interface AgentPostData {
@@ -280,6 +284,12 @@ export async function trackQuery(metadata: QueryMetadata): Promise<void> {
             citations: metadata.citations ? metadata.citations : undefined,
             expiresAt,
           } : {}),
+          // Update confidence metrics if provided
+          ...(metadata.dataConfidenceLevel ? {
+            dataConfidenceLevel: metadata.dataConfidenceLevel,
+            dataConfidenceScore: metadata.dataConfidenceScore,
+            dataSources: metadata.dataSources,
+          } : {}),
         },
       });
     } else {
@@ -301,6 +311,10 @@ export async function trackQuery(metadata: QueryMetadata): Promise<void> {
           hadCitations: metadata.hadCitations ?? false,
           expiresAt,
           userId: metadata.userId,
+          // NEW: Data confidence metrics
+          dataConfidenceLevel: metadata.dataConfidenceLevel,
+          dataConfidenceScore: metadata.dataConfidenceScore,
+          dataSources: metadata.dataSources,
         },
       });
     }

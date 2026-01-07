@@ -54,12 +54,30 @@ export interface MatchPredictionResult {
 /**
  * Check if query is asking for match prediction/analysis
  * NOT to be confused with OUR_PREDICTION category which asks about past predictions
+ * 
+ * Now more lenient: "Team A vs Team B" alone is enough to trigger lookup
+ * (Query Intelligence already classified it as MATCH_PREDICTION)
  */
 export function isMatchPredictionQuery(message: string): boolean {
   const lower = message.toLowerCase();
   
-  // Must have match context (team names or vs pattern)
-  const hasMatchContext = /\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s*(?:vs?\.?|x|-|@)\s*[A-Z][a-z]+/i.test(message) ||
+  // Check for explicit "vs" pattern - this is a match query
+  const hasVsPattern = /\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s*(?:vs?\.?|x|@)\s*[A-Z][a-z]+/i.test(message);
+  
+  // Check for two team names side by side (common shorthand: "Man City Arsenal", "Barcelona Real Madrid")
+  const hasTwoTeamsPattern = /\b(man\s*(city|utd|united)|liverpool|chelsea|arsenal|tottenham|newcastle|brighton|barcelona|barca|real\s*madrid|bayern|dortmund|juventus|juve|inter|milan|psg|lakers|warriors|celtics|heat|bucks|nets|knicks|nuggets|mavericks|mavs|chiefs|eagles|bills|cowboys)\b.*\b(man\s*(city|utd|united)|liverpool|chelsea|arsenal|tottenham|newcastle|brighton|barcelona|barca|real\s*madrid|bayern|dortmund|juventus|juve|inter|milan|psg|lakers|warriors|celtics|heat|bucks|nets|knicks|nuggets|mavericks|mavs|chiefs|eagles|bills|cowboys)\b/i.test(message);
+  
+  // If we have "Team vs Team" or two team names, it's likely a match prediction query
+  if (hasVsPattern || hasTwoTeamsPattern) {
+    // But exclude if it's clearly asking for past results, not prediction
+    const isPastResultQuery = /\b(score|result|who won|final|how did|yesterday|last night|last game)\b/i.test(lower);
+    if (!isPastResultQuery) {
+      return true;
+    }
+  }
+  
+  // Also check for match context with prediction keywords
+  const hasMatchContext = hasVsPattern ||
     /\b(match|game|fixture|utakmica|meč)\b/i.test(lower);
   
   if (!hasMatchContext) return false;
@@ -74,11 +92,13 @@ export function isMatchPredictionQuery(message: string): boolean {
     /predict.*match/i,
     /match\s+prediction/i,
     /what.*think.*will\s+(win|happen)/i,
-    /\banalysis\s+(of|for)\b/i,
-    /\bpre.?game\s+analysis\b/i,
-    /\bpre.?match\s+analysis\b/i,
+    /\banalysis\b/i,  // Simplified - any "analysis" mention
+    /\bpre.?game\b/i,
+    /\bpre.?match\b/i,
     /\bwin\s+probability\b/i,
     /\bexpected\s+(winner|result|outcome)\b/i,
+    /\btips?\b/i,
+    /\bpicks?\b/i,
     // Portuguese
     /quem\s+vai\s+ganhar/i,
     /previs[aã]o\s+(para|do)/i,

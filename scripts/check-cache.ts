@@ -1,4 +1,4 @@
-import { cacheGet, CACHE_KEYS } from '@/lib/cache';
+import { cacheGet, CACHE_KEYS } from '../src/lib/cache';
 
 async function check() {
   // Check NBA match
