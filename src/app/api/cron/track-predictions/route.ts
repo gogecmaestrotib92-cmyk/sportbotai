@@ -469,36 +469,40 @@ export async function GET(request: NextRequest) {
     console.log(`[Track-Predictions] Found ${recentPosts.length} recent posts to check`);
 
     for (const post of recentPosts) {
-      // Check if prediction already exists for this match
+      const matchName = post.matchRef || `${post.homeTeam} vs ${post.awayTeam}`;
+      
+      // Check if ANY prediction already exists for this match (from ANY source)
       const existingPrediction = await prisma.prediction.findFirst({
         where: {
-          matchName: post.matchRef || '',
-          source: 'AGENT_POST',
+          OR: [
+            { matchName: matchName },
+            { matchName: { contains: post.homeTeam || '', mode: 'insensitive' } },
+          ],
           createdAt: {
             gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Within last week
           },
         },
+        orderBy: { createdAt: 'desc' },
       });
 
       if (existingPrediction) {
-        // Link the post to existing prediction
+        // Link the post to existing prediction (even if from PRE_ANALYZE)
         await prisma.agentPost.update({
           where: { id: post.id },
           data: { predictionId: existingPrediction.id },
         });
+        console.log(`[Track-Predictions] Linked post to existing ${existingPrediction.source} prediction for ${matchName}`);
         continue;
       }
 
       // Extract prediction from content
       const prediction = await extractPredictionFromContent(
         post.content,
-        post.matchRef || `${post.homeTeam} vs ${post.awayTeam}`
+        matchName
       );
 
       if (prediction) {
         try {
-          const matchName = post.matchRef || `${post.homeTeam} vs ${post.awayTeam}`;
-          
           // Detect sport from league name
           const leagueLower = (post.league || '').toLowerCase();
           let sport = 'soccer';
@@ -510,13 +514,33 @@ export async function GET(request: NextRequest) {
             sport = 'icehockey_nhl';
           }
           
+          // Try to find a PRE_ANALYZE prediction to get correct kickoff time
+          const preAnalyzePred = await prisma.prediction.findFirst({
+            where: {
+              source: 'PRE_ANALYZE',
+              sport: sport,
+              kickoff: {
+                gte: new Date(), // Future matches
+                lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Within next week
+              },
+              OR: [
+                { matchName: { contains: post.homeTeam || '', mode: 'insensitive' } },
+                { matchName: { contains: post.awayTeam || '', mode: 'insensitive' } },
+              ],
+            },
+          });
+          
+          // Use PRE_ANALYZE kickoff if found, otherwise use 24 hours from now as estimate
+          const kickoffTime = preAnalyzePred?.kickoff || new Date(Date.now() + 24 * 60 * 60 * 1000);
+          const matchIdToUse = preAnalyzePred?.matchId || matchName.replace(/\s+/g, '_').toLowerCase();
+          
           const newPrediction = await prisma.prediction.create({
             data: {
-              matchId: matchName.replace(/\s+/g, '_').toLowerCase(),
+              matchId: matchIdToUse,
               matchName,
               sport,
               league: post.league || 'Unknown',
-              kickoff: new Date(), // Will be updated when we get actual match time
+              kickoff: kickoffTime,
               type: 'MATCH_RESULT',
               prediction: prediction.predictedScenario,
               reasoning: prediction.narrativeAngle,
@@ -527,7 +551,7 @@ export async function GET(request: NextRequest) {
           });
           
           results.newPredictions++;
-          console.log(`[Track-Predictions] Created prediction for ${post.matchRef} (${sport})`);
+          console.log(`[Track-Predictions] Created prediction for ${post.matchRef} (${sport}, kickoff: ${kickoffTime.toISOString()})`);
         } catch (error) {
           console.error(`[Track-Predictions] Error creating prediction:`, error);
           results.errors.push(`Failed to create prediction for ${post.matchRef}: ${error instanceof Error ? error.message : 'Unknown'}`);
