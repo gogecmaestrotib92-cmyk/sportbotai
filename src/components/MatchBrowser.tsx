@@ -112,6 +112,12 @@ interface AiPickData {
   conviction: number;
 }
 
+// Create normalized key for matching (same logic as API)
+function createMatchKey(homeTeam: string, awayTeam: string): string {
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return `${normalize(homeTeam)}_vs_${normalize(awayTeam)}`;
+}
+
 export default function MatchBrowser({ initialSport = 'soccer', initialLeague, maxMatches = 12 }: MatchBrowserProps) {
   const [selectedSport, setSelectedSport] = useState<string>(initialSport);
   const [selectedLeague, setSelectedLeague] = useState<string>(initialLeague || 'soccer_epl');
@@ -121,11 +127,11 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
   const [leagueMatchCounts, setLeagueMatchCounts] = useState<Record<string, number>>({});
   
   // AI Picks from pre-analyzed predictions (real AI data)
-  // Using plain objects instead of Set/Map to avoid hydration issues
+  // Using matchKey (team names) for reliable matching instead of matchId
   const [aiPicksData, setAiPicksData] = useState<{
-    flaggedMatchIds: Record<string, boolean>;
-    aiPicksMap: Record<string, AiPickData>;
-  }>({ flaggedMatchIds: {}, aiPicksMap: {} });
+    flaggedMatchKeys: Record<string, boolean>;  // Changed from matchIds to matchKeys
+    aiPicksMap: Record<string, AiPickData>;     // Keyed by matchKey
+  }>({ flaggedMatchKeys: {}, aiPicksMap: {} });
   
   // New state for filters
   const [viewMode, setViewMode] = useState<ViewMode>('ai-picks');
@@ -206,22 +212,21 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.aiPicks) {
-          const flaggedIds: Record<string, boolean> = {};
+          const flaggedKeys: Record<string, boolean> = {};
           const picksMap: Record<string, AiPickData> = {};
           
-          for (const id of (data.flaggedMatchIds || [])) {
-            flaggedIds[id] = true;
-          }
-          
+          // Use matchKey for reliable matching (team-name based)
           for (const pick of data.aiPicks) {
-            picksMap[pick.matchId] = {
+            const matchKey = pick.matchKey || createMatchKey(pick.homeTeam, pick.awayTeam);
+            flaggedKeys[matchKey] = true;
+            picksMap[matchKey] = {
               aiReason: pick.aiReason,
               valueBetEdge: pick.valueBetEdge,
               conviction: pick.conviction,
             };
           }
           
-          setAiPicksData({ flaggedMatchIds: flaggedIds, aiPicksMap: picksMap });
+          setAiPicksData({ flaggedMatchKeys: flaggedKeys, aiPicksMap: picksMap });
         }
       }
     } catch (err) {
@@ -295,15 +300,21 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
     if (!matches || matches.length === 0) return [];
     
     // Primary: Use real AI picks from pre-analyze cron (stored in DB)
-    const hasFlaggedData = Object.keys(aiPicksData.flaggedMatchIds).length > 0;
+    const hasFlaggedData = Object.keys(aiPicksData.flaggedMatchKeys).length > 0;
     if (hasFlaggedData) {
       // Filter current matches to only include those flagged by AI
-      const flagged = matches.filter(m => aiPicksData.flaggedMatchIds[m.matchId]);
+      // Use matchKey (team-name based) for reliable matching
+      const flagged = matches.filter(m => {
+        const matchKey = createMatchKey(m.homeTeam, m.awayTeam);
+        return aiPicksData.flaggedMatchKeys[matchKey];
+      });
       
       // Sort by edge/conviction (highest value first)
       return flagged.sort((a, b) => {
-        const aData = aiPicksData.aiPicksMap[a.matchId];
-        const bData = aiPicksData.aiPicksMap[b.matchId];
+        const aKey = createMatchKey(a.homeTeam, a.awayTeam);
+        const bKey = createMatchKey(b.homeTeam, b.awayTeam);
+        const aData = aiPicksData.aiPicksMap[aKey];
+        const bData = aiPicksData.aiPicksMap[bKey];
         const aScore = (aData?.valueBetEdge || 0) + (aData?.conviction || 0) / 10;
         const bScore = (bData?.valueBetEdge || 0) + (bData?.conviction || 0) / 10;
         return bScore - aScore;
@@ -318,13 +329,13 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
   const valueFlaggedMap = useMemo(() => {
     const map = new Map<string, ValueFlaggedMatch>();
     // Only populate if we're using fallback (no API data)
-    const hasFlaggedData = Object.keys(aiPicksData.flaggedMatchIds).length > 0;
+    const hasFlaggedData = Object.keys(aiPicksData.flaggedMatchKeys).length > 0;
     if (!hasFlaggedData) {
       const fallbackMatches = getValueFlaggedMatches(matches, Math.min(10, matches.length));
       fallbackMatches.forEach(m => map.set(m.matchId, m));
     }
     return map;
-  }, [matches, aiPicksData.flaggedMatchIds.size]);
+  }, [matches, Object.keys(aiPicksData.flaggedMatchKeys).length]);
 
   // Apply filters to get final match list
   const filteredMatches = useMemo(() => {
@@ -634,8 +645,9 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
         {!isLoading && !error && filteredMatches && filteredMatches.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredMatches.slice(0, maxMatches).map((match, index) => {
-              // Get AI data from real API or fallback heuristic
-              const aiPickData = aiPicksData.aiPicksMap[match.matchId];
+              // Get AI data using matchKey for reliable matching
+              const matchKey = createMatchKey(match.homeTeam, match.awayTeam);
+              const aiPickData = aiPicksData.aiPicksMap[matchKey];
               const valueFlagged = valueFlaggedMap.get(match.matchId);
               const trendingMatch = hotMatches.find(m => m.matchId === match.matchId);
               

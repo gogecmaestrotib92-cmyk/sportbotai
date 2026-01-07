@@ -21,8 +21,12 @@ const MIN_VALUE_EDGE = 3.0;
 const MIN_CONVICTION = 55;
 
 interface AIPick {
-  matchId: string;
+  matchId: string;        // Original matchId from database
+  seoMatchId: string;     // SEO-friendly slug for URLs
+  matchKey: string;       // Normalized key for matching (team1_vs_team2)
   matchName: string;
+  homeTeam: string;       // For matching
+  awayTeam: string;       // For matching
   sport: string;
   league: string;
   kickoff: string;
@@ -33,6 +37,12 @@ interface AIPick {
   conviction: number;
   reasoning: string;
   aiReason: string; // Short display text
+}
+
+// Create normalized key for matching (lowercase, no special chars)
+function createMatchKey(homeTeam: string, awayTeam: string): string {
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return `${normalize(homeTeam)}_vs_${normalize(awayTeam)}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -95,14 +105,22 @@ export async function GET(request: NextRequest) {
       
       // Parse team names from matchName (format: "Detroit Pistons vs New York Knicks")
       const [homeTeam, awayTeam] = p.matchName.split(' vs ');
-      // Generate SEO-friendly matchId that match-preview API can parse
+      // Generate SEO-friendly matchId for URLs
       const seoMatchId = homeTeam && awayTeam 
         ? generateMatchSlug(homeTeam, awayTeam, p.sport, p.kickoff.toISOString())
         : p.matchId;
+      // Create normalized key for matching with live data
+      const matchKey = homeTeam && awayTeam
+        ? createMatchKey(homeTeam, awayTeam)
+        : p.matchId;
       
       return {
-        matchId: seoMatchId,
+        matchId: p.matchId,       // Original ID
+        seoMatchId: seoMatchId,   // SEO slug for URLs
+        matchKey: matchKey,       // For matching with live data
         matchName: p.matchName,
+        homeTeam: homeTeam?.trim() || '',
+        awayTeam: awayTeam?.trim() || '',
         sport: p.sport,
         league: p.league,
         kickoff: p.kickoff.toISOString(),
@@ -116,13 +134,15 @@ export async function GET(request: NextRequest) {
       };
     });
     
-    // Also return match IDs for quick lookup
+    // Return both original matchIds AND matchKeys for flexible matching
     const flaggedMatchIds = aiPicks.map(p => p.matchId);
+    const flaggedMatchKeys = aiPicks.map(p => p.matchKey);
     
     return NextResponse.json({
       success: true,
       aiPicks,
       flaggedMatchIds,
+      flaggedMatchKeys, // For team-name based matching
       count: aiPicks.length,
       criteria: {
         minValueEdge: MIN_VALUE_EDGE,
