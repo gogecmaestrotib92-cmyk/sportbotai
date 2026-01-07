@@ -136,7 +136,9 @@ export async function captureScreenshotWithFallback(
     const result = await captureWebsiteScreenshot(websiteUrl, toolName);
     return result.url;
   } catch (error) {
-    console.log(`[Screenshot] Failed, using fallback: ${error instanceof Error ? error.message : error}`);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error(`[Screenshot] captureScreenshotWithFallback FAILED for ${toolName}: ${errorMsg}`);
+    console.error(`[Screenshot] Full error:`, error);
     return fallbackImage;
   }
 }

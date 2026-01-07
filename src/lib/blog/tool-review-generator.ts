@@ -79,6 +79,8 @@ export async function generateToolReviewPosts(count: number = 1): Promise<ToolRe
       let featuredImage = '/sports/football.jpg';
       try {
         console.log(`[ToolReview] Capturing screenshot of ${tool.toolUrl}...`);
+        console.log(`[ToolReview] SCREENSHOTONE_API_KEY configured: ${!!process.env.SCREENSHOTONE_API_KEY}`);
+        
         featuredImage = await captureScreenshotWithFallback(
           tool.toolUrl,
           tool.toolName,
@@ -87,7 +89,7 @@ export async function generateToolReviewPosts(count: number = 1): Promise<ToolRe
         if (featuredImage.includes('blob.vercel-storage.com')) {
           console.log(`[ToolReview] ✅ Screenshot captured: ${featuredImage.substring(0, 80)}...`);
         } else {
-          console.log(`[ToolReview] ⚠️ Using fallback image (screenshot failed silently)`);
+          console.log(`[ToolReview] ⚠️ Using fallback image - featuredImage is: ${featuredImage}`);
         }
       } catch (imgErr) {
         console.error(`[ToolReview] ❌ Screenshot error for ${tool.toolName}:`, imgErr);
