@@ -626,6 +626,44 @@ const translations = {
   },
 };
 
+// Map league/sport names to The Odds API sportKey for back navigation
+function getBackNavigationLeague(league: string, sport: string): string | null {
+  const l = league.toLowerCase();
+  const s = sport.toLowerCase();
+  
+  // Soccer leagues
+  if (l.includes('premier league') || l === 'epl') return 'soccer_epl';
+  if (l.includes('la liga')) return 'soccer_spain_la_liga';
+  if (l.includes('bundesliga')) return 'soccer_germany_bundesliga';
+  if (l.includes('serie a')) return 'soccer_italy_serie_a';
+  if (l.includes('ligue 1')) return 'soccer_france_ligue_one';
+  if (l.includes('primeira liga')) return 'soccer_portugal_primeira_liga';
+  if (l.includes('eredivisie')) return 'soccer_netherlands_eredivisie';
+  if (l.includes('champions league')) return 'soccer_uefa_champs_league';
+  if (l.includes('europa league')) return 'soccer_uefa_europa_league';
+  if (l.includes('scottish')) return 'soccer_spl';
+  if (l.includes('süper lig') || l.includes('super lig')) return 'soccer_turkey_super_league';
+  if (l.includes('jupiler') || l.includes('belgian')) return 'soccer_belgium_first_div';
+  
+  // Basketball
+  if (l === 'nba' || s.includes('nba') || s.includes('basketball')) return 'basketball_nba';
+  if (l.includes('euroleague')) return 'basketball_euroleague';
+  
+  // American Football
+  if (l === 'nfl' || s.includes('nfl') || s.includes('american')) return 'americanfootball_nfl';
+  if (l.includes('ncaa')) return 'americanfootball_ncaaf';
+  
+  // Hockey
+  if (l === 'nhl' || s.includes('nhl') || s.includes('hockey')) return 'icehockey_nhl';
+  
+  // Default by sport category
+  if (s.includes('soccer') || s.includes('football')) return 'soccer_epl';
+  if (s.includes('basket')) return 'basketball_nba';
+  if (s.includes('hockey') || s.includes('ice')) return 'icehockey_nhl';
+  
+  return null;
+}
+
 export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPreviewClientProps) {
   const t = translations[locale];
   const localePath = locale === 'sr' ? '/sr' : '';
@@ -644,6 +682,18 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
   
   // Parse matchId immediately to show header while loading
   const parsedMatch = useMemo(() => parseMatchIdClient(matchId), [matchId]);
+  
+  // Compute back URL based on match league/sport
+  const backUrl = useMemo(() => {
+    const league = data?.matchInfo?.league || parsedMatch?.league || '';
+    const sport = data?.matchInfo?.sport || parsedMatch?.sport || '';
+    const sportKey = getBackNavigationLeague(league, sport);
+    
+    if (sportKey) {
+      return `${localePath}/matches?league=${sportKey}`;
+    }
+    return `${localePath}/matches`;
+  }, [data?.matchInfo?.league, data?.matchInfo?.sport, parsedMatch?.league, parsedMatch?.sport, localePath]);
 
 
   // Check if match is too far in the future (>48 hours)
@@ -774,7 +824,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
         <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
           {/* Back navigation */}
           <Link 
-            href={`${localePath}/matches`}
+            href={backUrl}
             className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -838,7 +888,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
         <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
           {/* Back navigation */}
           <Link 
-            href={`${localePath}/matches`}
+            href={backUrl}
             className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -919,7 +969,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
           {/* CTA to browse other matches */}
           <div className="mt-6 text-center">
             <Link 
-              href={`${localePath}/matches`}
+              href={backUrl}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] rounded-lg text-sm text-zinc-300 hover:text-white transition-colors"
             >
               <span>{t.findOther}</span>
@@ -945,7 +995,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
         <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
           {/* Back navigation */}
           <Link 
-            href={`${localePath}/matches`}
+            href={backUrl}
             className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1020,7 +1070,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
             {/* Secondary action - keep user in funnel */}
             <p className="mt-4 text-zinc-600 text-sm">
               <Link 
-                href={`${localePath}/matches`}
+                href={backUrl}
                 className="text-zinc-500 hover:text-zinc-400 transition-colors underline underline-offset-2"
               >
                 {t.orViewAnother}
@@ -1047,7 +1097,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
             {error || t.couldntFindMatch}
           </p>
           <Link 
-            href={`${localePath}/matches`}
+            href={backUrl}
             className="btn-gradient-border inline-flex items-center gap-2 text-sm"
           >
             <span>←</span>
@@ -1113,7 +1163,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
       <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
         {/* Back navigation - Minimal */}
         <Link 
-          href={`${localePath}/matches`}
+          href={backUrl}
           className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
