@@ -309,19 +309,23 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
         return aiPicksData.flaggedMatchKeys[matchKey];
       });
       
-      // Sort by edge/conviction (highest value first)
-      return flagged.sort((a, b) => {
-        const aKey = createMatchKey(a.homeTeam, a.awayTeam);
-        const bKey = createMatchKey(b.homeTeam, b.awayTeam);
-        const aData = aiPicksData.aiPicksMap[aKey];
-        const bData = aiPicksData.aiPicksMap[bKey];
-        const aScore = (aData?.valueBetEdge || 0) + (aData?.conviction || 0) / 10;
-        const bScore = (bData?.valueBetEdge || 0) + (bData?.conviction || 0) / 10;
-        return bScore - aScore;
-      });
+      // If we have flagged matches for THIS league, use them
+      if (flagged.length > 0) {
+        // Sort by edge/conviction (highest value first)
+        return flagged.sort((a, b) => {
+          const aKey = createMatchKey(a.homeTeam, a.awayTeam);
+          const bKey = createMatchKey(b.homeTeam, b.awayTeam);
+          const aData = aiPicksData.aiPicksMap[aKey];
+          const bData = aiPicksData.aiPicksMap[bKey];
+          const aScore = (aData?.valueBetEdge || 0) + (aData?.conviction || 0) / 10;
+          const bScore = (bData?.valueBetEdge || 0) + (bData?.conviction || 0) / 10;
+          return bScore - aScore;
+        });
+      }
+      // If no matches for this league, fall through to heuristic
     }
     
-    // Fallback: Use client-side heuristic if no pre-analyzed data
+    // Fallback: Use client-side heuristic if no pre-analyzed data for current matches
     return getValueFlaggedMatches(matches, Math.min(10, matches.length)) as MatchData[];
   }, [matches, aiPicksData]);
 
