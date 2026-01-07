@@ -300,6 +300,56 @@ async function getFixtureStatistics(fixtureId: number): Promise<Array<{
 }
 
 /**
+ * Calculate a team's actual average shots per game from their recent fixtures
+ * This is more accurate than estimates since API doesn't provide shots in team stats
+ */
+async function getTeamAverageShotsPerGame(
+  teamId: number,
+  excludeFixtureId?: number, // Exclude the match we're comparing against
+  gamesCount: number = 10
+): Promise<number | null> {
+  // Get team's recent finished fixtures
+  const fixtures = await apiRequest<Array<{
+    fixture: { id: number; date: string };
+    teams: { home: { id: number }; away: { id: number } };
+  }>>('/fixtures', {
+    team: teamId,
+    last: gamesCount + 1, // Get extra in case we need to exclude one
+    status: 'FT',
+  });
+
+  if (!fixtures || fixtures.length === 0) return null;
+
+  // Filter out the excluded fixture if specified
+  const relevantFixtures = excludeFixtureId 
+    ? fixtures.filter(f => f.fixture.id !== excludeFixtureId).slice(0, gamesCount)
+    : fixtures.slice(0, gamesCount);
+
+  if (relevantFixtures.length === 0) return null;
+
+  let totalShots = 0;
+  let gamesWithStats = 0;
+
+  for (const fixture of relevantFixtures) {
+    const stats = await getFixtureStatistics(fixture.fixture.id);
+    if (!stats) continue;
+
+    const teamStats = stats.find(s => s.team.id === teamId);
+    if (!teamStats) continue;
+
+    const shotsValue = teamStats.statistics.find(s => s.type === 'Total Shots')?.value;
+    if (shotsValue !== null && shotsValue !== undefined) {
+      totalShots += typeof shotsValue === 'number' ? shotsValue : parseInt(String(shotsValue), 10) || 0;
+      gamesWithStats++;
+    }
+  }
+
+  if (gamesWithStats === 0) return null;
+
+  return Math.round((totalShots / gamesWithStats) * 10) / 10;
+}
+
+/**
  * Get team's season statistics (for averages)
  */
 async function getTeamSeasonStats(
@@ -451,10 +501,9 @@ export async function getOpponentAnalysis(
     return { success: false, data: null, error: matchStats.error };
   }
 
-  const { team, fixtures, league } = matchStats.data;
-  const season = new Date().getFullYear();
+  const { team, fixtures } = matchStats.data;
 
-  console.log(`[Team-Match-Stats] Analyzing opponents vs ${team.name}`);
+  console.log(`[Team-Match-Stats] Analyzing opponents vs ${team.name} - calculating real shot averages`);
 
   const analysis: Array<{
     fixture: { date: string; homeTeam: string; awayTeam: string; score: string };
@@ -468,33 +517,25 @@ export async function getOpponentAnalysis(
   let belowAverage = 0;
 
   for (const fixture of fixtures) {
-    // Get opponent's season average
-    const opponentSeasonStats = await getTeamSeasonStats(
+    // Get opponent's REAL average shots per game (excluding this match)
+    const opponentAvgShots = await getTeamAverageShotsPerGame(
       fixture.opponent.id,
-      league.id,
-      season
+      fixture.fixtureId, // Exclude this match from average
+      10 // Use last 10 matches for average
     );
 
-    // If we can't get season stats, try to estimate from recent fixtures
-    // For now, we'll skip if no season stats available
-    if (!opponentSeasonStats) {
-      console.log(`[Team-Match-Stats] No season stats for ${fixture.opponent.name}`);
-      continue;
-    }
-
-    // Calculate approximate shots per game from goals ratio (rough estimate)
-    // Note: API doesn't give shots in team statistics, only goals
-    // We'd need to call multiple fixture statistics to get true average
-    // For now, use a reasonable estimate based on league averages
-    const avgShotsPerGame = 12; // League average estimate
+    // If we couldn't calculate, use league average estimate
+    const avgShotsPerGame = opponentAvgShots ?? 12;
+    
+    console.log(`[Team-Match-Stats] ${fixture.opponent.name} avg shots: ${avgShotsPerGame} (${opponentAvgShots ? 'calculated' : 'estimated'})`);
 
     const actualShots = fixture.opponentStatistics.shotsTotal;
     const shotDiff = actualShots - avgShotsPerGame;
     totalShotDiff += shotDiff;
 
-    if (shotDiff > 0) {
+    if (shotDiff > 0.5) { // More than 0.5 above average counts as "above"
       aboveAverage++;
-    } else if (shotDiff < 0) {
+    } else if (shotDiff < -0.5) {
       belowAverage++;
     }
 
@@ -508,7 +549,7 @@ export async function getOpponentAnalysis(
       opponent: fixture.opponent,
       opponentSeasonAverage: {
         shotsPerGame: avgShotsPerGame,
-        cornersPerGame: 5, // Estimate
+        cornersPerGame: 5, // Still estimate for corners
       },
       opponentStatsInThisMatch: {
         shots: actualShots,
@@ -516,7 +557,7 @@ export async function getOpponentAnalysis(
       },
       comparison: {
         shotsVsAverage: Math.round(shotDiff * 10) / 10,
-        cornersVsAverage: 0, // Would need season stats
+        cornersVsAverage: 0, // Would need to calculate
       },
     });
   }
@@ -586,11 +627,27 @@ export function formatTeamMatchStatsContext(
     context += `  • Possession: ${fixture.opponentStatistics.possession}%\n`;
   }
 
-  // Add opponent analysis if available
+  // Add detailed opponent analysis if available
   if (opponentAnalysis?.success && opponentAnalysis.data) {
-    const { summary } = opponentAnalysis.data;
+    const { analysis, summary } = opponentAnalysis.data;
     context += `\n${'─'.repeat(60)}\n`;
-    context += `\nOPPONENT PATTERN ANALYSIS:\n`;
+    context += `\nOPPONENT SHOTS VS THEIR SEASON AVERAGE:\n`;
+    context += `(Did opponents shoot more/less than their usual average against ${team.name}?)\n\n`;
+    
+    for (const item of analysis) {
+      const dateStr = new Date(item.fixture.date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+      const diffSign = item.comparison.shotsVsAverage >= 0 ? '+' : '';
+      const indicator = item.comparison.shotsVsAverage > 0.5 ? '📈' : item.comparison.shotsVsAverage < -0.5 ? '📉' : '➖';
+      
+      context += `${indicator} ${item.opponent.name} (${dateStr}):\n`;
+      context += `   Season avg: ${item.opponentSeasonAverage.shotsPerGame} shots/game\n`;
+      context += `   vs ${team.name}: ${item.opponentStatsInThisMatch.shots} shots (${diffSign}${item.comparison.shotsVsAverage})\n\n`;
+    }
+    
+    context += `SUMMARY:\n`;
     context += `• Games where opponents shot ABOVE their average: ${summary.opponentsAboveAverageShots}\n`;
     context += `• Games where opponents shot BELOW their average: ${summary.opponentsBelowAverageShots}\n`;
     context += `• Average shot difference vs opponent norms: ${summary.avgShotDifference > 0 ? '+' : ''}${summary.avgShotDifference}\n`;
