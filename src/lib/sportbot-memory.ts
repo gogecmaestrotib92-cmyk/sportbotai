@@ -340,7 +340,7 @@ export async function trackQuery(metadata: QueryMetadata): Promise<void> {
           // Classification tracking
           detectedIntent: metadata.detectedIntent,
           intentConfidence: metadata.intentConfidence,
-          entitiesDetected: metadata.entitiesDetected ? JSON.stringify(metadata.entitiesDetected) : null,
+          entitiesDetected: metadata.entitiesDetected ? JSON.parse(JSON.stringify(metadata.entitiesDetected)) : undefined,
           expandedQuery: metadata.expandedQuery,
           patternMatched: metadata.patternMatched,
           wasLLMClassified: metadata.wasLLMClassified ?? false,
