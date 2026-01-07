@@ -35,23 +35,52 @@ interface MatchResult {
 }
 
 /**
+ * Helper to find match by team names from API response
+ */
+function findMatchByTeams(
+  matches: any[], 
+  homeTeam: string, 
+  awayTeam: string, 
+  isBasketball: boolean
+): any | null {
+  const homeNormalized = homeTeam.toLowerCase().replace(/[^a-z]/g, '');
+  const awayNormalized = awayTeam.toLowerCase().replace(/[^a-z]/g, '');
+  
+  return matches.find((m: any) => {
+    const apiHome = (m.teams?.home?.name || '').toLowerCase().replace(/[^a-z]/g, '');
+    const apiAway = (m.teams?.away?.name || '').toLowerCase().replace(/[^a-z]/g, '');
+    
+    // Fuzzy match - partial matching in both directions
+    const homeMatch = apiHome.includes(homeNormalized) || homeNormalized.includes(apiHome);
+    const awayMatch = apiAway.includes(awayNormalized) || awayNormalized.includes(apiAway);
+    
+    return homeMatch && awayMatch;
+  }) || null;
+}
+
+/**
  * Fetch match result from API
  * Supports both numeric IDs and team name slugs
+ * 
+ * IMPORTANT: For AGENT_POST predictions, the kickoff time might be wrong
+ * (e.g., set at post creation time, not actual match time).
+ * We search multiple days to find the match.
  */
 async function getMatchResult(matchId: string, sport: string, matchName?: string, kickoff?: Date): Promise<MatchResult | null> {
   try {
-    // Check if matchId is numeric (real API ID) or a slug
+    // Check if matchId is numeric (API-Football ID), UUID (The Odds API), or slug
     const isNumericId = /^\d+$/.test(matchId);
+    const isUUID = /^[a-f0-9]{32}$/.test(matchId);
     
     // For basketball sports, use basketball API
     const isBasketball = sport.includes('basketball') || sport.includes('nba') || sport.includes('euroleague');
     const baseUrl = isBasketball ? BASKETBALL_API_URL : FOOTBALL_API_URL;
+    const endpoint = isBasketball ? '/games' : '/fixtures';
     
     let match: any = null;
     
+    // Strategy 1: Direct ID lookup (only for numeric API-Football IDs)
     if (isNumericId) {
-      // Direct ID lookup
-      const endpoint = isBasketball ? '/games' : '/fixtures';
       const response = await fetch(`${baseUrl}${endpoint}?id=${matchId}`, {
         headers: { 'x-apisports-key': API_KEY },
       });
@@ -59,44 +88,57 @@ async function getMatchResult(matchId: string, sport: string, matchName?: string
       if (response.ok) {
         const data = await response.json();
         match = data.response?.[0];
+        if (match) {
+          console.log(`[Validation] Found match by numeric ID: ${matchId}`);
+        }
       }
     }
     
-    // If no match found and we have team names, search by team/date
+    // Strategy 2: Search by team names
+    // For UUIDs (from The Odds API) and slugs, we need to search by team names
+    // Also search multiple days since kickoff might be wrong for AGENT_POST predictions
     if (!match && matchName) {
       const [homeTeam, awayTeam] = matchName.split(' vs ').map(t => t.trim());
       
-      if (homeTeam && awayTeam && kickoff) {
-        const dateStr = kickoff.toISOString().split('T')[0];
-        const endpoint = isBasketball ? '/games' : '/fixtures';
+      if (homeTeam && awayTeam) {
+        // Generate dates to search: stored date, plus/minus 2 days
+        const baseDate = kickoff || new Date();
+        const datesToSearch: string[] = [];
         
-        // For soccer, search by date and then filter by team names
-        const response = await fetch(`${baseUrl}${endpoint}?date=${dateStr}`, {
-          headers: { 'x-apisports-key': API_KEY },
-        });
+        for (let dayOffset = -2; dayOffset <= 2; dayOffset++) {
+          const searchDate = new Date(baseDate);
+          searchDate.setDate(searchDate.getDate() + dayOffset);
+          datesToSearch.push(searchDate.toISOString().split('T')[0]);
+        }
         
-        if (response.ok) {
-          const data = await response.json();
-          const matches = data.response || [];
-          
-          // Find the match by team names (fuzzy match)
-          const homeNormalized = homeTeam.toLowerCase().replace(/[^a-z]/g, '');
-          const awayNormalized = awayTeam.toLowerCase().replace(/[^a-z]/g, '');
-          
-          match = matches.find((m: any) => {
-            const apiHome = isBasketball 
-              ? (m.teams?.home?.name || '').toLowerCase().replace(/[^a-z]/g, '')
-              : (m.teams?.home?.name || '').toLowerCase().replace(/[^a-z]/g, '');
-            const apiAway = isBasketball 
-              ? (m.teams?.away?.name || '').toLowerCase().replace(/[^a-z]/g, '')
-              : (m.teams?.away?.name || '').toLowerCase().replace(/[^a-z]/g, '');
-            
-            return (apiHome.includes(homeNormalized) || homeNormalized.includes(apiHome)) &&
-                   (apiAway.includes(awayNormalized) || awayNormalized.includes(apiAway));
+        // Remove duplicates and search each date
+        const uniqueDates = [...new Set(datesToSearch)];
+        
+        for (const dateStr of uniqueDates) {
+          const response = await fetch(`${baseUrl}${endpoint}?date=${dateStr}`, {
+            headers: { 'x-apisports-key': API_KEY },
           });
           
-          if (match) {
-            console.log(`[Validation] Found match by team names: ${homeTeam} vs ${awayTeam}`);
+          if (response.ok) {
+            const data = await response.json();
+            const matches = data.response || [];
+            
+            match = findMatchByTeams(matches, homeTeam, awayTeam, isBasketball);
+            
+            if (match) {
+              // Check if match is finished
+              const status = isBasketball ? match.status?.short : match.fixture?.status?.short;
+              const finishedStatuses = ['FT', 'AET', 'PEN', 'AOT', 'AP']; // Full time, After Extra Time, Penalties, After Over Time
+              
+              if (finishedStatuses.includes(status)) {
+                console.log(`[Validation] Found FINISHED match on ${dateStr}: ${homeTeam} vs ${awayTeam} (status: ${status})`);
+                break;
+              } else {
+                // Match found but not finished - keep searching in case there's another on a different day
+                console.log(`[Validation] Found match on ${dateStr} but status=${status}, continuing search...`);
+                match = null;
+              }
+            }
           }
         }
       }
