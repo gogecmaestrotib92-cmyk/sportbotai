@@ -288,11 +288,26 @@ function parseMatchIdClient(matchId: string): { homeTeam: string; awayTeam: stri
     const toDisplayName = (slug: string) => 
       slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     
+    // Map sport code to proper sport key
+    const sportCodeMap: Record<string, string> = {
+      'nba': 'basketball_nba',
+      'nhl': 'icehockey_nhl',
+      'nfl': 'americanfootball_nfl',
+      'epl': 'soccer_epl',
+      'la-liga': 'soccer_spain_la_liga',
+      'bundesliga': 'soccer_germany_bundesliga',
+      'serie-a': 'soccer_italy_serie_a',
+      'ligue-one': 'soccer_france_ligue_one',
+      'euroleague': 'basketball_euroleague',
+      'mls': 'soccer_usa_mls',
+    };
+    const sport = sportCodeMap[parsed.sportCode] || `soccer_${parsed.sportCode}`;
+    
     return {
       homeTeam: toDisplayName(parsed.homeSlug),
       awayTeam: toDisplayName(parsed.awaySlug),
       league: parsed.sportCode.toUpperCase(),
-      sport: `basketball_${parsed.sportCode}`, // Will be refined by API
+      sport: sport,
       kickoff: parsed.date ? `${parsed.date}T12:00:00Z` : new Date().toISOString(),
     };
   }
