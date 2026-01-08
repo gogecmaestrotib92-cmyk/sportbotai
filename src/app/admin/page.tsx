@@ -418,6 +418,23 @@ interface EdgePerformanceStats {
     binaryOutcome: number | null;
     clvValue: number | null;
   }>;
+  
+  // Pending predictions for manual result entry
+  pendingPredictionsList: Array<{
+    id: string;
+    matchId: string;
+    matchName: string;
+    sport: string;
+    league: string;
+    kickoff: Date;
+    prediction: string;
+    selection: string | null;
+    conviction: number;
+    modelProbability: number | null;
+    marketOddsAtPrediction: number | null;
+    valueBetSide: string | null;
+    valueBetOdds: number | null;
+  }>;
 }
 
 async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
@@ -427,6 +444,7 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
       where: { modelVersion: 'v2' },
       select: {
         id: true,
+        matchId: true,
         matchName: true,
         sport: true,
         league: true,
@@ -441,6 +459,9 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
         clvValue: true,
         closingProbabilityFair: true,
         outcome: true,
+        conviction: true,
+        valueBetSide: true,
+        valueBetOdds: true,
         // Legacy fallbacks
         valueBetEdge: true,
         odds: true,
@@ -730,6 +751,26 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
       clvValue: p.clvValue,
     }));
 
+    // Pending predictions for manual result entry
+    const pendingPredictionsList = predictions
+      .filter(p => p.outcome === 'PENDING')
+      .slice(0, 100)
+      .map(p => ({
+        id: p.id,
+        matchId: p.matchId,
+        matchName: p.matchName,
+        sport: p.sport,
+        league: p.league,
+        kickoff: p.kickoff,
+        prediction: p.prediction,
+        selection: p.selection,
+        conviction: p.conviction,
+        modelProbability: p.modelProbability,
+        marketOddsAtPrediction: p.marketOddsAtPrediction ?? p.odds,
+        valueBetSide: p.valueBetSide,
+        valueBetOdds: p.valueBetOdds,
+      }));
+
     return {
       totalPredictions: total,
       evaluatedPredictions: evaluated,
@@ -743,6 +784,7 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
       bySport,
       byLeague,
       recentPredictions,
+      pendingPredictionsList,
     };
   } catch (error) {
     console.error('Error fetching edge performance stats:', error);
@@ -778,5 +820,6 @@ function getDefaultEdgePerformanceStats(): EdgePerformanceStats {
     bySport: [],
     byLeague: [],
     recentPredictions: [],
+    pendingPredictionsList: [],
   };
 }

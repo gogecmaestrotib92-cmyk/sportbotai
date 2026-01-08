@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import UserManagement from './UserManagement';
+import PendingPredictionsManager from './PendingPredictionsManager';
 
 interface Stats {
   totalUsers: number;
@@ -154,6 +155,21 @@ interface EdgePerformanceStats {
     binaryOutcome: number | null;
     clvValue: number | null;
   }>;
+  pendingPredictionsList: Array<{
+    id: string;
+    matchId: string;
+    matchName: string;
+    sport: string;
+    league: string;
+    kickoff: Date;
+    prediction: string;
+    selection: string | null;
+    conviction: number;
+    modelProbability: number | null;
+    marketOddsAtPrediction: number | null;
+    valueBetSide: string | null;
+    valueBetOdds: number | null;
+  }>;
 }
 
 interface AdminDashboardProps {
@@ -165,7 +181,7 @@ interface AdminDashboardProps {
 }
 
 type TabType = 'overview' | 'users' | 'chat' | 'predictions';
-type PredictionSubTab = 'overview' | 'calibration' | 'clv' | 'roi' | 'raw';
+type PredictionSubTab = 'overview' | 'calibration' | 'clv' | 'roi' | 'raw' | 'manage';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -391,6 +407,9 @@ export default function AdminDashboard({
 
             {/* Sub-tabs for detailed views */}
             <div className="flex gap-2 overflow-x-auto pb-2">
+              <SubTabButton active={predictionSubTab === 'manage'} onClick={() => setPredictionSubTab('manage')}>
+                ✏️ Manage ({edgePerformanceStats.pendingPredictionsList?.length || 0})
+              </SubTabButton>
               <SubTabButton active={predictionSubTab === 'overview'} onClick={() => setPredictionSubTab('overview')}>
                 📊 Edge Buckets
               </SubTabButton>
@@ -407,6 +426,13 @@ export default function AdminDashboard({
                 📋 Raw Data
               </SubTabButton>
             </div>
+
+            {/* ===== MANAGE PENDING PREDICTIONS ===== */}
+            {predictionSubTab === 'manage' && (
+              <PendingPredictionsManager 
+                predictions={edgePerformanceStats.pendingPredictionsList || []}
+              />
+            )}
 
             {/* ===== EDGE BUCKET OVERVIEW ===== */}
             {predictionSubTab === 'overview' && (
