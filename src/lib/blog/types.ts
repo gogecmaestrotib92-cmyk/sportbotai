@@ -292,6 +292,8 @@ export const BLOG_CATEGORIES = [
   "Risk Management",
   "Market Insights",
   "Educational Guides",
+  "Match Previews",
+  "Tools & Resources",
 ] as const;
 
 export type BlogCategory = typeof BLOG_CATEGORIES[number];

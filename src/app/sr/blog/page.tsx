@@ -71,6 +71,8 @@ const CATEGORY_TRANSLATIONS: Record<string, string> = {
   'Bankroll Management': 'Upravljanje Budžetom',
   'Odds & Probability': 'Kvote i Verovatnoća',
   'Platform Tutorials': 'Uputstva za Platformu',
+  'Risk Management': 'Upravljanje Rizikom',
+  'Tools & Resources': 'Alati i Resursi',
 };
 
 async function getBlogPosts(page: number, category?: string) {
