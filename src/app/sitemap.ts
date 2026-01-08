@@ -15,6 +15,7 @@ const STATIC_PAGES = [
   
   // Content & Conversion
   { path: '/blog', priority: 0.85, changeFreq: 'daily' as const },
+  { path: '/partners', priority: 0.7, changeFreq: 'weekly' as const },
   { path: '/pricing', priority: 0.8, changeFreq: 'monthly' as const },
   { path: '/contact', priority: 0.6, changeFreq: 'monthly' as const },
   

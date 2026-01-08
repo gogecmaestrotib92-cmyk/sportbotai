@@ -24,6 +24,7 @@ Allow: /analyzer
 Allow: /matches
 Allow: /match/
 Allow: /blog
+Allow: /partners
 Allow: /pricing
 Allow: /terms
 Allow: /privacy
