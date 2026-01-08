@@ -145,6 +145,18 @@ export async function generateToolReviewPosts(count: number = 1): Promise<ToolRe
         const reviewUrl = `https://www.sportbotai.com/blog/${review.slug}`;
         const emailSent = await sendToolReviewOutreach(tool.contactEmail, tool.toolName, reviewUrl);
         console.log(`[ToolReview] 📧 Outreach email ${emailSent ? 'sent' : 'failed'} to ${tool.contactEmail}`);
+        
+        // Update outreach status in database
+        if (emailSent) {
+          await prisma.toolReview.update({
+            where: { id: tool.id },
+            data: {
+              outreachStatus: 'SENT',
+              outreachSentAt: new Date(),
+            },
+          });
+          console.log(`[ToolReview] ✅ Outreach status updated to SENT`);
+        }
       }
       
       results.push({ success: true, toolName: tool.toolName, slug: review.slug });
