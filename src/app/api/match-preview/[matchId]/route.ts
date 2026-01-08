@@ -448,8 +448,78 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
               responseData.universalSignals.display.availability.homeInjuries = freshInjuries.home;
               responseData.universalSignals.display.availability.awayInjuries = freshInjuries.away;
             }
+            
+            // Update viralStats.keyAbsence with fresh injury data
+            if (responseData.viralStats && (freshInjuries.home.length > 0 || freshInjuries.away.length > 0)) {
+              const keyAbsence = freshInjuries.home.length > 0 
+                ? { player: freshInjuries.home[0].player, team: 'home' as const, impact: 'star' as const }
+                : { player: freshInjuries.away[0].player, team: 'away' as const, impact: 'star' as const };
+              responseData.viralStats = {
+                ...responseData.viralStats,
+                keyAbsence,
+              };
+              console.log(`[Match-Preview] Updated soccer viralStats.keyAbsence: ${keyAbsence.player} (${keyAbsence.team})`);
+            }
           } catch (injuryError) {
             console.error(`[Match-Preview] Failed to fetch fresh injuries for cache:`, injuryError);
+          }
+        }
+
+        // For NHL/NBA/NFL: Also fetch fresh injuries and update viralStats.keyAbsence
+        const isNHLCached = ['icehockey', 'icehockey_nhl', 'nhl', 'hockey'].includes(cachedSport?.toLowerCase() || '');
+        const isNBACached = ['basketball', 'basketball_nba', 'nba'].includes(cachedSport?.toLowerCase() || '');
+        const isNFLCached = ['americanfootball', 'americanfootball_nfl', 'nfl'].includes(cachedSport?.toLowerCase() || '');
+        
+        if (isNHLCached || isNBACached || isNFLCached) {
+          const sportLabel = isNHLCached ? 'NHL' : isNBACached ? 'NBA' : 'NFL';
+          console.log(`[Match-Preview] ${sportLabel} match from cache - fetching fresh injuries via Perplexity...`);
+          try {
+            const perplexityInjuries = await getMatchInjuriesViaPerplexity(
+              responseData.matchInfo?.homeTeam || matchInfo.homeTeam,
+              responseData.matchInfo?.awayTeam || matchInfo.awayTeam,
+              cachedSport,
+              responseData.matchInfo?.league || matchInfo.league
+            );
+            
+            if (perplexityInjuries.success) {
+              const freshInjuries = {
+                home: perplexityInjuries.home.map(i => ({
+                  player: i.playerName,
+                  position: 'Unknown',
+                  reason: i.injury.toLowerCase().includes('suspend') ? 'suspension' as const : 'injury' as const,
+                  details: `${i.injury} - ${i.status}`,
+                })),
+                away: perplexityInjuries.away.map(i => ({
+                  player: i.playerName,
+                  position: 'Unknown',
+                  reason: i.injury.toLowerCase().includes('suspend') ? 'suspension' as const : 'injury' as const,
+                  details: `${i.injury} - ${i.status}`,
+                })),
+              };
+              
+              console.log(`[Match-Preview] ${sportLabel} fresh injuries - home: ${freshInjuries.home.length}, away: ${freshInjuries.away.length}`);
+              
+              // Update injuries
+              responseData.injuries = freshInjuries;
+              if (responseData.universalSignals?.display?.availability) {
+                responseData.universalSignals.display.availability.homeInjuries = freshInjuries.home;
+                responseData.universalSignals.display.availability.awayInjuries = freshInjuries.away;
+              }
+              
+              // Update viralStats.keyAbsence with fresh injury data
+              if (responseData.viralStats && (freshInjuries.home.length > 0 || freshInjuries.away.length > 0)) {
+                const keyAbsence = freshInjuries.home.length > 0 
+                  ? { player: freshInjuries.home[0].player, team: 'home' as const, impact: 'star' as const }
+                  : { player: freshInjuries.away[0].player, team: 'away' as const, impact: 'star' as const };
+                responseData.viralStats = {
+                  ...responseData.viralStats,
+                  keyAbsence,
+                };
+                console.log(`[Match-Preview] Updated viralStats.keyAbsence: ${keyAbsence.player} (${keyAbsence.team})`);
+              }
+            }
+          } catch (injuryError) {
+            console.error(`[Match-Preview] Failed to fetch fresh ${sportLabel} injuries for cache:`, injuryError);
           }
         }
 
