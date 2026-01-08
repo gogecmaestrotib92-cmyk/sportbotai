@@ -24,6 +24,7 @@ const CRON_SECRET = process.env.CRON_SECRET;
 // API endpoints for match results
 const FOOTBALL_API_URL = 'https://v3.football.api-sports.io';
 const BASKETBALL_API_URL = 'https://v1.basketball.api-sports.io';
+const HOCKEY_API_URL = 'https://v1.hockey.api-sports.io';
 const API_KEY = process.env.API_FOOTBALL_KEY || '';
 
 interface MatchResult {
@@ -40,8 +41,8 @@ interface MatchResult {
 function findMatchByTeams(
   matches: any[], 
   homeTeam: string, 
-  awayTeam: string, 
-  isBasketball: boolean
+  awayTeam: string,
+  sportType: 'soccer' | 'basketball' | 'hockey'
 ): any | null {
   const homeNormalized = homeTeam.toLowerCase().replace(/[^a-z]/g, '');
   const awayNormalized = awayTeam.toLowerCase().replace(/[^a-z]/g, '');
@@ -72,10 +73,24 @@ async function getMatchResult(matchId: string, sport: string, matchName?: string
     const isNumericId = /^\d+$/.test(matchId);
     const isUUID = /^[a-f0-9]{32}$/.test(matchId);
     
-    // For basketball sports, use basketball API
+    // Determine sport type and API
     const isBasketball = sport.includes('basketball') || sport.includes('nba') || sport.includes('euroleague');
-    const baseUrl = isBasketball ? BASKETBALL_API_URL : FOOTBALL_API_URL;
-    const endpoint = isBasketball ? '/games' : '/fixtures';
+    const isHockey = sport.includes('hockey') || sport.includes('nhl');
+    const sportType: 'soccer' | 'basketball' | 'hockey' = isHockey ? 'hockey' : isBasketball ? 'basketball' : 'soccer';
+    
+    let baseUrl: string;
+    let endpoint: string;
+    
+    if (isHockey) {
+      baseUrl = HOCKEY_API_URL;
+      endpoint = '/games';
+    } else if (isBasketball) {
+      baseUrl = BASKETBALL_API_URL;
+      endpoint = '/games';
+    } else {
+      baseUrl = FOOTBALL_API_URL;
+      endpoint = '/fixtures';
+    }
     
     let match: any = null;
     
@@ -123,12 +138,12 @@ async function getMatchResult(matchId: string, sport: string, matchName?: string
             const data = await response.json();
             const matches = data.response || [];
             
-            match = findMatchByTeams(matches, homeTeam, awayTeam, isBasketball);
+            match = findMatchByTeams(matches, homeTeam, awayTeam, sportType);
             
             if (match) {
               // Check if match is finished
-              const status = isBasketball ? match.status?.short : match.fixture?.status?.short;
-              const finishedStatuses = ['FT', 'AET', 'PEN', 'AOT', 'AP']; // Full time, After Extra Time, Penalties, After Over Time
+              const status = sportType === 'soccer' ? match.fixture?.status?.short : match.status?.short;
+              const finishedStatuses = ['FT', 'AET', 'PEN', 'AOT', 'AP', 'POST']; // Full time, After Extra Time, Penalties, After Over Time, Post-game
               
               if (finishedStatuses.includes(status)) {
                 console.log(`[Validation] Found FINISHED match on ${dateStr}: ${homeTeam} vs ${awayTeam} (status: ${status})`);
@@ -146,7 +161,7 @@ async function getMatchResult(matchId: string, sport: string, matchName?: string
     
     if (!match) return null;
     
-    if (isBasketball) {
+    if (sportType === 'basketball') {
       const homeScore = match.scores?.home?.total || 0;
       const awayScore = match.scores?.away?.total || 0;
       return {
@@ -156,7 +171,19 @@ async function getMatchResult(matchId: string, sport: string, matchName?: string
         status: match.status?.short || '',
         winner: homeScore > awayScore ? 'home' : homeScore < awayScore ? 'away' : 'draw',
       };
+    } else if (sportType === 'hockey') {
+      // Hockey API uses scores.home/scores.away directly
+      const homeScore = match.scores?.home ?? 0;
+      const awayScore = match.scores?.away ?? 0;
+      return {
+        matchId,
+        homeScore,
+        awayScore,
+        status: match.status?.short || '',
+        winner: homeScore > awayScore ? 'home' : homeScore < awayScore ? 'away' : 'draw',
+      };
     } else {
+      // Soccer
       const homeScore = match.goals?.home ?? 0;
       const awayScore = match.goals?.away ?? 0;
       return {
@@ -375,7 +402,7 @@ export async function GET(request: NextRequest) {
         }
         
         // Check if match is actually finished
-        const finishedStatuses = ['FT', 'AET', 'PEN', 'AOT'];
+        const finishedStatuses = ['FT', 'AET', 'PEN', 'AOT', 'AP', 'POST'];
         if (!finishedStatuses.includes(result.status)) {
           console.log(`[Cron] Match ${prediction.matchId} not finished: ${result.status}`);
           continue;
@@ -392,7 +419,9 @@ export async function GET(request: NextRequest) {
           continue;
         }
         
-        const actualResult = `${result.homeScore}-${result.awayScore}`;
+        const actualScore = `${result.homeScore}-${result.awayScore}`;
+        const actualResult = result.winner === 'home' ? 'HOME_WIN' : result.winner === 'away' ? 'AWAY_WIN' : 'DRAW';
+        const binaryOutcome = validation.outcome === 'HIT' ? 1 : 0;
         
         // Evaluate value bet if present
         let valueBetOutcome: 'HIT' | 'MISS' | null = null;
@@ -406,17 +435,22 @@ export async function GET(request: NextRequest) {
           console.log(`[Cron] Value bet: ${prediction.valueBetSide} @ ${prediction.valueBetOdds.toFixed(2)} -> ${valueBetOutcome}`);
         }
         
-        // Update prediction in database
+        // Update prediction in database with all fields
         await prisma.prediction.update({
           where: { id: prediction.id },
           data: {
             outcome: validation.outcome,
             actualResult,
+            actualScore,
+            binaryOutcome,
             validatedAt: new Date(),
+            resultTimestamp: new Date(),
             ...(valueBetOutcome && { valueBetOutcome }),
             ...(valueBetProfit !== null && { valueBetProfit }),
           },
         });
+        
+        console.log(`[Cron] ✅ Updated ${prediction.matchName}: ${actualScore} -> ${validation.outcome}`);
         
         results.processed++;
         if (validation.outcome === 'HIT') results.hits++;
@@ -432,7 +466,7 @@ export async function GET(request: NextRequest) {
               conviction: prediction.conviction,
             },
             validation.outcome,
-            actualResult
+            actualScore
           );
           
           const tweetResult = await twitter.postTweet(tweetContent);
