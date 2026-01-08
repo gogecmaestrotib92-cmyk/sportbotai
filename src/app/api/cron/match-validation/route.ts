@@ -112,7 +112,7 @@ async function getMatchResult(matchId: string, sport: string, matchName?: string
         }
         
         // Remove duplicates and search each date
-        const uniqueDates = [...new Set(datesToSearch)];
+        const uniqueDates = Array.from(new Set(datesToSearch));
         
         for (const dateStr of uniqueDates) {
           const response = await fetch(`${baseUrl}${endpoint}?date=${dateStr}`, {

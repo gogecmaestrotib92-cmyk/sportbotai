@@ -324,7 +324,7 @@ export async function GET(request: NextRequest) {
           }
           
           const bestEdge = edges.reduce((max, e) => e.edge > max.edge ? e : max, edges[0]);
-          const hasValueEdge = bestEdge.edge > 3;
+          const hasValueEdge = bestEdge.edge >= 3; // 3% threshold (was >3, now >=3 to match pre-analyze)
           
           // Get alert level
           const alertLevel = getAlertLevel(steam.hasSteam, bestEdge.edge);

@@ -80,12 +80,12 @@ function AccordionSection({ title, subtitle, icon, badge, isOpen, onToggle, chil
   );
 }
 
-// Value flag styling - Design System v2.0
+// Value flag styling - Design System v2.0 (LOW now more visible for 3%+ edges)
 const valueFlagConfig: Record<ValueFlag, { label: string; color: string; bgClass: string }> = {
   NONE: { label: 'None', color: 'text-text-muted', bgClass: 'bg-bg-hover border-divider' },
-  LOW: { label: 'Low', color: 'text-info', bgClass: 'bg-info/10 border-info/20' },
-  MEDIUM: { label: 'Medium', color: 'text-accent', bgClass: 'bg-accent/10 border-accent/20' },
-  HIGH: { label: 'High', color: 'text-success', bgClass: 'bg-success/10 border-success/20' },
+  LOW: { label: 'Edge 3-5%', color: 'text-cyan-400', bgClass: 'bg-cyan-500/15 border-cyan-400/30' },
+  MEDIUM: { label: 'Edge 5-8%', color: 'text-accent', bgClass: 'bg-accent/15 border-accent/30' },
+  HIGH: { label: 'Edge 8%+', color: 'text-success', bgClass: 'bg-success/15 border-success/30' },
 };
 
 // Risk level styling - Design System v2.0

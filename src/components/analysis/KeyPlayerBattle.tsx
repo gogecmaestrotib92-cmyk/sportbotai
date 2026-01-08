@@ -95,7 +95,7 @@ export default function KeyPlayerBattle({
           {player.rating && (
             <div className="flex justify-between items-center">
               <span className="text-xs text-text-muted">Rating</span>
-              <span className={`text-sm font-bold ${player.rating >= 7 ? 'text-green-400' : player.rating >= 6 ? 'text-yellow-400' : 'text-orange-400'}`}>
+              <span className={`text-sm font-bold ${player.rating >= 7 ? 'text-emerald-400' : player.rating >= 6 ? 'text-amber-400' : 'text-rose-400'}`}>
                 {player.rating.toFixed(1)}
               </span>
             </div>
@@ -134,7 +134,7 @@ export default function KeyPlayerBattle({
           </div>
           {edge !== 'even' && (
             <div className={`px-2 py-1 rounded-lg text-[10px] font-medium ${
-              edge === 'home' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'
+              edge === 'home' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-500/20 text-emerald-400'
             }`}>
               {edge === 'home' ? homePlayer.name.split(' ').pop() : awayPlayer.name.split(' ').pop()} ↑
             </div>

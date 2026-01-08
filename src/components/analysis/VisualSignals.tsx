@@ -3,9 +3,13 @@
  * 
  * Clean, minimal visual components for displaying match signals.
  * No charts libraries - pure CSS/SVG for performance.
+ * 
+ * COLORS: Uses unified design system - emerald for value, amber for caution, rose for negative
  */
 
 'use client';
+
+import { colors as dsColors } from '@/lib/design-system';
 
 // ============================================
 // FORM DOTS - Shows recent form as colored dots
@@ -371,11 +375,12 @@ interface AvailabilityDotsProps {
 }
 
 export function AvailabilityDots({ level }: AvailabilityDotsProps) {
+  // Use design system colors: emerald for low, amber for medium, rose for high/critical
   const levels = {
     low: { dots: 1, color: 'bg-emerald-500', label: 'Low Impact' },
     medium: { dots: 2, color: 'bg-amber-500', label: 'Medium' },
-    high: { dots: 3, color: 'bg-red-500', label: 'High' },
-    critical: { dots: 4, color: 'bg-red-600', label: 'Critical' },
+    high: { dots: 3, color: 'bg-rose-500', label: 'High' },
+    critical: { dots: 4, color: 'bg-rose-600', label: 'Critical' },
   };
   
   const config = levels[level];

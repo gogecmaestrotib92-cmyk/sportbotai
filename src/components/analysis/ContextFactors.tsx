@@ -66,7 +66,7 @@ export default function ContextFactors({
             <p className="text-base font-semibold text-white mb-2">{factor.value}</p>
             
             {factor.favors && factor.favors !== 'neutral' && (
-              <span className={`text-xs font-medium ${factor.favors === 'home' ? 'text-green-400' : 'text-blue-400'}`}>
+              <span className={`text-xs font-medium ${factor.favors === 'home' ? 'text-emerald-400' : 'text-emerald-400'}`}>
                 → {factor.favors === 'home' ? homeTeam : awayTeam}
               </span>
             )}

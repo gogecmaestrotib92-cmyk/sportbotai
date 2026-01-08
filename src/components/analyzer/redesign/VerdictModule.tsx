@@ -21,11 +21,11 @@ const riskStyles: Record<RiskLevel, { label: string; color: string; bg: string }
   HIGH: { label: 'High Risk', color: 'text-rose-400', bg: 'bg-rose-500/10' },
 };
 
-const valueStyles: Record<ValueFlag, { label: string; color: string; visible: boolean }> = {
-  NONE: { label: 'Fair Odds', color: 'text-white/50', visible: false },
-  LOW: { label: 'Small Edge', color: 'text-sky-400', visible: true },
-  MEDIUM: { label: 'Value Found', color: 'text-emerald-400', visible: true },
-  HIGH: { label: 'Strong Value', color: 'text-emerald-300', visible: true },
+const valueStyles: Record<ValueFlag, { label: string; color: string; bg: string; visible: boolean }> = {
+  NONE: { label: 'Fair Odds', color: 'text-white/50', bg: 'bg-white/5', visible: false },
+  LOW: { label: '🎯 Edge Detected', color: 'text-cyan-300', bg: 'bg-cyan-500/15 border-cyan-400/30', visible: true },
+  MEDIUM: { label: '✨ Value Found', color: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-400/30', visible: true },
+  HIGH: { label: '🔥 Strong Value', color: 'text-emerald-300', bg: 'bg-emerald-500/20 border-emerald-400/40', visible: true },
 };
 
 export default function VerdictModule({ result }: VerdictModuleProps) {
@@ -111,7 +111,7 @@ export default function VerdictModule({ result }: VerdictModuleProps) {
               {risk.label}
             </span>
             {value.visible && (
-              <span className={`px-3 py-1.5 rounded-full bg-emerald-500/10 text-sm ${value.color} border border-emerald-500/20`}>
+              <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${value.color} ${value.bg} border animate-pulse`}>
                 {value.label}
               </span>
             )}

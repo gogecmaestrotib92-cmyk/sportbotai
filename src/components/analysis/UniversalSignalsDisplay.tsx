@@ -467,12 +467,12 @@ function Pill({
 }: { 
   label: string; 
   value: string; 
-  color?: 'emerald' | 'amber' | 'blue' | 'zinc';
+  color?: 'emerald' | 'amber' | 'violet' | 'zinc';
 }) {
   const colors = {
     emerald: 'text-emerald-400 bg-emerald-500/10',
     amber: 'text-amber-400 bg-amber-500/10',
-    blue: 'text-blue-400 bg-blue-500/10',
+    violet: 'text-violet-400 bg-violet-500/10',
     zinc: 'text-zinc-400 bg-zinc-500/10',
   };
 

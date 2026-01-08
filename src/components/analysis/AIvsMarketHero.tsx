@@ -14,6 +14,7 @@
 
 import Link from 'next/link';
 import type { MarketIntel } from '@/lib/value-detection';
+import { colors, getEdgeStyle, getOverpricedStyle } from '@/lib/design-system';
 
 type Locale = 'en' | 'sr';
 
@@ -204,10 +205,10 @@ export function AIvsMarketHero({
             </>
           ) : (
             <>
-              {/* No edge - discipline signal with neutral indigo */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 mb-3 rounded-full bg-indigo-500/10 border border-indigo-500/20">
-                <span className="text-indigo-400 text-sm">⚖️</span>
-                <span className="text-indigo-300 font-semibold text-sm">DISCIPLINE SIGNAL</span>
+              {/* No edge - discipline signal with neutral violet (PRO color) */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 mb-3 rounded-full bg-violet-500/10 border border-violet-500/20">
+                <span className="text-violet-400 text-sm">⚖️</span>
+                <span className="text-violet-300 font-semibold text-sm">DISCIPLINE SIGNAL</span>
               </div>
               <p className="text-xl font-bold text-white mb-2">
                 {t.modelAgrees}
@@ -319,15 +320,9 @@ function HeroContent({
   impliedProbability,
   hasDraw,
 }: HeroContentProps) {
-  // Color logic: Only use green for meaningful edges (>8%), else neutral
-  const isStrongEdge = edgeMagnitude > 12;
-  const isModerateEdge = edgeMagnitude > 5;
-  
-  // Edge styling based on magnitude
-  const edgeTextColor = isStrongEdge ? 'text-green-400' : isModerateEdge ? 'text-amber-400' : 'text-indigo-400';
-  const edgeBgColor = isStrongEdge ? 'bg-green-500/10 border-green-500/20' : 
-                      isModerateEdge ? 'bg-amber-500/10 border-amber-500/20' : 
-                      'bg-indigo-500/10 border-indigo-500/20';
+  // Use unified design system - emerald for ALL edges, intensity via opacity
+  const edgeStyle = getEdgeStyle(edgeMagnitude, true);
+  const hasEdge = edgeStyle.tier !== 'none';
 
   return (
     <div className={`rounded-2xl border p-6 sm:p-7 ${hasSignificantEdge ? 'bg-gradient-to-br from-zinc-900/50 to-zinc-900/30 border-zinc-800/50' : 'bg-zinc-900/30 border-zinc-800/30'}`}>
@@ -348,10 +343,10 @@ function HeroContent({
           {/* Primary verdict text - the ONE thing that stands out */}
           <p className="text-2xl sm:text-3xl font-bold text-white mb-3">{favoredTeam}</p>
           
-          {/* Edge Badge - qualitative, not numeric, with info tooltip */}
-          <div className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full border ${edgeBgColor} mb-3`}>
-            <span className={`text-base font-semibold ${edgeTextColor}`}>
-              {isStrongEdge ? '🎯 Strong Edge Detected' : '📊 Edge Detected'}
+          {/* Edge Badge - uses unified emerald color system */}
+          <div className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full border ${edgeStyle.bg} ${edgeStyle.border} mb-3`}>
+            <span className={`text-base font-semibold ${edgeStyle.text}`}>
+              {edgeStyle.label}
             </span>
             <span className="group relative cursor-help">
               <svg className="w-4 h-4 text-zinc-500 hover:text-zinc-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -370,10 +365,10 @@ function HeroContent({
         </div>
       ) : (
         <div className="text-center mb-6">
-          {/* No edge verdict - uses neutral indigo, NOT green */}
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 mb-4 rounded-full bg-indigo-500/10 border border-indigo-500/20">
-            <span className="text-indigo-400 text-base">⚖️</span>
-            <span className="text-indigo-300 font-semibold text-base">DISCIPLINE SIGNAL</span>
+          {/* No edge verdict - uses violet (PRO color) */}
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 mb-4 rounded-full bg-violet-500/10 border border-violet-500/20">
+            <span className="text-violet-400 text-base">⚖️</span>
+            <span className="text-violet-300 font-semibold text-base">DISCIPLINE SIGNAL</span>
           </div>
           <p className="text-xl sm:text-2xl font-bold text-white mb-2">No Exploitable Edge</p>
           <p className="text-base text-zinc-400">{t.fairlyPriced}</p>
@@ -447,23 +442,23 @@ interface ProbabilityCardProps {
 function ProbabilityCard({ label, modelProb, marketProb, t, isBestValue = false }: ProbabilityCardProps) {
   const diff = modelProb - marketProb;
   
-  // Only color numbers when edge is meaningful (>5%)
-  const isValue = diff > 5;
-  const isOverpriced = diff < -5;
-  const isNeutral = !isValue && !isOverpriced;
+  // Use unified design system
+  const edgeStyle = getEdgeStyle(diff, isBestValue);
+  const overStyle = getOverpricedStyle(diff);
+  const hasEdge = edgeStyle.tier !== 'none';
+  const isOverpriced = diff < -3;
+  const isNeutral = !hasEdge && !isOverpriced;
   
-  // Edge badge styling - muted for non-best-value, calm red for overpriced
-  const edgeBadgeClass = isValue 
-    ? isBestValue 
-      ? 'bg-green-500/20 text-green-400 border-green-500/30' 
-      : 'bg-green-500/10 text-green-400/70 border-green-500/20'
+  // Edge badge styling - all edges use emerald now
+  const edgeBadgeClass = hasEdge 
+    ? `${edgeStyle.bg} ${edgeStyle.text} ${edgeStyle.border}`
     : isOverpriced 
-      ? 'bg-zinc-800/50 text-red-400/60 border-zinc-700/40'
-      : 'bg-zinc-700/30 text-zinc-400 border-zinc-600/30';
+      ? `${colors.neutral.bg} ${colors.negative.textMuted} ${colors.neutral.border}`
+      : `${colors.neutral.bg} ${colors.neutral.text} ${colors.neutral.border}`;
   
-  // Card styling - best value gets strong glow, others dimmed
-  const cardClass = isBestValue
-    ? 'bg-zinc-900/70 border-green-500/40 shadow-[0_0_30px_rgba(34,197,94,0.2),0_0_60px_rgba(34,197,94,0.1)] ring-1 ring-green-500/20'
+  // Card styling - best value gets emerald glow
+  const cardClass = isBestValue && hasEdge
+    ? `bg-zinc-900/70 border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.2),0_0_60px_rgba(16,185,129,0.1)] ring-1 ring-emerald-500/20`
     : 'bg-zinc-900/40 border-zinc-800/40 opacity-[0.65]';
   
   return (
@@ -501,14 +496,14 @@ function ProbabilityCard({ label, modelProb, marketProb, t, isBestValue = false 
             className="w-12 bg-zinc-700/50 rounded-t-sm transition-all duration-300 ease-out"
             style={{ height: `${Math.max((marketProb / 100) * 64, 8)}px` }}
           />
-          {/* Model Bar - height scaled: max bar = 64px when prob = 100% */}
+          {/* Model Bar - unified emerald for all edges, rose for overpriced */}
           <div 
             className={`w-12 rounded-t-sm transition-all duration-300 ease-out ${
-              isValue 
-                ? isBestValue ? 'bg-green-500' : 'bg-green-500/70'
+              hasEdge 
+                ? edgeStyle.barColor
                 : isOverpriced 
-                  ? 'bg-red-400/50'
-                  : 'bg-slate-400'
+                  ? 'bg-rose-400/50'
+                  : 'bg-zinc-400'
             }`}
             style={{ height: `${Math.max((modelProb / 100) * 64, 8)}px` }}
           />
@@ -527,15 +522,15 @@ function ProbabilityCard({ label, modelProb, marketProb, t, isBestValue = false 
           className={`px-2 py-1 rounded-md border text-center text-[10px] font-semibold truncate ${edgeBadgeClass}`}
           title={isNeutral 
             ? 'Fair price - no significant edge detected' 
-            : isValue 
-              ? `+${diff.toFixed(1)}% value - model probability exceeds market by ${diff.toFixed(1)}%`
+            : hasEdge 
+              ? `+${diff.toFixed(1)}% edge - model probability exceeds market by ${diff.toFixed(1)}%`
               : `${diff.toFixed(1)}% overpriced - market probability exceeds model by ${Math.abs(diff).toFixed(1)}%`
           }
         >
           {isNeutral 
             ? 'Fair price' 
-            : isValue 
-              ? `+${diff.toFixed(0)}% value`
+            : hasEdge 
+              ? edgeStyle.badge
               : `−${Math.abs(diff).toFixed(0)}% over`
           }
         </div>

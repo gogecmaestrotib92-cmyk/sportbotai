@@ -624,8 +624,8 @@ export function LineMovementIndicator({ lineMovement }: LineMovementProps) {
   const arrow = lineMovement.direction === 'toward_home' ? '←' : 
                 lineMovement.direction === 'toward_away' ? '→' : '↔';
   
-  const color = lineMovement.magnitude === 'sharp' ? 'text-yellow-400' :
-                lineMovement.magnitude === 'moderate' ? 'text-blue-400' : 'text-gray-400';
+  const color = lineMovement.magnitude === 'sharp' ? 'text-amber-400' :
+                lineMovement.magnitude === 'moderate' ? 'text-amber-400/70' : 'text-zinc-400';
 
   return (
     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1a2a1a] text-sm ${color}`}>

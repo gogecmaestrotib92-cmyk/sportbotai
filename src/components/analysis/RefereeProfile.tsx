@@ -3,9 +3,13 @@
  * 
  * Shows referee stats - cards/game, penalties, home bias.
  * Controversial data that gets shared.
+ * 
+ * COLORS: Uses amber for yellow cards, rose for red cards (design system)
  */
 
 'use client';
+
+import { colors } from '@/lib/design-system';
 
 interface RefereeStats {
   name: string;
@@ -108,19 +112,19 @@ export default function RefereeProfile({
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-yellow-400 text-base">🟨</span>
+              <span className="text-amber-400 text-base">🟨</span>
               <span className="text-sm text-text-muted font-medium">Yellows/game</span>
             </div>
-            <p className={`text-2xl font-bold ${referee.avgYellowCards >= 4.5 ? 'text-yellow-400' : 'text-white'}`}>
+            <p className={`text-2xl font-bold ${referee.avgYellowCards >= 4.5 ? 'text-amber-400' : 'text-white'}`}>
               {referee.avgYellowCards.toFixed(1)}
             </p>
           </div>
           <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-red-400 text-base">🟥</span>
+              <span className="text-rose-400 text-base">🟥</span>
               <span className="text-sm text-text-muted font-medium">Reds/game</span>
             </div>
-            <p className={`text-2xl font-bold ${referee.avgRedCards >= 0.3 ? 'text-red-400' : 'text-white'}`}>
+            <p className={`text-2xl font-bold ${referee.avgRedCards >= 0.3 ? 'text-rose-400' : 'text-white'}`}>
               {referee.avgRedCards.toFixed(2)}
             </p>
           </div>
@@ -136,7 +140,7 @@ export default function RefereeProfile({
               <span className="text-base">🏠</span>
               <span className="text-sm text-text-muted font-medium">Home win %</span>
             </div>
-            <p className={`text-2xl font-bold ${referee.homeWinRate >= 55 ? 'text-green-400' : 'text-white'}`}>
+            <p className={`text-2xl font-bold ${referee.homeWinRate >= 55 ? 'text-emerald-400' : 'text-white'}`}>
               {referee.homeWinRate.toFixed(0)}%
             </p>
           </div>
@@ -148,19 +152,19 @@ export default function RefereeProfile({
             value={referee.avgYellowCards} 
             max={6} 
             label="Cards tendency" 
-            color={referee.avgYellowCards >= 4.5 ? 'bg-yellow-500' : 'bg-white/30'}
+            color={referee.avgYellowCards >= 4.5 ? 'bg-amber-500' : 'bg-white/30'}
           />
           <StatBar 
             value={referee.avgFouls} 
             max={30} 
             label="Fouls/game" 
-            color="bg-orange-500"
+            color="bg-amber-500"
           />
           <StatBar 
             value={referee.avgAddedTime} 
             max={10} 
             label="Added time (mins)" 
-            color="bg-blue-500"
+            color="bg-zinc-500"
           />
         </div>
 

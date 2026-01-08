@@ -1334,7 +1334,7 @@ export async function GET(request: NextRequest) {
                 homeEdge,
                 awayEdge,
                 drawEdge,
-                hasValueEdge: bestEdge >= 5,
+                hasValueEdge: bestEdge >= 3,
                 alertLevel,
                 alertNote: pipelineMarketIntel?.valueEdge?.label || null,
                 bookmaker: 'consensus',
@@ -1349,7 +1349,7 @@ export async function GET(request: NextRequest) {
                 homeEdge,
                 awayEdge,
                 drawEdge,
-                hasValueEdge: bestEdge >= 5,
+                hasValueEdge: bestEdge >= 3,
                 alertLevel,
                 alertNote: pipelineMarketIntel?.valueEdge?.label || null,
                 updatedAt: new Date(),
@@ -1385,11 +1385,11 @@ export async function GET(request: NextRequest) {
             //
             // FILTERS to avoid losses:
             // 1. Max odds cap: 4.00 (avoid longshots that rarely hit)
-            // 2. Min edge: 5% (need meaningful edge)
-            // 3. Min probability: 30% (model must believe outcome is realistic)
+            // 2. Min edge: 3% (industry standard - matches value-detection.ts)
+            // 3. Min probability: 25% (allow some underdog value picks)
             const MAX_VALUE_BET_ODDS = 4.00;
-            const MIN_VALUE_BET_EDGE = 5; // 5% edge required
-            const MIN_VALUE_BET_PROB = 0.30; // 30% minimum probability
+            const MIN_VALUE_BET_EDGE = 3; // 3% edge required (was 5%, lowered for more predictions)
+            const MIN_VALUE_BET_PROB = 0.25; // 25% minimum probability (was 30%)
             
             // Find the outcome with the best edge (our value pick)
             type ValueCandidate = { side: 'HOME' | 'AWAY' | 'DRAW'; edge: number; odds: number; prob: number };
@@ -1463,6 +1463,13 @@ export async function GET(request: NextRequest) {
             // Build reasoning showing value bet rationale
             const reasoning = `VALUE BET: ${valueTeam} at ${valueBetOdds.toFixed(2)} odds (+${valueBetEdge.toFixed(1)}% edge). Model: ${(valueBetProb * 100).toFixed(0)}% vs Market: ${(storedImpliedProb * 100).toFixed(0)}%. ${analysis.story?.narrative || ''}`;
             
+            // Calculate edge bucket for v2 tracking
+            const edgeBucket = valueBetEdge >= 8 ? 'HIGH' : valueBetEdge >= 5 ? 'MEDIUM' : 'SMALL';
+            
+            // Build selection text (outcome for v2 tracking)
+            const selectionText = valueBetSide === 'HOME' ? event.home_team :
+                                  valueBetSide === 'AWAY' ? event.away_team : 'Draw';
+            
             await prisma.prediction.upsert({
               where: { id: predictionId },
               create: {
@@ -1488,6 +1495,17 @@ export async function GET(request: NextRequest) {
                 // CLV Tracking: Store opening odds at prediction time
                 openingOdds: valueBetOdds,
                 clvFetched: false,
+                // V2 Edge Tracking fields for admin dashboard
+                modelVersion: 'v2',
+                selection: selectionText,
+                modelProbability: valueBetProb * 100, // Store as percentage
+                marketProbabilityRaw: storedImpliedProb * 100, // Raw implied prob
+                marketProbabilityFair: storedImpliedProb * 100, // For now same as raw
+                marketOddsAtPrediction: valueBetOdds,
+                edgeValue: valueBetEdge,
+                edgeBucket,
+                marketType: 'MONEYLINE',
+                predictionTimestamp: new Date(),
               },
               update: {
                 conviction,
@@ -1497,6 +1515,14 @@ export async function GET(request: NextRequest) {
                 valueBetOdds,
                 valueBetEdge,
                 openingOdds: valueBetOdds,
+                // Also update v2 fields on re-run
+                selection: selectionText,
+                modelProbability: valueBetProb * 100,
+                marketProbabilityRaw: storedImpliedProb * 100,
+                marketProbabilityFair: storedImpliedProb * 100,
+                marketOddsAtPrediction: valueBetOdds,
+                edgeValue: valueBetEdge,
+                edgeBucket,
               },
             });
             

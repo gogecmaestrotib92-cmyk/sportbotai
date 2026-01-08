@@ -8,6 +8,7 @@
 'use client';
 
 import { useState } from 'react';
+import { colors, getSignalStyle } from '@/lib/design-system';
 
 interface MatchStoryProps {
   homeTeam: string;
@@ -43,14 +44,12 @@ export default function MatchStory({
 
   const favoredTeam = favored === 'home' ? homeTeam : favored === 'away' ? awayTeam : 'Draw';
   
-  // RESTRAINED COLOR SYSTEM:
-  // - Strong: subtle emerald (only when there's real edge)
-  // - Moderate: neutral zinc
-  // - Slight: neutral zinc (no color for weak signals)
+  // Use unified design system - emerald for strong signals, zinc for others
+  const signalStyle = getSignalStyle(confidence);
   const confidenceLabel = {
-    strong: { text: 'Strong lean', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    moderate: { text: 'Moderate lean', color: 'text-zinc-400', bg: 'bg-zinc-500/10' },
-    slight: { text: 'Slight lean', color: 'text-zinc-500', bg: 'bg-zinc-500/10' },
+    strong: { text: 'Strong lean', color: colors.value.text, bg: colors.value.bg },
+    moderate: { text: 'Moderate lean', color: colors.neutral.text, bg: colors.neutral.bg },
+    slight: { text: 'Slight lean', color: colors.neutral.textMuted, bg: colors.neutral.bg },
   }[confidence];
 
   const handlePlayAudio = () => {
