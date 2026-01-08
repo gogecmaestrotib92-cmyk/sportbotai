@@ -387,7 +387,7 @@ export default function AnalyzerFormLive({ onResult, onLoading }: AnalyzerFormPr
                       {selectedEvent.analysis.averageOdds.home.toFixed(2)}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {selectedEvent.analysis.impliedProbability.home}%
+                      {selectedEvent.analysis.impliedProbability.home.toFixed(1)}%
                     </div>
                   </div>
                   {selectedEvent.analysis.averageOdds.draw && (
@@ -397,7 +397,7 @@ export default function AnalyzerFormLive({ onResult, onLoading }: AnalyzerFormPr
                         {selectedEvent.analysis.averageOdds.draw.toFixed(2)}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {selectedEvent.analysis.impliedProbability.draw}%
+                        {selectedEvent.analysis.impliedProbability.draw?.toFixed(1)}%
                       </div>
                     </div>
                   )}
@@ -407,7 +407,7 @@ export default function AnalyzerFormLive({ onResult, onLoading }: AnalyzerFormPr
                       {selectedEvent.analysis.averageOdds.away.toFixed(2)}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {selectedEvent.analysis.impliedProbability.away}%
+                      {selectedEvent.analysis.impliedProbability.away.toFixed(1)}%
                     </div>
                   </div>
                 </div>

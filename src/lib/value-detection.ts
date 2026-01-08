@@ -841,19 +841,20 @@ export function analyzeMarket(
   let conflictExplanation: string | undefined = undefined;
   
   if (valueEdge.outcome) {
-    summary = `Model sees ${valueEdge.label}. Market implies ${impliedHome}% home, we calculate ${modelProb.home}%.`;
+    summary = `Model sees ${valueEdge.label}. Market implies ${impliedHome.toFixed(1)}% home, we calculate ${modelProb.home.toFixed(1)}%.`;
     
     // Check for conflict: value on non-favored team
     if (valueEdge.outcome !== modelFavored && valueEdge.strength !== 'none') {
       const favoredLabel = modelFavored === 'home' ? 'Home' : 'Away';
       const valueLabel = valueEdge.outcome === 'home' ? 'Home' : valueEdge.outcome === 'away' ? 'Away' : 'Draw';
-      const favoredProb = modelFavored === 'home' ? modelProb.home : modelProb.away;
-      const valueImplied = valueEdge.outcome === 'home' ? impliedHome : valueEdge.outcome === 'away' ? impliedAway : impliedDraw;
+      const favoredProb = (modelFavored === 'home' ? modelProb.home : modelProb.away).toFixed(1);
+      const valueImplied = (valueEdge.outcome === 'home' ? impliedHome : valueEdge.outcome === 'away' ? impliedAway : (impliedDraw ?? 0)).toFixed(1);
+      const modelEstimate = (valueEdge.outcome === 'home' ? modelProb.home : valueEdge.outcome === 'away' ? modelProb.away : (modelProb.draw ?? 0)).toFixed(1);
       
-      conflictExplanation = `${favoredLabel} is the stronger team (${favoredProb}% model probability), but the market has overpriced them. ${valueLabel} offers +${valueEdge.edgePercent}% value because the market implies only ${valueImplied}% vs our ${valueEdge.outcome === 'home' ? modelProb.home : valueEdge.outcome === 'away' ? modelProb.away : modelProb.draw}% model estimate. This is a contrarian value play.`;
+      conflictExplanation = `${favoredLabel} is the stronger team (${favoredProb}% model probability), but the market has overpriced them. ${valueLabel} offers +${valueEdge.edgePercent.toFixed(1)}% value because the market implies only ${valueImplied}% vs our ${modelEstimate}% model estimate. This is a contrarian value play.`;
     }
   } else {
-    summary = `Fair price. Model and market align around ${modelProb.home}% home probability.`;
+    summary = `Fair price. Model and market align around ${modelProb.home.toFixed(1)}% home probability.`;
   }
   
   return {
