@@ -686,15 +686,112 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .includes(matchInfo.sport.toLowerCase());
     
     if (isNFL) {
-      console.log(`[Match-Preview] Fetching NFL injuries...`);
+      console.log(`[Match-Preview] Fetching NFL injuries via Perplexity...`);
       try {
-        injuries = await getNFLMatchInjuries(
+        // Use Perplexity for NFL injuries (more accurate than API-Sports)
+        const perplexityInjuries = await getMatchInjuriesViaPerplexity(
           matchInfo.homeTeam,
-          matchInfo.awayTeam
+          matchInfo.awayTeam,
+          matchInfo.sport,
+          matchInfo.league
         );
-        console.log(`[Match-Preview] NFL injuries fetched - Home: ${injuries.home.length}, Away: ${injuries.away.length}`);
+        
+        if (perplexityInjuries.success && (perplexityInjuries.home.length > 0 || perplexityInjuries.away.length > 0)) {
+          injuries = {
+            home: perplexityInjuries.home.map(i => ({
+              player: i.playerName,
+              position: 'Unknown',
+              reason: i.injury.toLowerCase().includes('suspend') ? 'suspension' as const : 'injury' as const,
+              details: `${i.injury} - ${i.status}`,
+            })),
+            away: perplexityInjuries.away.map(i => ({
+              player: i.playerName,
+              position: 'Unknown',
+              reason: i.injury.toLowerCase().includes('suspend') ? 'suspension' as const : 'injury' as const,
+              details: `${i.injury} - ${i.status}`,
+            })),
+          };
+          console.log(`[Match-Preview] NFL injuries from Perplexity - Home: ${injuries.home.length}, Away: ${injuries.away.length}`);
+        } else {
+          // Fallback to API-Sports
+          console.log(`[Match-Preview] Perplexity returned no NFL injuries, trying API-Sports fallback...`);
+          injuries = await getNFLMatchInjuries(matchInfo.homeTeam, matchInfo.awayTeam);
+          console.log(`[Match-Preview] NFL injuries from API-Sports - Home: ${injuries.home.length}, Away: ${injuries.away.length}`);
+        }
       } catch (nflError) {
         console.error(`[Match-Preview] NFL injuries error (non-fatal):`, nflError);
+      }
+    }
+
+    // NHL-specific: fetch injuries via Perplexity
+    const isNHL = ['icehockey', 'icehockey_nhl', 'nhl', 'hockey']
+      .includes(matchInfo.sport.toLowerCase());
+    
+    if (isNHL) {
+      console.log(`[Match-Preview] Fetching NHL injuries via Perplexity...`);
+      try {
+        const perplexityInjuries = await getMatchInjuriesViaPerplexity(
+          matchInfo.homeTeam,
+          matchInfo.awayTeam,
+          matchInfo.sport,
+          matchInfo.league
+        );
+        
+        if (perplexityInjuries.success) {
+          injuries = {
+            home: perplexityInjuries.home.map(i => ({
+              player: i.playerName,
+              position: 'Unknown',
+              reason: i.injury.toLowerCase().includes('suspend') ? 'suspension' as const : 'injury' as const,
+              details: `${i.injury} - ${i.status}`,
+            })),
+            away: perplexityInjuries.away.map(i => ({
+              player: i.playerName,
+              position: 'Unknown',
+              reason: i.injury.toLowerCase().includes('suspend') ? 'suspension' as const : 'injury' as const,
+              details: `${i.injury} - ${i.status}`,
+            })),
+          };
+          console.log(`[Match-Preview] NHL injuries from Perplexity - Home: ${injuries.home.length}, Away: ${injuries.away.length}`);
+        }
+      } catch (nhlError) {
+        console.error(`[Match-Preview] NHL injuries error (non-fatal):`, nhlError);
+      }
+    }
+
+    // NBA-specific: fetch injuries via Perplexity
+    const isNBA = ['basketball', 'basketball_nba', 'nba']
+      .includes(matchInfo.sport.toLowerCase());
+    
+    if (isNBA) {
+      console.log(`[Match-Preview] Fetching NBA injuries via Perplexity...`);
+      try {
+        const perplexityInjuries = await getMatchInjuriesViaPerplexity(
+          matchInfo.homeTeam,
+          matchInfo.awayTeam,
+          matchInfo.sport,
+          matchInfo.league
+        );
+        
+        if (perplexityInjuries.success) {
+          injuries = {
+            home: perplexityInjuries.home.map(i => ({
+              player: i.playerName,
+              position: 'Unknown',
+              reason: i.injury.toLowerCase().includes('suspend') ? 'suspension' as const : 'injury' as const,
+              details: `${i.injury} - ${i.status}`,
+            })),
+            away: perplexityInjuries.away.map(i => ({
+              player: i.playerName,
+              position: 'Unknown',
+              reason: i.injury.toLowerCase().includes('suspend') ? 'suspension' as const : 'injury' as const,
+              details: `${i.injury} - ${i.status}`,
+            })),
+          };
+          console.log(`[Match-Preview] NBA injuries from Perplexity - Home: ${injuries.home.length}, Away: ${injuries.away.length}`);
+        }
+      } catch (nbaError) {
+        console.error(`[Match-Preview] NBA injuries error (non-fatal):`, nbaError);
       }
     }
 
@@ -768,46 +865,53 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     console.log(`[Match-Preview] Stats prepared in ${Date.now() - startTime}ms`);
 
     // Build key absence from injuries data
-    const findKeyAbsence = () => {
-      // Check home team injuries first
+    // For impact rating: first injury found = 'star' player assumption (most reported)
+    const findKeyAbsence = (): { player: string; team: 'home' | 'away'; impact: 'star' | 'key' | 'rotation' } | null => {
+      // Check home team injuries first - priority to key positions
       const homeKeyPlayer = injuries.home.find(i => 
         i.position?.toLowerCase().includes('forward') || 
         i.position?.toLowerCase().includes('striker') ||
+        i.position?.toLowerCase().includes('quarterback') ||
+        i.position?.toLowerCase().includes('center') ||
+        i.position?.toLowerCase().includes('goalie') ||
         i.position?.toLowerCase().includes('midfielder')
       );
       if (homeKeyPlayer) {
         return {
           player: homeKeyPlayer.player,
           team: 'home' as const,
-          impact: `${homeKeyPlayer.reason}: ${homeKeyPlayer.details}`,
+          impact: 'star' as const, // Key position = star player
         };
       }
       // Check away team
       const awayKeyPlayer = injuries.away.find(i => 
         i.position?.toLowerCase().includes('forward') || 
         i.position?.toLowerCase().includes('striker') ||
+        i.position?.toLowerCase().includes('quarterback') ||
+        i.position?.toLowerCase().includes('center') ||
+        i.position?.toLowerCase().includes('goalie') ||
         i.position?.toLowerCase().includes('midfielder')
       );
       if (awayKeyPlayer) {
         return {
           player: awayKeyPlayer.player,
           team: 'away' as const,
-          impact: `${awayKeyPlayer.reason}: ${awayKeyPlayer.details}`,
+          impact: 'star' as const,
         };
       }
-      // Return first injury if any
+      // Return first injury if any - first reported = usually key player
       if (injuries.home.length > 0) {
         return {
           player: injuries.home[0].player,
           team: 'home' as const,
-          impact: `${injuries.home[0].reason}: ${injuries.home[0].details}`,
+          impact: injuries.home.length === 1 ? 'key' as const : 'star' as const,
         };
       }
       if (injuries.away.length > 0) {
         return {
           player: injuries.away[0].player,
           team: 'away' as const,
-          impact: `${injuries.away[0].reason}: ${injuries.away[0].details}`,
+          impact: injuries.away.length === 1 ? 'key' as const : 'star' as const,
         };
       }
       return null;
