@@ -21,6 +21,9 @@ import { CallOutcome, CallType } from '@prisma/client';
 // Verify cron secret
 const CRON_SECRET = process.env.CRON_SECRET;
 
+// Toggle Twitter posting (set to 'true' to enable)
+const TWITTER_POSTING_ENABLED = process.env.TWITTER_VALIDATION_ENABLED === 'true';
+
 // API endpoints for match results
 const FOOTBALL_API_URL = 'https://v3.football.api-sports.io';
 const BASKETBALL_API_URL = 'https://v1.basketball.api-sports.io';
@@ -458,7 +461,8 @@ export async function GET(request: NextRequest) {
         if (validation.outcome === 'PUSH') results.pushes++;
         
         // Post validation tweet (only for HIT/MISS, skip PUSHes)
-        if (twitter.isConfigured() && validation.outcome !== 'PUSH') {
+        // Disabled via TWITTER_VALIDATION_ENABLED env var
+        if (TWITTER_POSTING_ENABLED && twitter.isConfigured() && validation.outcome !== 'PUSH') {
           const tweetContent = generateValidationTweet(
             {
               matchName: prediction.matchName,
