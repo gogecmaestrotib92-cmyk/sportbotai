@@ -115,15 +115,137 @@ export interface TeamProfileData {
   }[];
 }
 
+// Common team slug to API ID mappings
+const TEAM_SLUG_MAP: Record<string, number> = {
+  // Premier League
+  'arsenal': 42,
+  'aston-villa': 66,
+  'bournemouth': 35,
+  'brentford': 55,
+  'brighton': 51,
+  'chelsea': 49,
+  'crystal-palace': 52,
+  'everton': 45,
+  'fulham': 36,
+  'liverpool': 40,
+  'manchester-city': 50,
+  'manchester-united': 33,
+  'newcastle': 34,
+  'nottingham-forest': 65,
+  'tottenham': 47,
+  'west-ham': 48,
+  'wolves': 39,
+  'luton': 1359,
+  'burnley': 44,
+  'sheffield-united': 62,
+  'ipswich': 57,
+  'leicester': 46,
+  'southampton': 41,
+  
+  // La Liga
+  'real-madrid': 541,
+  'barcelona': 529,
+  'atletico-madrid': 530,
+  'sevilla': 536,
+  'real-sociedad': 548,
+  'villarreal': 533,
+  'athletic-bilbao': 531,
+  'real-betis': 543,
+  
+  // Serie A
+  'inter-milan': 505,
+  'ac-milan': 489,
+  'juventus': 496,
+  'napoli': 492,
+  'roma': 497,
+  'lazio': 487,
+  'atalanta': 499,
+  'fiorentina': 502,
+  
+  // Bundesliga
+  'bayern-munich': 157,
+  'borussia-dortmund': 165,
+  'rb-leipzig': 173,
+  'bayer-leverkusen': 168,
+  
+  // Ligue 1
+  'psg': 85,
+  'marseille': 81,
+  'monaco': 91,
+  'lyon': 80,
+  
+  // NBA
+  'los-angeles-lakers': 17,
+  'boston-celtics': 2,
+  'golden-state-warriors': 11,
+  'miami-heat': 20,
+  'phoenix-suns': 28,
+  'dallas-mavericks': 8,
+  'denver-nuggets': 9,
+  'milwaukee-bucks': 21,
+  'philadelphia-76ers': 27,
+  'new-york-knicks': 24,
+  'los-angeles-clippers': 16,
+  'oklahoma-city-thunder': 25,
+  'minnesota-timberwolves': 22,
+  'cleveland-cavaliers': 7,
+  'memphis-grizzlies': 19,
+  'sacramento-kings': 30,
+  'indiana-pacers': 15,
+  'new-orleans-pelicans': 23,
+  'orlando-magic': 26,
+  'chicago-bulls': 6,
+  
+  // NHL
+  'toronto-maple-leafs': 699,
+  'boston-bruins': 681,
+  'new-york-rangers': 697,
+  'florida-panthers': 687,
+  'carolina-hurricanes': 684,
+  'edmonton-oilers': 686,
+  'colorado-avalanche': 685,
+  'dallas-stars': 682,
+  'vegas-golden-knights': 716,
+  'winnipeg-jets': 718,
+  'tampa-bay-lightning': 712,
+  
+  // NFL
+  'kansas-city-chiefs': 1,
+  'buffalo-bills': 4,
+  'baltimore-ravens': 3,
+  'san-francisco-49ers': 25,
+  'dallas-cowboys': 9,
+  'philadelphia-eagles': 26,
+  'miami-dolphins': 20,
+  'green-bay-packers': 12,
+  'detroit-lions': 10,
+  'cincinnati-bengals': 7,
+};
+
+function resolveTeamId(teamIdOrSlug: string): number | null {
+  // Check if it's already a number
+  const numId = parseInt(teamIdOrSlug, 10);
+  if (!isNaN(numId)) {
+    return numId;
+  }
+  
+  // Try slug lookup
+  const slug = teamIdOrSlug.toLowerCase();
+  return TEAM_SLUG_MAP[slug] || null;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ teamId: string }> }
 ) {
   const { teamId } = await params;
-  const teamIdNum = parseInt(teamId, 10);
+  const teamIdNum = resolveTeamId(teamId);
 
-  if (isNaN(teamIdNum)) {
-    return NextResponse.json({ error: 'Invalid team ID' }, { status: 400 });
+  if (!teamIdNum) {
+    return NextResponse.json({ 
+      error: 'Team not found. Try searching for the team.', 
+      slug: teamId 
+    }, { status: 404 });
   }
 
   // Check cache first
