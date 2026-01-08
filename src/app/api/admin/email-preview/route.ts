@@ -87,29 +87,40 @@ function generatePreviewHtml(templateId: string, params: Record<string, any>): s
 
   // Generate content based on template
   switch (templateId) {
-    case 'welcome':
+    case 'welcome': {
+      const plan = (params.planName || 'Pro').toUpperCase();
+      const displayName = plan === 'PREMIUM' ? 'Premium' : 'Pro';
+      
+      const proFeatures = `
+        <li>✅ 10 AI analyses per day</li>
+        <li>✅ 50 AI chat messages per day</li>
+        <li>✅ All sports covered</li>
+        <li>✅ Advanced AI analysis</li>
+        <li>✅ Pre-match insights & streaks</li>
+        <li>✅ Analysis history (30 days)</li>
+        <li>✅ My Teams favorites</li>
+        <li>✅ Priority support</li>
+      `;
+      
+      const premiumFeatures = `
+        <li>✅ Unlimited AI analyses</li>
+        <li>✅ Unlimited AI chat messages</li>
+        <li>✅ All sports covered</li>
+        <li>✅ Edge Alerts (value detection)</li>
+        <li>✅ Advanced statistics & trends</li>
+        <li>✅ Unlimited analysis history</li>
+        <li>✅ My Teams favorites</li>
+        <li>✅ Priority support 24/7</li>
+      `;
+
       return emailWrapper(`
-        <h2 style="color: #10B981; margin-bottom: 20px;">Welcome to SportBot AI ${params.planName}! 🎉</h2>
+        <h2 style="color: #10B981; margin-bottom: 20px;">Welcome to SportBot AI ${displayName}! 🎉</h2>
         
-        <p>Thank you for subscribing! Your account has been upgraded and you now have access to all ${params.planName} features.</p>
+        <p>Thank you for subscribing! Your account has been upgraded and you now have access to all ${displayName} features.</p>
         
         <h3 style="color: #f8fafc; margin-top: 30px;">What's included:</h3>
         <ul style="color: #cbd5e1; line-height: 1.8;">
-          ${params.planName === 'Premium' ? `
-            <li>✅ Unlimited AI analyses per day</li>
-            <li>✅ All sports covered</li>
-            <li>✅ Advanced probability models</li>
-            <li>✅ Head-to-head statistics</li>
-            <li>✅ Form & momentum analysis</li>
-            <li>✅ Weather & injury data</li>
-            <li>✅ Priority support</li>
-          ` : `
-            <li>✅ 20 AI analyses per day</li>
-            <li>✅ All major sports</li>
-            <li>✅ Probability estimates</li>
-            <li>✅ Value detection</li>
-            <li>✅ Risk assessment</li>
-          `}
+          ${plan === 'PREMIUM' ? premiumFeatures : proFeatures}
         </ul>
         
         <div style="text-align: center;">
@@ -122,6 +133,7 @@ function generatePreviewHtml(templateId: string, params: Record<string, any>): s
           If you have any questions, just reply to this email or contact us at ${SITE_CONFIG.email}
         </p>
       `);
+    }
 
     case 'renewal':
       return emailWrapper(`
