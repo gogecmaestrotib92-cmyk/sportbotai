@@ -70,6 +70,13 @@ async function getBlogPosts(page: number, category?: string) {
 
   const where: Record<string, unknown> = {
     status: 'PUBLISHED',
+    // Exclude match previews (those go to /news)
+    NOT: {
+      OR: [
+        { category: 'Match Previews' },
+        { postType: 'MATCH_PREVIEW' },
+      ],
+    },
   };
 
   if (category) {

@@ -284,7 +284,7 @@ export const SEED_KEYWORDS = [
   "handball predictions guide",
 ];
 
-// Blog categories
+// Blog categories (Match Previews excluded - they go to /news)
 export const BLOG_CATEGORIES = [
   "Betting Fundamentals",
   "Sports Analysis",
@@ -292,7 +292,6 @@ export const BLOG_CATEGORIES = [
   "Risk Management",
   "Market Insights",
   "Educational Guides",
-  "Match Previews",
   "Tools & Resources",
 ] as const;
 
