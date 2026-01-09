@@ -1187,7 +1187,79 @@ export async function GET(request: NextRequest) {
             return `${h2h.homeWins}-${h2h.draws}-${h2h.awayWins} in ${h2h.total} meetings`;
           };
           
-          // Build viralStats (same logic as full API)
+          // Find key absence from injuries (same logic as match-preview API)
+          const findKeyAbsence = (): { player: string; team: 'home' | 'away'; impact: 'star' | 'key' | 'rotation' } | null => {
+            const homeInjuries = analysis.injuries?.home || [];
+            const awayInjuries = analysis.injuries?.away || [];
+            
+            // Check home team injuries first - priority to key positions
+            const homeKeyPlayer = homeInjuries.find((i: any) => 
+              i.position?.toLowerCase().includes('forward') || 
+              i.position?.toLowerCase().includes('striker') ||
+              i.position?.toLowerCase().includes('quarterback') ||
+              i.position?.toLowerCase().includes('center') ||
+              i.position?.toLowerCase().includes('goalie') ||
+              i.position?.toLowerCase().includes('midfielder')
+            );
+            if (homeKeyPlayer) {
+              return {
+                player: homeKeyPlayer.player,
+                team: 'home' as const,
+                impact: 'star' as const,
+              };
+            }
+            // Check away team
+            const awayKeyPlayer = awayInjuries.find((i: any) => 
+              i.position?.toLowerCase().includes('forward') || 
+              i.position?.toLowerCase().includes('striker') ||
+              i.position?.toLowerCase().includes('quarterback') ||
+              i.position?.toLowerCase().includes('center') ||
+              i.position?.toLowerCase().includes('goalie') ||
+              i.position?.toLowerCase().includes('midfielder')
+            );
+            if (awayKeyPlayer) {
+              return {
+                player: awayKeyPlayer.player,
+                team: 'away' as const,
+                impact: 'star' as const,
+              };
+            }
+            // Return first injury if any
+            if (homeInjuries.length > 0) {
+              return {
+                player: homeInjuries[0].player,
+                team: 'home' as const,
+                impact: homeInjuries.length === 1 ? 'key' as const : 'star' as const,
+              };
+            }
+            if (awayInjuries.length > 0) {
+              return {
+                player: awayInjuries[0].player,
+                team: 'away' as const,
+                impact: awayInjuries.length === 1 ? 'key' as const : 'star' as const,
+              };
+            }
+            return null;
+          };
+          
+          // Detect win streaks (same logic as match-preview API)
+          const detectStreak = (): { text: string; team: 'home' | 'away' } | null => {
+            const homeWinStreak = (homeFormStr.match(/W+$/) || [''])[0].length;
+            const awayWinStreak = (awayFormStr.match(/W+$/) || [''])[0].length;
+            const homeUnbeaten = (homeFormStr.match(/[WD]+$/) || [''])[0].length;
+            const awayUnbeaten = (awayFormStr.match(/[WD]+$/) || [''])[0].length;
+
+            if (homeWinStreak >= 3) return { text: `${homeWinStreak} wins in a row`, team: 'home' as const };
+            if (awayWinStreak >= 3) return { text: `${awayWinStreak} wins in a row`, team: 'away' as const };
+            if (homeUnbeaten >= 5) return { text: `${homeUnbeaten} unbeaten`, team: 'home' as const };
+            if (awayUnbeaten >= 5) return { text: `${awayUnbeaten} unbeaten`, team: 'away' as const };
+            
+            return null;
+          };
+          
+          // Build viralStats (same logic as full API) - NOW WITH REAL DATA!
+          const keyAbsence = findKeyAbsence();
+          const streak = detectStreak();
           const viralStats = {
             h2h: {
               headline: buildH2HHeadline(),
@@ -1197,9 +1269,17 @@ export async function GET(request: NextRequest) {
               home: homeFormStr.slice(-5),
               away: awayFormStr.slice(-5),
             },
-            keyAbsence: null, // No injury data in quick analysis
-            streak: null, // Could add later
+            keyAbsence, // NOW POPULATED from analysis.injuries!
+            streak, // NOW POPULATED from form data!
           };
+          
+          // Log what we found
+          if (keyAbsence) {
+            console.log(`[Pre-Analyze] ${matchRef} keyAbsence: ${keyAbsence.player} (${keyAbsence.team})`);
+          }
+          if (streak) {
+            console.log(`[Pre-Analyze] ${matchRef} streak: ${streak.text} (${streak.team})`);
+          }
           
           // Build homeAwaySplits (estimated from overall stats)
           const homeAwaySplits = {
@@ -1273,7 +1353,7 @@ export async function GET(request: NextRequest) {
               source: 'API_SPORTS',
               hasFormData: homeFormStr !== '-----',
               hasH2H: h2h.total > 0,
-              hasInjuries: false,
+              hasInjuries: (analysis.injuries?.home?.length || 0) + (analysis.injuries?.away?.length || 0) > 0,
             },
             story: analysis.story,
             signals: analysis.signals,
@@ -1291,6 +1371,11 @@ export async function GET(request: NextRequest) {
               drawOdds: consensus.draw,
               homeTeam: event.home_team,
               awayTeam: event.away_team,
+            },
+            // Include injuries data for UI
+            injuries: {
+              home: analysis.injuries?.home || [],
+              away: analysis.injuries?.away || [],
             },
             // Rich UI components - NOW POPULATED!
             viralStats,
