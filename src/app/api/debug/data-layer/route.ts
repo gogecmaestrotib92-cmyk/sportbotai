@@ -62,6 +62,7 @@ export async function GET(request: NextRequest) {
     log(`Home form games: ${enrichedData.homeForm?.length || 0}`);
     log(`Away form games: ${enrichedData.awayForm?.length || 0}`);
     log(`H2H games: ${enrichedData.headToHead?.length || 0}`);
+    log(`H2H summary: ${JSON.stringify(enrichedData.h2hSummary)}`);
     
     const totalTime = Date.now() - startTime;
     log(`Complete in ${totalTime}ms`);
@@ -88,6 +89,7 @@ export async function GET(request: NextRequest) {
         homeFormCount: enrichedData.homeForm?.length || 0,
         awayFormCount: enrichedData.awayForm?.length || 0,
         h2hCount: enrichedData.headToHead?.length || 0,
+        h2hSummary: enrichedData.h2hSummary,
         homeStats: enrichedData.homeStats,
         awayStats: enrichedData.awayStats,
       },

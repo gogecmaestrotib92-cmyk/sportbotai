@@ -650,6 +650,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         homeFormGames: enrichedData.homeForm?.length || 0,
         awayFormGames: enrichedData.awayForm?.length || 0,
         h2hGames: enrichedData.headToHead?.length || 0,
+        h2hSummary: enrichedData.h2hSummary,
       });
     } catch (sportError) {
       console.error(`[Match-Preview] Sport API error for ${matchInfo.sport}:`, sportError);
@@ -986,6 +987,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
       return null;
     };
+
+    console.log(`[Match-Preview] H2H data for headline:`, h2h);
 
     // Build viral stats
     const viralStats = {

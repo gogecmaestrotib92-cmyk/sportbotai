@@ -869,7 +869,7 @@ ${!hasDraw ? 'NO DRAWS in this sport. Pick a winner.' : ''}`;
       goalsConceded: enrichedData.awayStats?.goalsConceded || enrichedData.awayStats?.pointsConceded || 0,
     };
     const h2hData = {
-      total: enrichedData.h2hSummary?.totalMeetings || enrichedData.h2h?.total || 0,
+      total: enrichedData.h2hSummary?.totalMatches || enrichedData.h2h?.total || 0,
       homeWins: enrichedData.h2hSummary?.homeWins || enrichedData.h2h?.homeWins || 0,
       awayWins: enrichedData.h2hSummary?.awayWins || enrichedData.h2h?.awayWins || 0,
       draws: enrichedData.h2hSummary?.draws || enrichedData.h2h?.draws || 0,

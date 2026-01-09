@@ -184,6 +184,7 @@ export async function getEnrichedMatchDataV2(
     console.log(`[Bridge] Away team:`, data.awayTeam?.team?.name);
     console.log(`[Bridge] Home recent games:`, data.homeTeam?.recentGames?.games?.length || 0);
     console.log(`[Bridge] Away recent games:`, data.awayTeam?.recentGames?.games?.length || 0);
+    console.log(`[Bridge] H2H present:`, !!data.h2h, 'matches:', data.h2h?.matches?.length, 'summary:', data.h2h?.summary);
     
     // Helper to safely convert date to ISO string
     const toISOString = (date: Date | string | undefined): string => {
