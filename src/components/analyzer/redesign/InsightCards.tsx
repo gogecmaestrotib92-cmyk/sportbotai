@@ -10,6 +10,7 @@
 
 import { AnalyzeResponse, FormMatch } from '@/types';
 import { TeamLogo } from '@/components/ui';
+import PremiumIcon, { IconName } from '@/components/ui/PremiumIcon';
 
 interface InsightCardsProps {
   result: AnalyzeResponse;
@@ -17,7 +18,7 @@ interface InsightCardsProps {
 
 interface InsightCardProps {
   title: string;
-  icon: string;
+  icon: IconName;
   children: React.ReactNode;
   accentColor?: string;
 }
@@ -31,7 +32,7 @@ function InsightCard({ title, icon, children, accentColor = 'from-white/10 to-wh
       <div className="relative p-5 sm:p-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <span className="text-xl">{icon}</span>
+          <PremiumIcon name={icon} size="lg" className="text-white/70" />
           <h3 className="text-sm font-medium text-white/70">{title}</h3>
         </div>
         
@@ -116,7 +117,7 @@ export default function InsightCards({ result }: InsightCardsProps) {
   return (
     <div className="grid md:grid-cols-2 gap-4">
       {/* Form & Momentum Card */}
-      <InsightCard title="Recent Form" icon="📈" accentColor="from-emerald-500/5 to-transparent">
+      <InsightCard title="Recent Form" icon="trending" accentColor="from-emerald-500/5 to-transparent">
         <div className="space-y-4">
           <FormIndicator 
             form={momentumAndForm.homeForm} 
@@ -146,7 +147,7 @@ export default function InsightCards({ result }: InsightCardsProps) {
       </InsightCard>
 
       {/* Key Factors Card */}
-      <InsightCard title="Key Factors" icon="🎯" accentColor="from-blue-500/5 to-transparent">
+      <InsightCard title="Key Factors" icon="target" accentColor="from-blue-500/5 to-transparent">
         <ul className="space-y-2.5">
           {tacticalAnalysis.keyMatchFactors.slice(0, 4).map((factor, idx) => (
             <li key={idx} className="flex items-start gap-2.5">
@@ -158,14 +159,14 @@ export default function InsightCards({ result }: InsightCardsProps) {
       </InsightCard>
 
       {/* Playing Style Card */}
-      <InsightCard title="Tactical Preview" icon="⚔️" accentColor="from-purple-500/5 to-transparent">
+      <InsightCard title="Tactical Preview" icon="shield" accentColor="from-purple-500/5 to-transparent">
         <p className="text-sm text-white/60 leading-relaxed">
           {tacticalAnalysis.stylesSummary || 'Tactical analysis pending...'}
         </p>
       </InsightCard>
 
       {/* Risk & Psychology Card */}
-      <InsightCard title="Watch Out For" icon="⚠️" accentColor="from-amber-500/5 to-transparent">
+      <InsightCard title="Watch Out For" icon="warning" accentColor="from-amber-500/5 to-transparent">
         <div className="space-y-3">
           {/* Risk Explanation */}
           <p className="text-sm text-white/60 leading-relaxed">

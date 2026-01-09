@@ -10,6 +10,7 @@
 'use client';
 
 import { AnalyzeResponse, RiskLevel, ValueFlag } from '@/types';
+import PremiumIcon from '@/components/ui/PremiumIcon';
 
 interface VerdictModuleProps {
   result: AnalyzeResponse;
@@ -21,11 +22,11 @@ const riskStyles: Record<RiskLevel, { label: string; color: string; bg: string }
   HIGH: { label: 'High Risk', color: 'text-rose-400', bg: 'bg-rose-500/10' },
 };
 
-const valueStyles: Record<ValueFlag, { label: string; color: string; bg: string; visible: boolean }> = {
-  NONE: { label: 'Fair Odds', color: 'text-white/50', bg: 'bg-white/5', visible: false },
-  LOW: { label: '🎯 Edge Detected', color: 'text-cyan-300', bg: 'bg-cyan-500/15 border-cyan-400/30', visible: true },
-  MEDIUM: { label: '✨ Value Found', color: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-400/30', visible: true },
-  HIGH: { label: '🔥 Strong Value', color: 'text-emerald-300', bg: 'bg-emerald-500/20 border-emerald-400/40', visible: true },
+const valueStyles: Record<ValueFlag, { label: string; color: string; bg: string; visible: boolean; icon: 'target' | 'star' | 'fire' | null }> = {
+  NONE: { label: 'Fair Odds', color: 'text-white/50', bg: 'bg-white/5', visible: false, icon: null },
+  LOW: { label: 'Edge Detected', color: 'text-cyan-300', bg: 'bg-cyan-500/15 border-cyan-400/30', visible: true, icon: 'target' },
+  MEDIUM: { label: 'Value Found', color: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-400/30', visible: true, icon: 'star' },
+  HIGH: { label: 'Strong Value', color: 'text-emerald-300', bg: 'bg-emerald-500/20 border-emerald-400/40', visible: true, icon: 'fire' },
 };
 
 export default function VerdictModule({ result }: VerdictModuleProps) {
