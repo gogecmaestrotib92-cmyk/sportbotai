@@ -12,6 +12,7 @@ import { useState, useEffect, useCallback } from 'react';
 import TeamLogo from '@/components/ui/TeamLogo';
 import LeagueLogo from '@/components/ui/LeagueLogo';
 import FavoriteButton from '@/components/FavoriteButton';
+import PremiumIcon from '@/components/ui/PremiumIcon';
 
 interface LiveScoreData {
   homeScore: number;
@@ -305,7 +306,7 @@ export default function PremiumMatchHeader({
                 <div key={idx} className="flex items-center justify-center gap-2 text-xs">
                   <span className="text-zinc-600 font-mono w-6">{event.time}&apos;</span>
                   <span className={event.type === 'Goal' ? 'text-green-400' : event.type === 'Card' ? 'text-yellow-400' : 'text-zinc-500'}>
-                    {event.type === 'Goal' ? '⚽' : event.type === 'Card' ? '🟨' : '↔️'}
+                    {event.type === 'Goal' ? <PremiumIcon name="soccer" size="sm" /> : event.type === 'Card' ? <PremiumIcon name="card-yellow" size="sm" /> : <PremiumIcon name="swap" size="sm" />}
                   </span>
                   <span className="text-zinc-400">{event.player}</span>
                   <span className={`text-xs ${event.team === 'home' ? 'text-zinc-500' : 'text-zinc-500'}`}>
@@ -320,7 +321,7 @@ export default function PremiumMatchHeader({
         {/* Venue (if available and not showing events) */}
         {venue && !(isLive && liveScore?.events && liveScore.events.length > 0) && (
           <div className="mt-6 pt-4 border-t border-white/[0.04] text-center">
-            <span className="text-xs text-zinc-500">📍 {venue}</span>
+            <span className="text-xs text-zinc-500 flex items-center justify-center gap-1"><PremiumIcon name="location" size="xs" /> {venue}</span>
           </div>
         )}
       </div>

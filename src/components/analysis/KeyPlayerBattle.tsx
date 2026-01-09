@@ -7,6 +7,8 @@
 
 'use client';
 
+import PremiumIcon, { type IconName } from '@/components/ui/PremiumIcon';
+
 interface PlayerStats {
   name: string;
   position: string;
@@ -26,10 +28,10 @@ interface KeyPlayerBattleProps {
   battleType: 'attack-vs-defense' | 'midfield-duel' | 'top-scorers';
 }
 
-const battleLabels = {
-  'attack-vs-defense': { icon: '⚔️', title: 'Key Matchup', subtitle: 'Attack meets Defense' },
-  'midfield-duel': { icon: '🎯', title: 'Midfield Battle', subtitle: 'Who controls the game?' },
-  'top-scorers': { icon: '🔥', title: 'Goal Threat', subtitle: 'Top scorers head-to-head' },
+const battleLabels: Record<string, { iconName: IconName; title: string; subtitle: string }> = {
+  'attack-vs-defense': { iconName: 'shield', title: 'Key Matchup', subtitle: 'Attack meets Defense' },
+  'midfield-duel': { iconName: 'target', title: 'Midfield Battle', subtitle: 'Who controls the game?' },
+  'top-scorers': { iconName: 'fire', title: 'Goal Threat', subtitle: 'Top scorers head-to-head' },
 };
 
 const FormBadge = ({ result }: { result: string }) => {
@@ -66,7 +68,7 @@ export default function KeyPlayerBattle({
             {player.photo ? (
               <img src={player.photo} alt={player.name} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-2xl">⚽</span>
+              <PremiumIcon name="soccer" size="xl" className="text-zinc-400" />
             )}
           </div>
         </div>
@@ -126,7 +128,7 @@ export default function KeyPlayerBattle({
       <div className="px-5 py-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-xl flex items-center justify-center">
-            <span className="text-xl">{battle.icon}</span>
+            <PremiumIcon name={battle.iconName} size="lg" className="text-orange-400" />
           </div>
           <div className="flex-1">
             <h3 className="font-bold text-white">{battle.title}</h3>

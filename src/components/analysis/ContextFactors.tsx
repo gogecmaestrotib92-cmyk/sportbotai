@@ -10,6 +10,8 @@
 
 'use client';
 
+import PremiumIcon from '@/components/ui/PremiumIcon';
+
 interface ContextFactor {
   id: string;
   icon: string;
@@ -40,7 +42,7 @@ export default function ContextFactors({
       <div className="px-6 py-5 border-b border-white/[0.06]">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-xl flex items-center justify-center">
-            <span className="text-2xl">📋</span>
+            <PremiumIcon name="clipboard" size="xl" className="text-yellow-400" />
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">Context & Factors</h3>

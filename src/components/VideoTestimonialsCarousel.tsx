@@ -35,20 +35,20 @@ const CAROUSEL_ITEMS: CarouselItem[] = [
   {
     type: 'situation',
     id: 'situation-1',
-    icon: 'trending',
+    icon: 'bolt',
     headline: { 
-      en: 'When the line moves your way',
-      sr: 'Kada se linija pomeri u tvoju korist'
+      en: 'When the 8% edge alert drops',
+      sr: 'Kada stigne alert za 8% prednosti'
     },
     subtext: { 
-      en: 'You saw the edge. The market caught up.',
-      sr: 'Video si prednost. Tržište je stiglo.'
+      en: 'Market mispricing. You move first.',
+      sr: 'Tržište greši. Ti reaguješ prvi.'
     },
   },
   {
     type: 'video',
     id: 'video-1',
-    videoSrc: '/videos/the alert hit.mp4',
+    videoSrc: '/videos/the pub moment.mp4',
   },
   {
     type: 'situation',
@@ -89,20 +89,20 @@ const CAROUSEL_ITEMS: CarouselItem[] = [
   {
     type: 'situation',
     id: 'situation-4',
-    icon: 'bolt',
+    icon: 'trending',
     headline: { 
-      en: 'When the 8% edge alert drops',
-      sr: 'Kada stigne alert za 8% prednosti'
+      en: 'When the line moves your way',
+      sr: 'Kada se linija pomeri u tvoju korist'
     },
     subtext: { 
-      en: 'Market mispricing. You move first.',
-      sr: 'Tržište greši. Ti reaguješ prvi.'
+      en: 'You saw the edge. The market caught up.',
+      sr: 'Video si prednost. Tržište je stiglo.'
     },
   },
   {
     type: 'video',
     id: 'video-4',
-    videoSrc: '/videos/the pub moment.mp4',
+    videoSrc: '/videos/the alert hit.mp4',
   },
   {
     type: 'situation',

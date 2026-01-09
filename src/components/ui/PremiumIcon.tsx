@@ -11,7 +11,10 @@ export type IconName =
   | 'chart' | 'trending' | 'trending-down' | 'target' | 'bolt' | 'diamond'
   | 'trophy' | 'fire' | 'warning' | 'check' | 'x' | 'lightbulb' | 'money'
   | 'soccer' | 'basketball' | 'football' | 'bell' | 'clock' | 'star'
-  | 'shield' | 'users' | 'eye' | 'lock' | 'unlock' | 'info' | 'alert';
+  | 'shield' | 'users' | 'eye' | 'lock' | 'unlock' | 'info' | 'alert'
+  | 'home' | 'plane' | 'stadium' | 'handshake' | 'card-yellow' | 'card-red'
+  | 'location' | 'brain' | 'whistle' | 'microscope' | 'scale' | 'clipboard'
+  | 'medical' | 'swap';
 
 export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -122,6 +125,61 @@ const ICON_PATHS: Record<IconName, React.ReactNode> = {
   alert: (
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
   ),
+  home: (
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+  ),
+  plane: (
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+  ),
+  stadium: (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21c4.97 0 9-2.015 9-4.5V9M12 21c-4.97 0-9-2.015-9-4.5V9M12 21V9M21 9c0-2.485-4.03-4.5-9-4.5S3 6.515 3 9m18 0c0 2.485-4.03 4.5-9 4.5S3 11.485 3 9" />
+      <ellipse cx="12" cy="9" rx="9" ry="4.5" />
+    </>
+  ),
+  handshake: (
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59" />
+  ),
+  'card-yellow': (
+    <>
+      <rect x="6" y="3" width="12" height="18" rx="2" fill="currentColor" fillOpacity="0.3" />
+      <rect x="6" y="3" width="12" height="18" rx="2" />
+    </>
+  ),
+  'card-red': (
+    <>
+      <rect x="6" y="3" width="12" height="18" rx="2" fill="currentColor" fillOpacity="0.5" />
+      <rect x="6" y="3" width="12" height="18" rx="2" />
+    </>
+  ),
+  location: (
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+  ),
+  brain: (
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+  ),
+  whistle: (
+    <>
+      <circle cx="16" cy="12" r="5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M11 12H5M5 12l-2 2M5 12l-2-2" />
+      <circle cx="16" cy="12" r="1.5" fill="currentColor" />
+    </>
+  ),
+  microscope: (
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611l-.628.105a9.038 9.038 0 01-4.507 0l-.628-.105c-1.718-.294-2.3-2.38-1.067-3.611L14.8 15.3M5 14.5l-1.402 1.402c-1.232 1.232-.65 3.318 1.067 3.611l.628.105a9.038 9.038 0 004.507 0" />
+  ),
+  scale: (
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0012 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 01-2.031.352 5.988 5.988 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.97zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 01-2.031.352 5.989 5.989 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.97z" />
+  ),
+  clipboard: (
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+  ),
+  medical: (
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+  ),
+  swap: (
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+  ),
 };
 
 export default function PremiumIcon({ name, size = 'md', className = '' }: PremiumIconProps) {
@@ -169,4 +227,18 @@ export const EMOJI_TO_ICON: Record<string, IconName> = {
   '🔓': 'unlock',
   'ℹ️': 'info',
   '🚨': 'alert',
+  '🏠': 'home',
+  '✈️': 'plane',
+  '🏟️': 'stadium',
+  '🤝': 'handshake',
+  '🟨': 'card-yellow',
+  '🟥': 'card-red',
+  '📍': 'location',
+  '🧠': 'brain',
+  '👨‍⚖️': 'whistle',
+  '🔬': 'microscope',
+  '⚖️': 'scale',
+  '📋': 'clipboard',
+  '🏥': 'medical',
+  '↔️': 'swap',
 };

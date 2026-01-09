@@ -8,6 +8,7 @@
 'use client';
 
 import { useState } from 'react';
+import PremiumIcon from '@/components/ui/PremiumIcon';
 
 interface SnapshotListProps {
   snapshot: string[];
@@ -106,7 +107,7 @@ function SnapshotInsight({ insight, index, compact }: { insight: string; index: 
           {!compact && expanded && (
             <div className="mt-3 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
               <p className="text-sm text-stone-400 leading-relaxed flex items-start gap-2">
-                <span className="text-stone-500 mt-0.5 flex-shrink-0">💡</span>
+                <PremiumIcon name="lightbulb" size="sm" className="text-stone-500 mt-0.5 flex-shrink-0" />
                 <span><strong className="text-stone-300">Why this matters:</strong> {config.explanation}</span>
               </p>
             </div>

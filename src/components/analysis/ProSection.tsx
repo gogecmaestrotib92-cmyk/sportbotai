@@ -13,6 +13,7 @@
 
 import Link from 'next/link';
 import React from 'react';
+import PremiumIcon from '@/components/ui/PremiumIcon';
 import { colors, proSection, proBadge } from '@/lib/design-system';
 
 type Locale = 'en' | 'sr';
@@ -83,8 +84,8 @@ export function ProSection({
       <h3 className="matrix-label mb-4 flex items-center gap-3">
         <span className="opacity-60 text-base">{icon}</span>
         <span>{title}</span>
-        <span className="ml-auto matrix-dim px-2.5 py-1 bg-zinc-800/70 rounded-full border border-zinc-700/40">
-          🔒 PRO
+        <span className="ml-auto matrix-dim px-2.5 py-1 bg-zinc-800/70 rounded-full border border-zinc-700/40 flex items-center gap-1">
+          <PremiumIcon name="lock" size="xs" /> PRO
         </span>
       </h3>
 
@@ -180,8 +181,8 @@ export function ProSectionPlaceholder({
       <h3 className="matrix-dim mb-4 flex items-center gap-2">
         <span className="opacity-40">{icon}</span>
         <span>{title}</span>
-        <span className="ml-auto matrix-dim px-2 py-0.5 bg-zinc-800/50 rounded-full border border-zinc-700/30">
-          🔒 PRO
+        <span className="ml-auto matrix-dim px-2 py-0.5 bg-zinc-800/50 rounded-full border border-zinc-700/30 flex items-center gap-1">
+          <PremiumIcon name="lock" size="xs" /> PRO
         </span>
       </h3>
 
@@ -199,7 +200,7 @@ export function ProSectionPlaceholder({
       {/* Lock message */}
       <div className="mt-4 pt-3 border-t border-white/[0.06]">
         <div className="flex items-center gap-2 text-zinc-500 mb-1">
-          <span>🔒</span>
+          <PremiumIcon name="lock" size="sm" />
           <span className="text-xs font-medium">{t.availableInPro}</span>
         </div>
         {description && (

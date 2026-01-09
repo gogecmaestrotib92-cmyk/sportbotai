@@ -9,6 +9,7 @@
 'use client';
 
 import { useState } from 'react';
+import PremiumIcon from '@/components/ui/PremiumIcon';
 import { UniversalSignals } from '@/lib/universal-signals';
 import { InfoTooltip } from '@/components/ui/Tooltip';
 import {
@@ -147,7 +148,7 @@ export default function UniversalSignalsDisplay({
         
         {/* Form - Visual dots */}
         <SignalCard 
-          icon="📊" 
+          icon={<PremiumIcon name="chart" size="lg" className="text-white" />} 
           label={t.form}
           tooltip={t.formTooltip}
           rightContent={
@@ -163,7 +164,7 @@ export default function UniversalSignalsDisplay({
         </SignalCard>
 
         {/* Strength Edge - Visual bar */}
-        <SignalCard icon="⚡" label={t.strengthEdge} tooltip={t.edgeTooltip}>
+        <SignalCard icon={<PremiumIcon name="bolt" size="lg" className="text-white" />} label={t.strengthEdge} tooltip={t.edgeTooltip}>
           <div className="mt-3">
             <EdgeBar
               direction={display.edge?.direction || 'even'}
@@ -181,7 +182,7 @@ export default function UniversalSignalsDisplay({
           <div className="p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] border-t-white/[0.12]">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="text-lg">🎯</span>
+                <PremiumIcon name="target" size="lg" className="text-white" />
                 <span className="matrix-label">{t.tempo}</span>
                 <InfoTooltip content={t.tempoTooltip} position="bottom" />
               </div>
@@ -195,7 +196,7 @@ export default function UniversalSignalsDisplay({
           {/* Efficiency */}
           <div className="p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] border-t-white/[0.12]">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-lg">📈</span>
+              <PremiumIcon name="trending" size="lg" className="text-white" />
               <span className="matrix-label">{t.efficiency}</span>
               <InfoTooltip content={t.efficiencyTooltip} position="bottom" />
             </div>
@@ -288,7 +289,7 @@ function ExpandableAvailability({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <span className="text-lg">🏥</span>
+          <PremiumIcon name="medical" size="lg" className="text-white" />
           <span className="matrix-label">
             {locale === 'sr' ? 'Raspoloživost Tima' : 'Squad Availability'}
           </span>
@@ -416,7 +417,7 @@ function SignalCard({
   rightContent,
   tooltip,
 }: { 
-  icon: string; 
+  icon: React.ReactNode; 
   label: string; 
   children: React.ReactNode;
   rightContent?: React.ReactNode;
@@ -426,7 +427,7 @@ function SignalCard({
     <div className="p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-lg">{icon}</span>
+          {icon}
           <span className="matrix-label">{label}</span>
           {tooltip && <InfoTooltip content={tooltip} position="bottom" />}
         </div>

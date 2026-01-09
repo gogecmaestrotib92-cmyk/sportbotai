@@ -7,6 +7,8 @@
 
 'use client';
 
+import PremiumIcon from '@/components/ui/PremiumIcon';
+
 interface Headline {
   icon: string;
   text: string;
@@ -33,7 +35,7 @@ export default function MatchHeadlines({
       <div className="px-6 py-5 border-b border-white/[0.06] flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-gradient-to-br from-violet-500/20 to-violet-600/10 rounded-xl flex items-center justify-center">
-            <span className="text-2xl">💡</span>
+            <PremiumIcon name="lightbulb" size="xl" className="text-violet-400" />
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">Did You Know?</h3>

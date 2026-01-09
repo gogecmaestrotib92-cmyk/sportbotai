@@ -10,6 +10,7 @@
 'use client';
 
 import { useState } from 'react';
+import PremiumIcon, { type IconName } from '@/components/ui/PremiumIcon';
 
 interface SignalAnalysisProps {
   homeTeam: string;
@@ -59,9 +60,11 @@ export default function SignalAnalysis({
           <div className="flex items-center justify-between mb-7">
             <div className="flex items-center gap-4">
               <div className={`w-14 h-14 rounded-xl bg-white/[0.04] ring-1 ${confidenceConfig.ring} flex items-center justify-center`}>
-                <span className="text-3xl">
-                  {favored === 'draw' ? '⚖️' : favored === 'home' ? '🏠' : '✈️'}
-                </span>
+                <PremiumIcon 
+                  name={favored === 'draw' ? 'scale' : favored === 'home' ? 'home' : 'plane'} 
+                  size="xl" 
+                  className="text-white" 
+                />
               </div>
               <div>
                 <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-1">
@@ -181,13 +184,13 @@ function SnapshotInsight({ insight, index }: { insight: string; index: number })
   const [expanded, setExpanded] = useState(false);
   
   // Determine bullet type and color based on content
-  const getBulletConfig = (text: string, idx: number) => {
+  const getBulletConfig = (text: string, idx: number): { color: string; iconName: IconName; label: string; explanation: string } => {
     const lowerText = text.toLowerCase();
     
     if (lowerText.includes('the edge:') || idx === 0) {
       return { 
         color: 'bg-emerald-500', 
-        icon: '🎯',
+        iconName: 'target',
         label: 'THE EDGE',
         explanation: 'This is our primary pick based on statistical analysis. The percentage shown is the computed edge between our model probability and the market odds.'
       };
@@ -195,7 +198,7 @@ function SnapshotInsight({ insight, index }: { insight: string; index: number })
     if (lowerText.includes('market miss:') || idx === 1) {
       return { 
         color: 'bg-blue-500', 
-        icon: '💡',
+        iconName: 'lightbulb',
         label: 'MARKET MISS',
         explanation: 'This identifies what the bookmaker odds are potentially undervaluing. We compare home/away form splits, recent performance, and market implied probabilities.'
       };
@@ -203,7 +206,7 @@ function SnapshotInsight({ insight, index }: { insight: string; index: number })
     if (lowerText.includes('the pattern:') || idx === 2) {
       return { 
         color: 'bg-violet-500', 
-        icon: '📊',
+        iconName: 'chart',
         label: 'THE PATTERN',
         explanation: 'Historical patterns from head-to-head meetings and streaks. While past performance doesn\'t guarantee future results, recurring patterns can indicate underlying dynamics.'
       };
@@ -211,14 +214,14 @@ function SnapshotInsight({ insight, index }: { insight: string; index: number })
     if (lowerText.includes('the risk:') || idx === 3) {
       return { 
         color: 'bg-amber-500', 
-        icon: '⚠️',
+        iconName: 'warning',
         label: 'THE RISK',
         explanation: 'Key factors that could invalidate this analysis. Always consider these before making decisions. Injuries, fatigue, and form changes can significantly impact outcomes.'
       };
     }
     return { 
       color: 'bg-zinc-500', 
-      icon: '•',
+      iconName: 'info',
       label: 'INSIGHT',
       explanation: 'Additional context from our analysis.'
     };
@@ -253,7 +256,7 @@ function SnapshotInsight({ insight, index }: { insight: string; index: number })
           {expanded && (
             <div className="mt-3 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
               <p className="text-sm text-zinc-400 leading-relaxed flex items-start gap-2">
-                <span className="text-zinc-500 mt-0.5">ℹ️</span>
+                <PremiumIcon name="info" size="sm" className="text-zinc-500 mt-0.5 flex-shrink-0" />
                 <span><strong className="text-zinc-300">Why this matters:</strong> {config.explanation}</span>
               </p>
             </div>

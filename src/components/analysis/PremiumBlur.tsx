@@ -13,6 +13,7 @@
 'use client';
 
 import Link from 'next/link';
+import PremiumIcon from '@/components/ui/PremiumIcon';
 
 interface PremiumBlurProps {
   /** The content to blur/show */
@@ -65,7 +66,9 @@ export function PremiumBlur({
       {/* Premium Gate Card - matching Market Alerts style */}
       <div className="bg-gradient-to-br from-[#0a0a0b] via-[#0a0a0b] to-violet-500/5 border border-violet-500/30 rounded-2xl p-6 text-center">
         {/* Lock Icon */}
-        <div className="text-4xl mb-4">🔒</div>
+        <div className="mb-4 flex justify-center">
+          <PremiumIcon name="lock" size="xl" className="text-violet-400 w-10 h-10" />
+        </div>
         
         {/* Title */}
         <h3 className="text-xl font-bold text-white mb-2">{title}</h3>

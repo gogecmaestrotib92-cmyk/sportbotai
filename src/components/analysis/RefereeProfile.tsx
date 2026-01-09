@@ -10,6 +10,7 @@
 'use client';
 
 import { colors } from '@/lib/design-system';
+import PremiumIcon from '@/components/ui/PremiumIcon';
 
 interface RefereeStats {
   name: string;
@@ -82,7 +83,7 @@ export default function RefereeProfile({
       <div className="px-6 py-5 border-b border-white/[0.06]">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-xl flex items-center justify-center">
-            <span className="text-2xl">🎯</span>
+            <PremiumIcon name="whistle" size="xl" className="text-yellow-400" />
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold text-white">Match Official</h3>
@@ -99,7 +100,7 @@ export default function RefereeProfile({
             {referee.photo ? (
               <img src={referee.photo} alt={referee.name} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-3xl">👨‍⚖️</span>
+              <PremiumIcon name="whistle" size="xl" className="text-zinc-400" />
             )}
           </div>
           <div>
@@ -112,7 +113,7 @@ export default function RefereeProfile({
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-amber-400 text-base">🟨</span>
+              <PremiumIcon name="card-yellow" size="md" className="text-amber-400" />
               <span className="text-sm text-text-muted font-medium">Yellows/game</span>
             </div>
             <p className={`text-2xl font-bold ${referee.avgYellowCards >= 4.5 ? 'text-amber-400' : 'text-white'}`}>
@@ -121,7 +122,7 @@ export default function RefereeProfile({
           </div>
           <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-rose-400 text-base">🟥</span>
+              <PremiumIcon name="card-red" size="md" className="text-rose-400" />
               <span className="text-sm text-text-muted font-medium">Reds/game</span>
             </div>
             <p className={`text-2xl font-bold ${referee.avgRedCards >= 0.3 ? 'text-rose-400' : 'text-white'}`}>
@@ -130,14 +131,14 @@ export default function RefereeProfile({
           </div>
           <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-base">⚽</span>
+              <PremiumIcon name="soccer" size="md" className="text-white" />
               <span className="text-sm text-text-muted font-medium">Penalties</span>
             </div>
             <p className="text-2xl font-bold text-white">{referee.penaltiesAwarded}</p>
           </div>
           <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-base">🏠</span>
+              <PremiumIcon name="home" size="md" className="text-white" />
               <span className="text-sm text-text-muted font-medium">Home win %</span>
             </div>
             <p className={`text-2xl font-bold ${referee.homeWinRate >= 55 ? 'text-emerald-400' : 'text-white'}`}>

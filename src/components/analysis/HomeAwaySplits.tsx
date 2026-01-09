@@ -7,6 +7,8 @@
 
 'use client';
 
+import PremiumIcon from '@/components/ui/PremiumIcon';
+
 interface TeamSplits {
   played: number;
   wins: number;
@@ -68,7 +70,7 @@ export default function HomeAwaySplits({
         <div className="px-5 py-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl flex items-center justify-center">
-              <span className="text-xl">🏟️</span>
+              <PremiumIcon name="stadium" size="lg" className="text-green-400" />
             </div>
             <div>
               <h3 className="text-base font-bold text-white">Home & Away Form</h3>
@@ -99,7 +101,7 @@ export default function HomeAwaySplits({
       <div className="px-5 py-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl flex items-center justify-center">
-            <span className="text-xl">🏟️</span>
+            <PremiumIcon name="stadium" size="lg" className="text-green-400" />
           </div>
           <div>
             <h3 className="text-base font-bold text-white">Home & Away Form</h3>
@@ -113,7 +115,7 @@ export default function HomeAwaySplits({
         {/* Home Team at Home */}
         <div className="p-4">
           <div className="text-center mb-4">
-            <span className="text-xs text-text-muted">🏠 {homeTeam}</span>
+            <span className="text-xs text-text-muted flex items-center justify-center gap-1"><PremiumIcon name="home" size="xs" /> {homeTeam}</span>
             <p className="text-lg font-bold text-white">At Home</p>
           </div>
 
@@ -169,7 +171,7 @@ export default function HomeAwaySplits({
         {/* Away Team Away */}
         <div className="p-4">
           <div className="text-center mb-4">
-            <span className="text-xs text-text-muted">✈️ {awayTeam}</span>
+            <span className="text-xs text-text-muted flex items-center justify-center gap-1"><PremiumIcon name="plane" size="xs" /> {awayTeam}</span>
             <p className="text-lg font-bold text-white">Away</p>
           </div>
 

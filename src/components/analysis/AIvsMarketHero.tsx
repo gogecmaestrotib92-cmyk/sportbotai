@@ -13,6 +13,7 @@
 'use client';
 
 import Link from 'next/link';
+import PremiumIcon from '@/components/ui/PremiumIcon';
 import type { MarketIntel } from '@/lib/value-detection';
 import { colors, getEdgeStyle, getOverpricedStyle } from '@/lib/design-system';
 
@@ -130,12 +131,12 @@ export function AIvsMarketHero({
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-violet-500/20 rounded-xl flex items-center justify-center">
-              <span className="text-xl">🧠</span>
+              <PremiumIcon name="brain" size="lg" className="text-violet-400" />
             </div>
             <h3 className="text-lg text-white font-bold">{t.aiVsMarket}</h3>
           </div>
-          <span className="px-3 py-1 bg-violet-500/20 text-violet-300 text-sm font-medium rounded-full">
-            🔒 {locale === 'sr' ? 'Zaključano' : 'Locked'}
+          <span className="px-3 py-1 bg-violet-500/20 text-violet-300 text-sm font-medium rounded-full flex items-center gap-1.5">
+            <PremiumIcon name="lock" size="sm" /> {locale === 'sr' ? 'Zaključano' : 'Locked'}
           </span>
         </div>
         
@@ -174,7 +175,7 @@ export function AIvsMarketHero({
       <div className="mt-4 sm:mt-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-6">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <span className="text-lg opacity-60">🧠</span>
+            <PremiumIcon name="brain" size="lg" className="text-zinc-500" />
             <span className="text-xs text-zinc-400 uppercase tracking-widest font-semibold">{t.aiVsMarket}</span>
           </div>
           {hasSignificantEdge && (
@@ -227,7 +228,7 @@ export function AIvsMarketHero({
         {/* Locked "What Pro would show" preview */}
         <div className="mt-5 p-4 bg-[#0a0a0b] border border-white/[0.06] rounded-xl">
           <div className="flex items-center gap-2 text-xs text-zinc-400 mb-3">
-            <span>🔒</span>
+            <PremiumIcon name="lock" size="sm" />
             <span className="uppercase tracking-wider font-semibold">{t.proWouldShow}</span>
           </div>
           <ul className="space-y-2 text-sm text-zinc-500">
@@ -329,7 +330,7 @@ function HeroContent({
       {/* Header - muted label */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <span className="text-lg opacity-60">🧠</span>
+          <PremiumIcon name="brain" size="lg" className="text-zinc-500" />
           <span className="matrix-label">{t.aiVsMarket}</span>
         </div>
         <span className="matrix-dim px-2.5 py-0.5 rounded-full border border-violet-500/20">

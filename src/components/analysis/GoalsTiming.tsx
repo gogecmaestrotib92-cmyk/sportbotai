@@ -7,6 +7,8 @@
 
 'use client';
 
+import PremiumIcon from '@/components/ui/PremiumIcon';
+
 interface GoalsTimingData {
   /** Goals by time period */
   scoring: {
@@ -77,7 +79,7 @@ export default function GoalsTiming({
         <div className="px-5 py-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl flex items-center justify-center">
-              <span className="text-xl">⏱️</span>
+              <PremiumIcon name="clock" size="lg" className="text-blue-400" />
             </div>
             <div>
               <h3 className="text-base font-bold text-white">Goals Timing</h3>
@@ -103,7 +105,7 @@ export default function GoalsTiming({
       <div className="px-5 py-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl flex items-center justify-center">
-            <span className="text-xl">⏱️</span>
+            <PremiumIcon name="clock" size="lg" className="text-blue-400" />
           </div>
           <div>
             <h3 className="text-base font-bold text-white">Goals Timing</h3>
@@ -117,13 +119,13 @@ export default function GoalsTiming({
         <div className="text-center">
           <p className="text-xs text-text-muted mb-1">{homeTeam} most dangerous</p>
           <span className="inline-flex items-center gap-1 px-2 py-1 bg-accent/20 text-accent text-sm font-bold rounded">
-            ⚡ {homePeak.period}&apos;
+            <PremiumIcon name="bolt" size="sm" /> {homePeak.period}&apos;
           </span>
         </div>
         <div className="text-center">
           <p className="text-xs text-text-muted mb-1">{awayTeam} most dangerous</p>
           <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/20 text-primary text-sm font-bold rounded">
-            ⚡ {awayPeak.period}&apos;
+            <PremiumIcon name="bolt" size="sm" /> {awayPeak.period}&apos;
           </span>
         </div>
       </div>
@@ -132,7 +134,7 @@ export default function GoalsTiming({
       <div className="p-5 space-y-6">
         {/* Home Team */}
         <div>
-          <p className="text-xs text-text-muted mb-2">🏠 {homeTeam} scoring by period</p>
+          <p className="text-xs text-text-muted mb-2 flex items-center gap-1"><PremiumIcon name="home" size="xs" /> {homeTeam} scoring by period</p>
           <div className="flex items-end gap-1 h-16">
             {periods.map((period, index) => {
               const goals = homeTiming.scoring[period];
@@ -155,7 +157,7 @@ export default function GoalsTiming({
 
         {/* Away Team */}
         <div>
-          <p className="text-xs text-text-muted mb-2">✈️ {awayTeam} scoring by period</p>
+          <p className="text-xs text-text-muted mb-2 flex items-center gap-1"><PremiumIcon name="plane" size="xs" /> {awayTeam} scoring by period</p>
           <div className="flex items-end gap-1 h-16">
             {periods.map((period, index) => {
               const goals = awayTiming.scoring[period];
@@ -180,8 +182,8 @@ export default function GoalsTiming({
       {/* Insights */}
       {(homeTiming.insight || awayTiming.insight) && (
         <div className="px-5 py-3 bg-white/[0.02] border-t border-white/5">
-          <p className="text-xs text-text-secondary">
-            💡 {homeTiming.insight || awayTiming.insight}
+          <p className="text-xs text-text-secondary flex items-center gap-1.5">
+            <PremiumIcon name="lightbulb" size="sm" className="text-amber-400" /> {homeTiming.insight || awayTiming.insight}
           </p>
         </div>
       )}

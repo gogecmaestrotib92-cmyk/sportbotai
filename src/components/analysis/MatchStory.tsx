@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { colors, getSignalStyle } from '@/lib/design-system';
+import PremiumIcon from '@/components/ui/PremiumIcon';
 
 interface MatchStoryProps {
   homeTeam: string;
@@ -76,7 +77,7 @@ export default function MatchStory({
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-gradient-to-br from-violet-500/20 to-violet-600/10 rounded-xl flex items-center justify-center">
-              <span className="text-3xl">🎯</span>
+              <PremiumIcon name="target" size="xl" className="text-violet-400" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">AI Match Analysis</h2>
@@ -111,9 +112,11 @@ export default function MatchStory({
       <div className="px-6 py-5 bg-white/[0.02] border-b border-white/[0.06]">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <span className="text-3xl">
-              {favored === 'draw' ? '🤝' : favored === 'home' ? '🏠' : '✈️'}
-            </span>
+            <PremiumIcon 
+              name={favored === 'draw' ? 'handshake' : favored === 'home' ? 'home' : 'plane'} 
+              size="xl" 
+              className="text-white" 
+            />
             <div>
               <p className="matrix-header">Analysis Points To</p>
               <h3 className="text-2xl font-bold text-white mt-1">

@@ -10,6 +10,7 @@
 'use client';
 
 import React from 'react';
+import PremiumIcon from '@/components/ui/PremiumIcon';
 import type { MarketIntel, OddsData } from '@/lib/value-detection';
 import { formatProb, formatOdds, getRecommendationColor, getRecommendationLabel } from '@/lib/value-detection';
 
@@ -347,7 +348,7 @@ export function RecommendationCard({ marketIntel, locale = 'en' }: Recommendatio
       {marketIntel.conflictExplanation && (
         <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
           <div className="flex items-start gap-3">
-            <span className="text-amber-400 text-base">💡</span>
+            <PremiumIcon name="lightbulb" size="md" className="text-amber-400 flex-shrink-0 mt-0.5" />
             <p className="text-amber-200/90 text-base leading-relaxed">
               {marketIntel.conflictExplanation}
             </p>
@@ -399,11 +400,11 @@ export function MarketIntelSection({
         {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="text-white text-lg font-bold flex items-center gap-3">
-            <span className="text-xl">📊</span>
+            <PremiumIcon name="chart" size="lg" className="text-white" />
             {t.marketEdge}
           </h3>
-          <span className="px-4 py-2 rounded-full bg-[#1a2a1a] text-gray-400 text-sm font-medium">
-            🔒 {locale === 'sr' ? 'Zaključano' : 'Locked'}
+          <span className="px-4 py-2 rounded-full bg-[#1a2a1a] text-gray-400 text-sm font-medium flex items-center gap-1.5">
+            <PremiumIcon name="lock" size="sm" /> {locale === 'sr' ? 'Zaključano' : 'Locked'}
           </span>
         </div>
         
@@ -475,11 +476,11 @@ function MarketIntelContent({
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-zinc-400 font-medium flex items-center gap-2 text-sm">
-            <span className="text-base opacity-40">📊</span>
+            <PremiumIcon name="chart" size="md" className="opacity-40" />
             {t.marketEdge}
           </h3>
-          <span className="px-2 py-0.5 bg-zinc-800/50 text-zinc-500 text-[10px] rounded">
-            🔒 PRO
+          <span className="px-2 py-0.5 bg-zinc-800/50 text-zinc-500 text-[10px] rounded flex items-center gap-1">
+            <PremiumIcon name="lock" size="xs" /> PRO
           </span>
         </div>
         
@@ -501,7 +502,7 @@ function MarketIntelContent({
         {/* Locked analysis section */}
         <div className="p-4 bg-[#0a0a0b] border border-white/[0.06] rounded-2xl">
           <div className="flex items-center gap-2 text-zinc-500 mb-2">
-            <span>🔒</span>
+            <PremiumIcon name="lock" size="sm" />
             <span className="text-xs font-medium">{t.executionLocked}</span>
           </div>
           <p className="text-zinc-600 text-xs">{t.executionLockedDesc}</p>
@@ -525,7 +526,7 @@ function MarketIntelContent({
       {/* PRO Execution Layer Label */}
       {canSeeExactNumbers && (
         <div className="flex items-center gap-1.5 matrix-label">
-          <span>🔬</span>
+          <PremiumIcon name="microscope" size="sm" />
           <span>{t.executionLayer}</span>
         </div>
       )}
@@ -533,7 +534,7 @@ function MarketIntelContent({
       {/* Header with Value Badge */}
       <div className="flex items-center justify-between">
         <h3 className="text-zinc-300 font-medium flex items-center gap-2 text-sm">
-          <span className="text-base opacity-60">📊</span>
+          <PremiumIcon name="chart" size="md" className="opacity-60" />
           {t.marketEdge}
         </h3>
         <div className="flex items-center gap-2">
@@ -632,7 +633,7 @@ export function LineMovementIndicator({ lineMovement }: LineMovementProps) {
       <span className="font-mono">{arrow}</span>
       <span>{lineMovement.interpretation}</span>
       {lineMovement.suspicious && (
-        <span className="text-yellow-400">⚠️</span>
+        <PremiumIcon name="warning" size="sm" className="text-yellow-400" />
       )}
     </div>
   );

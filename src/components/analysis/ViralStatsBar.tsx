@@ -9,6 +9,8 @@
 
 'use client';
 
+import PremiumIcon from '@/components/ui/PremiumIcon';
+
 interface ViralStatsBarProps {
   homeTeam: string;
   awayTeam: string;
@@ -47,7 +49,7 @@ export default function ViralStatsBar({
       {/* H2H Record */}
       <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-5">
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-xl">🆚</span>
+          <PremiumIcon name="users" size="lg" className="text-white" />
           <span className="matrix-label">Head to Head</span>
         </div>
         <p className="text-base font-bold text-white mb-2">{stats.h2h.headline}</p>
@@ -62,7 +64,7 @@ export default function ViralStatsBar({
       {stats.keyAbsence ? (
         <div className="rounded-2xl bg-[#0a0a0b] border border-red-500/20 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xl">🚨</span>
+            <PremiumIcon name="alert" size="lg" className="text-red-400" />
             <span className="matrix-label !text-red-400/80">Key Absence</span>
           </div>
           <p className="text-base font-bold text-white mb-2">
@@ -75,7 +77,7 @@ export default function ViralStatsBar({
       ) : stats.streak ? (
         <div className="rounded-2xl bg-[#0a0a0b] border border-emerald-500/20 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xl">🔥</span>
+            <PremiumIcon name="fire" size="lg" className="text-emerald-400" />
             <span className="matrix-label !text-emerald-400/80">Hot Streak</span>
           </div>
           <p className="text-base font-bold text-white mb-2">
@@ -88,7 +90,7 @@ export default function ViralStatsBar({
       ) : (
         <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-5">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xl">✅</span>
+            <PremiumIcon name="check" size="lg" className="text-emerald-400" />
             <span className="matrix-label">Squad Status</span>
           </div>
           <p className="text-base font-bold text-white mb-2">Full Strength</p>
