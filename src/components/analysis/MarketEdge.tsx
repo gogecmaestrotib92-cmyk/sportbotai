@@ -151,7 +151,7 @@ export function ProbabilityCompare({ modelProb, marketProb, label, teamName, loc
           <div className="text-base font-medium tabular-nums text-white">
             {canSeeExactNumbers ? `${marketProb.toFixed(1)}%` : '—'}
           </div>
-          <div className="text-[10px] uppercase tracking-wide text-white/40 mt-0.5">
+          <div className="matrix-dim mt-0.5">
             {t.market}
           </div>
         </div>
@@ -161,7 +161,7 @@ export function ProbabilityCompare({ modelProb, marketProb, label, teamName, loc
           <div className="text-lg font-bold tabular-nums text-gradient-gold">
             {canSeeExactNumbers ? `${modelProb.toFixed(1)}%` : (isValue ? '▲' : isOverpriced ? '▼' : '—')}
           </div>
-          <div className="text-[10px] uppercase tracking-wide text-white/40 mt-0.5">
+          <div className="matrix-label mt-0.5">
             {t.model}
           </div>
         </div>
@@ -331,9 +331,9 @@ export function RecommendationCard({ marketIntel, locale = 'en' }: Recommendatio
   const badgeLabel = getRecommendationLabel(marketIntel.recommendation);
 
   return (
-    <div className="p-5 bg-zinc-900/50 border border-zinc-800/50 rounded-xl space-y-4">
+    <div className="p-5 bg-[#0a0a0b] border border-white/[0.06] rounded-2xl space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-zinc-400 text-xs uppercase tracking-wider font-semibold">{t.marketVerdict}</span>
+        <span className="matrix-label">{t.marketVerdict}</span>
         <span className={`px-3 py-1 rounded text-xs font-bold ${badgeColor}`}>
           {badgeLabel}
         </span>
@@ -471,7 +471,7 @@ function MarketIntelContent({
   // FREE users see collapsed version (odds only, analysis locked)
   if (!canSeeExactNumbers) {
     return (
-      <div className="p-5 bg-[#0c0c0d] border border-zinc-800/60 rounded-xl">
+      <div className="p-5 bg-[#0a0a0b] border border-white/[0.06] rounded-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-zinc-400 font-medium flex items-center gap-2 text-sm">
@@ -485,7 +485,7 @@ function MarketIntelContent({
         
         {/* Current Odds - always visible (public data) */}
         <div className="mb-4">
-          <div className="text-zinc-500 text-[10px] uppercase tracking-wider mb-2">{t.currentOdds}</div>
+          <div className="matrix-dim mb-2">{t.currentOdds}</div>
           <OddsDisplay 
             odds={odds} 
             homeTeam={homeTeam} 
@@ -499,7 +499,7 @@ function MarketIntelContent({
         </div>
         
         {/* Locked analysis section */}
-        <div className="p-4 bg-zinc-900/50 border border-zinc-800/30 rounded-lg">
+        <div className="p-4 bg-[#0a0a0b] border border-white/[0.06] rounded-2xl">
           <div className="flex items-center gap-2 text-zinc-500 mb-2">
             <span>🔒</span>
             <span className="text-xs font-medium">{t.executionLocked}</span>
@@ -521,10 +521,10 @@ function MarketIntelContent({
   
   // PRO users see full content
   return (
-    <div className="space-y-5 p-5 bg-[#0c0c0d] border border-zinc-800/60 rounded-xl">
+    <div className="space-y-5 p-5 bg-[#0a0a0b] border border-white/[0.06] rounded-2xl">
       {/* PRO Execution Layer Label */}
       {canSeeExactNumbers && (
-        <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 uppercase tracking-widest">
+        <div className="flex items-center gap-1.5 matrix-label">
           <span>🔬</span>
           <span>{t.executionLayer}</span>
         </div>
@@ -537,7 +537,7 @@ function MarketIntelContent({
           {t.marketEdge}
         </h3>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] px-2.5 py-0.5 text-violet-400/60 rounded-full border border-violet-500/20 font-medium uppercase tracking-wider">
+          <span className="matrix-dim px-2.5 py-0.5 rounded-full border border-violet-500/20">
             PRO
           </span>
           <ValueBadge valueEdge={marketIntel.valueEdge} locale={locale} />
@@ -559,7 +559,7 @@ function MarketIntelContent({
 
       {/* Current Odds */}
       <div>
-        <div className="text-zinc-500 text-[10px] uppercase tracking-wider mb-2">{t.currentOdds}</div>
+        <div className="matrix-dim mb-2">{t.currentOdds}</div>
         <OddsDisplay 
           odds={odds} 
           homeTeam={homeTeam} 
@@ -574,7 +574,7 @@ function MarketIntelContent({
 
       {/* Model vs Market */}
       <div>
-        <div className="text-zinc-500 text-[10px] uppercase tracking-wider mb-3">{t.modelVsMarket}</div>
+        <div className="matrix-dim mb-3">{t.modelVsMarket}</div>
         <ModelVsMarket 
           marketIntel={marketIntel}
           homeTeam={homeTeam}
@@ -589,7 +589,7 @@ function MarketIntelContent({
       <RecommendationCard marketIntel={marketIntel} locale={locale} />
 
       {/* Signal Quality - hide exact % for non-PRO */}
-      <div className="flex items-center justify-between text-sm pt-3 border-t border-zinc-800/50">
+      <div className="flex items-center justify-between text-sm pt-3 border-t border-white/[0.06]">
         <span className="text-zinc-500 text-xs">{t.signalQuality}</span>
         <div className="flex items-center gap-2">
           <div className="w-16 h-1 bg-zinc-800 rounded-full overflow-hidden">

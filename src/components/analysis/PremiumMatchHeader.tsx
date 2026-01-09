@@ -252,7 +252,7 @@ export default function PremiumMatchHeader({
             <h2 className="text-lg sm:text-xl font-bold text-white leading-tight">
               {homeTeam}
             </h2>
-            <span className="text-xs uppercase tracking-widest text-zinc-500 mt-1.5 font-medium">Home</span>
+            <span className="matrix-dim mt-1.5">Home</span>
           </div>
 
           {/* VS Divider OR Live Score */}
@@ -293,7 +293,7 @@ export default function PremiumMatchHeader({
             <h2 className="text-lg sm:text-xl font-bold text-white leading-tight">
               {awayTeam}
             </h2>
-            <span className="text-xs uppercase tracking-widest text-zinc-500 mt-1.5 font-medium">Away</span>
+            <span className="matrix-dim mt-1.5">Away</span>
           </div>
         </div>
 

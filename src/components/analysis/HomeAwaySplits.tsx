@@ -64,8 +64,8 @@ export default function HomeAwaySplits({
   
   if (!hasHomeData && !hasAwayData) {
     return (
-      <div className="bg-[#0F1114] rounded-2xl border border-white/10 overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/5">
+      <div className="bg-[#0a0a0b] rounded-2xl border border-white/[0.06] overflow-hidden">
+        <div className="px-5 py-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl flex items-center justify-center">
               <span className="text-xl">🏟️</span>
@@ -94,9 +94,9 @@ export default function HomeAwaySplits({
   const awayWinRate = calcWinRate(awayTeamAway);
 
   return (
-    <div className="bg-[#0F1114] rounded-2xl border border-white/10 overflow-hidden">
+    <div className="bg-[#0a0a0b] rounded-2xl border border-white/[0.06] overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-white/5">
+      <div className="px-5 py-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl flex items-center justify-center">
             <span className="text-xl">🏟️</span>

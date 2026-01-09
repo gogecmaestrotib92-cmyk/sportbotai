@@ -5,7 +5,7 @@
  */
 
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Share_Tech_Mono } from 'next/font/google';
 import { Suspense } from 'react';
 import { headers } from 'next/headers';
 import './globals.css';
@@ -32,6 +32,14 @@ import CookieConsent from '@/components/CookieConsent';
 const inter = Inter({ 
   subsets: ['latin'],
   display: 'swap',
+});
+
+// Share Tech Mono for Matrix-style analytical labels
+const shareTechMono = Share_Tech_Mono({
+  weight: '400',
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-matrix',
 });
 
 // Viewport configuration
@@ -219,7 +227,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} ${shareTechMono.variable}`}>
         {/* Fallback for users with JavaScript disabled */}
         <noscript>
           <div style={{background:'#1a1a2e',color:'#fff',padding:'20px',textAlign:'center',borderBottom:'1px solid #333'}}>

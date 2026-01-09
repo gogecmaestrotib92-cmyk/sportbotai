@@ -40,7 +40,7 @@ export function CollapsibleSection({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <div className={`rounded-xl bg-zinc-900/40 border border-zinc-800/50 overflow-hidden ${className}`}>
+    <div className={`rounded-2xl bg-[#0a0a0b] border border-white/[0.06] overflow-hidden ${className}`}>
       {/* Header - 44px min height for accessibility */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}

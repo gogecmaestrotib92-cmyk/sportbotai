@@ -125,7 +125,7 @@ export function AIvsMarketHero({
   // ============================================
   if (!isAuthenticated) {
     return (
-      <div className="mt-4 sm:mt-5 p-6 sm:p-7 rounded-2xl bg-gradient-to-br from-violet-500/10 via-[#0a0a0b] to-[#0a0a0b] border border-violet-500/20">
+      <div className="mt-4 sm:mt-5 p-6 sm:p-7 rounded-2xl bg-[#0a0a0b] border border-violet-500/20">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
@@ -150,7 +150,7 @@ export function AIvsMarketHero({
         </div>
         
         {/* CTA */}
-        <div className="text-center pt-4 border-t border-zinc-800/50">
+        <div className="text-center pt-4 border-t border-white/[0.06]">
           <p className="text-zinc-300 text-base mb-4">{t.signInToSee}</p>
           <Link
             href={`${localePath}/auth/signin`}
@@ -171,7 +171,7 @@ export function AIvsMarketHero({
   // ============================================
   if (!canSeeExactNumbers) {
     return (
-      <div className="mt-4 sm:mt-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/50 p-6">
+      <div className="mt-4 sm:mt-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-6">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
             <span className="text-lg opacity-60">🧠</span>
@@ -225,7 +225,7 @@ export function AIvsMarketHero({
         </div>
 
         {/* Locked "What Pro would show" preview */}
-        <div className="mt-5 p-4 bg-zinc-900/50 border border-zinc-800/50 rounded-xl">
+        <div className="mt-5 p-4 bg-[#0a0a0b] border border-white/[0.06] rounded-xl">
           <div className="flex items-center gap-2 text-xs text-zinc-400 mb-3">
             <span>🔒</span>
             <span className="uppercase tracking-wider font-semibold">{t.proWouldShow}</span>
@@ -325,14 +325,14 @@ function HeroContent({
   const hasEdge = edgeStyle.tier !== 'none';
 
   return (
-    <div className={`rounded-2xl border p-6 sm:p-7 ${hasSignificantEdge ? 'bg-gradient-to-br from-zinc-900/50 to-zinc-900/30 border-zinc-800/50' : 'bg-zinc-900/30 border-zinc-800/30'}`}>
+    <div className={`rounded-2xl border p-6 sm:p-7 bg-[#0a0a0b] ${hasSignificantEdge ? 'border-emerald-500/20' : 'border-white/[0.06]'}`}>
       {/* Header - muted label */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <span className="text-lg opacity-60">🧠</span>
-          <span className="text-xs text-zinc-400 uppercase tracking-widest font-semibold">{t.aiVsMarket}</span>
+          <span className="matrix-label">{t.aiVsMarket}</span>
         </div>
-        <span className="text-[10px] px-2.5 py-0.5 text-violet-400/60 rounded-full border border-violet-500/20 font-medium uppercase tracking-wider">
+        <span className="matrix-dim px-2.5 py-0.5 rounded-full border border-violet-500/20">
           {t.pro}
         </span>
       </div>
@@ -458,8 +458,8 @@ function ProbabilityCard({ label, modelProb, marketProb, t, isBestValue = false 
   
   // Card styling - best value gets emerald glow
   const cardClass = isBestValue && hasEdge
-    ? `bg-zinc-900/70 border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.2),0_0_60px_rgba(16,185,129,0.1)] ring-1 ring-emerald-500/20`
-    : 'bg-zinc-900/40 border-zinc-800/40 opacity-[0.65]';
+    ? `bg-[#0a0a0b] border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.2),0_0_60px_rgba(16,185,129,0.1)] ring-1 ring-emerald-500/20`
+    : 'bg-[#0a0a0b] border-white/[0.04] opacity-[0.65]';
   
   return (
     <div className={`flex flex-col min-h-[200px] p-3 sm:p-4 rounded-xl border ${cardClass}`}>
@@ -511,8 +511,8 @@ function ProbabilityCard({ label, modelProb, marketProb, t, isBestValue = false 
         
         {/* Labels row - below bars */}
         <div className="flex justify-center gap-3 mt-1">
-          <span className="w-12 text-center text-[10px] uppercase tracking-wide text-white/40">Market</span>
-          <span className="w-12 text-center text-[10px] uppercase tracking-wide text-white/50 font-medium">Model</span>
+          <span className="w-12 text-center matrix-dim">Market</span>
+          <span className="w-12 text-center matrix-label">Model</span>
         </div>
       </div>
       

@@ -45,13 +45,13 @@ export default function ViralStatsBar({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {/* H2H Record */}
-      <div className="bg-[#0F1114] rounded-xl border border-white/10 p-5">
+      <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-5">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xl">🆚</span>
-          <span className="text-xs text-text-muted uppercase tracking-wider font-medium">Head to Head</span>
+          <span className="matrix-label">Head to Head</span>
         </div>
         <p className="text-base font-bold text-white mb-2">{stats.h2h.headline}</p>
-        <p className="text-sm text-text-muted">
+        <p className="text-sm text-zinc-500">
           {stats.h2h.favors === 'home' ? `${homeTeam} dominates` : 
            stats.h2h.favors === 'away' ? `${awayTeam} dominates` : 
            'Evenly matched'}
@@ -60,39 +60,39 @@ export default function ViralStatsBar({
 
       {/* Key Absence or Streak */}
       {stats.keyAbsence ? (
-        <div className="bg-gradient-to-br from-red-500/10 to-red-500/5 rounded-xl border border-red-500/20 p-5">
+        <div className="rounded-2xl bg-[#0a0a0b] border border-red-500/20 p-5">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-xl">🚨</span>
-            <span className="text-xs text-red-400 uppercase tracking-wider font-bold">Key Absence</span>
+            <span className="matrix-label !text-red-400/80">Key Absence</span>
           </div>
           <p className="text-base font-bold text-white mb-2">
             {stats.keyAbsence.player} OUT
           </p>
-          <p className="text-sm text-text-muted">
+          <p className="text-sm text-zinc-500">
             {stats.keyAbsence.team === 'home' ? homeTeam : awayTeam} without their {stats.keyAbsence.impact === 'star' ? 'star player' : stats.keyAbsence.impact === 'key' ? 'key player' : 'squad player'}
           </p>
         </div>
       ) : stats.streak ? (
-        <div className="bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl border border-accent/20 p-5">
+        <div className="rounded-2xl bg-[#0a0a0b] border border-emerald-500/20 p-5">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-xl">🔥</span>
-            <span className="text-xs text-accent uppercase tracking-wider font-bold">Hot Streak</span>
+            <span className="matrix-label !text-emerald-400/80">Hot Streak</span>
           </div>
           <p className="text-base font-bold text-white mb-2">
             {stats.streak.text}
           </p>
-          <p className="text-sm text-text-muted">
+          <p className="text-sm text-zinc-500">
             {stats.streak.team === 'home' ? homeTeam : awayTeam} on fire
           </p>
         </div>
       ) : (
-        <div className="bg-[#0F1114] rounded-xl border border-white/10 p-5">
+        <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-5">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-xl">✅</span>
-            <span className="text-xs text-text-muted uppercase tracking-wider font-medium">Squad Status</span>
+            <span className="matrix-label">Squad Status</span>
           </div>
           <p className="text-base font-bold text-white mb-2">Full Strength</p>
-          <p className="text-sm text-text-muted">No major absences reported</p>
+          <p className="text-sm text-zinc-500">No major absences reported</p>
         </div>
       )}
     </div>

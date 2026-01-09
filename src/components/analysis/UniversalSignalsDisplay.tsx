@@ -102,7 +102,7 @@ export default function UniversalSignalsDisplay({
   // Guard against undefined signals or display
   if (!signals || !signals.display) {
     return (
-      <div className="p-4 bg-zinc-900/50 rounded-xl border border-zinc-800 text-center text-zinc-500 text-sm">
+      <div className="p-4 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] text-center text-zinc-500 text-sm">
         {t.loadingSignals}
       </div>
     );
@@ -178,11 +178,11 @@ export default function UniversalSignalsDisplay({
         {/* Tempo + Efficiency Row */}
         <div className="grid grid-cols-2 gap-3">
           {/* Tempo */}
-          <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+          <div className="p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] border-t-white/[0.12]">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="text-lg">🎯</span>
-                <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">{t.tempo}</span>
+                <span className="matrix-label">{t.tempo}</span>
                 <InfoTooltip content={t.tempoTooltip} position="bottom" />
               </div>
               <TempoIndicator level={display.tempo.level} />
@@ -193,10 +193,10 @@ export default function UniversalSignalsDisplay({
           </div>
 
           {/* Efficiency */}
-          <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+          <div className="p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] border-t-white/[0.12]">
             <div className="flex items-center gap-2 mb-3">
               <span className="text-lg">📈</span>
-              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">{t.efficiency}</span>
+              <span className="matrix-label">{t.efficiency}</span>
               <InfoTooltip content={t.efficiencyTooltip} position="bottom" />
             </div>
             <p className="text-base font-medium text-stone-200">
@@ -284,12 +284,12 @@ function ExpandableAvailability({
   };
 
   return (
-    <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+    <div className="p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] border-t-white/[0.12]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <span className="text-lg">🏥</span>
-          <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">
+          <span className="matrix-label">
             {locale === 'sr' ? 'Raspoloživost Tima' : 'Squad Availability'}
           </span>
           {tooltip && <InfoTooltip content={tooltip} position="bottom" />}
@@ -423,11 +423,11 @@ function SignalCard({
   tooltip?: string;
 }) {
   return (
-    <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+    <div className="p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-lg">{icon}</span>
-          <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">{label}</span>
+          <span className="matrix-label">{label}</span>
           {tooltip && <InfoTooltip content={tooltip} position="bottom" />}
         </div>
         {rightContent}
@@ -501,7 +501,7 @@ function Pill({
 
   return (
     <div className={`px-2.5 py-1.5 rounded-lg ${colors[color]}`}>
-      <span className="text-[9px] text-zinc-500 uppercase tracking-wider">{label}</span>
+      <span className="matrix-dim">{label}</span>
       <span className="mx-1.5 text-zinc-700">·</span>
       <span className="text-[11px] font-medium">{value}</span>
     </div>

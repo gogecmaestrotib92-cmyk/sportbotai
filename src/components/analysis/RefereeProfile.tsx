@@ -77,9 +77,9 @@ export default function RefereeProfile({
   if (referee.avgAddedTime >= 6) insights.push(`Adds ${referee.avgAddedTime.toFixed(1)} mins on average`);
 
   return (
-    <div className="bg-[#0F1114] rounded-2xl border border-white/10 overflow-hidden">
+    <div className="bg-[#0a0a0b] rounded-2xl border border-white/[0.06] overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-white/5">
+      <div className="px-6 py-5 border-b border-white/[0.06]">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-xl flex items-center justify-center">
             <span className="text-2xl">🎯</span>
@@ -171,7 +171,7 @@ export default function RefereeProfile({
         {/* Insights */}
         {insights.length > 0 && (
           <div className="space-y-3">
-            <h5 className="text-sm font-bold text-white uppercase tracking-wider">Key Insights</h5>
+            <h5 className="matrix-header">Key Insights</h5>
             <div className="space-y-2">
               {insights.map((insight, i) => (
                 <div key={i} className="flex items-start gap-2 text-sm text-text-secondary">

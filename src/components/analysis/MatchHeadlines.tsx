@@ -28,9 +28,9 @@ export default function MatchHeadlines({
   awayTeam,
 }: MatchHeadlinesProps) {
   return (
-    <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800/50 overflow-hidden">
+    <div className="bg-[#0a0a0b] rounded-2xl border border-white/[0.06] overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-zinc-800/50 flex items-center justify-between">
+      <div className="px-6 py-5 border-b border-white/[0.06] flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-gradient-to-br from-violet-500/20 to-violet-600/10 rounded-xl flex items-center justify-center">
             <span className="text-2xl">💡</span>

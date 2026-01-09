@@ -73,6 +73,13 @@ module.exports = {
           danger: '#FF5C5C',
         },
         
+        // Matrix Typography Colors
+        matrix: {
+          DEFAULT: '#6B8E6B',    // Muted sage green
+          dim: '#4A6A4A',        // Darker for secondary labels
+          bright: '#8FB38F',     // Slightly brighter for emphasis
+        },
+        
         // Semantic Colors
         success: '#2AF6A0',
         warning: '#FACC15',
@@ -96,6 +103,7 @@ module.exports = {
       
       fontFamily: {
         sans: ['Inter', 'SF Pro Display', 'Helvetica', 'Arial', 'sans-serif'],
+        matrix: ['var(--font-matrix)', 'Share Tech Mono', 'Consolas', 'monospace'],
       },
       
       fontSize: {

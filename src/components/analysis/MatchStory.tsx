@@ -70,9 +70,9 @@ export default function MatchStory({
   };
 
   return (
-    <div className="bg-gradient-to-br from-zinc-900/80 via-zinc-900/60 to-zinc-900/80 rounded-2xl border border-zinc-800/50 overflow-hidden">
+    <div className="bg-[#0a0a0b] rounded-2xl border border-white/[0.06] overflow-hidden">
       {/* Header with verdict */}
-      <div className="px-6 py-5 border-b border-zinc-800/50">
+      <div className="px-6 py-5 border-b border-white/[0.06]">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-gradient-to-br from-violet-500/20 to-violet-600/10 rounded-xl flex items-center justify-center">
@@ -108,14 +108,14 @@ export default function MatchStory({
       </div>
 
       {/* The Verdict Banner */}
-      <div className="px-6 py-5 bg-zinc-900/70 border-b border-zinc-800/50">
+      <div className="px-6 py-5 bg-white/[0.02] border-b border-white/[0.06]">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <span className="text-3xl">
               {favored === 'draw' ? '🤝' : favored === 'home' ? '🏠' : '✈️'}
             </span>
             <div>
-              <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Our Analysis Points To</p>
+              <p className="matrix-header">Analysis Points To</p>
               <h3 className="text-2xl font-bold text-white mt-1">
                 {favored === 'draw' ? 'A Draw' : `${favoredTeam} Win`}
               </h3>
@@ -139,15 +139,15 @@ export default function MatchStory({
 
         {/* Supporting Stats */}
         {supportingStats && supportingStats.length > 0 && (
-          <div className="mt-8 pt-6 border-t border-zinc-800/50">
-            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">
+          <div className="mt-8 pt-6 border-t border-white/[0.06]">
+            <h4 className="matrix-header mb-4">
               Data Behind This Analysis
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {supportingStats.map((stat, index) => (
                 <div 
                   key={index}
-                  className="flex items-start gap-4 p-4 bg-zinc-900/50 rounded-xl border border-zinc-800/50"
+                  className="flex items-start gap-4 p-4 bg-[#0a0a0b] rounded-2xl border border-white/[0.06]"
                 >
                   <span className="text-2xl">{stat.icon}</span>
                   <div>
@@ -162,7 +162,7 @@ export default function MatchStory({
       </div>
 
       {/* Disclaimer */}
-      <div className="px-6 py-4 bg-zinc-900/30 border-t border-zinc-800/50">
+      <div className="px-6 py-4 bg-white/[0.02] border-t border-white/[0.06]">
         <p className="text-xs text-zinc-500 text-center">
           This is AI-generated analysis for educational purposes • Not betting advice • Football is unpredictable
         </p>

@@ -132,6 +132,11 @@ button:focus-visible {
   --radius-card: 16px;
   --radius-chip: 999px;
   --radius-btn: 12px;
+  
+  /* Matrix Typography Colors */
+  --color-matrix: rgba(107, 142, 107, 0.75);     /* Muted sage green - reduced opacity */
+  --color-matrix-dim: rgba(74, 106, 74, 0.65);   /* Darker, more subtle */
+  --color-matrix-bright: rgba(143, 179, 143, 0.85); /* Slightly brighter for emphasis */
 }
 
 /* Reset & Base */
@@ -221,6 +226,50 @@ button:focus-visible {
    ======================================== */
 
 @layer components {
+  /* ========================================
+     MATRIX TYPOGRAPHY - Intelligence System Style
+     Use for analytical labels, model outputs, system explanations
+     ======================================== */
+  
+  /* Primary Matrix Label - uppercase, tracked, muted green */
+  .matrix-label {
+    font-family: var(--font-matrix), 'Share Tech Mono', 'Consolas', monospace;
+    font-weight: 400;
+    font-size: 0.625rem; /* 10px */
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-matrix);
+  }
+  
+  /* Matrix Label - slightly larger for section headers */
+  .matrix-header {
+    font-family: var(--font-matrix), 'Share Tech Mono', 'Consolas', monospace;
+    font-weight: 400;
+    font-size: 0.6875rem; /* 11px */
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-matrix);
+  }
+  
+  /* Matrix Dim - for secondary/supporting labels */
+  .matrix-dim {
+    font-family: var(--font-matrix), 'Share Tech Mono', 'Consolas', monospace;
+    font-weight: 400;
+    font-size: 0.5625rem; /* 9px */
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-matrix-dim);
+  }
+  
+  /* Matrix Value - for displaying computed values (not percentages) */
+  .matrix-value {
+    font-family: var(--font-matrix), 'Share Tech Mono', 'Consolas', monospace;
+    font-weight: 400;
+    font-size: 0.75rem; /* 12px */
+    letter-spacing: 0.08em;
+    color: var(--color-matrix-bright);
+  }
+  
   /* ---- BUTTONS ---- */
   
   /* Primary Button - Accent with premium press feedback */

@@ -73,8 +73,8 @@ export default function GoalsTiming({
   // If no data, show simplified card
   if (!hasData) {
     return (
-      <div className="bg-[#0F1114] rounded-2xl border border-white/10 overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/5">
+      <div className="bg-[#0a0a0b] rounded-2xl border border-white/[0.06] overflow-hidden">
+        <div className="px-5 py-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl flex items-center justify-center">
               <span className="text-xl">⏱️</span>
@@ -98,9 +98,9 @@ export default function GoalsTiming({
   }
 
   return (
-    <div className="bg-[#0F1114] rounded-2xl border border-white/10 overflow-hidden">
+    <div className="bg-[#0a0a0b] rounded-2xl border border-white/[0.06] overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-white/5">
+      <div className="px-5 py-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl flex items-center justify-center">
             <span className="text-xl">⏱️</span>

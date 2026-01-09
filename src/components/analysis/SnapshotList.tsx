@@ -92,7 +92,7 @@ function SnapshotInsight({ insight, index, compact }: { insight: string; index: 
         <div className="flex-1 min-w-0">
           {/* Label badge - only show if not compact */}
           {!compact && (
-            <span className={`inline-block text-[10px] font-bold uppercase tracking-wider mb-1 ${config.textColor}`}>
+            <span className={`inline-block font-matrix text-[10px] font-normal uppercase tracking-[0.15em] mb-1 ${config.textColor}`}>
               {config.label}
             </span>
           )}
