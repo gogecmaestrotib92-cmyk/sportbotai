@@ -4,6 +4,8 @@
  * Horizontal scrolling carousel showing relatable betting moments.
  * Purple gradient cards with situations + ambient video clips (always playing).
  * Mobile-optimized with snap scrolling and touch gestures.
+ * 
+ * Supports i18n: pass locale="sr" for Serbian
  */
 
 'use client';
@@ -15,8 +17,8 @@ interface SituationCard {
   type: 'situation';
   id: string;
   icon: string;
-  headline: string;
-  subtext: string;
+  headline: { en: string; sr: string };
+  subtext: { en: string; sr: string };
 }
 
 // Video clip (ambient, always playing)
@@ -34,8 +36,14 @@ const CAROUSEL_ITEMS: CarouselItem[] = [
     type: 'situation',
     id: 'situation-1',
     icon: 'trending',
-    headline: 'When the line moves your way',
-    subtext: 'You saw the edge. The market caught up.',
+    headline: { 
+      en: 'When the line moves your way',
+      sr: 'Kada se linija pomeri u tvoju korist'
+    },
+    subtext: { 
+      en: 'You saw the edge. The market caught up.',
+      sr: 'Video si prednost. Tržište je stiglo.'
+    },
   },
   {
     type: 'video',
@@ -46,8 +54,14 @@ const CAROUSEL_ITEMS: CarouselItem[] = [
     type: 'situation',
     id: 'situation-2',
     icon: 'target',
-    headline: 'When your +180 underdog covers',
-    subtext: 'Data over hype. Every time.',
+    headline: { 
+      en: 'When your +180 underdog covers',
+      sr: 'Kada tvoj autsajder na +180 prođe'
+    },
+    subtext: { 
+      en: 'Data over hype. Every time.',
+      sr: 'Podaci pre svega. Uvek.'
+    },
   },
   {
     type: 'video',
@@ -58,8 +72,14 @@ const CAROUSEL_ITEMS: CarouselItem[] = [
     type: 'situation',
     id: 'situation-3',
     icon: 'chart',
-    headline: '+12% ROI this month',
-    subtext: 'Quiet confidence. No sweating.',
+    headline: { 
+      en: '+12% ROI this month',
+      sr: '+12% ROI ovog meseca'
+    },
+    subtext: { 
+      en: 'Quiet confidence. No sweating.',
+      sr: 'Tiho samopouzdanje. Bez stresa.'
+    },
   },
   {
     type: 'video',
@@ -70,8 +90,14 @@ const CAROUSEL_ITEMS: CarouselItem[] = [
     type: 'situation',
     id: 'situation-4',
     icon: 'bolt',
-    headline: 'When the 8% edge alert drops',
-    subtext: 'Market mispricing. You move first.',
+    headline: { 
+      en: 'When the 8% edge alert drops',
+      sr: 'Kada stigne alert za 8% prednosti'
+    },
+    subtext: { 
+      en: 'Market mispricing. You move first.',
+      sr: 'Tržište greši. Ti reaguješ prvi.'
+    },
   },
   {
     type: 'video',
@@ -82,8 +108,14 @@ const CAROUSEL_ITEMS: CarouselItem[] = [
     type: 'situation',
     id: 'situation-5',
     icon: 'diamond',
-    headline: 'Finding value others miss',
-    subtext: 'Not tips. Edge.',
+    headline: { 
+      en: 'Finding value others miss',
+      sr: 'Pronalazak vrednosti koju drugi propuštaju'
+    },
+    subtext: { 
+      en: 'Not tips. Edge.',
+      sr: 'Ne tipovi. Prednost.'
+    },
   },
   {
     type: 'video',
@@ -91,6 +123,20 @@ const CAROUSEL_ITEMS: CarouselItem[] = [
     videoSrc: '/videos/the silent nod.mp4',
   },
 ];
+
+// Section text translations
+const SECTION_TEXT = {
+  en: {
+    title: 'Moments That Matter',
+    subtitle: 'Find where the market is wrong',
+    swipeHint: 'Swipe to explore',
+  },
+  sr: {
+    title: 'Momenti Koji Znače',
+    subtitle: 'Pronađi gde tržište greši',
+    swipeHint: 'Prevuci za više',
+  },
+};
 
 // Premium SVG icons
 const ICONS: Record<string, JSX.Element> = {
@@ -125,7 +171,7 @@ const ICONS: Record<string, JSX.Element> = {
 };
 
 // Situation card (purple gradient like PrizePicks)
-function SituationCardComponent({ item }: { item: SituationCard }) {
+function SituationCardComponent({ item, locale }: { item: SituationCard; locale: 'en' | 'sr' }) {
   return (
     <div className="flex-shrink-0 w-[160px] sm:w-[200px] lg:w-[220px] aspect-[9/14] rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 via-purple-600 to-purple-800 p-4 sm:p-5 flex flex-col justify-between shadow-lg shadow-purple-900/30">
       {/* Icon with glow */}
@@ -136,10 +182,10 @@ function SituationCardComponent({ item }: { item: SituationCard }) {
       {/* Text */}
       <div className="flex-grow flex flex-col justify-center py-2">
         <h3 className="text-white text-base sm:text-xl lg:text-2xl font-bold leading-tight mb-1 sm:mb-2">
-          {item.headline}
+          {item.headline[locale]}
         </h3>
         <p className="text-white/70 text-xs sm:text-sm leading-snug">
-          {item.subtext}
+          {item.subtext[locale]}
         </p>
       </div>
       
@@ -196,10 +242,12 @@ function VideoCardComponent({ item }: { item: VideoClip }) {
   );
 }
 
-export default function VideoTestimonialsCarousel() {
+export default function VideoTestimonialsCarousel({ locale = 'en' }: { locale?: 'en' | 'sr' }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  
+  const t = SECTION_TEXT[locale];
 
   const checkScroll = () => {
     if (!scrollRef.current) return;
@@ -232,10 +280,10 @@ export default function VideoTestimonialsCarousel() {
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8 px-4">
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1.5 sm:mb-2">
-            Moments That Matter
+            {t.title}
           </h2>
           <p className="text-white/50 text-xs sm:text-sm">
-            Find where the market is wrong
+            {t.subtitle}
           </p>
         </div>
 
@@ -260,7 +308,7 @@ export default function VideoTestimonialsCarousel() {
             {CAROUSEL_ITEMS.map((item) => (
               <div key={item.id} className="snap-start">
                 {item.type === 'situation' 
-                  ? <SituationCardComponent item={item} />
+                  ? <SituationCardComponent item={item} locale={locale} />
                   : <VideoCardComponent item={item} />
                 }
               </div>
@@ -308,7 +356,7 @@ export default function VideoTestimonialsCarousel() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
             </svg>
-            <span>Swipe to explore</span>
+            <span>{t.swipeHint}</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>

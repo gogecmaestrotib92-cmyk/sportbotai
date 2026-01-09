@@ -93,7 +93,7 @@ export default function SerbianHomePage() {
       <HowItWorksStripI18n locale="sr" />
 
       {/* Moments carousel - marketing situations */}
-      <VideoTestimonialsCarousel />
+      <VideoTestimonialsCarousel locale="sr" />
 
       {/* FAQ section */}
       <FAQI18n t={t} />
