@@ -473,7 +473,7 @@ function inferIntentFromContext(query: string, entities: ExtractedEntity[]): Que
   
   // One team + future indicators → prediction or schedule
   if (teamCount === 1) {
-    if (/\b(next|when|schedule|play)\b/.test(lower)) {
+    if (/\b(next|when|schedule|plays?|playing)\b/.test(lower)) {
       return 'SCHEDULE';
     }
     // Just a team name alone could be form check
@@ -611,12 +611,12 @@ const INTENT_PATTERNS: IntentPattern[] = [
   {
     intent: 'SCHEDULE',
     patterns: [
-      /\bwhen\b.*\b(play|playing|game|match|face|facing)\b/i,  // "when nuggets play", "when do they play"
-      /\bwhen (is|does|do|are|will)\b.*\b(play|game|match|next)\b/i,
+      /\bwhen\b.*\b(plays?|playing|game|match|face|facing)\b/i,  // "when nuggets play", "when do they play", "when denver plays"
+      /\bwhen (is|does|do|are|will)\b.*\b(plays?|game|match|next)\b/i,
       /\bnext (game|match|fixture|opponent)\b/i,
       /\b(schedule|fixture|calendar)\b/i,
-      /\bwho.*play.*next\b/i,  // "who do they play next"
-      /\bwhat time\b.*\b(game|match|play)\b/i,  // "what time is the game"
+      /\bwho.*plays?.*next\b/i,  // "who do they play next"
+      /\bwhat time\b.*\b(game|match|plays?)\b/i,  // "what time is the game"
     ],
     priority: 75,  // HIGHER priority - schedule questions are common!
   },
