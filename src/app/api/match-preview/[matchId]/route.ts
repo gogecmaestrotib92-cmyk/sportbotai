@@ -614,6 +614,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           }
         });
       }
+      }
       // If we reach here, either cache was empty OR cache had incomplete data
       console.log(`[Match-Preview] Cache MISS or INVALID for key: ${cacheKey} - will generate fresh analysis`);
     } else if (isAboutToStart) {
