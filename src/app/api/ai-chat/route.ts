@@ -452,8 +452,11 @@ function detectMatchAnalysisRequest(message: string): {
     // "match between X and Y" pattern
     /(?:match|game)\s+(?:between|of)\s+([A-Za-z][A-Za-z\s]+?)\s+(?:and|vs\.?)\s+([A-Za-z][A-Za-z\s]+)/i,
     
-    // "will X win against Y" / "can X beat Y"
-    /(?:will|can|should)\s+([A-Za-z][A-Za-z\s]+?)\s+(?:win|beat|defeat)\s+(?:against\s+)?([A-Za-z][A-Za-z\s]+)/i,
+    // "will X win against Y" / "can X beat Y" - with optional words in between
+    /(?:will|can|should)\s+([A-Za-z][A-Za-z\s]+?)\s+(?:win|beat|defeat)(?:\s+(?:today'?s?|tonight'?s?|tomorrow'?s?|the|this)?\s*(?:match|game)?)?\s+(?:against\s+)?([A-Za-z][A-Za-z\s]+)/i,
+    
+    // "X vs Y" anywhere in sentence with match context
+    /([A-Za-z]+)\s+(?:vs\.?|VS|versus)\s+([A-Za-z]+)/i,
     
     // "X vs Y [followed by additional context]" - stops at team name repetition or common words
     /^([A-Za-z][A-Za-z\s]*?)\s+(?:vs\.?|VS|versus)\s+([A-Za-z][A-Za-z\s]*?)(?:\s+(?:Roma|Sassuolo|[A-Z][a-z]+\s+has|will|today|tonight|\.|\,))/i,
