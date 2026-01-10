@@ -296,9 +296,15 @@ function resolveConversationReferences(message: string, history: ChatMessage[]):
     const lastAssistant = history.filter(m => m.role === 'assistant').slice(-1)[0];
     const lastUserQuery = history.filter(m => m.role === 'user').slice(-1)[0];
     
+    console.log(`[Conversation] Checking clarification: lastAssistant="${lastAssistant?.content.substring(0, 50)}...", lastUserQuery="${lastUserQuery?.content}"`);
+    
     if (lastAssistant?.content.includes('Which sport are you asking about?')) {
       // This is a response to our clarification - find the original teams
-      const teamsMatch = lastUserQuery?.content.match(/([a-zA-Z\s]+)\s+(?:vs?\.?|or|versus|against)\s+([a-zA-Z\s]+)/i);
+      // Match patterns: "dallas vs chicago", "dallas or chicago", "dallas versus chicago"
+      // Also handles: "who will win dallas or chicago", "what about dallas vs chicago"
+      const teamsMatch = lastUserQuery?.content.match(/\b([a-zA-Z]+)\s+(?:vs?\.?|or|versus|against|v)\s+([a-zA-Z]+)\b/i);
+      console.log(`[Conversation] Teams match result:`, teamsMatch);
+      
       if (teamsMatch) {
         const team1 = teamsMatch[1].trim();
         const team2 = teamsMatch[2].trim();
@@ -1861,6 +1867,8 @@ If their favorite team has a match today/tonight, lead with that information.`;
           const isPredictionIntent = queryUnderstanding?.intent === 'MATCH_PREDICTION' || 
                                      queryUnderstanding?.intent === 'OUR_ANALYSIS' ||
                                      queryUnderstanding?.intent === 'BETTING_ANALYSIS';
+          
+          console.log(`[AI-Chat-Stream] Match Prediction Check: isPredictionIntent=${isPredictionIntent}, intent=${queryUnderstanding?.intent}, entities=${queryUnderstanding?.entities?.length || 0}, searchMessage="${searchMessage.substring(0, 50)}"`);
           
           if (isPredictionIntent && (queryUnderstanding?.entities?.length ?? 0) > 0) {
             console.log(`[AI-Chat-Stream] Prediction query detected (intent: ${queryUnderstanding?.intent})...`);
