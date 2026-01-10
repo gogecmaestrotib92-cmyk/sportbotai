@@ -54,6 +54,18 @@
     {
       "path": "/api/cron/translate",
       "schedule": "30 0,3,6,8,10,12,14,16,18,21 * * *"
+    },
+    {
+      "path": "/api/cron/backlink-scout?action=discover",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/backlink-scout?action=generate",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/backlink-scout?action=outreach",
+      "schedule": "0 10 * * *"
     }
   ]
 }
