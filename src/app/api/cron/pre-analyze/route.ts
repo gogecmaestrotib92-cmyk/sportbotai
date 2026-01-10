@@ -50,7 +50,9 @@ const openai = new OpenAI({
 });
 
 // Sports to pre-analyze with league-specific configurations
+// Pre-analyze sports - matches exactly what's shown in MatchBrowser.tsx UI
 const PRE_ANALYZE_SPORTS = [
+  // Soccer (12 leagues)
   { key: 'soccer_epl', title: 'EPL', league: 'Premier League', hasDraw: true },
   { key: 'soccer_spain_la_liga', title: 'La Liga', league: 'La Liga', hasDraw: true },
   { key: 'soccer_germany_bundesliga', title: 'Bundesliga', league: 'Bundesliga', hasDraw: true },
@@ -61,10 +63,15 @@ const PRE_ANALYZE_SPORTS = [
   { key: 'soccer_turkey_super_league', title: 'Süper Lig', league: 'Süper Lig', hasDraw: true },
   { key: 'soccer_belgium_first_div', title: 'Jupiler Pro League', league: 'Jupiler Pro League', hasDraw: true },
   { key: 'soccer_spl', title: 'Scottish Premiership', league: 'Scottish Premiership', hasDraw: true },
+  { key: 'soccer_uefa_champs_league', title: 'Champions League', league: 'Champions League', hasDraw: true },
   { key: 'soccer_uefa_europa_league', title: 'Europa League', league: 'Europa League', hasDraw: true },
+  // Basketball (2 leagues)
   { key: 'basketball_nba', title: 'NBA', league: 'NBA', hasDraw: false },
-  { key: 'basketball_euroleague', title: 'Euroleague', league: 'Euroleague', hasDraw: false },
+  { key: 'basketball_euroleague', title: 'EuroLeague', league: 'EuroLeague', hasDraw: false },
+  // American Football (2 leagues)
   { key: 'americanfootball_nfl', title: 'NFL', league: 'NFL', hasDraw: false },
+  { key: 'americanfootball_ncaaf', title: 'NCAA Football', league: 'NCAA Football', hasDraw: false },
+  // Hockey (1 league)
   { key: 'icehockey_nhl', title: 'NHL', league: 'NHL', hasDraw: false },
 ];
 
@@ -702,10 +709,10 @@ async function runQuickAnalysis(
         conceded: enrichedData.awayStats?.goalsConceded || enrichedData.awayStats?.pointsConceded || 0,
       },
       h2h: {
-        total: enrichedData.h2h?.total || 0,
-        homeWins: enrichedData.h2h?.homeWins || 0,
-        awayWins: enrichedData.h2h?.awayWins || 0,
-        draws: enrichedData.h2h?.draws || 0,
+        total: enrichedData.h2hSummary?.totalMatches || 0,
+        homeWins: enrichedData.h2hSummary?.homeWins || 0,
+        awayWins: enrichedData.h2hSummary?.awayWins || 0,
+        draws: enrichedData.h2hSummary?.draws || 0,
       },
       // Include structured injury data for availability signals
       homeInjuries: finalInjuries.home.map((i: any) => i.player) || [],
@@ -935,6 +942,19 @@ ${!hasDraw ? 'NO DRAWS in this sport. Pick a winner.' : ''}`;
 // MAIN CRON HANDLER
 // ============================================
 
+// Split leagues into batches to avoid timeout (17 leagues / 4 batches = ~4-5 per batch)
+// Runs hourly 6-9 AM UTC (7-10 AM CET) so all leagues done by 10 AM CET
+const BATCH_CONFIG = [
+  // Batch 0: Top 5 soccer - runs at 6 AM UTC (7 AM CET)
+  ['soccer_epl', 'soccer_spain_la_liga', 'soccer_germany_bundesliga', 'soccer_italy_serie_a', 'soccer_france_ligue_one'],
+  // Batch 1: Mid soccer - runs at 7 AM UTC (8 AM CET)
+  ['soccer_portugal_primeira_liga', 'soccer_netherlands_eredivisie', 'soccer_turkey_super_league', 'soccer_belgium_first_div', 'soccer_spl'],
+  // Batch 2: UCL/UEL + Basketball - runs at 8 AM UTC (9 AM CET)
+  ['soccer_uefa_champs_league', 'soccer_uefa_europa_league', 'basketball_nba', 'basketball_euroleague'],
+  // Batch 3: American sports - runs at 9 AM UTC (10 AM CET)
+  ['americanfootball_nfl', 'americanfootball_ncaaf', 'icehockey_nhl'],
+];
+
 export async function GET(request: NextRequest) {
   // Verify cron secret - allow Vercel cron OR Bearer token OR query param
   const authHeader = request.headers.get('authorization');
@@ -953,7 +973,27 @@ export async function GET(request: NextRequest) {
     console.log(`[Pre-Analyze] Filtering to sport: ${sportFilter}`);
   }
   
-  console.log('[Pre-Analyze] Starting daily pre-analysis cron job...');
+  // Batch parameter: 0-3, or 'all' for manual full run
+  const batchParam = url.searchParams.get('batch');
+  const currentHour = new Date().getUTCHours();
+  
+  // Auto-detect batch based on hour if not specified
+  // 6 AM = batch 0, 7 AM = batch 1, 8 AM = batch 2, 9 AM = batch 3
+  let batchIndex: number | null = null;
+  if (batchParam === 'all') {
+    batchIndex = null; // Process all
+  } else if (batchParam !== null) {
+    batchIndex = parseInt(batchParam, 10);
+  } else {
+    // Auto-detect from hour (6-9 AM UTC)
+    if (currentHour === 6) batchIndex = 0;
+    else if (currentHour === 7) batchIndex = 1;
+    else if (currentHour === 8) batchIndex = 2;
+    else if (currentHour === 9) batchIndex = 3;
+    else batchIndex = null; // Outside scheduled hours, run all
+  }
+  
+  console.log(`[Pre-Analyze] Starting cron job... Batch: ${batchIndex !== null ? batchIndex : 'ALL'}, Hour: ${currentHour} UTC`);
   
   if (!theOddsClient.isConfigured()) {
     console.error('[Pre-Analyze] Odds API not configured');
@@ -969,12 +1009,21 @@ export async function GET(request: NextRequest) {
     predictionsCreated: 0,
     errors: [] as string[],
     analyzedMatches: [] as string[],
+    batch: batchIndex,
   };
   
-  // Filter sports if query param provided
-  const sportsToProcess = sportFilter 
-    ? PRE_ANALYZE_SPORTS.filter(s => s.key === sportFilter || s.key.includes(sportFilter))
-    : PRE_ANALYZE_SPORTS;
+  // Determine which sports to process
+  let sportsToProcess = PRE_ANALYZE_SPORTS;
+  
+  if (sportFilter) {
+    // Manual filter takes precedence
+    sportsToProcess = PRE_ANALYZE_SPORTS.filter(s => s.key === sportFilter || s.key.includes(sportFilter));
+  } else if (batchIndex !== null && BATCH_CONFIG[batchIndex]) {
+    // Use batch config
+    const batchKeys = BATCH_CONFIG[batchIndex];
+    sportsToProcess = PRE_ANALYZE_SPORTS.filter(s => batchKeys.includes(s.key));
+    console.log(`[Pre-Analyze] Batch ${batchIndex}: Processing ${sportsToProcess.map(s => s.title).join(', ')}`);
+  }
   
   if (sportFilter && sportsToProcess.length === 0) {
     return NextResponse.json({ 
