@@ -472,62 +472,172 @@ function detectMatchAnalysisRequest(message: string): {
 function detectSportFromTeams(homeTeam: string, awayTeam: string, message: string): string {
   const combined = `${homeTeam} ${awayTeam} ${message}`.toLowerCase();
   
+  // ==========================================
+  // BASKETBALL
+  // ==========================================
+  
   // NBA teams
-  const nbaTeams = /lakers|celtics|warriors|bulls|heat|nets|knicks|76ers|sixers|bucks|nuggets|suns|mavs|mavericks|clippers|rockets|spurs|thunder|grizzlies|kings|pelicans|jazz|blazers|timberwolves|hornets|hawks|magic|pistons|pacers|wizards|cavaliers|cavs|raptors/i;
-  if (nbaTeams.test(combined) || /nba|basketball/i.test(message)) {
+  const nbaTeams = /\b(lakers|celtics|warriors|bulls|heat|nets|knicks|76ers|sixers|bucks|nuggets|suns|mavs|mavericks|clippers|rockets|spurs|thunder|grizzlies|kings|pelicans|jazz|blazers|trail blazers|timberwolves|wolves|hornets|hawks|magic|pistons|pacers|wizards|cavaliers|cavs|raptors)\b/i;
+  if (nbaTeams.test(combined) || /\bnba\b|basketball/i.test(message)) {
     return 'basketball_nba';
   }
   
+  // EuroLeague basketball
+  const euroLeagueTeams = /\b(real madrid basket|barcelona basket|olympiacos|panathinaikos|fenerbahce|anadolu efes|cska moscow|maccabi tel aviv|zalgiris|baskonia|virtus bologna|partizan|red star|monaco basket|olympia milano|bayern munich basket)\b/i;
+  if (euroLeagueTeams.test(combined) || /euroleague|eurocup/i.test(message)) {
+    return 'basketball_euroleague';
+  }
+  
+  // NCAA Basketball
+  if (/ncaa|college basketball|march madness|duke blue devils|tar heels|wildcats|jayhawks|spartans|wolverines|hoosiers/i.test(combined)) {
+    return 'basketball_ncaab';
+  }
+  
+  // ==========================================
+  // AMERICAN FOOTBALL
+  // ==========================================
+  
   // NFL teams
-  const nflTeams = /chiefs|eagles|bills|49ers|niners|cowboys|ravens|lions|dolphins|bengals|chargers|broncos|jets|patriots|giants|raiders|saints|packers|steelers|seahawks|commanders|falcons|buccaneers|cardinals|rams|bears|vikings|browns|texans|colts|jaguars|titans|panthers/i;
-  if (nflTeams.test(combined) || /nfl|football|american football/i.test(message)) {
+  const nflTeams = /\b(chiefs|eagles|bills|49ers|niners|cowboys|ravens|lions|dolphins|bengals|chargers|broncos|jets|patriots|giants|raiders|saints|packers|steelers|seahawks|commanders|falcons|buccaneers|bucs|cardinals|rams|bears|vikings|browns|texans|colts|jaguars|jags|titans|panthers)\b/i;
+  if (nflTeams.test(combined) || /\bnfl\b|super bowl|american football/i.test(message)) {
     return 'americanfootball_nfl';
   }
   
-  // NHL teams  
-  const nhlTeams = /bruins|rangers|maple leafs|leafs|canadiens|habs|blackhawks|penguins|flyers|red wings|oilers|flames|canucks|avalanche|lightning|panthers|stars|blues|wild|kraken|knights|ducks|sharks|kings|senators|sabres|devils|islanders|hurricanes|predators|jets|coyotes|blue jackets/i;
-  if (nhlTeams.test(combined) || /nhl|hockey/i.test(message)) {
+  // NCAA Football
+  if (/ncaaf|college football|cfb|alabama crimson|ohio state buckeyes|georgia bulldogs|clemson tigers|michigan wolverines/i.test(combined)) {
+    return 'americanfootball_ncaaf';
+  }
+  
+  // ==========================================
+  // ICE HOCKEY
+  // ==========================================
+  
+  // NHL teams
+  const nhlTeams = /\b(bruins|rangers|maple leafs|leafs|canadiens|habs|blackhawks|penguins|flyers|red wings|oilers|flames|canucks|avalanche|lightning|panthers|stars|blues|wild|kraken|golden knights|knights|ducks|sharks|kings|senators|sabres|devils|islanders|hurricanes|predators|jets|coyotes|blue jackets)\b/i;
+  if (nhlTeams.test(combined) || /\bnhl\b|hockey/i.test(message)) {
     return 'icehockey_nhl';
   }
   
-  // MMA/UFC
-  if (/ufc|mma|fight|fighter/i.test(message)) {
+  // ==========================================
+  // MMA / UFC
+  // ==========================================
+  if (/\bufc\b|\bmma\b|fight night|bellator|pfl|one championship/i.test(message)) {
     return 'mma_mixed_martial_arts';
   }
   
-  // Serie A (Italian) teams - check before generic soccer
-  const serieATeams = /\b(roma|lazio|napoli|juventus|inter|milan|ac milan|atalanta|fiorentina|bologna|torino|genoa|sassuolo|udinese|verona|lecce|empoli|cagliari|monza|parma|sampdoria|salernitana|spezia|cremonese|frosinone|como|venezia)\b/i;
-  if (serieATeams.test(combined) || /serie a|calcio|italian/i.test(message)) {
+  // ==========================================
+  // BASEBALL
+  // ==========================================
+  const mlbTeams = /\b(yankees|red sox|dodgers|giants|cubs|white sox|astros|braves|mets|phillies|cardinals|brewers|padres|mariners|guardians|twins|tigers|royals|orioles|blue jays|rays|athletics|a's|angels|rockies|diamondbacks|marlins|nationals|reds|pirates)\b/i;
+  if (mlbTeams.test(combined) || /\bmlb\b|baseball|world series/i.test(message)) {
+    return 'baseball_mlb';
+  }
+  
+  // ==========================================
+  // TENNIS
+  // ==========================================
+  if (/tennis|wimbledon|us open tennis|french open|australian open|atp|wta|grand slam/i.test(message)) {
+    return 'tennis_atp_us_open'; // Default tennis
+  }
+  
+  // ==========================================
+  // SOCCER - SPECIFIC LEAGUES (check before generic)
+  // ==========================================
+  
+  // Champions League / Europa League
+  if (/champions league|ucl|europa league|uel|conference league/i.test(message)) {
+    return 'soccer_uefa_champs_league';
+  }
+  
+  // Serie A (Italian) teams
+  const serieATeams = /\b(roma|lazio|napoli|juventus|juve|inter milan|inter|ac milan|milan|atalanta|fiorentina|bologna|torino|genoa|sassuolo|udinese|verona|hellas verona|lecce|empoli|cagliari|monza|parma|sampdoria|salernitana|spezia|cremonese|frosinone|como|venezia)\b/i;
+  if (serieATeams.test(combined) || /serie a|calcio|italian league/i.test(message)) {
     return 'soccer_italy_serie_a';
   }
   
   // La Liga (Spanish) teams
-  const laLigaTeams = /\b(real madrid|barcelona|atletico|sevilla|valencia|villarreal|betis|real sociedad|athletic bilbao|getafe|osasuna|celta vigo|mallorca|rayo vallecano|almeria|cadiz|las palmas|girona|alaves|leganes)\b/i;
-  if (laLigaTeams.test(combined) || /la liga|spanish|primera/i.test(message)) {
+  const laLigaTeams = /\b(real madrid|barcelona|barca|atletico madrid|atletico|sevilla|valencia|villarreal|betis|real betis|real sociedad|athletic bilbao|athletic club|getafe|osasuna|celta vigo|celta|mallorca|rayo vallecano|rayo|almeria|cadiz|las palmas|girona|alaves|leganes)\b/i;
+  if (laLigaTeams.test(combined) || /la liga|spanish league|primera division/i.test(message)) {
     return 'soccer_spain_la_liga';
   }
   
   // Bundesliga (German) teams
-  const bundesligaTeams = /\b(bayern|dortmund|leverkusen|leipzig|frankfurt|wolfsburg|gladbach|freiburg|hoffenheim|mainz|augsburg|koln|stuttgart|union berlin|hertha|bochum|bremen|schalke|darmstadt|heidenheim)\b/i;
-  if (bundesligaTeams.test(combined) || /bundesliga|german/i.test(message)) {
+  const bundesligaTeams = /\b(bayern munich|bayern|borussia dortmund|dortmund|bvb|bayer leverkusen|leverkusen|rb leipzig|leipzig|eintracht frankfurt|frankfurt|wolfsburg|borussia monchengladbach|gladbach|freiburg|hoffenheim|mainz|augsburg|koln|cologne|stuttgart|union berlin|hertha berlin|hertha|bochum|werder bremen|bremen|schalke|darmstadt|heidenheim|st pauli)\b/i;
+  if (bundesligaTeams.test(combined) || /bundesliga|german league/i.test(message)) {
     return 'soccer_germany_bundesliga';
   }
   
   // Ligue 1 (French) teams
-  const ligue1Teams = /\b(psg|paris saint-germain|marseille|lyon|monaco|lille|nice|lens|rennes|strasbourg|nantes|montpellier|toulouse|reims|brest|lorient|clermont|metz|le havre|auxerre)\b/i;
-  if (ligue1Teams.test(combined) || /ligue 1|french/i.test(message)) {
+  const ligue1Teams = /\b(psg|paris saint-germain|paris|marseille|om|lyon|olympique lyon|monaco|lille|losc|nice|lens|rennes|strasbourg|nantes|montpellier|toulouse|reims|brest|lorient|clermont|metz|le havre|auxerre|angers)\b/i;
+  if (ligue1Teams.test(combined) || /ligue 1|french league/i.test(message)) {
     return 'soccer_france_ligue_one';
   }
   
   // Premier League (English) teams
-  const eplTeams = /\b(arsenal|chelsea|liverpool|manchester united|man utd|manchester city|man city|tottenham|spurs|newcastle|west ham|aston villa|brighton|crystal palace|fulham|brentford|everton|nottingham forest|bournemouth|wolves|burnley|sheffield united|luton)\b/i;
-  if (eplTeams.test(combined) || /premier league|epl|english/i.test(message)) {
+  const eplTeams = /\b(arsenal|chelsea|liverpool|manchester united|man utd|man united|manchester city|man city|tottenham|spurs|newcastle|newcastle united|west ham|aston villa|villa|brighton|crystal palace|palace|fulham|brentford|everton|nottingham forest|forest|bournemouth|wolves|wolverhampton|burnley|sheffield united|sheffield|luton|luton town|ipswich|leicester)\b/i;
+  if (eplTeams.test(combined) || /premier league|epl|english premier/i.test(message)) {
     return 'soccer_epl';
   }
   
-  // Generic soccer detection
-  const soccerIndicators = /fc|united|city|real|sporting|benfica|porto|ajax|feyenoord|psv/i;
-  if (soccerIndicators.test(combined) || /champions league|europa|soccer|football/i.test(message)) {
+  // Primeira Liga (Portuguese) teams
+  const primeiraTeams = /\b(benfica|porto|sporting cp|sporting lisbon|braga|vitoria guimaraes|boavista|famalicao|rio ave|gil vicente|santa clara|arouca|estoril|casa pia|vizela|portimonense|maritimo|chaves)\b/i;
+  if (primeiraTeams.test(combined) || /primeira liga|portuguese league/i.test(message)) {
+    return 'soccer_portugal_primeira_liga';
+  }
+  
+  // Eredivisie (Dutch) teams
+  const eredivisieTeams = /\b(ajax|psv|psv eindhoven|feyenoord|az alkmaar|az|twente|utrecht|vitesse|heerenveen|groningen|sparta rotterdam|nec|rkc waalwijk|go ahead eagles|fortuna sittard|volendam|excelsior|cambuur|emmen)\b/i;
+  if (eredivisieTeams.test(combined) || /eredivisie|dutch league/i.test(message)) {
+    return 'soccer_netherlands_eredivisie';
+  }
+  
+  // Turkish Super Lig
+  const turkishTeams = /\b(galatasaray|fenerbahce|besiktas|trabzonspor|basaksehir|konyaspor|antalyaspor|sivasspor|alanyaspor|kasimpasa|gaziantep|hatayspor|kayserispor|adana demirspor|giresunspor|rizespor|samsunspor|pendikspor)\b/i;
+  if (turkishTeams.test(combined) || /super lig|turkish league/i.test(message)) {
+    return 'soccer_turkey_super_league';
+  }
+  
+  // Belgian First Division
+  const belgianTeams = /\b(club brugge|anderlecht|genk|standard liege|gent|antwerp|union saint-gilloise|union sg|cercle brugge|mechelen|oostende|charleroi|westerlo|oud-heverlee leuven|kortrijk|sint-truiden|eupen)\b/i;
+  if (belgianTeams.test(combined) || /belgian league|jupiler/i.test(message)) {
+    return 'soccer_belgium_first_div';
+  }
+  
+  // Scottish Premiership
+  const scottishTeams = /\b(celtic|rangers|aberdeen|hearts|hibernian|hibs|dundee united|dundee|motherwell|st johnstone|kilmarnock|ross county|livingston|st mirren)\b/i;
+  if (scottishTeams.test(combined) || /scottish premiership|scottish league|spfl/i.test(message)) {
+    return 'soccer_spl';
+  }
+  
+  // MLS (USA)
+  const mlsTeams = /\b(la galaxy|lafc|inter miami|atlanta united|seattle sounders|portland timbers|new york red bulls|nycfc|new york city|orlando city|austin fc|nashville sc|fc cincinnati|columbus crew|toronto fc|cf montreal|dc united|chicago fire|colorado rapids|minnesota united|sporting kc|houston dynamo|real salt lake|san jose earthquakes|vancouver whitecaps|new england revolution|philadelphia union|charlotte fc|st louis city)\b/i;
+  if (mlsTeams.test(combined) || /\bmls\b|major league soccer/i.test(message)) {
+    return 'soccer_usa_mls';
+  }
+  
+  // Liga MX (Mexico)
+  const ligaMxTeams = /\b(club america|america|guadalajara|chivas|cruz azul|tigres|monterrey|pumas|toluca|santos laguna|leon|pachuca|necaxa|atlas|queretaro|puebla|mazatlan|tijuana|juarez)\b/i;
+  if (ligaMxTeams.test(combined) || /liga mx|mexican league/i.test(message)) {
+    return 'soccer_mexico_ligamx';
+  }
+  
+  // Brazilian Serie A
+  const brazilTeams = /\b(flamengo|palmeiras|corinthians|sao paulo|santos|fluminense|botafogo|atletico mineiro|gremio|internacional|cruzeiro|vasco|bahia|fortaleza|athletico paranaense|ceara|coritiba|goias|cuiaba|america mineiro)\b/i;
+  if (brazilTeams.test(combined) || /brasileirao|brazilian league/i.test(message)) {
+    return 'soccer_brazil_serie_a';
+  }
+  
+  // Argentine Primera Division
+  const argentinaTeams = /\b(boca juniors|boca|river plate|river|racing club|racing|independiente|san lorenzo|huracan|velez sarsfield|velez|estudiantes|lanus|defensa y justicia|talleres|godoy cruz|union|colon|central cordoba|newell's|rosario central|banfield|argentinos juniors)\b/i;
+  if (argentinaTeams.test(combined) || /argentine league|primera division argentina/i.test(message)) {
+    return 'soccer_argentina_primera_division';
+  }
+  
+  // ==========================================
+  // GENERIC SOCCER FALLBACK
+  // ==========================================
+  const soccerIndicators = /\bfc\b|\bunited\b|\bcity\b|sporting|real\b/i;
+  if (soccerIndicators.test(combined) || /soccer|football|futbol|fussball/i.test(message)) {
     return 'soccer_epl'; // Default to EPL if can't determine specific league
   }
   
