@@ -44,7 +44,7 @@ import { isCoachQuery, getVerifiedCoach, formatCoachContext } from '@/lib/verifi
 // Match events (goals, cards)
 import { isMatchEventsQuery, getVerifiedMatchEvents, formatMatchEventsContext } from '@/lib/verified-match-events';
 // Match prediction (our pre-match analysis for upcoming games within 48h)
-import { isMatchPredictionQuery, getUpcomingMatchPrediction, formatMatchPredictionContext } from '@/lib/verified-match-prediction';
+import { getUpcomingMatchPrediction, formatMatchPredictionContext } from '@/lib/verified-match-prediction';
 // Query Learning - systematic improvement over time
 import { trackQuery as trackQueryForLearning, detectMismatch, recordMismatch, type QueryTrackingData } from '@/lib/query-learning';
 
@@ -1737,18 +1737,15 @@ If their favorite team has a match today/tonight, lead with that information.`;
           }
 
           // Step 1.13: Our Match Prediction (for upcoming games within 48h)
-          // Triggered by: explicit prediction queries OR Query Intelligence detecting MATCH_PREDICTION/OUR_ANALYSIS intent
-          // IMPORTANT: Do NOT trigger for non-prediction queries like SCHEDULE, INJURY, PLAYER_STATS etc
+          // SIMPLIFIED: Only trigger for MATCH_PREDICTION or OUR_ANALYSIS intent
+          // Trust Query Intelligence - don't duplicate pattern matching here
           let verifiedMatchPredictionContext = '';
-          const nonPredictionIntents = ['SCHEDULE', 'INJURY_NEWS', 'PLAYER_STATS', 'FORM_CHECK', 'TRANSFER_NEWS', 'STANDINGS', 'LINEUP', 'GENERAL_INFO'];
-          const isNonPredictionQuery = queryUnderstanding?.intent && nonPredictionIntents.includes(queryUnderstanding.intent);
-          const shouldFetchOurPrediction = !isNonPredictionQuery && (
-            isMatchPredictionQuery(searchMessage) || 
-            (queryUnderstanding?.needsOurPrediction && queryUnderstanding.entities.length > 0)
-          );
+          const isPredictionIntent = queryUnderstanding?.intent === 'MATCH_PREDICTION' || 
+                                     queryUnderstanding?.intent === 'OUR_ANALYSIS' ||
+                                     queryUnderstanding?.intent === 'BETTING_ANALYSIS';
           
-          if (shouldFetchOurPrediction) {
-            console.log('[AI-Chat-Stream] Match prediction query detected (explicit or via query intelligence)...');
+          if (isPredictionIntent && queryUnderstanding?.entities.length > 0) {
+            console.log(`[AI-Chat-Stream] Prediction query detected (intent: ${queryUnderstanding.intent})...`);
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '🎯 Fetching our match analysis...' })}\n\n`));
             
             const predictionResult = await getUpcomingMatchPrediction(searchMessage);
