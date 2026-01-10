@@ -387,6 +387,109 @@ function detectTimeFrame(query: string): TimeFrame {
 }
 
 // ============================================
+// SMART SHORT QUERY HANDLING
+// ============================================
+
+/**
+ * Detect if query is a short/minimal match query like "Roma Sassuolo" or "Lakers vs Celtics"
+ * Users often type just team names expecting prediction
+ */
+function isShortMatchQuery(query: string): { isMatch: boolean; teams: string[] } {
+  const lower = query.toLowerCase().trim();
+  
+  // Pattern: "Team1 Team2" or "Team1 vs Team2" or "Team1 - Team2"
+  // Very short queries (1-5 words) with 2 team-like words
+  const words = lower.split(/\s+/);
+  
+  // If it's short (1-6 words) and contains vs/versus/-, it's definitely a match query
+  if (words.length <= 6 && /\b(vs\.?|versus|v\.?|at|@)\b|[-–—]/.test(lower)) {
+    // Extract team names (everything before and after the separator)
+    const parts = lower.split(/\s*(?:vs\.?|versus|v\.?|at|@|[-–—])\s*/i);
+    if (parts.length === 2) {
+      return { 
+        isMatch: true, 
+        teams: parts.map(t => t.trim()).filter(t => t.length > 0) 
+      };
+    }
+  }
+  
+  // Very short query (2-4 words) with no other keywords - likely just team names
+  if (words.length >= 2 && words.length <= 4) {
+    // Check if most words look like team names (capitalized, known patterns)
+    const noQuestionWords = !/(who|what|when|where|why|how|will|can|should|is|are|do|does)/i.test(lower);
+    const noStatsWords = !/(stats|points|goals|assists|average|score|result|form)/i.test(lower);
+    
+    if (noQuestionWords && noStatsWords) {
+      // Try to find 2 team names
+      const allTeamPatterns = Object.values(TEAM_PATTERNS);
+      const foundTeams: string[] = [];
+      
+      for (const pattern of allTeamPatterns) {
+        const match = lower.match(pattern);
+        if (match) {
+          foundTeams.push(match[0]);
+        }
+      }
+      
+      // Also check Serie A teams (not in main patterns yet)
+      const serieATeams = /\b(roma|as roma|lazio|napoli|juventus|juve|inter|ac milan|milan|atalanta|fiorentina|torino|bologna|sassuolo|udinese|cagliari|verona|monza|empoli|lecce|genoa|parma|como|venezia)\b/gi;
+      let serieAMatch;
+      while ((serieAMatch = serieATeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === serieAMatch![0].toLowerCase())) {
+          foundTeams.push(serieAMatch[0]);
+        }
+      }
+      
+      if (foundTeams.length >= 2) {
+        return { isMatch: true, teams: foundTeams.slice(0, 2) };
+      }
+    }
+  }
+  
+  return { isMatch: false, teams: [] };
+}
+
+/**
+ * Infer intent from context when patterns don't match
+ * This is the "smart" part - understanding user intent from minimal input
+ */
+function inferIntentFromContext(query: string, entities: ExtractedEntity[]): QueryIntent | null {
+  const lower = query.toLowerCase();
+  
+  // Count entity types
+  const teamCount = entities.filter(e => e.type === 'TEAM').length;
+  const playerCount = entities.filter(e => e.type === 'PLAYER').length;
+  
+  // Two teams mentioned → likely asking about a match (prediction, h2h, or result)
+  if (teamCount >= 2) {
+    // Check for past tense → result
+    if (/\b(won|beat|defeated|lost|drew|played)\b/.test(lower)) {
+      return 'MATCH_RESULT';
+    }
+    // Default: upcoming match prediction
+    return 'MATCH_PREDICTION';
+  }
+  
+  // One team + future indicators → prediction or schedule
+  if (teamCount === 1) {
+    if (/\b(next|when|schedule|play)\b/.test(lower)) {
+      return 'SCHEDULE';
+    }
+    // Just a team name alone could be form check
+    if (entities.length === 1) {
+      return 'FORM_CHECK';
+    }
+  }
+  
+  // Player mentioned → stats
+  if (playerCount >= 1) {
+    return 'PLAYER_STATS';
+  }
+  
+  return null;
+}
+
+// ============================================
 // INTENT CLASSIFICATION (Smart rules + LLM fallback)
 // ============================================
 
@@ -661,6 +764,12 @@ async function classifyWithLLM(query: string): Promise<{
 
 /**
  * Understand a query fully - intent, entities, time frame, data needs
+ * 
+ * SMART FEATURES:
+ * 1. Short query detection ("Roma Sassuolo" → match prediction)
+ * 2. Context inference (2 teams → match, 1 player → stats)
+ * 3. Pattern matching (regex)
+ * 4. LLM fallback for ambiguous queries
  */
 export async function understandQuery(query: string): Promise<QueryUnderstanding> {
   const startTime = Date.now();
@@ -676,7 +785,49 @@ export async function understandQuery(query: string): Promise<QueryUnderstanding
   // Extract entities
   const entities = extractEntities(query);
   const sport = detectSport(query);
-  const timeFrame = detectTimeFrame(query);
+  let timeFrame = detectTimeFrame(query);
+  
+  // SMART FEATURE 1: Check for short match query first
+  const shortMatchCheck = isShortMatchQuery(query);
+  if (shortMatchCheck.isMatch) {
+    console.log(`[QueryIntelligence] Short match query detected: ${shortMatchCheck.teams.join(' vs ')}`);
+    
+    // Create team entities if not already extracted
+    const teamEntities: ExtractedEntity[] = shortMatchCheck.teams.map(team => ({
+      type: 'TEAM' as EntityType,
+      name: team.charAt(0).toUpperCase() + team.slice(1), // Capitalize
+      confidence: 0.9,
+      sport: sport,
+    }));
+    
+    // Merge with existing entities (avoid duplicates)
+    for (const te of teamEntities) {
+      if (!entities.some(e => e.name.toLowerCase() === te.name.toLowerCase())) {
+        entities.push(te);
+      }
+    }
+    
+    // This is definitely a match prediction
+    const understanding: QueryUnderstanding = {
+      originalQuery: query,
+      intent: 'MATCH_PREDICTION',
+      intentConfidence: 0.95,
+      timeFrame: 'UPCOMING',
+      entities,
+      sport,
+      needsRealTimeData: false,
+      needsVerifiedStats: false,
+      needsOurPrediction: true,
+      suggestedDataSources: ['predictions-db', 'analyze-api'],
+      isAmbiguous: false,
+      patternMatched: 'SHORT_MATCH_QUERY',
+      usedLLM: false,
+    };
+    
+    await cacheSet(cacheKey, understanding, 3600);
+    console.log(`[QueryIntelligence] ✅ Classified as MATCH_PREDICTION (short query) in ${Date.now() - startTime}ms`);
+    return understanding;
+  }
   
   // Try pattern-based classification first (fast)
   const patternResult = classifyIntentByPatterns(query);
@@ -688,8 +839,24 @@ export async function understandQuery(query: string): Promise<QueryUnderstanding
   let patternMatched: string | undefined = patternResult.matchedPattern;
   let usedLLM = false;
   
-  // If low confidence or UNCLEAR, use LLM
-  if (intentConfidence < 0.7 || intent === 'UNCLEAR') {
+  // SMART FEATURE 2: If patterns didn't match well, try context inference
+  if (intent === 'UNCLEAR' || intentConfidence < 0.6) {
+    const inferredIntent = inferIntentFromContext(query, entities);
+    if (inferredIntent) {
+      console.log(`[QueryIntelligence] Inferred intent from context: ${inferredIntent}`);
+      intent = inferredIntent;
+      intentConfidence = 0.75; // Context inference is fairly reliable
+      patternMatched = 'CONTEXT_INFERENCE';
+      
+      // Adjust timeframe for match predictions
+      if (inferredIntent === 'MATCH_PREDICTION') {
+        timeFrame = 'UPCOMING';
+      }
+    }
+  }
+  
+  // If still low confidence or UNCLEAR, use LLM
+  if (intentConfidence < 0.6 || intent === 'UNCLEAR') {
     console.log(`[QueryIntelligence] Low confidence (${intentConfidence}), using LLM...`);
     usedLLM = true;
     const llmResult = await classifyWithLLM(query);

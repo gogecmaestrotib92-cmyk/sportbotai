@@ -139,3 +139,32 @@ npm run lint         # ESLint check
 - `src/lib/verified-match-prediction.ts` - `formatMatchPredictionContext()` function
 - `src/types/index.ts` - `AnalyzeResponse` interface (source of truth for available fields)
 
+## 🚨 CRITICAL: Query Intelligence Standards
+
+**The Query Intelligence system (`src/lib/query-intelligence.ts`) MUST be smart enough to understand user intent from minimal/short queries:**
+
+### Smart Features (ALWAYS maintain these):
+1. **Short query detection** - "Roma Sassuolo" → MATCH_PREDICTION
+2. **Implicit match detection** - Two teams mentioned = match prediction
+3. **Context inference** - Infer intent from entity types (player → stats, teams → match)
+4. **Typo tolerance** - Common abbreviations work (Man U, Juve, etc.)
+
+### Query Examples That MUST Work:
+- ✅ `"Roma Sassuolo"` → MATCH_PREDICTION (no verbs needed)
+- ✅ `"Lakers Celtics prediction"` → MATCH_PREDICTION
+- ✅ `"罗马对阵萨索洛"` (Chinese) → Translate → MATCH_PREDICTION
+- ✅ `"Luka stats"` → PLAYER_STATS
+- ✅ `"how is Arsenal doing"` → FORM_CHECK
+- ✅ `"who won Chelsea game"` → MATCH_RESULT
+
+### NEVER require:
+- ❌ Complete sentences ("Who will win the match between...")
+- ❌ Specific keywords ("prediction", "analysis", "who will win")
+- ❌ Perfect grammar or spelling
+
+### Key Functions:
+- `isShortMatchQuery()` - Detects "Team1 Team2" pattern
+- `inferIntentFromContext()` - Infers intent from entity types
+- `classifyIntentByPatterns()` - Regex pattern matching
+- `classifyWithLLM()` - LLM fallback for ambiguous queries
+
