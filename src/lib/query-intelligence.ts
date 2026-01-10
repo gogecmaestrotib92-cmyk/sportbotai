@@ -776,12 +776,20 @@ async function classifyWithLLM(query: string): Promise<{
  * 2. Context inference (2 teams → match, 1 player → stats)
  * 3. Pattern matching (regex)
  * 4. LLM fallback for ambiguous queries
+ * 
+ * A/B TEST: query-classification-2026-01
+ * - Variant A: LLM fallback when confidence < 0.6
+ * - Variant B: LLM fallback when confidence < 0.7 (more aggressive)
  */
-export async function understandQuery(query: string): Promise<QueryUnderstanding> {
+export async function understandQuery(query: string, abVariant?: 'A' | 'B'): Promise<QueryUnderstanding> {
   const startTime = Date.now();
   
-  // Check cache first
-  const cacheKey = `query-intel:${crypto.createHash('md5').update(query.toLowerCase()).digest('hex').slice(0, 16)}`;
+  // A/B test: confidence threshold for LLM fallback
+  const LLM_CONFIDENCE_THRESHOLD = abVariant === 'B' ? 0.7 : 0.6;
+  
+  // Check cache first (include variant in cache key for A/B test isolation)
+  const variantSuffix = abVariant ? `:${abVariant}` : '';
+  const cacheKey = `query-intel:${crypto.createHash('md5').update(query.toLowerCase()).digest('hex').slice(0, 16)}${variantSuffix}`;
   const cached = await cacheGet<QueryUnderstanding>(cacheKey);
   if (cached) {
     console.log(`[QueryIntelligence] Cache hit (${Date.now() - startTime}ms)`);
@@ -846,7 +854,7 @@ export async function understandQuery(query: string): Promise<QueryUnderstanding
   let usedLLM = false;
   
   // SMART FEATURE 2: If patterns didn't match well, try context inference
-  if (intent === 'UNCLEAR' || intentConfidence < 0.6) {
+  if (intent === 'UNCLEAR' || intentConfidence < LLM_CONFIDENCE_THRESHOLD) {
     const inferredIntent = inferIntentFromContext(query, entities);
     if (inferredIntent) {
       console.log(`[QueryIntelligence] Inferred intent from context: ${inferredIntent}`);
@@ -862,8 +870,9 @@ export async function understandQuery(query: string): Promise<QueryUnderstanding
   }
   
   // If still low confidence or UNCLEAR, use LLM
-  if (intentConfidence < 0.6 || intent === 'UNCLEAR') {
-    console.log(`[QueryIntelligence] Low confidence (${intentConfidence}), using LLM...`);
+  // A/B TEST: Variant B uses LLM more aggressively (threshold 0.7 vs 0.6)
+  if (intentConfidence < LLM_CONFIDENCE_THRESHOLD || intent === 'UNCLEAR') {
+    console.log(`[QueryIntelligence] Low confidence (${intentConfidence} < ${LLM_CONFIDENCE_THRESHOLD}), using LLM... (variant: ${abVariant || 'default'})`);
     usedLLM = true;
     const llmResult = await classifyWithLLM(query);
     

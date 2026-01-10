@@ -256,6 +256,10 @@ model ChatQuery {
   responseSource     String?   // CACHE, VERIFIED_STATS, PERPLEXITY, OUR_PREDICTION, LLM
   cacheHit           Boolean   @default(false)
   latencyMs          Int?      // How long the response took
+  
+  // A/B Testing
+  abTestVariant      String?   // Which A/B test variant was used (A or B)
+  abTestId           String?   // Which A/B test this query was part of
 
   @@index([category])
   @@index([sport])

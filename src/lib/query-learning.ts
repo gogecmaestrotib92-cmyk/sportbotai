@@ -50,6 +50,10 @@ export interface QueryTrackingData {
   
   // User
   userId?: string;
+  
+  // A/B Testing
+  abTestVariant?: 'A' | 'B';
+  abTestId?: string;
 }
 
 export interface MismatchCheck {

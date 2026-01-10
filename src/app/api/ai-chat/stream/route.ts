@@ -47,6 +47,8 @@ import { isMatchEventsQuery, getVerifiedMatchEvents, formatMatchEventsContext } 
 import { getUpcomingMatchPrediction, formatMatchPredictionContext } from '@/lib/verified-match-prediction';
 // Query Learning - systematic improvement over time
 import { trackQuery as trackQueryForLearning, detectMismatch, recordMismatch, type QueryTrackingData } from '@/lib/query-learning';
+// A/B Testing
+import { getVariantFromCookies, getTestCookieName, type Variant } from '@/lib/ab-testing';
 
 // ============================================
 // TYPES
@@ -1277,9 +1279,17 @@ If their favorite team has a match today/tonight, lead with that information.`;
     // Use LLM-backed classification for better intent detection
     // ============================================
     const requestStartTime = Date.now(); // Track latency for learning
+    
+    // A/B Test: Query Classification Strategy
+    const abTestId = 'query-classification-2026-01';
+    const abCookieName = getTestCookieName(abTestId);
+    const abCookieValue = request.cookies.get(abCookieName)?.value;
+    const abVariant = getVariantFromCookies(abTestId, abCookieValue) as Variant;
+    console.log(`[AI-Chat-Stream] A/B Test ${abTestId}: Variant ${abVariant}`);
+    
     let queryUnderstanding: QueryUnderstanding | null = null;
     try {
-      queryUnderstanding = await understandQuery(message);
+      queryUnderstanding = await understandQuery(message, abVariant);
       console.log(`[AI-Chat-Stream] Query Intelligence: intent=${queryUnderstanding.intent} (${(queryUnderstanding.intentConfidence * 100).toFixed(0)}%), entities=${queryUnderstanding.entities.map(e => e.name).join(', ')}, sport=${queryUnderstanding.sport || 'unknown'}`);
       
       if (queryUnderstanding.isAmbiguous) {
@@ -2215,6 +2225,10 @@ RESPONSE FORMAT:
             responseSource,
             cacheHit: false,
             latencyMs,
+            
+            // A/B Testing
+            abTestVariant: abVariant,
+            abTestId: abTestId,
           }).catch(() => {});
           
           // Detect entity mismatch (asked about X, answered about Y)

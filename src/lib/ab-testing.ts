@@ -36,6 +36,15 @@ export const ACTIVE_TESTS: Record<string, ABTest> = {
     },
     trafficSplitB: 50, // 50/50 split
   },
+  'query-classification-2026-01': {
+    id: 'query-classification-2026-01',
+    name: 'Query Classification Strategy - Jan 2026',
+    variants: {
+      A: 'Original: Pattern-first, LLM fallback',
+      B: 'Test: LLM-first for ambiguous queries (confidence < 0.7)',
+    },
+    trafficSplitB: 20, // 20% get variant B (safer test)
+  },
 };
 
 // ============================================

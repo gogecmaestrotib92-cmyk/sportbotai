@@ -53,6 +53,10 @@ interface QueryMetadata {
   responseSource?: 'CACHE' | 'VERIFIED_STATS' | 'PERPLEXITY' | 'OUR_PREDICTION' | 'LLM' | 'HYBRID';
   cacheHit?: boolean;
   latencyMs?: number;
+  
+  // A/B Testing
+  abTestVariant?: 'A' | 'B';
+  abTestId?: string;
 }
 
 interface AgentPostData {
@@ -349,6 +353,10 @@ export async function trackQuery(metadata: QueryMetadata): Promise<void> {
           responseSource: metadata.responseSource,
           cacheHit: metadata.cacheHit ?? false,
           latencyMs: metadata.latencyMs,
+          
+          // A/B Testing
+          abTestVariant: metadata.abTestVariant,
+          abTestId: metadata.abTestId,
         },
       });
     }
