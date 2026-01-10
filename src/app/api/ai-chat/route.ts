@@ -420,8 +420,12 @@ function detectMatchAnalysisRequest(message: string): {
     /(?:what do you think|thoughts on|your take on|give me a breakdown|break down)\s+(?:about\s+)?(?:the\s+)?(.+?)\s+(?:vs\.?|versus|v\.?)\s+(.+?)(?:\s+(?:match|game))?$/i,
     /(?:can you analyze|could you analyze|please analyze|i want analysis)\s+(.+?)\s+(?:vs\.?|versus|v\.?)\s+(.+)/i,
     /(.+?)\s+(?:vs\.?|versus|v\.?)\s+(.+?)\s+(?:analysis|breakdown|preview|prediction)/i,
-    // Generic "X vs Y" if context suggests analysis
-    /^(.+?)\s+(?:vs\.?|versus|v\.?)\s+(.+?)(?:\s*\?)?$/i, // Just "Lakers vs Celtics?"
+    
+    // Better generic "X vs Y" pattern - stops at common trailing words
+    /(?:^|today|tonight|tomorrow|match|game|about)\s*([A-Za-z][A-Za-z\s]+?)\s+(?:vs\.?|versus|v\.?|VS)\s+([A-Za-z][A-Za-z\s]+?)(?:\s+(?:will|who|match|game|today|tonight|tomorrow|\?|$))/i,
+    
+    // Simple team1 VS team2 (all caps VS is common)
+    /\b([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s+VS\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\b/,
     
     // Serbian/Croatian
     /(?:analiziraj|analiza|analizu|pregledaj)\s+(?:utakmicu?\s+)?(.+?)\s+(?:vs\.?|protiv|v\.?|-)\s+(.+)/i,
@@ -438,14 +442,14 @@ function detectMatchAnalysisRequest(message: string): {
   for (const pattern of analysisPatterns) {
     const match = message.match(pattern);
     if (match && match[1] && match[2]) {
-      // Clean up team names (remove extra words)
-      const homeTeam = match[1].trim()
-        .replace(/^(the|match|game)\s+/i, '')
-        .replace(/\s+(match|game|tonight|today)?$/i, '')
+      // Clean up team names (remove extra words from start and end)
+      let homeTeam = match[1].trim()
+        .replace(/^(the|match|game|today|tonight|tomorrow|about)\s+/i, '')
+        .replace(/\s+(match|game|tonight|today|tomorrow)?$/i, '')
         .trim();
-      const awayTeam = match[2].trim()
+      let awayTeam = match[2].trim()
         .replace(/^(the)\s+/i, '')
-        .replace(/\s+(match|game|tonight|today|\?)?$/i, '')
+        .replace(/\s+(match|game|tonight|today|tomorrow|will|who|win|\?)+.*$/i, '')
         .trim();
       
       // Must have reasonable team names (2+ chars each)
