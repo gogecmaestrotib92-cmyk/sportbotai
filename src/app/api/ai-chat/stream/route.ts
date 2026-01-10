@@ -1658,7 +1658,7 @@ If their favorite team has a match today/tonight, lead with that information.`;
               
               // Extract team names from entities
               const teamEntities = queryUnderstanding?.entities.filter(e => 
-                e.type === 'team' || !e.type // Untyped entities are often team names
+                e.type === 'TEAM' || e.type === 'UNKNOWN' || e.type === 'MATCH'
               ).map(e => e.name.replace(/^Will\s+/i, '')) || [];
               
               if (teamEntities.length >= 2) {
