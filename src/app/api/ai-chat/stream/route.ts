@@ -94,6 +94,82 @@ function stripMarkdown(text: string): string {
     .trim();
 }
 
+/**
+ * Format live analyze API response for chat context
+ * This creates a structured context that the LLM can use to answer
+ */
+function formatLiveAnalysisForChat(analysis: any, homeTeam: string, awayTeam: string): string {
+  const { probabilities, briefing, valueAnalysis, oddsComparison, riskAnalysis, tacticalAnalysis, responsibleGambling } = analysis;
+  
+  let context = `\n=== SPORTBOT MATCH ANALYSIS: ${homeTeam} vs ${awayTeam} ===\n\n`;
+  
+  // AI Briefing
+  if (briefing?.headline) {
+    context += `📋 HEADLINE: ${briefing.headline}\n`;
+    if (briefing.verdict) {
+      context += `🎯 VERDICT: ${briefing.verdict}\n`;
+    }
+    if (briefing.keyPoints && briefing.keyPoints.length > 0) {
+      context += `\n🔑 KEY FACTORS:\n`;
+      for (const point of briefing.keyPoints.slice(0, 4)) {
+        context += `• ${point}\n`;
+      }
+    }
+    context += '\n';
+  }
+  
+  // Probabilities
+  if (probabilities) {
+    context += `📊 AI PROBABILITY ESTIMATES:\n`;
+    if (probabilities.homeWin) {
+      context += `• ${homeTeam} win: ${Math.round(probabilities.homeWin * 100)}%\n`;
+    }
+    if (probabilities.draw !== null && probabilities.draw !== undefined) {
+      context += `• Draw: ${Math.round(probabilities.draw * 100)}%\n`;
+    }
+    if (probabilities.awayWin) {
+      context += `• ${awayTeam} win: ${Math.round(probabilities.awayWin * 100)}%\n`;
+    }
+    context += '\n';
+  }
+  
+  // Edge/Value
+  if (oddsComparison) {
+    const edges = [
+      { name: homeTeam, edge: oddsComparison.homeEdge || 0 },
+      { name: 'Draw', edge: oddsComparison.drawEdge || 0 },
+      { name: awayTeam, edge: oddsComparison.awayEdge || 0 },
+    ].filter(e => e.edge > 1);
+    
+    if (edges.length > 0) {
+      context += `💎 VALUE DETECTED:\n`;
+      for (const e of edges) {
+        context += `• ${e.name}: +${e.edge.toFixed(1)}% edge\n`;
+      }
+      context += '\n';
+    }
+  }
+  
+  // Risk Level
+  if (riskAnalysis?.riskLevel) {
+    context += `⚠️ RISK LEVEL: ${riskAnalysis.riskLevel}`;
+    if (riskAnalysis.trapMatchWarning) {
+      context += ' (TRAP MATCH WARNING!)';
+    }
+    context += '\n';
+  }
+  
+  // Expert take
+  if (tacticalAnalysis?.expertConclusionOneLiner) {
+    context += `\n💡 EXPERT TAKE: ${tacticalAnalysis.expertConclusionOneLiner}\n`;
+  }
+  
+  context += `\n⚠️ DISCLAIMER: ${responsibleGambling?.disclaimer || 'This is educational analysis, not betting advice.'}\n`;
+  context += `=== END SPORTBOT ANALYSIS ===\n`;
+  
+  return context;
+}
+
 // ============================================
 // CONVERSATION MEMORY: Reference Resolution
 // ============================================
@@ -1576,7 +1652,75 @@ If their favorite team has a match today/tonight, lead with that information.`;
               verifiedMatchPredictionContext = `⏳ ${predictionResult.error}. Check back closer to kickoff for our full analysis.`;
               console.log(`[AI-Chat-Stream] ℹ️ Match found but ${predictionResult.hoursUntilKickoff}h away`);
             } else {
-              console.log('[AI-Chat-Stream] ⚠️ Could not get match prediction:', predictionResult.error);
+              // No stored prediction - try to generate one using the analyze API!
+              console.log('[AI-Chat-Stream] ⚠️ No stored prediction, attempting live analysis via analyze API...');
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '🔬 Generating live analysis...' })}\n\n`));
+              
+              // Extract team names from entities
+              const teamEntities = queryUnderstanding?.entities.filter(e => 
+                e.type === 'team' || !e.type // Untyped entities are often team names
+              ).map(e => e.name.replace(/^Will\s+/i, '')) || [];
+              
+              if (teamEntities.length >= 2) {
+                const homeTeam = teamEntities[0];
+                const awayTeam = teamEntities[1];
+                const sport = queryUnderstanding?.sport || 'soccer_epl';
+                
+                console.log(`[AI-Chat-Stream] Calling analyze API for: ${homeTeam} vs ${awayTeam} (${sport})`);
+                
+                try {
+                  // Call the analyze API
+                  const protocol = request.headers.get('x-forwarded-proto') || 'https';
+                  const host = request.headers.get('host') || 'sportbot.ai';
+                  const baseUrl = `${protocol}://${host}`;
+                  const cookies = request.headers.get('cookie') || '';
+                  
+                  const analyzeRequest = {
+                    matchData: {
+                      sport: sport,
+                      league: 'Auto-detected',
+                      homeTeam: homeTeam,
+                      awayTeam: awayTeam,
+                      matchDate: new Date().toISOString(),
+                      sourceType: 'chat-stream',
+                      odds: {
+                        home: 2.0,  // Default odds
+                        draw: sport.includes('soccer') ? 3.5 : null,
+                        away: 2.0,
+                      },
+                    },
+                  };
+                  
+                  const analyzeResponse = await fetch(`${baseUrl}/api/analyze`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Cookie': cookies,
+                    },
+                    body: JSON.stringify(analyzeRequest),
+                  });
+                  
+                  if (analyzeResponse.ok) {
+                    const analysisData = await analyzeResponse.json();
+                    
+                    if (analysisData.success) {
+                      // Format the analysis for chat
+                      verifiedMatchPredictionContext = formatLiveAnalysisForChat(analysisData, homeTeam, awayTeam);
+                      console.log(`[AI-Chat-Stream] ✅ Live analysis generated for ${homeTeam} vs ${awayTeam}`);
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '✅ Live analysis ready!' })}\n\n`));
+                      // Use our data, not Perplexity
+                      perplexityContext = '';
+                      citations = [];
+                    }
+                  } else {
+                    console.log(`[AI-Chat-Stream] Analyze API failed: ${analyzeResponse.status}`);
+                  }
+                } catch (analyzeError) {
+                  console.error('[AI-Chat-Stream] Analyze API error:', analyzeError);
+                }
+              } else {
+                console.log('[AI-Chat-Stream] ⚠️ Could not extract team names from entities:', teamEntities);
+              }
             }
           }
 
