@@ -380,7 +380,27 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (!shouldSkipCache) {
       const cachedPreview = await cacheGet<any>(cacheKey);
       if (cachedPreview) {
-        console.log(`[Match-Preview] Cache HIT for ${matchInfo.homeTeam} vs ${matchInfo.awayTeam} (${Date.now() - startTime}ms, preAnalyzed: ${cachedPreview.preAnalyzed || false})`);
+        // VALIDATION: Check if cached data has complete form data
+        const homeForm = cachedPreview.universalSignals?.form?.home || 
+                         cachedPreview.signals?.form?.home || 
+                         cachedPreview.momentumAndForm?.homeForm;
+        const awayForm = cachedPreview.universalSignals?.form?.away || 
+                         cachedPreview.signals?.form?.away || 
+                         cachedPreview.momentumAndForm?.awayForm;
+        
+        const isValidForm = (form: string | null | undefined): boolean => {
+          if (!form) return false;
+          if (form === '-----') return false;
+          return /[WLD]/i.test(form);
+        };
+        
+        const hasCompleteFormData = isValidForm(homeForm) && isValidForm(awayForm);
+        
+        if (!hasCompleteFormData) {
+          console.log(`[Match-Preview] Cache INVALID - missing form data (home: ${homeForm}, away: ${awayForm}) - will regenerate`);
+          // Don't use cache, continue to regenerate
+        } else {
+          console.log(`[Match-Preview] Cache HIT for ${matchInfo.homeTeam} vs ${matchInfo.awayTeam} (${Date.now() - startTime}ms, preAnalyzed: ${cachedPreview.preAnalyzed || false})`);
         
         // Backwards compatibility: transform old cache formats
         let responseData = cachedPreview;
@@ -594,7 +614,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           }
         });
       }
-      console.log(`[Match-Preview] Cache MISS for key: ${cacheKey}`);
+      // If we reach here, either cache was empty OR cache had incomplete data
+      console.log(`[Match-Preview] Cache MISS or INVALID for key: ${cacheKey} - will generate fresh analysis`);
     } else if (isAboutToStart) {
       console.log(`[Match-Preview] Skipping cache - match starts in ${Math.round(minutesUntilKickoff)} min (about to start, generating fresh)`);
     }
