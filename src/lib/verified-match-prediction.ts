@@ -15,6 +15,80 @@
 import { prisma } from '@/lib/prisma';
 
 // ============================================================================
+// City to Team Name Mapping (normalize city names to team names for DB lookup)
+// ============================================================================
+
+const CITY_TO_TEAM: Record<string, string> = {
+  // NBA
+  'los angeles': 'Lakers', // Could also be Clippers - will match either
+  'boston': 'Celtics',
+  'golden state': 'Warriors',
+  'miami': 'Heat',
+  'milwaukee': 'Bucks',
+  'brooklyn': 'Nets',
+  'new york': 'Knicks', // Could also be Nets
+  'phoenix': 'Suns',
+  'denver': 'Nuggets',
+  'dallas': 'Mavericks',
+  'memphis': 'Grizzlies',
+  'minnesota': 'Timberwolves',
+  'cleveland': 'Cavaliers',
+  'chicago': 'Bulls',
+  'atlanta': 'Hawks',
+  'toronto': 'Raptors',
+  'indiana': 'Pacers',
+  'orlando': 'Magic',
+  'charlotte': 'Hornets',
+  'washington': 'Wizards',
+  'detroit': 'Pistons',
+  'oklahoma city': 'Thunder',
+  'portland': 'Trail Blazers',
+  'utah': 'Jazz',
+  'sacramento': 'Kings',
+  'san antonio': 'Spurs',
+  'new orleans': 'Pelicans',
+  'houston': 'Rockets',
+  // NFL additions
+  'kansas city': 'Chiefs',
+  'philadelphia': 'Eagles',
+  'buffalo': 'Bills',
+  'baltimore': 'Ravens',
+  'cincinnati': 'Bengals',
+  'san francisco': '49ers',
+  'seattle': 'Seahawks',
+  'green bay': 'Packers',
+  'pittsburgh': 'Steelers',
+  'las vegas': 'Raiders',
+  'tennessee': 'Titans',
+  'jacksonville': 'Jaguars',
+  'indianapolis': 'Colts',
+  'tampa bay': 'Buccaneers',
+  'carolina': 'Panthers',
+  'arizona': 'Cardinals',
+  // NHL additions
+  'montreal': 'Canadiens',
+  'edmonton': 'Oilers',
+  'calgary': 'Flames',
+  'vancouver': 'Canucks',
+  'winnipeg': 'Jets',
+  'ottawa': 'Senators',
+  'florida': 'Panthers',
+  'colorado': 'Avalanche',
+  'vegas': 'Golden Knights',
+  'st louis': 'Blues',
+  'nashville': 'Predators',
+  'new jersey': 'Devils',
+};
+
+/**
+ * Normalize city name to team name for DB lookup
+ */
+function normalizeTeamName(name: string): string {
+  const lower = name.toLowerCase().trim();
+  return CITY_TO_TEAM[lower] || name; // Return team name or original if not found
+}
+
+// ============================================================================
 // Types
 // ============================================================================
 
@@ -174,7 +248,7 @@ function extractTeamNamesFromMessage(message: string): { team1: string; team2?: 
     return { team1: singleMatch[1].trim() };
   }
   
-  // Look for common team names
+  // Look for common team names AND city names
   const teamPatterns = [
     // Premier League
     /(Arsenal|Chelsea|Liverpool|Manchester United|Manchester City|Man United|Man City|Tottenham|Spurs|Newcastle|Brighton|Aston Villa|West Ham|Fulham|Brentford|Crystal Palace|Everton|Nottingham Forest|Wolves|Bournemouth|Ipswich|Leicester|Southampton)/gi,
@@ -186,12 +260,12 @@ function extractTeamNamesFromMessage(message: string): { team1: string; team2?: 
     /(Bayern|Bayern Munich|Dortmund|Borussia Dortmund|Leipzig|RB Leipzig|Leverkusen|Bayer Leverkusen|Frankfurt|Eintracht|Wolfsburg|Stuttgart|Union Berlin|Freiburg|Mainz|Hoffenheim|Werder Bremen|Augsburg|Bochum|Heidenheim|Darmstadt)/gi,
     // Ligue 1
     /(PSG|Paris Saint.?Germain|Marseille|Lyon|Monaco|Lille|Nice|Lens|Rennes|Strasbourg|Nantes|Toulouse|Montpellier|Reims|Brest)/gi,
-    // NBA
-    /(Lakers|Celtics|Warriors|Bulls|Heat|Nets|Knicks|76ers|Sixers|Bucks|Nuggets|Suns|Mavericks|Mavs|Clippers|Rockets|Spurs|Thunder|Grizzlies|Kings|Pelicans|Jazz|Trail Blazers|Blazers|Timberwolves|Wolves|Hornets|Hawks|Magic|Pistons|Pacers|Wizards|Cavaliers|Cavs|Raptors)/gi,
-    // NFL
-    /(Chiefs|Eagles|Bills|49ers|Niners|Cowboys|Ravens|Lions|Dolphins|Bengals|Chargers|Broncos|Jets|Patriots|Giants|Raiders|Saints|Packers|Steelers|Seahawks|Commanders|Falcons|Buccaneers|Bucs|Cardinals|Rams|Bears|Vikings|Browns|Texans|Colts|Jaguars|Jags|Titans|Panthers)/gi,
-    // NHL
-    /(Maple Leafs|Canadiens|Bruins|Rangers|Penguins|Blackhawks|Red Wings|Flyers|Devils|Islanders|Oilers|Flames|Canucks|Avalanche|Blues|Stars|Lightning|Panthers|Capitals|Kings|Ducks|Sharks|Kraken|Knights|Wild|Jets|Sabres|Hurricanes|Senators|Blue Jackets|Predators|Coyotes)/gi,
+    // NBA (with city names!)
+    /(Lakers|Celtics|Warriors|Bulls|Heat|Nets|Knicks|76ers|Sixers|Bucks|Nuggets|Suns|Mavericks|Mavs|Clippers|Rockets|Spurs|Thunder|Grizzlies|Kings|Pelicans|Jazz|Trail Blazers|Blazers|Timberwolves|Wolves|Hornets|Hawks|Magic|Pistons|Pacers|Wizards|Cavaliers|Cavs|Raptors|Los Angeles|Boston|Golden State|Miami|Milwaukee|Brooklyn|New York|Phoenix|Denver|Dallas|Memphis|Minnesota|Cleveland|Chicago|Atlanta|Toronto|Indiana|Orlando|Charlotte|Washington|Detroit|Oklahoma City|Portland|Utah|Sacramento|San Antonio|New Orleans|Houston)/gi,
+    // NFL (with city names!)
+    /(Chiefs|Eagles|Bills|49ers|Niners|Cowboys|Ravens|Lions|Dolphins|Bengals|Chargers|Broncos|Jets|Patriots|Giants|Raiders|Saints|Packers|Steelers|Seahawks|Commanders|Falcons|Buccaneers|Bucs|Cardinals|Rams|Bears|Vikings|Browns|Texans|Colts|Jaguars|Jags|Titans|Panthers|Kansas City|Philadelphia|Buffalo|Dallas|Miami|Baltimore|Cincinnati|San Francisco|Detroit|Seattle|Green Bay|Minnesota|Pittsburgh|Los Angeles|Denver|Las Vegas|Washington|New York|New England|Tennessee|Jacksonville|Indianapolis|Houston|Cleveland|Chicago|New Orleans|Tampa Bay|Atlanta|Carolina|Arizona)/gi,
+    // NHL (with city names!)
+    /(Maple Leafs|Canadiens|Bruins|Rangers|Penguins|Blackhawks|Red Wings|Flyers|Devils|Islanders|Oilers|Flames|Canucks|Avalanche|Blues|Stars|Lightning|Panthers|Capitals|Kings|Ducks|Sharks|Kraken|Knights|Wild|Jets|Sabres|Hurricanes|Senators|Blue Jackets|Predators|Coyotes|Toronto|Montreal|Boston|New York|Pittsburgh|Chicago|Detroit|Edmonton|Calgary|Vancouver|Winnipeg|Ottawa|Tampa Bay|Florida|Colorado|Vegas|Seattle|Dallas|St Louis|Minnesota|Nashville|Carolina|New Jersey)/gi,
   ];
   
   const foundTeams: string[] = [];
@@ -207,9 +281,13 @@ function extractTeamNamesFromMessage(message: string): { team1: string; team2?: 
   }
   
   if (foundTeams.length >= 2) {
-    return { team1: foundTeams[0], team2: foundTeams[1] };
+    // Normalize city names to team names for DB lookup
+    return { 
+      team1: normalizeTeamName(foundTeams[0]), 
+      team2: normalizeTeamName(foundTeams[1]) 
+    };
   } else if (foundTeams.length === 1) {
-    return { team1: foundTeams[0] };
+    return { team1: normalizeTeamName(foundTeams[0]) };
   }
   
   return null;
