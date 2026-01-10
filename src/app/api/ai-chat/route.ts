@@ -447,18 +447,25 @@ function detectMatchAnalysisRequest(message: string): {
     if (match && match[1] && match[2]) {
       // Clean up team names (remove extra words from start and end)
       let homeTeam = match[1].trim()
-        .replace(/^(the|match|game|today|tonight|tomorrow|about)\s+/i, '')
+        .replace(/^(the|match|game|today|tonight|tomorrow|about|this|what about|how about)\s+/i, '')
         .replace(/\s+(match|game|tonight|today|tomorrow)?$/i, '')
         .trim();
       let awayTeam = match[2].trim()
         .replace(/^(the)\s+/i, '')
-        .replace(/\s+(match|game|tonight|today|tomorrow|will|who|win|\?)+.*$/i, '')
+        // Stop at common words that indicate end of team name
+        .replace(/\s+(match|game|tonight|today|tomorrow|this|will|who|win|should|can|could|would|is|are|has|have|what|sunday|monday|tuesday|wednesday|thursday|friday|saturday|\?).*/i, '')
         .trim();
+      
+      // Additional cleanup for edge cases
+      homeTeam = homeTeam.replace(/^(today|tonight|tomorrow|what about|how about)\s+/i, '').trim();
+      awayTeam = awayTeam.replace(/\s+(will|this|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s+.*$/i, '').trim();
       
       // Must have reasonable team names (2+ chars each)
       if (homeTeam.length >= 2 && awayTeam.length >= 2) {
         // Detect sport from team names or message
         const sport = detectSportFromTeams(homeTeam, awayTeam, message);
+        
+        console.log(`[AI-Chat] Team extraction: Home="${homeTeam}", Away="${awayTeam}", Sport="${sport}"`);
         
         return {
           isMatchAnalysis: true,
@@ -871,15 +878,29 @@ function formatMatchPreviewForChat(data: any, homeTeam: string, awayTeam: string
 
 /**
  * Format the analysis response for chat display
+ * Uses the actual AnalyzeResponse interface structure
  */
 function formatAnalysisForChat(analysis: any, homeTeam: string, awayTeam: string): string {
-  const { matchInfo, probabilities, valueSummary, keyFactors, briefing, responsibleGamblingNote } = analysis;
+  const { probabilities, briefing, valueAnalysis, oddsComparison, riskAnalysis, tacticalAnalysis, responsibleGambling } = analysis;
   
   let response = `## 🎯 Match Analysis: ${homeTeam} vs ${awayTeam}\n\n`;
   
-  // AI Briefing (the main insight)
-  if (briefing?.narrative) {
-    response += `### 💡 Key Insight\n${briefing.narrative}\n\n`;
+  // AI Briefing - use headline and verdict (not narrative)
+  if (briefing?.headline) {
+    response += `### 💡 Key Insight\n${briefing.headline}\n`;
+    if (briefing.verdict) {
+      response += `**Verdict:** ${briefing.verdict}\n`;
+    }
+    response += '\n';
+  }
+  
+  // Key points from briefing
+  if (briefing?.keyPoints && briefing.keyPoints.length > 0) {
+    response += `### 🔑 Key Factors\n`;
+    for (const point of briefing.keyPoints.slice(0, 4)) {
+      response += `• ${point}\n`;
+    }
+    response += '\n';
   }
   
   // Probabilities
@@ -897,33 +918,48 @@ function formatAnalysisForChat(analysis: any, homeTeam: string, awayTeam: string
     response += '\n';
   }
   
-  // Value Summary
-  if (valueSummary?.bestValue) {
-    const edge = valueSummary.estimatedEdge ? ` (${valueSummary.estimatedEdge > 0 ? '+' : ''}${(valueSummary.estimatedEdge * 100).toFixed(1)}% edge)` : '';
+  // Odds Comparison (edge) - preferred over deprecated valueAnalysis
+  if (oddsComparison) {
+    const edge = oddsComparison.homeEdge || oddsComparison.awayEdge || oddsComparison.drawEdge;
+    if (edge && Math.abs(edge) > 1) {
+      const bestEdge = Math.max(
+        Math.abs(oddsComparison.homeEdge || 0),
+        Math.abs(oddsComparison.awayEdge || 0),
+        Math.abs(oddsComparison.drawEdge || 0)
+      );
+      const edgeTeam = (oddsComparison.homeEdge || 0) === bestEdge ? homeTeam :
+                       (oddsComparison.awayEdge || 0) === bestEdge ? awayTeam : 'Draw';
+      response += `### 💎 Value Indication\n`;
+      response += `Best edge: **${edgeTeam}** (+${bestEdge.toFixed(1)}% edge)\n\n`;
+    }
+  } else if (valueAnalysis?.bestValue?.selection) {
+    // Fallback to valueAnalysis (deprecated but may still be present)
     response += `### 💎 Value Indication\n`;
-    response += `Best value: **${valueSummary.bestValue}**${edge}\n`;
-    response += `Confidence: ${valueSummary.confidence || 'Medium'}\n\n`;
+    response += `Best value: **${valueAnalysis.bestValue.selection}**`;
+    if (valueAnalysis.bestValue.edge) {
+      response += ` (+${(valueAnalysis.bestValue.edge * 100).toFixed(1)}% edge)`;
+    }
+    response += '\n\n';
   }
   
-  // Key Factors (top 3)
-  if (keyFactors && keyFactors.length > 0) {
-    response += `### 🔑 Key Factors\n`;
-    const topFactors = keyFactors.slice(0, 3);
-    for (const factor of topFactors) {
-      const emoji = factor.favors === 'home' ? '🏠' : factor.favors === 'away' ? '✈️' : '⚖️';
-      response += `${emoji} **${factor.factor}**: ${factor.insight}\n`;
+  // Risk Level
+  if (riskAnalysis?.riskLevel) {
+    const riskEmoji = riskAnalysis.riskLevel === 'LOW' ? '🟢' : riskAnalysis.riskLevel === 'MEDIUM' ? '🟡' : '🔴';
+    response += `**Risk Level**: ${riskEmoji} ${riskAnalysis.riskLevel}\n`;
+    if (riskAnalysis.trapMatchWarning) {
+      response += `⚠️ Trap match warning!\n`;
     }
     response += '\n';
   }
   
-  // Risk Level
-  if (valueSummary?.riskLevel) {
-    const riskEmoji = valueSummary.riskLevel === 'LOW' ? '🟢' : valueSummary.riskLevel === 'MEDIUM' ? '🟡' : '🔴';
-    response += `**Risk Level**: ${riskEmoji} ${valueSummary.riskLevel}\n\n`;
+  // Expert one-liner from tactical analysis
+  if (tacticalAnalysis?.expertConclusionOneLiner) {
+    response += `**Expert Take:** ${tacticalAnalysis.expertConclusionOneLiner}\n\n`;
   }
   
   // Disclaimer
-  response += `---\n⚠️ *${responsibleGamblingNote || 'This is educational analysis, not betting advice. Always gamble responsibly.'}*`;
+  const disclaimer = responsibleGambling?.disclaimer || 'This is educational analysis, not betting advice. Always gamble responsibly.';
+  response += `---\n⚠️ *${disclaimer}*`;
   
   return response;
 }
