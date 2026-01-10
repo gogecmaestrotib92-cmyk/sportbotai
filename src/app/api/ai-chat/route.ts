@@ -424,8 +424,11 @@ function detectMatchAnalysisRequest(message: string): {
     // Better generic "X vs Y" pattern - stops at common trailing words
     /(?:^|today|tonight|tomorrow|match|game|about)\s*([A-Za-z][A-Za-z\s]+?)\s+(?:vs\.?|versus|v\.?|VS)\s+([A-Za-z][A-Za-z\s]+?)(?:\s+(?:will|who|match|game|today|tonight|tomorrow|\?|$))/i,
     
-    // Simple team1 VS team2 (all caps VS is common)
-    /\b([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s+VS\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\b/,
+    // Multi-word teams with vs/VS (e.g., "Los Angeles Lakers vs Boston Celtics")
+    /\b([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){1,3})\s+(?:vs\.?|VS)\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){1,3})\b/i,
+    
+    // Simple team1 vs team2 - fallback for any "X vs Y" at end of message
+    /\b([A-Za-z][a-zA-Z]+(?:\s+[A-Za-z][a-zA-Z]+){0,3})\s+(?:vs\.?|VS|versus)\s+([A-Za-z][a-zA-Z]+(?:\s+[A-Za-z][a-zA-Z]+){0,3})$/i,
     
     // Serbian/Croatian
     /(?:analiziraj|analiza|analizu|pregledaj)\s+(?:utakmicu?\s+)?(.+?)\s+(?:vs\.?|protiv|v\.?|-)\s+(.+)/i,
