@@ -445,6 +445,9 @@ function detectMatchAnalysisRequest(message: string): {
     // "X vs Y [followed by additional context]" - stops at team name repetition or common words
     /^([A-Za-z][A-Za-z\s]*?)\s+(?:vs\.?|VS|versus)\s+([A-Za-z][A-Za-z\s]*?)(?:\s+(?:Roma|Sassuolo|[A-Z][a-z]+\s+has|will|today|tonight|\.|\,))/i,
     
+    // "X versus Y." with period/punctuation ending
+    /^([A-Za-z][A-Za-z\s]+?)\s+(?:vs\.?|VS|versus)\s+([A-Za-z][A-Za-z\s]+?)[\.!\?]/i,
+    
     // Serbian/Croatian
     /(?:analiziraj|analiza|analizu|pregledaj)\s+(?:utakmicu?\s+)?(.+?)\s+(?:vs\.?|protiv|v\.?|-)\s+(.+)/i,
     /(?:šta misliš|sta mislis|mišljenje|tvoje mišljenje)\s+(?:o\s+)?(.+?)\s+(?:vs\.?|protiv|v\.?|-)\s+(.+)/i,
