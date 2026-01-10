@@ -97,21 +97,29 @@ function stripMarkdown(text: string): string {
 /**
  * Format live analyze API response for chat context
  * This creates a structured context that the LLM can use to answer
+ * INCLUDES ALL RICH DATA: form, injuries, insights, edge, etc.
  */
 function formatLiveAnalysisForChat(analysis: any, homeTeam: string, awayTeam: string): string {
-  const { probabilities, briefing, valueAnalysis, oddsComparison, riskAnalysis, tacticalAnalysis, responsibleGambling } = analysis;
+  const { 
+    probabilities, briefing, valueAnalysis, oddsComparison, riskAnalysis, 
+    tacticalAnalysis, responsibleGambling, momentumAndForm, injuryContext,
+    preMatchInsights, upsetPotential, marketStability
+  } = analysis;
   
   let context = `\n=== SPORTBOT MATCH ANALYSIS: ${homeTeam} vs ${awayTeam} ===\n\n`;
   
-  // AI Briefing
+  // AI Briefing (MOST IMPORTANT)
   if (briefing?.headline) {
     context += `📋 HEADLINE: ${briefing.headline}\n`;
     if (briefing.verdict) {
       context += `🎯 VERDICT: ${briefing.verdict}\n`;
     }
+    if (briefing.confidenceRating) {
+      context += `⭐ CONFIDENCE: ${briefing.confidenceRating}/5\n`;
+    }
     if (briefing.keyPoints && briefing.keyPoints.length > 0) {
-      context += `\n🔑 KEY FACTORS:\n`;
-      for (const point of briefing.keyPoints.slice(0, 4)) {
+      context += `\n🔑 KEY INSIGHTS:\n`;
+      for (const point of briefing.keyPoints) {
         context += `• ${point}\n`;
       }
     }
@@ -133,20 +141,93 @@ function formatLiveAnalysisForChat(analysis: any, homeTeam: string, awayTeam: st
     context += '\n';
   }
   
-  // Edge/Value
+  // Edge/Value Detection
   if (oddsComparison) {
     const edges = [
       { name: homeTeam, edge: oddsComparison.homeEdge || 0 },
       { name: 'Draw', edge: oddsComparison.drawEdge || 0 },
       { name: awayTeam, edge: oddsComparison.awayEdge || 0 },
-    ].filter(e => e.edge > 1);
+    ].filter(e => Math.abs(e.edge) > 1);
     
     if (edges.length > 0) {
-      context += `💎 VALUE DETECTED:\n`;
+      context += `💎 VALUE ANALYSIS (AI vs Market):\n`;
       for (const e of edges) {
-        context += `• ${e.name}: +${e.edge.toFixed(1)}% edge\n`;
+        const sign = e.edge > 0 ? '+' : '';
+        context += `• ${e.name}: ${sign}${e.edge.toFixed(1)}% edge\n`;
       }
       context += '\n';
+    }
+  } else if (valueAnalysis?.bestValue) {
+    context += `💎 VALUE ANALYSIS:\n`;
+    context += `• Best value: ${valueAnalysis.bestValue.selection}`;
+    if (valueAnalysis.bestValue.edge) {
+      context += ` (+${(valueAnalysis.bestValue.edge * 100).toFixed(1)}% edge)`;
+    }
+    context += '\n\n';
+  }
+  
+  // Form & Momentum
+  if (momentumAndForm) {
+    context += `📈 RECENT FORM:\n`;
+    if (momentumAndForm.homeForm && momentumAndForm.homeForm.length > 0) {
+      const formStr = momentumAndForm.homeForm.slice(0, 5).map((m: any) => 
+        m.result === 'W' ? 'W' : m.result === 'L' ? 'L' : 'D'
+      ).join('-');
+      context += `• ${homeTeam}: ${formStr}`;
+      if (momentumAndForm.homeFormScore) context += ` (Form score: ${momentumAndForm.homeFormScore}/10)`;
+      context += '\n';
+    }
+    if (momentumAndForm.awayForm && momentumAndForm.awayForm.length > 0) {
+      const formStr = momentumAndForm.awayForm.slice(0, 5).map((m: any) => 
+        m.result === 'W' ? 'W' : m.result === 'L' ? 'L' : 'D'
+      ).join('-');
+      context += `• ${awayTeam}: ${formStr}`;
+      if (momentumAndForm.awayFormScore) context += ` (Form score: ${momentumAndForm.awayFormScore}/10)`;
+      context += '\n';
+    }
+    if (momentumAndForm.momentumShift) {
+      context += `• Momentum: ${momentumAndForm.momentumShift}\n`;
+    }
+    context += '\n';
+  }
+  
+  // Injuries
+  if (injuryContext) {
+    const hasHomeInjuries = injuryContext.homeTeamInjuries?.length > 0;
+    const hasAwayInjuries = injuryContext.awayTeamInjuries?.length > 0;
+    
+    if (hasHomeInjuries || hasAwayInjuries) {
+      context += `🏥 INJURY REPORT:\n`;
+      if (hasHomeInjuries) {
+        const keyPlayers = injuryContext.homeTeamInjuries.slice(0, 3);
+        context += `• ${homeTeam}: ${keyPlayers.map((p: any) => `${p.player} (${p.status})`).join(', ')}\n`;
+      }
+      if (hasAwayInjuries) {
+        const keyPlayers = injuryContext.awayTeamInjuries.slice(0, 3);
+        context += `• ${awayTeam}: ${keyPlayers.map((p: any) => `${p.player} (${p.status})`).join(', ')}\n`;
+      }
+      if (injuryContext.overallImpact) {
+        context += `• Impact: ${injuryContext.overallImpact}\n`;
+      }
+      context += '\n';
+    }
+  }
+  
+  // Upset Potential
+  if (upsetPotential) {
+    if (upsetPotential.upsetLikely || upsetPotential.probability > 0.25) {
+      context += `⚡ UPSET ALERT: ${Math.round(upsetPotential.probability * 100)}% chance of upset\n`;
+      if (upsetPotential.reason) {
+        context += `   Reason: ${upsetPotential.reason}\n`;
+      }
+      context += '\n';
+    }
+  }
+  
+  // Market Stability
+  if (marketStability) {
+    if (marketStability.isUnstable || marketStability.significantMovement) {
+      context += `📉 MARKET ALERT: ${marketStability.narrative || 'Significant line movement detected'}\n\n`;
     }
   }
   
@@ -154,17 +235,38 @@ function formatLiveAnalysisForChat(analysis: any, homeTeam: string, awayTeam: st
   if (riskAnalysis?.riskLevel) {
     context += `⚠️ RISK LEVEL: ${riskAnalysis.riskLevel}`;
     if (riskAnalysis.trapMatchWarning) {
-      context += ' (TRAP MATCH WARNING!)';
+      context += ' - TRAP MATCH WARNING!';
+    }
+    if (riskAnalysis.factors && riskAnalysis.factors.length > 0) {
+      context += `\n   Factors: ${riskAnalysis.factors.slice(0, 2).join(', ')}`;
+    }
+    context += '\n\n';
+  }
+  
+  // Pre-Match Insights (viral stats)
+  if (preMatchInsights?.viralStats && preMatchInsights.viralStats.length > 0) {
+    context += `🔥 INTERESTING STATS:\n`;
+    for (const stat of preMatchInsights.viralStats.slice(0, 3)) {
+      context += `• ${stat}\n`;
     }
     context += '\n';
   }
   
-  // Expert take
-  if (tacticalAnalysis?.expertConclusionOneLiner) {
-    context += `\n💡 EXPERT TAKE: ${tacticalAnalysis.expertConclusionOneLiner}\n`;
+  // Tactical Analysis
+  if (tacticalAnalysis) {
+    if (tacticalAnalysis.keyBattles && tacticalAnalysis.keyBattles.length > 0) {
+      context += `⚔️ KEY BATTLES:\n`;
+      for (const battle of tacticalAnalysis.keyBattles.slice(0, 2)) {
+        context += `• ${battle}\n`;
+      }
+      context += '\n';
+    }
+    if (tacticalAnalysis.expertConclusionOneLiner) {
+      context += `💡 EXPERT VERDICT: ${tacticalAnalysis.expertConclusionOneLiner}\n\n`;
+    }
   }
   
-  context += `\n⚠️ DISCLAIMER: ${responsibleGambling?.disclaimer || 'This is educational analysis, not betting advice.'}\n`;
+  context += `⚠️ DISCLAIMER: ${responsibleGambling?.disclaimer || 'This is educational analysis, not betting advice. Always gamble responsibly.'}\n`;
   context += `=== END SPORTBOT ANALYSIS ===\n`;
   
   return context;
@@ -1840,14 +1942,24 @@ If their favorite team has a match today/tonight, lead with that information.`;
 
 ${verifiedMatchPredictionContext}
 
-RESPONSE RULES:
-1. Present SportBot's pre-match analysis in a clear, engaging format
-2. Include our prediction, conviction level, and reasoning
-3. Show win probabilities if available
-4. Mention any value bet detected
-5. ALWAYS include the disclaimer about gambling responsibly
-6. Answer in the user's language
-7. If the analysis says "not yet available", explain that our detailed analysis is published closer to kickoff (within 48 hours)`;
+RESPONSE RULES - Present ALL of this data naturally:
+1. Start with the headline/verdict if available
+2. Show win probabilities with clear percentages
+3. Include VALUE/EDGE if there's a market discrepancy (this is our key differentiator!)
+4. Mention FORM - recent results (W-L-D) for both teams
+5. Include KEY INJURIES affecting the match
+6. Show INTERESTING STATS/VIRAL STATS if available
+7. Mention the RISK LEVEL and any trap match warnings
+8. Include KEY BATTLES or tactical insights
+9. End with the expert verdict/conclusion
+10. ALWAYS include the gambling disclaimer
+11. Answer in the user's language
+
+FORMAT GUIDELINES:
+- Use clear sections with emojis for visual appeal
+- Lead with the most impactful insight (often the edge or verdict)
+- Make it feel like expert analysis, not just data dumps
+- If something is missing from the data, just skip that section`;
             // For league leaders queries (top scorers/assists)
             } else if (verifiedLeagueLeadersContext) {
               userContent = `USER QUESTION: ${message}
