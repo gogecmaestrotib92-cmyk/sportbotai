@@ -426,9 +426,13 @@ function isShortMatchQuery(query: string): { isMatch: boolean; teams: string[] }
       const foundTeams: string[] = [];
       
       for (const pattern of allTeamPatterns) {
-        const match = lower.match(pattern);
-        if (match) {
-          foundTeams.push(match[0]);
+        // Use matchAll to find ALL occurrences, not just the first
+        const globalPattern = new RegExp(pattern.source, 'gi');
+        const matches = [...lower.matchAll(globalPattern)];
+        for (const match of matches) {
+          if (match[0] && !foundTeams.some(t => t.toLowerCase() === match[0].toLowerCase())) {
+            foundTeams.push(match[0]);
+          }
         }
       }
       
@@ -514,7 +518,8 @@ const INTENT_PATTERNS: IntentPattern[] = [
   {
     intent: 'MATCH_PREDICTION',
     patterns: [
-      /who (will|is going to|gonna) win/i,
+      /who (will|is going to|gonna|wins?) win/i,  // "who will win", "who wins"
+      /who wins (between|against)/i,  // "who wins between miami and boston"
       /\b(predict|prediction|preview)\b.*\b(match|game)\b/i,
       /\b(match|game)\b.*\b(predict|prediction|preview)\b/i,
       /\bwinner\s+(of|between)\b/i,
@@ -545,12 +550,10 @@ const INTENT_PATTERNS: IntentPattern[] = [
     intent: 'TEAM_STATS',
     patterns: [
       /\b(team|club)\s+(stats|statistics|record)\b/i,
-      /\bhow (is|are)\s+.+\s+(doing|performing|playing)\b/i,
       /\b(shots|xg|possession|clean sheets)\b.*\b(per game|average)\b/i,
-      /\b(form|streak|run)\b/i,
-      /\b(wins|losses|draws|record)\b/i,
+      /\b(wins|losses|draws|record)\s+(this|last|season)\b/i,
     ],
-    priority: 75,
+    priority: 55,  // Lower than FORM_CHECK
   },
   {
     intent: 'STANDINGS',
@@ -565,11 +568,12 @@ const INTENT_PATTERNS: IntentPattern[] = [
     intent: 'MATCH_RESULT',
     patterns: [
       /\bwho won\b/i,
-      /\b(score|result|final)\b.*\b(game|match)\b/i,
-      /\b(game|match)\b.*\b(score|result)\b/i,
+      /\bdid .+ (win|lose|beat|draw)\b/i,  // "did barcelona win"
+      /\b(score|result|final)\b/i,  // "chelsea arsenal score" - any mention of score
       /\bhow did .+ (do|play|perform)\b.*\b(against|vs)\b/i,
+      /\bwhat was the (score|result)\b/i,
     ],
-    priority: 65,
+    priority: 75,  // Higher than FORM_CHECK to catch "score" first
   },
   {
     intent: 'LINEUP',
@@ -593,11 +597,13 @@ const INTENT_PATTERNS: IntentPattern[] = [
   {
     intent: 'FORM_CHECK',
     patterns: [
-      /\bhow('s| is| are) .+ (doing|going|looking)\b/i,
-      /\b(form|momentum|streak|run)\b/i,
+      /\bhow('s| is| are) .+ (doing|going|looking|playing)\b/i,  // "how is arsenal doing", "how are the lakers playing"
+      /\b(recent|current|latest)\s*(form|results|run)\b/i,  // "celtics recent form"
+      /\b(form|momentum|streak)\b/i,  // "form", "streak"
       /\blast \d+ (games|matches)\b/i,
+      /\bhow .+ (playing|performing) (recently|lately|this)\b/i,
     ],
-    priority: 50,
+    priority: 70,  // Higher than TEAM_STATS (55)
   },
   {
     intent: 'HEAD_TO_HEAD',
