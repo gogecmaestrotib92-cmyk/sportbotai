@@ -614,6 +614,8 @@ const INTENT_PATTERNS: IntentPattern[] = [
       /\banalysis\s+(of|for)\s+.+\s+(vs?\.?|versus)\s+/i,
       // "Analyze X vs Y" - our own suggested prompts use this format!
       /\b(analy[sz]e|breakdown|preview|assess)\s+.+\s+(vs?\.?|versus|v\.?|against)\s+/i,
+      // "Will X win their next game?" - personalized prompt format
+      /\bwill .+ win\b/i,
     ],
     priority: 90,
   },
@@ -633,6 +635,9 @@ const INTENT_PATTERNS: IntentPattern[] = [
       /\b(stats|statistics|numbers|average|averaging)\b.*\b(player|for)\b/i,
       /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b.*\b(stats|average|scoring|points|goals)\b/i,
       /\b(ppg|rpg|apg|gpg)\b/i,  // Per-game stats abbreviations
+      /\b(top|leading)\s*(scorers?|goal.?scorers?|assist(er)?s?)\b/i,  // "top scorers", "leading goalscorers"
+      /\bwho (has|have|leads?|is leading)\s*(the )?most (goals|points|assists)\b/i,  // "who has most goals"
+      /\bwho leads\b.*\b(in|the)\b/i,  // "who leads the NFL in passing yards"
     ],
     priority: 80,
   },
@@ -692,6 +697,8 @@ const INTENT_PATTERNS: IntentPattern[] = [
       /\b(form|momentum|streak)\b/i,  // "form", "streak"
       /\blast \d+ (games|matches)\b/i,
       /\bhow .+ (playing|performing) (recently|lately|this)\b/i,
+      /\b(hot|cold|winning|losing)\s*streak\b/i,  // "hot streak", "winning streak"
+      /\bon a (roll|run|tear|streak)\b/i,  // "who's on a roll"
     ],
     priority: 70,  // Higher than TEAM_STATS (55)
   },
@@ -713,6 +720,8 @@ const INTENT_PATTERNS: IntentPattern[] = [
       /\b(schedule|fixture|calendar)\b/i,
       /\bwho.*plays?.*next\b/i,  // "who do they play next"
       /\bwhat time\b.*\b(game|match|plays?)\b/i,  // "what time is the game"
+      /\bwhat (games|matches).*\b(this|today|tomorrow|weekend)\b/i,  // "what matches are happening this weekend"
+      /\b(games|matches).*\b(happening|scheduled|on)\b/i,  // "matches happening this weekend"
     ],
     priority: 75,  // HIGHER priority - schedule questions are common!
   },
