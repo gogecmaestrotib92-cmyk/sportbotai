@@ -17,6 +17,7 @@ import {
   generateToolReview,
 } from '@/lib/backlink-scout';
 import { captureScreenshotWithFallback } from '@/lib/blog/screenshot-generator';
+import { sendToolReviewOutreach } from '@/lib/email';
 
 export const maxDuration = 300; // 5 minute timeout
 
@@ -172,14 +173,15 @@ export async function GET(request: NextRequest) {
       
       // ========================================
       // ACTION: OUTREACH
-      // Send emails to tools with published reviews
+      // Send emails to tools with generated/published reviews
       // ========================================
       case 'outreach': {
         const readyForOutreach = await prisma.toolReview.findMany({
           where: {
-            reviewStatus: 'PUBLISHED',
+            reviewStatus: { in: ['GENERATED', 'PUBLISHED'] },
             outreachStatus: 'NOT_SENT',
             contactEmail: { not: null },
+            blogSlug: { not: null }, // Must have a blog post created
           },
           take: 5,
         });
@@ -194,17 +196,30 @@ export async function GET(request: NextRequest) {
               continue;
             }
             
-            // TODO: Integrate with Resend/SendGrid
-            // For now, just mark as queued
-            await prisma.toolReview.update({
-              where: { id: tool.id },
-              data: {
-                outreachStatus: 'QUEUED',
-              },
-            });
+            // Build the review URL
+            const reviewUrl = `https://sportbot.ai/blog/${tool.blogSlug}`;
             
-            stats.emailsQueued++;
-            console.log(`[BacklinkScout] Queued outreach: ${tool.toolName} -> ${tool.contactEmail}`);
+            // Send the outreach email
+            const emailSent = await sendToolReviewOutreach(
+              tool.contactEmail!,
+              tool.toolName,
+              reviewUrl
+            );
+            
+            if (emailSent) {
+              await prisma.toolReview.update({
+                where: { id: tool.id },
+                data: {
+                  outreachStatus: 'SENT',
+                  outreachSentAt: new Date(),
+                },
+              });
+              stats.emailsQueued++;
+              console.log(`[BacklinkScout] ✅ Sent outreach: ${tool.toolName} -> ${tool.contactEmail}`);
+            } else {
+              console.log(`[BacklinkScout] ⚠️ Failed to send email to ${tool.contactEmail}`);
+              stats.errors.push(`Email failed for ${tool.toolName}`);
+            }
             
           } catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
