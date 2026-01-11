@@ -15,6 +15,8 @@ import {
   type ComputedAnalysis,
 } from '@/lib/unified-match-service';
 import { translateBlogPost } from '@/lib/translate';
+import { getMatchInjuries } from '@/lib/football-api';
+import { getMatchInjuriesViaPerplexity } from '@/lib/perplexity';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -450,6 +452,61 @@ interface MatchAnalysisResult {
 }
 
 /**
+ * Fetch injuries for a match using hybrid approach
+ * - Perplexity for US sports (NBA, NFL, NHL, NCAA) - real-time web search
+ * - API-Sports for soccer - structured data
+ */
+async function fetchMatchInjuries(
+  homeTeam: string,
+  awayTeam: string,
+  sport: string,
+  league?: string
+): Promise<{ home: string[]; away: string[] }> {
+  try {
+    const sportLower = sport.toLowerCase();
+    const isUSASport = sportLower.includes('basketball') || 
+                       sportLower.includes('nba') ||
+                       sportLower.includes('football') || 
+                       sportLower.includes('nfl') ||
+                       sportLower.includes('hockey') || 
+                       sportLower.includes('nhl') ||
+                       sportLower.includes('ncaa');
+
+    // US Sports: Use Perplexity (real-time web search)
+    if (isUSASport) {
+      console.log(`[Blog Generator] Fetching injuries via Perplexity for ${homeTeam} vs ${awayTeam}`);
+      const result = await getMatchInjuriesViaPerplexity(homeTeam, awayTeam, sport, league);
+      
+      if (result.success && (result.home.length > 0 || result.away.length > 0)) {
+        console.log(`[Blog Generator] Perplexity injuries: home=${result.home.length}, away=${result.away.length}`);
+        return {
+          home: result.home.slice(0, 5).map(i => `${i.playerName} (${i.injury} - ${i.status})`),
+          away: result.away.slice(0, 5).map(i => `${i.playerName} (${i.injury} - ${i.status})`),
+        };
+      }
+      return { home: [], away: [] };
+    }
+
+    // Soccer: Use API-Sports
+    console.log(`[Blog Generator] Fetching injuries via API-Sports for ${homeTeam} vs ${awayTeam}`);
+    const injuries = await getMatchInjuries(homeTeam, awayTeam, league);
+    
+    if (injuries && (injuries.home.length > 0 || injuries.away.length > 0)) {
+      console.log(`[Blog Generator] API-Sports injuries: home=${injuries.home.length}, away=${injuries.away.length}`);
+      return {
+        home: injuries.home.slice(0, 5).map((i: any) => `${i.playerName || i.player?.name || 'Unknown'} (${i.type || i.reason || 'injured'})`),
+        away: injuries.away.slice(0, 5).map((i: any) => `${i.playerName || i.player?.name || 'Unknown'} (${i.type || i.reason || 'injured'})`),
+      };
+    }
+    
+    return { home: [], away: [] };
+  } catch (error) {
+    console.warn(`[Blog Generator] Failed to fetch injuries for ${homeTeam} vs ${awayTeam}:`, error);
+    return { home: [], away: [] };
+  }
+}
+
+/**
  * Fetch match analysis using the Unified Match Service
  * 
  * This ensures blogs use the same data pipeline as:
@@ -464,24 +521,27 @@ async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisResult
   try {
     console.log(`[Match Analysis] Fetching via Unified Match Service: ${match.homeTeam} vs ${match.awayTeam}`);
     
-    // Use the Unified Match Service (same as all other components)
-    const unifiedData = await getUnifiedMatchData(
-      {
-        homeTeam: match.homeTeam,
-        awayTeam: match.awayTeam,
-        sport: match.sportKey || match.sport,
-        league: match.league,
-        kickoff: match.commenceTime,
-      },
-      {
-        odds: match.odds ? {
-          home: match.odds.home,
-          away: match.odds.away,
-          draw: match.odds.draw,
-        } : undefined,
-        includeOdds: !!match.odds,
-      }
-    );
+    // Fetch unified data and injuries in parallel
+    const [unifiedData, injuries] = await Promise.all([
+      getUnifiedMatchData(
+        {
+          homeTeam: match.homeTeam,
+          awayTeam: match.awayTeam,
+          sport: match.sportKey || match.sport,
+          league: match.league,
+          kickoff: match.commenceTime,
+        },
+        {
+          odds: match.odds ? {
+            home: match.odds.home,
+            away: match.odds.away,
+            draw: match.odds.draw,
+          } : undefined,
+          includeOdds: !!match.odds,
+        }
+      ),
+      fetchMatchInjuries(match.homeTeam, match.awayTeam, match.sportKey || match.sport, match.league),
+    ]);
     
     // Check if we have real data (form or H2H)
     const hasHomeForm = (unifiedData.enrichedData.homeForm?.length || 0) > 0;
@@ -496,9 +556,10 @@ async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisResult
       hasHomeForm || hasAwayForm ? 'LOW' : 'INSUFFICIENT';
     
     console.log(`[Match Analysis] Data quality: ${dataQuality} (homeForm: ${hasHomeForm}, awayForm: ${hasAwayForm}, h2h: ${hasH2H})`);
+    console.log(`[Match Analysis] Injuries: home=${injuries.home.length}, away=${injuries.away.length}`);
     
-    // Convert unified data to MatchAnalysisData format
-    const analysis = convertUnifiedToAnalysisData(unifiedData, match);
+    // Convert unified data to MatchAnalysisData format, including injuries
+    const analysis = convertUnifiedToAnalysisData(unifiedData, match, injuries);
     
     return {
       analysis,
@@ -521,7 +582,8 @@ async function fetchMatchAnalysis(match: MatchInfo): Promise<MatchAnalysisResult
  */
 function convertUnifiedToAnalysisData(
   unified: UnifiedMatchData,
-  match: MatchInfo
+  match: MatchInfo,
+  injuries: { home: string[]; away: string[] } = { home: [], away: [] }
 ): MatchAnalysisData | null {
   const { enrichedData, analysis } = unified;
   
@@ -662,8 +724,8 @@ function convertUnifiedToAnalysisData(
         'No recent head-to-head data available',
     },
     injuries: {
-      home: [],
-      away: [],
+      home: injuries.home,
+      away: injuries.away,
     },
     narrative,
     marketInsights: analysis?.marketIntel ? [
