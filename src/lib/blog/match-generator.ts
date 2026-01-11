@@ -714,6 +714,28 @@ async function researchMatch(match: MatchInfo): Promise<MatchResearch> {
 // GENERATE PRE-MATCH PREVIEW CONTENT
 // ============================================
 
+// Check if sport has draws (soccer, hockey do; basketball, football don't)
+function sportHasDraws(sport: string): boolean {
+  const noDrawSports = ['basketball', 'nba', 'ncaab', 'americanfootball', 'nfl', 'ncaaf'];
+  return !noDrawSports.some(s => sport.toLowerCase().includes(s));
+}
+
+// Get sport-specific metrics text
+function getSportMetrics(sport: string): string {
+  const sportLower = sport.toLowerCase();
+  if (sportLower.includes('basketball') || sportLower.includes('nba')) {
+    return 'points per game, field goal percentage, rebounds, assists, and defensive efficiency';
+  }
+  if (sportLower.includes('football') || sportLower.includes('nfl')) {
+    return 'yards per play, third-down conversion rate, turnover differential, and red zone efficiency';
+  }
+  if (sportLower.includes('hockey') || sportLower.includes('nhl')) {
+    return 'goals per game, power play percentage, penalty kill rate, and save percentage';
+  }
+  // Default: soccer
+  return 'xG, defensive pressure, set-piece efficiency, and possession stats';
+}
+
 async function generatePreviewContent(
   match: MatchInfo,
   keywords: SEOKeywords,
@@ -753,13 +775,16 @@ ${match.odds.draw ? `- Draw: ${match.odds.draw}` : ''}
 - ${match.awayTeam} to win: ${match.odds.away}
 ` : '';
 
+  // Check if this sport has draws
+  const hasDraws = sportHasDraws(match.sport);
+
   // Build rich analysis section if we have AI analysis data
   const analysisSection = analysis ? `
 === SPORTBOT AI ANALYSIS DATA (USE THIS!) ===
 
 PROBABILITY ESTIMATES (from our AI model):
 - ${match.homeTeam} Win: ${(analysis.probabilities.homeWin * 100).toFixed(1)}%
-${analysis.probabilities.draw !== null ? `- Draw: ${(analysis.probabilities.draw * 100).toFixed(1)}%` : ''}
+${hasDraws && analysis.probabilities.draw !== null ? `- Draw: ${(analysis.probabilities.draw * 100).toFixed(1)}%` : ''}
 - ${match.awayTeam} Win: ${(analysis.probabilities.awayWin * 100).toFixed(1)}%
 
 CONFIDENCE LEVEL: ${analysis.confidenceLevel}
@@ -771,16 +796,16 @@ ${analysis.keyFactors.map(f => `• ${f}`).join('\n')}
 VALUE ASSESSMENT: ${analysis.valueAssessment}
 
 ${match.homeTeam.toUpperCase()} FORM (Last 5):
-- Record: ${analysis.homeForm.wins}W ${analysis.homeForm.draws}D ${analysis.homeForm.losses}L
+- Record: ${analysis.homeForm.wins}W ${hasDraws ? `${analysis.homeForm.draws}D ` : ''}${analysis.homeForm.losses}L
 - Trend: ${analysis.homeForm.trend}
 
 ${match.awayTeam.toUpperCase()} FORM (Last 5):
-- Record: ${analysis.awayForm.wins}W ${analysis.awayForm.draws}D ${analysis.awayForm.losses}L  
+- Record: ${analysis.awayForm.wins}W ${hasDraws ? `${analysis.awayForm.draws}D ` : ''}${analysis.awayForm.losses}L  
 - Trend: ${analysis.awayForm.trend}
 
 HEAD TO HEAD RECORD:
 - ${match.homeTeam} Wins: ${analysis.headToHead.homeWins}
-- Draws: ${analysis.headToHead.draws}
+${hasDraws ? `- Draws: ${analysis.headToHead.draws}` : ''}
 - ${match.awayTeam} Wins: ${analysis.headToHead.awayWins}
 - Summary: ${analysis.headToHead.summary}
 
@@ -794,6 +819,135 @@ MARKET INSIGHTS:
 ${analysis.marketInsights.map(m => `• ${m}`).join('\n')}
 ` : '';
 
+  // Sport-specific metrics for the CTA box
+  const sportMetrics = getSportMetrics(match.sport);
+
+  // Form table template - no Draws column for NBA/NFL
+  const formTableTemplate = hasDraws ? `
+<table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #1e293b; border-radius: 8px; overflow: hidden;">
+  <thead>
+    <tr style="background: #334155;">
+      <th style="padding: 12px; text-align: left; color: #fff;">Team</th>
+      <th style="padding: 12px; text-align: center; color: #10b981;">W</th>
+      <th style="padding: 12px; text-align: center; color: #fbbf24;">D</th>
+      <th style="padding: 12px; text-align: center; color: #ef4444;">L</th>
+      <th style="padding: 12px; text-align: left; color: #fff;">Form</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid #334155;">
+      <td style="padding: 12px; color: #fff;">${match.homeTeam}</td>
+      <td style="padding: 12px; text-align: center; color: #10b981;">[WINS]</td>
+      <td style="padding: 12px; text-align: center; color: #fbbf24;">[DRAWS]</td>
+      <td style="padding: 12px; text-align: center; color: #ef4444;">[LOSSES]</td>
+      <td style="padding: 12px;"><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span><span style="color: #fbbf24;">●</span><span style="color: #ef4444;">●</span><span style="color: #10b981;">●</span></td>
+    </tr>
+    <tr>
+      <td style="padding: 12px; color: #fff;">${match.awayTeam}</td>
+      <td style="padding: 12px; text-align: center; color: #10b981;">[WINS]</td>
+      <td style="padding: 12px; text-align: center; color: #fbbf24;">[DRAWS]</td>
+      <td style="padding: 12px; text-align: center; color: #ef4444;">[LOSSES]</td>
+      <td style="padding: 12px;"><span style="color: #10b981;">●</span><span style="color: #ef4444;">●</span><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span><span style="color: #fbbf24;">●</span></td>
+    </tr>
+  </tbody>
+</table>` : `
+<table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #1e293b; border-radius: 8px; overflow: hidden;">
+  <thead>
+    <tr style="background: #334155;">
+      <th style="padding: 12px; text-align: left; color: #fff;">Team</th>
+      <th style="padding: 12px; text-align: center; color: #10b981;">W</th>
+      <th style="padding: 12px; text-align: center; color: #ef4444;">L</th>
+      <th style="padding: 12px; text-align: left; color: #fff;">Form</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid #334155;">
+      <td style="padding: 12px; color: #fff;">${match.homeTeam}</td>
+      <td style="padding: 12px; text-align: center; color: #10b981;">[WINS]</td>
+      <td style="padding: 12px; text-align: center; color: #ef4444;">[LOSSES]</td>
+      <td style="padding: 12px;"><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span><span style="color: #ef4444;">●</span><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span></td>
+    </tr>
+    <tr>
+      <td style="padding: 12px; color: #fff;">${match.awayTeam}</td>
+      <td style="padding: 12px; text-align: center; color: #10b981;">[WINS]</td>
+      <td style="padding: 12px; text-align: center; color: #ef4444;">[LOSSES]</td>
+      <td style="padding: 12px;"><span style="color: #10b981;">●</span><span style="color: #ef4444;">●</span><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span></td>
+    </tr>
+  </tbody>
+</table>`;
+
+  // H2H box template - no Draws for NBA/NFL
+  const h2hBoxTemplate = hasDraws ? `
+<div style="background: #1e293b; border-radius: 8px; padding: 20px; margin: 20px 0;">
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center;">
+    <div style="background: #10b981/20; padding: 16px; border-radius: 8px;">
+      <p style="font-size: 32px; font-weight: bold; color: #10b981;">[HOME_WINS]</p>
+      <p style="color: #94a3b8; font-size: 14px;">${match.homeTeam} Wins</p>
+    </div>
+    <div style="background: #64748b/20; padding: 16px; border-radius: 8px;">
+      <p style="font-size: 32px; font-weight: bold; color: #64748b;">[DRAWS]</p>
+      <p style="color: #94a3b8; font-size: 14px;">Draws</p>
+    </div>
+    <div style="background: #ef4444/20; padding: 16px; border-radius: 8px;">
+      <p style="font-size: 32px; font-weight: bold; color: #ef4444;">[AWAY_WINS]</p>
+      <p style="color: #94a3b8; font-size: 14px;">${match.awayTeam} Wins</p>
+    </div>
+  </div>
+</div>` : `
+<div style="background: #1e293b; border-radius: 8px; padding: 20px; margin: 20px 0;">
+  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; text-align: center;">
+    <div style="background: #10b981/20; padding: 16px; border-radius: 8px;">
+      <p style="font-size: 32px; font-weight: bold; color: #10b981;">[HOME_WINS]</p>
+      <p style="color: #94a3b8; font-size: 14px;">${match.homeTeam} Wins</p>
+    </div>
+    <div style="background: #ef4444/20; padding: 16px; border-radius: 8px;">
+      <p style="font-size: 32px; font-weight: bold; color: #ef4444;">[AWAY_WINS]</p>
+      <p style="color: #94a3b8; font-size: 14px;">${match.awayTeam} Wins</p>
+    </div>
+  </div>
+</div>`;
+
+  // Prediction box template - no Draw for NBA/NFL
+  const predictionBoxTemplate = hasDraws ? `
+<div style="background: linear-gradient(135deg, #10b981/10 0%, #0f172a 100%); border: 2px solid #10b981/30; border-radius: 12px; padding: 24px; margin: 24px 0;">
+  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+    <span style="font-size: 24px;">🎯</span>
+    <h3 style="color: #10b981; font-size: 18px; font-weight: bold; margin: 0;">SportBot AI Prediction</h3>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center; margin-bottom: 16px;">
+    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">${match.homeTeam}</p>
+      <p style="font-size: 24px; font-weight: bold; color: #fff;">[HOME_%]%</p>
+    </div>
+    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Draw</p>
+      <p style="font-size: 24px; font-weight: bold; color: #fff;">[DRAW_%]%</p>
+    </div>
+    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">${match.awayTeam}</p>
+      <p style="font-size: 24px; font-weight: bold; color: #fff;">[AWAY_%]%</p>
+    </div>
+  </div>
+  <p style="color: #94a3b8; font-size: 14px; text-align: center;">Based on historical data, current form, and AI analysis. For educational purposes only.</p>
+</div>` : `
+<div style="background: linear-gradient(135deg, #10b981/10 0%, #0f172a 100%); border: 2px solid #10b981/30; border-radius: 12px; padding: 24px; margin: 24px 0;">
+  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+    <span style="font-size: 24px;">🎯</span>
+    <h3 style="color: #10b981; font-size: 18px; font-weight: bold; margin: 0;">SportBot AI Prediction</h3>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; text-align: center; margin-bottom: 16px;">
+    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">${match.homeTeam}</p>
+      <p style="font-size: 24px; font-weight: bold; color: #fff;">[HOME_%]%</p>
+    </div>
+    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">${match.awayTeam}</p>
+      <p style="font-size: 24px; font-weight: bold; color: #fff;">[AWAY_%]%</p>
+    </div>
+  </div>
+  <p style="color: #94a3b8; font-size: 14px; text-align: center;">Based on historical data, current form, and AI analysis. For educational purposes only.</p>
+</div>`;
+
   const prompt = `Write a comprehensive match preview blog post for SportBot AI.
 
 MATCH DETAILS:
@@ -802,6 +956,7 @@ MATCH DETAILS:
 - League: ${match.league}
 - Date: ${dateStr}
 - Time: ${timeStr}
+${hasDraws ? '' : '- NOTE: This sport has NO DRAWS - do not mention draws anywhere!'}
 ${oddsSection}
 ${analysisSection}
 
@@ -846,74 +1001,13 @@ ${research.rosterContext}
 </div>
 
 2. FORM COMPARISON TABLE (in form analysis section):
-<table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #1e293b; border-radius: 8px; overflow: hidden;">
-  <thead>
-    <tr style="background: #334155;">
-      <th style="padding: 12px; text-align: left; color: #fff;">Team</th>
-      <th style="padding: 12px; text-align: center; color: #10b981;">W</th>
-      <th style="padding: 12px; text-align: center; color: #fbbf24;">D</th>
-      <th style="padding: 12px; text-align: center; color: #ef4444;">L</th>
-      <th style="padding: 12px; text-align: left; color: #fff;">Form</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr style="border-bottom: 1px solid #334155;">
-      <td style="padding: 12px; color: #fff;">${match.homeTeam}</td>
-      <td style="padding: 12px; text-align: center; color: #10b981;">[WINS]</td>
-      <td style="padding: 12px; text-align: center; color: #fbbf24;">[DRAWS]</td>
-      <td style="padding: 12px; text-align: center; color: #ef4444;">[LOSSES]</td>
-      <td style="padding: 12px;"><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span><span style="color: #fbbf24;">●</span><span style="color: #ef4444;">●</span><span style="color: #10b981;">●</span></td>
-    </tr>
-    <tr>
-      <td style="padding: 12px; color: #fff;">${match.awayTeam}</td>
-      <td style="padding: 12px; text-align: center; color: #10b981;">[WINS]</td>
-      <td style="padding: 12px; text-align: center; color: #fbbf24;">[DRAWS]</td>
-      <td style="padding: 12px; text-align: center; color: #ef4444;">[LOSSES]</td>
-      <td style="padding: 12px;"><span style="color: #10b981;">●</span><span style="color: #ef4444;">●</span><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span><span style="color: #fbbf24;">●</span></td>
-    </tr>
-  </tbody>
-</table>
+${formTableTemplate}
 
 3. HEAD-TO-HEAD BOX (in H2H section):
-<div style="background: #1e293b; border-radius: 8px; padding: 20px; margin: 20px 0;">
-  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center;">
-    <div style="background: #10b981/20; padding: 16px; border-radius: 8px;">
-      <p style="font-size: 32px; font-weight: bold; color: #10b981;">[HOME_WINS]</p>
-      <p style="color: #94a3b8; font-size: 14px;">${match.homeTeam} Wins</p>
-    </div>
-    <div style="background: #64748b/20; padding: 16px; border-radius: 8px;">
-      <p style="font-size: 32px; font-weight: bold; color: #64748b;">[DRAWS]</p>
-      <p style="color: #94a3b8; font-size: 14px;">Draws</p>
-    </div>
-    <div style="background: #ef4444/20; padding: 16px; border-radius: 8px;">
-      <p style="font-size: 32px; font-weight: bold; color: #ef4444;">[AWAY_WINS]</p>
-      <p style="color: #94a3b8; font-size: 14px;">${match.awayTeam} Wins</p>
-    </div>
-  </div>
-</div>
+${h2hBoxTemplate}
 
 4. PREDICTION BOX (in prediction section):
-<div style="background: linear-gradient(135deg, #10b981/10 0%, #0f172a 100%); border: 2px solid #10b981/30; border-radius: 12px; padding: 24px; margin: 24px 0;">
-  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-    <span style="font-size: 24px;">🎯</span>
-    <h3 style="color: #10b981; font-size: 18px; font-weight: bold; margin: 0;">SportBot AI Prediction</h3>
-  </div>
-  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center; margin-bottom: 16px;">
-    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
-      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">${match.homeTeam}</p>
-      <p style="font-size: 24px; font-weight: bold; color: #fff;">[HOME_%]%</p>
-    </div>
-    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
-      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Draw</p>
-      <p style="font-size: 24px; font-weight: bold; color: #fff;">[DRAW_%]%</p>
-    </div>
-    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
-      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">${match.awayTeam}</p>
-      <p style="font-size: 24px; font-weight: bold; color: #fff;">[AWAY_%]%</p>
-    </div>
-  </div>
-  <p style="color: #94a3b8; font-size: 14px; text-align: center;">Based on historical data, current form, and AI analysis. For educational purposes only.</p>
-</div>
+${predictionBoxTemplate}
 
 5. KEY PLAYERS BOXES (in key players section):
 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 20px 0;">
@@ -948,7 +1042,7 @@ ${research.rosterContext}
     <span style="font-size: 24px;">📊</span>
     <p style="color: #fff; font-size: 16px; font-weight: 600; margin: 0;">Unlock Advanced Stats</p>
   </div>
-  <p style="color: #94a3b8; font-size: 14px; margin: 0 0 16px 0;">Our AI analyzes 50+ data points including xG, defensive pressure, set-piece efficiency, and more.</p>
+  <p style="color: #94a3b8; font-size: 14px; margin: 0 0 16px 0;">Our AI analyzes 50+ data points including ${sportMetrics}.</p>
   <a href="/pricing" style="color: #0ea5e9; text-decoration: none; font-weight: 500;">See Pro Features →</a>
 </div>
 
@@ -1365,13 +1459,14 @@ function transformToNewsContent(
 </div>`;
   
   // Don't strip/replace - just use the first few sections of the blog content for news
-  // Take content up to and including Form Analysis sections (about first 3-4 sections)
+  // Take content up to and including tactical analysis (exclude betting predictions)
   const sections = newsContent.split(/<h2[^>]*>/i);
   
-  // Keep Match Overview + Both Form Analysis sections + maybe Head to Head
-  // Each section starts at <h2>, so we take first 4-5 sections
+  // Keep all analytical sections, exclude betting-focused ones:
+  // Include: Match Overview, Home Form, Away Form, Form Comparison, H2H, Key Players, Tactical Matchup
+  // Exclude: SportBot AI Prediction, Value Assessment, Responsible Gambling Notice
   let newsArticle = '';
-  const maxSections = 5; // Match Overview, Home Form, Away Form, H2H, maybe Key Stats
+  const maxSections = 9; // All analysis sections including tactical matchup
   
   for (let i = 0; i < Math.min(sections.length, maxSections); i++) {
     if (i === 0) {

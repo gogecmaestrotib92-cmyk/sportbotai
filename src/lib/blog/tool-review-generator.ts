@@ -43,7 +43,7 @@ export async function generateToolReviewPosts(count: number = 1): Promise<ToolRe
     where: {
       contentWords: { gt: 100 }, // Has extracted content
       blogPostId: null, // No blog post created yet
-      // ONLY from sportsbettingtools.io - our single source
+      // ONLY from sportsbettingtools.io - our single credible source
       sourceUrl: { contains: 'sportsbettingtools' },
       // ONLY tools with contact emails - so we can send outreach
       contactEmail: { not: null },

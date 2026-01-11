@@ -4,9 +4,17 @@ import OpenAI from 'openai';
 import { prisma } from '@/lib/prisma';
 import { ResearchResult, BlogOutline, GeneratedContent, BlogCategory, BLOG_CATEGORIES } from './types';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to support scripts that load env manually
+let openaiClient: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiClient;
+}
 
 // Get existing blog posts for internal linking
 async function getExistingBlogSlugs(): Promise<{ slug: string; title: string }[]> {
@@ -117,7 +125,7 @@ Return JSON:
   "estimatedWordCount": 2200
 }`;
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.7,
@@ -346,7 +354,7 @@ Return JSON:
   "category": "One of: ${BLOG_CATEGORIES.join(', ')}"
 }`;
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.75,
@@ -371,7 +379,7 @@ Return JSON:
 
 // Generate a catchy excerpt if needed
 export async function generateExcerpt(title: string, content: string): Promise<string> {
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [{
       role: 'user',
@@ -582,7 +590,7 @@ Return JSON:
   "tags": ["tool-review", "sports-betting", "analytics", "${toolName.toLowerCase()}", "betting-tools"]
 }`;
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o', // Use gpt-4o for longer, higher quality content
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.75,

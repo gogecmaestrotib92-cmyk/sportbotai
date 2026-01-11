@@ -10,7 +10,8 @@
 
 import { SITE_CONFIG } from './seo';
 
-const BREVO_API_KEY = process.env.BREVO_API_KEY;
+// Read API key lazily to support scripts that load dotenv
+const getBrevoApiKey = () => process.env.BREVO_API_KEY;
 const FROM_EMAIL = 'contact@sportbotai.com';
 const FROM_NAME = 'Stefan';
 const SUPPORT_EMAIL = SITE_CONFIG.email;
@@ -26,6 +27,7 @@ interface SendEmailOptions {
  * Send an email using Brevo API
  */
 export async function sendEmail({ to, subject, html, replyTo }: SendEmailOptions): Promise<boolean> {
+  const BREVO_API_KEY = getBrevoApiKey();
   if (!BREVO_API_KEY) {
     console.log('[Email] BREVO_API_KEY not configured, skipping email');
     return false;
