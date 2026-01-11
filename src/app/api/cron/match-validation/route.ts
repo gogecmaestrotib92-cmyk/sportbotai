@@ -18,6 +18,9 @@ import { getTwitterClient, formatForTwitter } from '@/lib/twitter-client';
 import { prisma } from '@/lib/prisma';
 import { CallOutcome, CallType } from '@prisma/client';
 
+// Allow up to 60 seconds for validation
+export const maxDuration = 60;
+
 // Verify cron secret
 const CRON_SECRET = process.env.CRON_SECRET;
 
