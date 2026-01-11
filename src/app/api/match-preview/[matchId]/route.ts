@@ -1328,11 +1328,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         console.log(`[Match-Preview] Analysis saved for user ${userId}`);
         
         // Also create Prediction for tracking accuracy
-        // Check if prediction already exists for this match
+        // Check if prediction already exists for this match from ANY source
         const existingPrediction = await prisma.prediction.findFirst({
           where: {
             matchName: matchRef,
-            source: 'MATCH_ANALYSIS',
             createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
           },
         });

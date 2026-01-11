@@ -1301,6 +1301,19 @@ export async function POST(request: NextRequest) {
     // SAVE PREDICTION FOR TRACKING
     // ========================================
     try {
+      const matchRef = `${normalizedRequest.matchData.homeTeam} vs ${normalizedRequest.matchData.awayTeam}`;
+      
+      // Check if prediction already exists for this match from ANY source
+      const existingPrediction = await prisma.prediction.findFirst({
+        where: {
+          matchName: matchRef,
+          createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+        },
+      });
+      
+      if (existingPrediction) {
+        console.log(`[Prediction] Skipping - prediction already exists from ${existingPrediction.source}`);
+      } else {
       // Determine the best value prediction (what the AI recommends)
       const bestValue = analysis.valueAnalysis.bestValueSide;
       let predictionText = 'No clear value';
@@ -1355,7 +1368,7 @@ export async function POST(request: NextRequest) {
       await prisma.prediction.create({
         data: {
           matchId,
-          matchName: `${normalizedRequest.matchData.homeTeam} vs ${normalizedRequest.matchData.awayTeam}`,
+          matchName: matchRef,
           sport: sportInput,
           league: normalizedRequest.matchData.league,
           kickoff: matchDate,
@@ -1369,6 +1382,7 @@ export async function POST(request: NextRequest) {
         },
       });
       console.log('[Prediction] Prediction saved for tracking:', predictionText, `(conviction: ${rawConviction} -> ${conviction} after ${sportInput} cap)`);
+      } // End of if (!existingPrediction)
     } catch (predictionError) {
       // Don't fail the request if prediction save fails
       console.error('[Prediction] Failed to save prediction:', predictionError);

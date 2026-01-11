@@ -588,18 +588,20 @@ export async function GET(request: NextRequest) {
     for (const analysis of recentAnalyses) {
       const matchRef = `${analysis.homeTeam} vs ${analysis.awayTeam}`;
       
-      // Check if prediction already exists (skip - match-preview already creates it)
+      // Check if prediction already exists from ANY source (skip to avoid duplicates)
       const existingPrediction = await prisma.prediction.findFirst({
         where: {
           matchName: matchRef,
-          source: 'MATCH_ANALYSIS',
           createdAt: {
             gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
           },
         },
       });
 
-      if (existingPrediction) continue;
+      if (existingPrediction) {
+        console.log(`[Track-Predictions] Skipping ${matchRef} - prediction already exists from ${existingPrediction.source}`);
+        continue;
+      }
 
       // Convert market edge to prediction
       const prediction = marketEdgeToPrediction(
