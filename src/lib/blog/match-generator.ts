@@ -18,9 +18,17 @@ import { translateBlogPost } from '@/lib/translate';
 import { getMatchInjuries } from '@/lib/football-api';
 import { getMatchInjuriesViaPerplexity } from '@/lib/perplexity';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid issues with module loading before env vars are set
+let openaiClient: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiClient;
+}
 
 // Use gpt-4.1-nano for faster and cheaper generation
 const AI_MODEL = 'gpt-4.1-nano';
@@ -366,7 +374,7 @@ Focus on:
 - Date-specific terms (if applicable)`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: AI_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.5,
@@ -865,11 +873,13 @@ ${match.awayTeam.toUpperCase()} FORM (Last 5):
 - Record: ${analysis.awayForm.wins}W ${hasDraws ? `${analysis.awayForm.draws}D ` : ''}${analysis.awayForm.losses}L  
 - Trend: ${analysis.awayForm.trend}
 
-HEAD TO HEAD RECORD:
+${(analysis.headToHead.homeWins > 0 || analysis.headToHead.awayWins > 0) ? `HEAD TO HEAD RECORD:
 - ${match.homeTeam} Wins: ${analysis.headToHead.homeWins}
 ${hasDraws ? `- Draws: ${analysis.headToHead.draws}` : ''}
 - ${match.awayTeam} Wins: ${analysis.headToHead.awayWins}
-- Summary: ${analysis.headToHead.summary}
+- Summary: ${analysis.headToHead.summary}` : `HEAD TO HEAD RECORD:
+- No recent head-to-head data available for these teams
+- Focus analysis on current form and team stats`}
 
 INJURY CONCERNS:
 - ${match.homeTeam}: ${analysis.injuries.home.length > 0 ? analysis.injuries.home.join(', ') : 'No major injuries reported'}
@@ -1066,7 +1076,9 @@ ${research.rosterContext}
 ${formTableTemplate}
 
 3. HEAD-TO-HEAD BOX (in H2H section):
-${h2hBoxTemplate}
+${(analysis?.headToHead?.homeWins || 0) > 0 || (analysis?.headToHead?.awayWins || 0) > 0 
+  ? h2hBoxTemplate 
+  : `<!-- No H2H data available - write a brief paragraph noting that these teams rarely face each other or historical data is limited. Do NOT include the H2H visual box with zeros. -->`}
 
 4. PREDICTION BOX (in prediction section):
 ${predictionBoxTemplate}
@@ -1260,7 +1272,7 @@ Return JSON:
   "category": "Match Previews"
 }`;
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: AI_MODEL,
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.7,
@@ -1340,7 +1352,7 @@ Be factual and analytical, NOT promotional.
 
 Return the HTML content ONLY (no JSON wrapper).`;
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: AI_MODEL,
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.7,

@@ -6,9 +6,17 @@
 
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid issues with module loading before env vars are set
+let openaiClient: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiClient;
+}
 
 interface TranslateOptions {
   preserveHtml?: boolean;
@@ -61,7 +69,7 @@ CONTEXT: This is ${context === 'news' ? 'a sports news article' : context === 'm
 Return ONLY the translated text, no explanations.`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini', // Cost-effective for translation
       messages: [
         { role: 'system', content: systemPrompt },
