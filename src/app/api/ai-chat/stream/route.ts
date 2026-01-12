@@ -1225,7 +1225,7 @@ async function fetchDataLayerContext(
                      sport === 'american_football' ? 'american_football' :
                      sport;
     
-    // If we have two teams, get matchup data via Unified Service
+    // If we have two teams, get matchup data via Unified Service (with 10s timeout)
     if (teams.awayTeam) {
       const matchId: MatchIdentifier = {
         homeTeam: teams.homeTeam,
@@ -1233,7 +1233,17 @@ async function fetchDataLayerContext(
         sport: sportKey,
       };
       
-      const unifiedData = await getUnifiedMatchData(matchId, { includeOdds: false });
+      const unifiedData = await withTimeout(
+        getUnifiedMatchData(matchId, { includeOdds: false }),
+        10000,
+        'Unified match data'
+      );
+      
+      if (!unifiedData) {
+        console.log('[AI-Chat-Stream] ⚠️ Unified match data timed out');
+        return '';
+      }
+      
       const data = unifiedData.enrichedData;
       
       if (data.dataSource === 'UNAVAILABLE') return '';
@@ -2103,12 +2113,17 @@ If their favorite team has a match today/tonight, lead with that information.`;
             }
           }
 
-          // Step 1.4: Fetch our past predictions if user asks about them
+          // Step 1.4: Fetch our past predictions if user asks about them (with 10s timeout)
           let ourPredictionContext = '';
           if (queryCategory === 'OUR_PREDICTION') {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '📊 Looking up our prediction...' })}\n\n`));
-            ourPredictionContext = await fetchOurPrediction(searchMessage);
-            if (ourPredictionContext) {
+            const predictionResult = await withTimeout(
+              fetchOurPrediction(searchMessage),
+              10000,
+              'Our prediction lookup'
+            );
+            if (predictionResult) {
+              ourPredictionContext = predictionResult;
               console.log('[AI-Chat-Stream] Found our past prediction');
             }
           }
