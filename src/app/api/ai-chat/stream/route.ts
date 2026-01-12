@@ -1824,6 +1824,37 @@ If their favorite team has a match today/tonight, lead with that information.`;
           }
         );
       }
+      
+      // HANDLE OFF_TOPIC QUERIES - Politely decline non-sports questions
+      if (queryUnderstanding?.intent === 'OFF_TOPIC') {
+        console.log(`[AI-Chat-Stream] 🚫 OFF_TOPIC query detected: "${message.slice(0, 50)}..."`);
+        
+        const offTopicResponse = "I'm SportBot - sports is my specialty! 🏀⚽🏈\n\nI can help you with:\n• Match predictions and analysis\n• Player stats and form\n• Team standings and schedules\n• Injury news and transfers\n• Betting analysis and value picks\n\nWhat sports question can I answer for you?";
+        
+        return new Response(
+          new ReadableStream({
+            async start(controller) {
+              const encoder = new TextEncoder();
+              
+              // Stream the response
+              for (const char of offTopicResponse) {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', content: char })}\n\n`));
+              }
+              
+              // Send done signal
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+              controller.close();
+            },
+          }),
+          {
+            headers: {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+            },
+          }
+        );
+      }
     } catch (err) {
       console.error('[AI-Chat-Stream] Query intelligence failed, using fallback:', err);
     }

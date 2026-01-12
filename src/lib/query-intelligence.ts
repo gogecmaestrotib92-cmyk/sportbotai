@@ -31,6 +31,7 @@ export type QueryIntent =
   | 'GENERAL_INFO'      // General questions (rules, who is X, etc.)
   | 'OUR_ANALYSIS'      // Asking about SportBot's prediction
   | 'EXPLAIN_UI'        // Explaining SportBot features (edge, confidence, etc.)
+  | 'OFF_TOPIC'         // Non-sports queries (politics, general news, etc.)
   | 'UNCLEAR';          // Ambiguous - needs clarification
 
 export type TimeFrame = 
@@ -743,6 +744,30 @@ const INTENT_PATTERNS: IntentPattern[] = [
     ],
     priority: 30,
   },
+  // OFF_TOPIC - Non-sports queries that should be politely declined
+  {
+    intent: 'OFF_TOPIC',
+    patterns: [
+      // Politics and news
+      /\b(trump|biden|politics|political|election|vote|voting|president|congress|senate|government|immigration|ICE)\b/i,
+      /\b(iran|ukraine|russia|war|military|missile|attack|conflict|protest|riot)\b/i,
+      /\b(stock|stocks|crypto|bitcoin|ethereum|market|economy|inflation|recession|finance|trading)\b/i,
+      /\b(weather|forecast|rain|snow|temperature|climate)\b/i,
+      // Generic breaking news (without sports context)
+      /^(any )?(breaking )?news\?*$/i,  // "any breaking news?" standalone
+      /^what('s| is) (happening|going on)( today)?\?*$/i,  // "what's happening today?"
+      /^(what('s| is) new|anything new)\?*$/i,  // "what's new?"
+      // Tech unrelated to sports
+      /\b(apple|google|microsoft|amazon|meta|facebook|twitter|instagram|tiktok|elon musk|ai company|openai|chatgpt)\b/i,
+      // Entertainment (unless sports-adjacent)
+      /\b(movie|movies|film|tv show|series|netflix|streaming|celebrity|hollywood|music|concert|album)\b/i,
+      // Personal/General
+      /\b(recipe|cooking|food|restaurant|travel|vacation|holiday|hotel|flight)\b/i,
+      /\b(health advice|medical|doctor|medicine|symptom|disease)\b/i,
+      /\b(relationship|dating|love|breakup)\b/i,
+    ],
+    priority: 100,  // High priority - catch these early
+  },
   {
     intent: 'EXPLAIN_UI',
     patterns: [
@@ -812,7 +837,9 @@ function classifyIntentByPatterns(query: string): {
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const CLASSIFICATION_PROMPT = `You are a sports query classifier. Analyze the user's question and return JSON.
+const CLASSIFICATION_PROMPT = `You are a sports query classifier for SportBot, a SPORTS-ONLY AI assistant.
+
+IMPORTANT: SportBot ONLY handles sports-related questions. If the query is not about sports, classify as OFF_TOPIC.
 
 INTENTS:
 - PLAYER_STATS: Asking for player statistics (points, goals, assists, averages)
@@ -826,8 +853,9 @@ INTENTS:
 - HEAD_TO_HEAD: Asking about historical matchups between teams
 - BETTING_ANALYSIS: Asking about odds, betting advice, over/under
 - SCHEDULE: Asking when a game is
-- GENERAL_INFO: General questions (rules, who is X, etc.)
+- GENERAL_INFO: General sports questions (rules, who is player X, etc.)
 - OUR_ANALYSIS: Asking specifically about SportBot's prediction
+- OFF_TOPIC: NOT about sports (politics, weather, stocks, general news, tech, entertainment, etc.)
 - UNCLEAR: Cannot determine intent
 
 Return ONLY valid JSON:
@@ -1170,6 +1198,7 @@ export function mapIntentToCategory(intent: QueryIntent): QueryCategory {
     'GENERAL_INFO': 'GENERAL',
     'OUR_ANALYSIS': 'OUR_PREDICTION',
     'EXPLAIN_UI': 'GENERAL',
+    'OFF_TOPIC': 'GENERAL',  // Will be handled separately before reaching here
     'UNCLEAR': 'GENERAL',
   };
   
