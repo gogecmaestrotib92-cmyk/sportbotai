@@ -2912,10 +2912,17 @@ RESPONSE FORMAT:
             }
           }
 
-          // Generate smart follow-ups based on the full conversation (async but wait for it)
+          // Generate smart follow-ups based on the full conversation (with timeout to prevent blocking)
           let smartFollowUps: string[] = quickFollowUps;
           try {
-            smartFollowUps = await generateSmartFollowUps(message, fullResponse, queryCategory, detectedSport);
+            const followUpResult = await withTimeout(
+              generateSmartFollowUps(message, fullResponse, queryCategory, detectedSport),
+              5000,
+              'Smart follow-ups'
+            );
+            if (followUpResult) {
+              smartFollowUps = followUpResult;
+            }
           } catch (err) {
             console.error('[AI-Chat] Smart follow-up generation failed:', err);
           }
