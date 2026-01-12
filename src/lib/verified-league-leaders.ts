@@ -101,13 +101,28 @@ const TEAM_TO_LEAGUE: Record<string, number> = {
 // ============================================================================
 
 /**
- * Check if query is asking for league top scorers
+ * Check if query is asking for SOCCER league top scorers
+ * Returns FALSE for NBA/NFL/NHL queries - those should go to Perplexity
  */
 export function isTopScorersQuery(message: string): boolean {
-  // Match various ways people ask for top scorers:
-  // "top scorer", "top goal scorer", "best scorers", "leading scorer", "golden boot", etc.
-  return /top\s*(goal\s*)?scor|best\s*(goal\s*)?scor|leading\s*(goal\s*)?scor|golden\s*boot|goal.*king|artilheir|goleador|najbol.+strel|who.*scor.*most|most\s*goals/i.test(message) &&
-    !/last\s+game|yesterday|match|vs\s/i.test(message); // Exclude match-specific queries
+  const lower = message.toLowerCase();
+  
+  // EXCLUDE non-soccer sports - they should use Perplexity
+  if (/\b(nba|nfl|nhl|mlb|basketball|hockey|baseball|american football)\b/i.test(lower)) {
+    return false;
+  }
+  
+  // Must have soccer context OR no sport context (assume soccer as default)
+  const hasSoccerContext = /\b(premier league|la liga|serie a|bundesliga|ligue 1|epl|champions league|football|soccer|goal)\b/i.test(lower);
+  const hasNoSportContext = !/\b(nba|nfl|nhl|mlb|basketball|hockey|baseball|football)\b/i.test(lower);
+  
+  // Match various ways people ask for top scorers
+  const hasTopScorerPattern = /top\s*(goal\s*)?scor|best\s*(goal\s*)?scor|leading\s*(goal\s*)?scor|golden\s*boot|goal.*king|artilheir|goleador|najbol.+strel|who.*scor.*most|most\s*goals/i.test(lower);
+  
+  // Exclude match-specific queries
+  const isMatchSpecific = /last\s+game|yesterday|match|vs\s/i.test(lower);
+  
+  return hasTopScorerPattern && !isMatchSpecific && (hasSoccerContext || hasNoSportContext);
 }
 
 /**

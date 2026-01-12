@@ -2337,22 +2337,27 @@ If their favorite team has a match today/tonight, lead with that information.`;
             }
           }
 
-          // Step 1.9: Verified League Leaders (top scorers/assists)
-          // USE QUERY INTELLIGENCE - check if intent is PLAYER_STATS with scorer/assist keywords
-          // This is smarter than regex - QI already normalized the intent
+          // Step 1.9: Verified League Leaders (top scorers/assists) - SOCCER ONLY
+          // For NBA/NFL/NHL, skip this and let Perplexity handle it
           let verifiedLeagueLeadersContext = '';
-          const isTopScorersIntent = (
-            queryUnderstanding?.intent === 'PLAYER_STATS' && 
-            /\b(top|leading|best|most)\b.*\b(scor|goal)/i.test(searchMessage)
-          ) || isTopScorersQuery(searchMessage); // Fallback to regex for backwards compat
+          const isSoccerSport = !detectedSport || detectedSport === 'soccer' || detectedSport === 'football';
+          const isNonSoccerSport = /\b(nba|nfl|nhl|mlb|basketball|hockey|baseball|american football)\b/i.test(searchMessage);
           
-          const isTopAssistsIntent = (
-            queryUnderstanding?.intent === 'PLAYER_STATS' && 
-            /\b(top|leading|best|most)\b.*\b(assist)/i.test(searchMessage)
-          ) || isTopAssistsQuery(searchMessage);
+          // Only try soccer league leaders API for soccer queries
+          const isTopScorersIntent = isSoccerSport && !isNonSoccerSport && (
+            (queryUnderstanding?.intent === 'PLAYER_STATS' && 
+             /\b(top|leading|best|most)\b.*\b(scor|goal)/i.test(searchMessage)) ||
+            isTopScorersQuery(searchMessage)
+          );
+          
+          const isTopAssistsIntent = isSoccerSport && !isNonSoccerSport && (
+            (queryUnderstanding?.intent === 'PLAYER_STATS' && 
+             /\b(top|leading|best|most)\b.*\b(assist)/i.test(searchMessage)) ||
+            isTopAssistsQuery(searchMessage)
+          );
           
           if (isTopScorersIntent) {
-            console.log('[AI-Chat-Stream] Top scorers query detected (via QI or regex)...');
+            console.log('[AI-Chat-Stream] Soccer top scorers query detected...');
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '🏆 Fetching top scorers...' })}\n\n`));
             
             const leadersResult = await withTimeout(
