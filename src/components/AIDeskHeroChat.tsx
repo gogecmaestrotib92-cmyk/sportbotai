@@ -31,6 +31,7 @@ interface ChatMessage {
   followUps?: string[];
   fromCache?: boolean;
   isStreaming?: boolean;
+  statusMessage?: string;  // Shows progress like "Searching..." or "Generating..."
   feedbackGiven?: 'up' | 'down' | null;
   timestamp: Date;
   // Data confidence for quality tracking
@@ -446,12 +447,13 @@ export default function AIDeskHeroChat() {
       let isFromCache = false;
 
       if (response.ok && isStreamable && response.body) {
-        // Add empty assistant message for streaming
+        // Add empty assistant message for streaming with initial status
         setMessages(prev => [...prev, {
           id: assistantMessageId,
           role: 'assistant',
           content: '',
           isStreaming: true,
+          statusMessage: 'Thinking...',  // Show immediately
           timestamp: new Date(),
         }]);
         setIsLoading(false);
@@ -474,7 +476,20 @@ export default function AIDeskHeroChat() {
                 try {
                   const data = JSON.parse(line.slice(6));
                   
-                  if (data.type === 'metadata') {
+                  if (data.type === 'status') {
+                    // Update status message (e.g., "Searching real-time data...")
+                    setMessages(prev => prev.map(m => 
+                      m.id === assistantMessageId 
+                        ? { ...m, statusMessage: data.status, isStreaming: true }
+                        : m
+                    ));
+                  } else if (data.type === 'metadata') {
+                    // Clear status when metadata arrives (about to stream content)
+                    setMessages(prev => prev.map(m => 
+                      m.id === assistantMessageId 
+                        ? { ...m, statusMessage: undefined }
+                        : m
+                    ));
                     streamCitations = data.citations || [];
                     streamUsedSearch = data.usedRealTimeSearch;
                     streamFollowUps = data.followUps || [];
@@ -638,13 +653,23 @@ export default function AIDeskHeroChat() {
                       ? 'bg-primary text-white rounded-tr-md'
                       : 'bg-white/[0.03] text-white/90 rounded-tl-md border border-white/[0.06]'
                   }`}>
+                    {/* Status message while loading */}
+                    {msg.role === 'assistant' && msg.statusMessage && !msg.content && (
+                      <div className="flex items-center gap-2 text-sm text-primary/80 animate-pulse">
+                        <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                        </svg>
+                        <span>{msg.statusMessage}</span>
+                      </div>
+                    )}
                     <p className={`whitespace-pre-wrap ${
                       msg.role === 'user'
                         ? 'text-[13px] sm:text-sm leading-relaxed'
                         : 'text-[13px] sm:text-[15px] leading-[1.6] sm:leading-[1.7] tracking-[-0.01em] font-light'
-                    }`}>
+                    } ${msg.role === 'assistant' && msg.statusMessage && !msg.content ? 'hidden' : ''}`}>
                       {msg.role === 'assistant' ? stripMarkdown(msg.content) : msg.content}
-                      {msg.role === 'assistant' && msg.isStreaming && (
+                      {msg.role === 'assistant' && msg.isStreaming && !msg.statusMessage && (
                         <span className="inline-block w-2 h-4 ml-1 bg-primary animate-pulse rounded-sm" />
                       )}
                     </p>
