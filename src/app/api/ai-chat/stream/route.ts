@@ -3053,12 +3053,49 @@ RESPONSE FORMAT:
           };
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(metadata)}\n\n`));
 
-          // Stream the response
-          for await (const chunk of stream) {
-            const content = chunk.choices[0]?.delta?.content || '';
-            if (content) {
-              fullResponse += content;
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', content })}\n\n`));
+          // Stream the response with per-chunk timeout to prevent hanging
+          let streamTimedOut = false;
+          const STREAM_CHUNK_TIMEOUT = 30000; // 30s max wait between chunks
+          let lastChunkTime = Date.now();
+          
+          // Create a promise race for streaming with timeout
+          const streamWithTimeout = async () => {
+            for await (const chunk of stream) {
+              // Check if we've exceeded chunk timeout
+              const now = Date.now();
+              if (now - lastChunkTime > STREAM_CHUNK_TIMEOUT) {
+                console.error('[AI-Chat-Stream] Stream chunk timeout exceeded');
+                streamTimedOut = true;
+                break;
+              }
+              lastChunkTime = now;
+              
+              const content = chunk.choices[0]?.delta?.content || '';
+              if (content) {
+                fullResponse += content;
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', content })}\n\n`));
+              }
+            }
+          };
+          
+          // Race the stream against an absolute timeout
+          const streamPromiseRace = Promise.race([
+            streamWithTimeout(),
+            new Promise<void>((_, reject) => 
+              setTimeout(() => reject(new Error('Stream absolute timeout')), 45000)
+            )
+          ]);
+          
+          try {
+            await streamPromiseRace;
+          } catch (streamErr) {
+            console.error('[AI-Chat-Stream] Stream error:', streamErr);
+            streamTimedOut = true;
+            if (!fullResponse) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                type: 'content', 
+                content: "I'm having trouble completing this response. Please try again." 
+              })}\n\n`));
             }
           }
 
