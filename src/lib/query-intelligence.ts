@@ -688,6 +688,10 @@ const INTENT_PATTERNS: IntentPattern[] = [
       /\b(doubt(ful)?|questionable|probable|ruled out|day.to.day|GTD|IL|IR)\b/i,
       /\b(status|update|recovery|return)\b.*\b(injur|health)\b/i,
       /\bhow (is|are) .+ (injur|going|doing).*injur/i,  // "how is X injury going"
+      // "breaking news" defaults to sports news (injuries, transfers, trades)
+      /\b(breaking|latest|recent)\s*(news|updates?)\b/i,
+      /\bany\s*(news|updates?)\s*(today)?\b/i,  // "any news today?"
+      /\bwhat('s| is)\s*(happening|new|going on)\b/i,  // "what's happening?" = sports news
     ],
     priority: 80,  // BOOST priority - injury queries are critical and time-sensitive
   },
@@ -730,10 +734,11 @@ const INTENT_PATTERNS: IntentPattern[] = [
   {
     intent: 'TRANSFER_NEWS',
     patterns: [
-      /\b(transfer|sign|signing|rumor|linked|interest)\b/i,
-      /\b(buy|sell|move|join)\b/i,
+      /\b(transfers?|signings?|rumors?|rumours?|linked|interest)\b/i,
+      /\b(buy|sell|move|join|loan|swap)\b/i,
+      /\babout transfers\b/i,  // "what about transfers"
     ],
-    priority: 35,
+    priority: 80,  // BOOST priority - transfer queries are common sports questions
   },
   {
     intent: 'GENERAL_INFO',
@@ -745,20 +750,18 @@ const INTENT_PATTERNS: IntentPattern[] = [
     priority: 30,
   },
   // OFF_TOPIC - Non-sports queries that should be politely declined
+  // NOTE: Lower priority (50) so sports-related patterns win
   {
     intent: 'OFF_TOPIC',
     patterns: [
-      // Politics and news
-      /\b(trump|biden|politics|political|election|vote|voting|president|congress|senate|government|immigration|ICE)\b/i,
+      // Politics - very specific to avoid false positives
+      /\b(trump|biden|politics|political|election|vote|voting|president|congress|senate|government)\b/i,
       /\b(iran|ukraine|russia|war|military|missile|attack|conflict|protest|riot)\b/i,
-      /\b(stock|stocks|crypto|bitcoin|ethereum|market|economy|inflation|recession|finance|trading)\b/i,
+      // Finance - but NOT "market" alone (could be betting market)
+      /\b(stocks?|crypto|bitcoin|ethereum|economy|inflation|recession)\b/i,
       /\b(weather|forecast|rain|snow|temperature|climate)\b/i,
-      // Generic breaking news (without sports context)
-      /^(any )?(breaking )?news\?*$/i,  // "any breaking news?" standalone
-      /^what('s| is) (happening|going on)( today)?\?*$/i,  // "what's happening today?"
-      /^(what('s| is) new|anything new)\?*$/i,  // "what's new?"
-      // Tech unrelated to sports
-      /\b(apple|google|microsoft|amazon|meta|facebook|twitter|instagram|tiktok|elon musk|ai company|openai|chatgpt)\b/i,
+      // Tech companies - but allow esports/gaming context
+      /\b(apple|google|microsoft|amazon|meta|facebook|twitter|instagram|tiktok|elon musk|openai|chatgpt)\b(?!.*\b(esports?|gaming|game)\b)/i,
       // Entertainment (unless sports-adjacent)
       /\b(movie|movies|film|tv show|series|netflix|streaming|celebrity|hollywood|music|concert|album)\b/i,
       // Personal/General
@@ -766,7 +769,7 @@ const INTENT_PATTERNS: IntentPattern[] = [
       /\b(health advice|medical|doctor|medicine|symptom|disease)\b/i,
       /\b(relationship|dating|love|breakup)\b/i,
     ],
-    priority: 100,  // High priority - catch these early
+    priority: 50,  // LOWER than sports patterns so valid queries aren't blocked
   },
   {
     intent: 'EXPLAIN_UI',
