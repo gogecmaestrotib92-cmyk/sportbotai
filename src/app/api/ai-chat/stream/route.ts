@@ -2770,7 +2770,12 @@ If their favorite team has a match today/tonight, lead with that information.`;
           const DATA_CRITICAL_CATEGORIES = ['STATS', 'STANDINGS', 'BETTING_ADVICE', 'PLAYER_PROP', 'OUR_PREDICTION', 'INJURY', 'COMPARISON'];
           const isDataCriticalQuery = DATA_CRITICAL_CATEGORIES.includes(queryCategory.toUpperCase());
           
-          if (!dataConfidence.canAnswer && isDataCriticalQuery) {
+          // BUT: For basic questions GPT can answer, don't refuse - just let GPT handle it
+          // NBA leading scorer is common knowledge, not something we need verified stats for
+          const isBasicKnowledgeQuery = /\b(who leads|who is leading|top scorer|mvp|best player)\b/i.test(searchMessage) && 
+            /\b(nba|nfl|nhl|mlb)\b/i.test(searchMessage);
+          
+          if (!dataConfidence.canAnswer && isDataCriticalQuery && !isBasicKnowledgeQuery) {
             console.log(`[AI-Chat-Stream] 🛑 REFUSING to answer - data-critical query with insufficient data`);
             
             const refusalMessage = dataConfidence.missingCritical.length > 0
@@ -2791,24 +2796,11 @@ Rather than make something up, I'll be honest - I can't find reliable stats for 
 - Asking about major leagues where I have better coverage
 - Check back later as data updates regularly`;
             
-            // Stream the refusal
-            return new Response(
-              new ReadableStream({
-                async start(controller) {
-                  const encoder = new TextEncoder();
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', content: refusalMessage })}\n\n`));
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
-                  controller.close();
-                }
-              }),
-              {
-                headers: {
-                  'Content-Type': 'text/event-stream',
-                  'Cache-Control': 'no-cache',
-                  'Connection': 'keep-alive',
-                },
-              }
-            );
+            // Send refusal using existing controller
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', content: refusalMessage })}\n\n`));
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+            controller.close();
+            return; // Exit the start() callback
           }
           
           const brainMode: BrainMode = 
