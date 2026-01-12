@@ -12,6 +12,10 @@
  * - Favorite team context
  */
 
+// Vercel: Extend function timeout to 60 seconds (Pro plan)
+// This is needed for complex queries that require multiple API calls
+export const maxDuration = 60;
+
 import { NextRequest } from 'next/server';
 import OpenAI from 'openai';
 import { getServerSession } from 'next-auth';
