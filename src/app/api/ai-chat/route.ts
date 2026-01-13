@@ -33,6 +33,14 @@ import {
 } from '@/lib/verified-nba-stats';
 import { authOptions, canUserChat, incrementChatCount, CHAT_LIMITS } from '@/lib/auth';
 import { classifyQuery, needsPerplexity, needsDataLayer, isBettingQuery, type ClassificationResult } from '@/lib/query-classifier';
+// Shared Chat Utilities (consolidated)
+import {
+  withTimeout,
+  fetchMatchPreviewOrAnalysis,
+  formatMatchPreviewForChat,
+  formatAnalysisForChat,
+} from '@/lib/chat-utils';
+
 
 // ============================================
 // TYPES
@@ -929,169 +937,7 @@ async function performMatchAnalysis(
   }
 }
 
-/**
- * Format match-preview data for chat display
- */
-function formatMatchPreviewForChat(data: any, homeTeam: string, awayTeam: string): string {
-  let response = `## 🔮 ${homeTeam} vs ${awayTeam}\n\n`;
-
-  // Story/Narrative
-  if (data.story?.narrative) {
-    response += `${data.story.narrative}\n\n`;
-  }
-
-  // Prediction
-  if (data.story?.favored) {
-    const favored = data.story.favored;
-    const confidence = data.story.confidence;
-    const team = favored === 'home' ? homeTeam : favored === 'away' ? awayTeam : 'Draw';
-    const emoji = confidence === 'strong' ? '💪' : confidence === 'moderate' ? '📊' : '🤔';
-    response += `### ${emoji} Prediction: **${team}** (${confidence} confidence)\n\n`;
-  }
-
-  // Market Edge
-  if (data.marketIntel?.valueEdge) {
-    const edge = data.marketIntel.valueEdge;
-    if (edge.hasValue) {
-      response += `### 💰 Value Detected\n`;
-      response += `- **${edge.side}** @ ${edge.odds?.toFixed(2)} (${edge.edgePercent?.toFixed(1)}% edge)\n\n`;
-    }
-  }
-
-  // Form Data
-  if (data.momentumAndForm?.homeForm?.length > 0 || data.momentumAndForm?.awayForm?.length > 0) {
-    response += `### 📈 Recent Form\n`;
-    if (data.momentumAndForm.homeForm?.length > 0) {
-      const homeFormStr = data.momentumAndForm.homeForm.slice(0, 5).map((m: any) =>
-        m.result === 'W' ? '✅' : m.result === 'L' ? '❌' : '➖'
-      ).join('');
-      response += `- **${homeTeam}**: ${homeFormStr}\n`;
-    }
-    if (data.momentumAndForm.awayForm?.length > 0) {
-      const awayFormStr = data.momentumAndForm.awayForm.slice(0, 5).map((m: any) =>
-        m.result === 'W' ? '✅' : m.result === 'L' ? '❌' : '➖'
-      ).join('');
-      response += `- **${awayTeam}**: ${awayFormStr}\n`;
-    }
-    response += '\n';
-  }
-
-  // Key Factors
-  if (data.universalSignals?.length > 0) {
-    response += `### 🔑 Key Factors\n`;
-    const topSignals = data.universalSignals.slice(0, 3);
-    for (const signal of topSignals) {
-      const emoji = signal.favors === 'home' ? '🏠' : signal.favors === 'away' ? '✈️' : '⚖️';
-      response += `${emoji} **${signal.name}**: ${signal.insight || signal.description}\n`;
-    }
-    response += '\n';
-  }
-
-  // Injuries
-  if (data.injuries?.home?.length > 0 || data.injuries?.away?.length > 0) {
-    response += `### 🏥 Injury News\n`;
-    if (data.injuries.home?.length > 0) {
-      response += `- **${homeTeam}**: ${data.injuries.home.slice(0, 3).map((i: any) => i.player).join(', ')}\n`;
-    }
-    if (data.injuries.away?.length > 0) {
-      response += `- **${awayTeam}**: ${data.injuries.away.slice(0, 3).map((i: any) => i.player).join(', ')}\n`;
-    }
-    response += '\n';
-  }
-
-  // Disclaimer
-  response += `---\n⚠️ *This is educational analysis, not betting advice. Always gamble responsibly.*`;
-
-  return response;
-}
-
-/**
- * Format the analysis response for chat display
- * Uses the actual AnalyzeResponse interface structure
- */
-function formatAnalysisForChat(analysis: any, homeTeam: string, awayTeam: string): string {
-  const { probabilities, briefing, valueAnalysis, oddsComparison, riskAnalysis, tacticalAnalysis, responsibleGambling } = analysis;
-
-  let response = `## 🎯 Match Analysis: ${homeTeam} vs ${awayTeam}\n\n`;
-
-  // AI Briefing - use headline and verdict (not narrative)
-  if (briefing?.headline) {
-    response += `### 💡 Key Insight\n${briefing.headline}\n`;
-    if (briefing.verdict) {
-      response += `**Verdict:** ${briefing.verdict}\n`;
-    }
-    response += '\n';
-  }
-
-  // Key points from briefing
-  if (briefing?.keyPoints && briefing.keyPoints.length > 0) {
-    response += `### 🔑 Key Factors\n`;
-    for (const point of briefing.keyPoints.slice(0, 4)) {
-      response += `• ${point}\n`;
-    }
-    response += '\n';
-  }
-
-  // Probabilities
-  if (probabilities) {
-    response += `### 📊 AI Probability Estimates\n`;
-    if (probabilities.homeWin) {
-      response += `- **${homeTeam}** win: ${Math.round(probabilities.homeWin * 100)}%\n`;
-    }
-    if (probabilities.draw !== null && probabilities.draw !== undefined) {
-      response += `- **Draw**: ${Math.round(probabilities.draw * 100)}%\n`;
-    }
-    if (probabilities.awayWin) {
-      response += `- **${awayTeam}** win: ${Math.round(probabilities.awayWin * 100)}%\n`;
-    }
-    response += '\n';
-  }
-
-  // Odds Comparison (edge) - preferred over deprecated valueAnalysis
-  if (oddsComparison) {
-    const edge = oddsComparison.homeEdge || oddsComparison.awayEdge || oddsComparison.drawEdge;
-    if (edge && Math.abs(edge) > 1) {
-      const bestEdge = Math.max(
-        Math.abs(oddsComparison.homeEdge || 0),
-        Math.abs(oddsComparison.awayEdge || 0),
-        Math.abs(oddsComparison.drawEdge || 0)
-      );
-      const edgeTeam = (oddsComparison.homeEdge || 0) === bestEdge ? homeTeam :
-        (oddsComparison.awayEdge || 0) === bestEdge ? awayTeam : 'Draw';
-      response += `### 💎 Value Indication\n`;
-      response += `Best edge: **${edgeTeam}** (+${bestEdge.toFixed(1)}% edge)\n\n`;
-    }
-  } else if (valueAnalysis?.bestValue?.selection) {
-    // Fallback to valueAnalysis (deprecated but may still be present)
-    response += `### 💎 Value Indication\n`;
-    response += `Best value: **${valueAnalysis.bestValue.selection}**`;
-    if (valueAnalysis.bestValue.edge) {
-      response += ` (+${(valueAnalysis.bestValue.edge * 100).toFixed(1)}% edge)`;
-    }
-    response += '\n\n';
-  }
-
-  // Risk Level
-  if (riskAnalysis?.riskLevel) {
-    const riskEmoji = riskAnalysis.riskLevel === 'LOW' ? '🟢' : riskAnalysis.riskLevel === 'MEDIUM' ? '🟡' : '🔴';
-    response += `**Risk Level**: ${riskEmoji} ${riskAnalysis.riskLevel}\n`;
-    if (riskAnalysis.trapMatchWarning) {
-      response += `⚠️ Trap match warning!\n`;
-    }
-    response += '\n';
-  }
-
-  // Expert one-liner from tactical analysis
-  if (tacticalAnalysis?.expertConclusionOneLiner) {
-    response += `**Expert Take:** ${tacticalAnalysis.expertConclusionOneLiner}\n\n`;
-  }
-
-  // Disclaimer
-  const disclaimer = responsibleGambling?.disclaimer || 'This is educational analysis, not betting advice. Always gamble responsibly.';
-  response += `---\n⚠️ *${disclaimer}*`;
-
-  return response;
-}
+// formatMatchPreviewForChat and formatAnalysisForChat are now imported from @/lib/chat-utils
 
 /**
  * Detect the category of sports question
