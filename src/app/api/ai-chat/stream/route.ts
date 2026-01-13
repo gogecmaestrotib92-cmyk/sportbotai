@@ -20,6 +20,7 @@ import { NextRequest } from 'next/server';
 import OpenAI from 'openai';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { theOddsClient } from '@/lib/theOdds';
 import { getPerplexityClient } from '@/lib/perplexity';
 import { detectChatMode, buildSystemPrompt, type BrainMode, calculateDataConfidence, type DataConfidence } from '@/lib/sportbot-brain';
 import { trackQuery, getCachedAnswer, shouldSkipCache } from '@/lib/sportbot-memory';
@@ -1766,10 +1767,10 @@ export async function POST(request: NextRequest) {
       return new Response(JSON.stringify({
         error: 'Rate limit exceeded',
         message: `You've reached your daily limit of ${limits.requests} messages. ${!userPlan || userPlan === 'FREE'
-            ? 'Upgrade to Pro for 50/day or Premium for unlimited.'
-            : userPlan === 'PRO'
-              ? 'Upgrade to Premium for unlimited messages.'
-              : ''
+          ? 'Upgrade to Pro for 50/day or Premium for unlimited.'
+          : userPlan === 'PRO'
+            ? 'Upgrade to Premium for unlimited messages.'
+            : ''
           }`,
         remaining: 0,
         limit: limits.requests,
@@ -2652,6 +2653,65 @@ If their favorite team has a match today/tonight, lead with that information.`;
                   const baseUrl = `${protocol}://${host}`;
                   const cookies = request.headers.get('cookie') || '';
 
+                  // FETCH REAL ODDS FOR THE MATCH
+                  let realOdds = {
+                    home: 2.0,
+                    draw: sport.includes('soccer') ? 3.5 : null,
+                    away: 2.0
+                  };
+
+                  try {
+                    // Only try to fetch odds if we have a valid sport
+                    if (theOddsClient.isConfigured() && sport !== 'unknown') {
+                      console.log(`[AI-Chat-Stream] Fetching real odds for ${homeTeam} vs ${awayTeam}...`);
+
+                      // 1. Get events for this sport
+                      const { data: events } = await theOddsClient.getEvents(sport);
+
+                      // 2. Find the specific match (fuzzy match team names)
+                      const matchEvent = events.find(e => {
+                        const homeMatch = e.home_team.toLowerCase().includes(homeTeam.toLowerCase()) ||
+                          homeTeam.toLowerCase().includes(e.home_team.toLowerCase());
+                        const awayMatch = e.away_team.toLowerCase().includes(awayTeam.toLowerCase()) ||
+                          awayTeam.toLowerCase().includes(e.away_team.toLowerCase());
+                        return homeMatch && awayMatch;
+                      });
+
+                      if (matchEvent) {
+                        console.log(`[AI-Chat-Stream] ✅ Found match event: ${matchEvent.home_team} vs ${matchEvent.away_team} (ID: ${matchEvent.id})`);
+
+                        // 3. Get odds for this specific event
+                        // Note: getEventOdds uses API quota, but getEvents might already have odds included?
+                        // Actually getEvents usually doesn't include bookmakers unless we use getOddsForSport
+                        // Let's try to fetch odds for this specific event
+                        try {
+                          const { data: eventWithOdds } = await theOddsClient.getEventOdds(sport, matchEvent.id, {
+                            regions: ['eu', 'uk'], // Prioritize EU/UK odds
+                            markets: ['h2h']
+                          });
+
+                          // 4. Calculate average odds
+                          const avgOdds = await import('@/lib/theOdds/theOddsClient').then(m => m.calculateAverageOdds(eventWithOdds));
+
+                          if (avgOdds.home > 0 && avgOdds.away > 0) {
+                            realOdds = {
+                              home: avgOdds.home,
+                              draw: avgOdds.draw, // Will be null for non-draw sports
+                              away: avgOdds.away
+                            };
+                            console.log(`[AI-Chat-Stream] ✅ Using real odds: Home=${realOdds.home}, Draw=${realOdds.draw}, Away=${realOdds.away}`);
+                          }
+                        } catch (oddsErr) {
+                          console.log('[AI-Chat-Stream] Failed to get specific event odds, using defaults:', oddsErr);
+                        }
+                      } else {
+                        console.log('[AI-Chat-Stream] Match event not found in upcoming fixtures');
+                      }
+                    }
+                  } catch (oddsFetchErr) {
+                    console.error('[AI-Chat-Stream] Error fetching real odds:', oddsFetchErr);
+                  }
+
                   const analyzeRequest = {
                     matchData: {
                       sport: sport,
@@ -2660,11 +2720,7 @@ If their favorite team has a match today/tonight, lead with that information.`;
                       awayTeam: awayTeam,
                       matchDate: new Date().toISOString(),
                       sourceType: 'chat-stream',
-                      odds: {
-                        home: 2.0,  // Default odds
-                        draw: sport.includes('soccer') ? 3.5 : null,
-                        away: 2.0,
-                      },
+                      odds: realOdds,
                     },
                   };
 
