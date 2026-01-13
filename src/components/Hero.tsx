@@ -20,7 +20,7 @@ export default function Hero() {
         videoSrc="/videos/hero-bg.mp4"
         overlayOpacity={0.35}
       />
-      
+
       {/* Additional decorative elements - Accent ambient glows */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 right-0 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-accent/10 rounded-full blur-[80px] sm:blur-[120px]" />
@@ -42,11 +42,16 @@ export default function Hero() {
             </div>
 
             {/* Headline - H1 for SEO - Bolder with gradient */}
-            <h1 className="text-3xl xs:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.05] tracking-tight mb-4 sm:mb-6 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+            <h1 className="text-3xl xs:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.05] tracking-tight mb-2 sm:mb-3 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
               Find Where
               <br className="hidden xs:block" />
               <span className="text-gradient-accent drop-shadow-[0_0_30px_rgba(16,185,129,0.4)]">The Market Is Wrong</span>
             </h1>
+
+            {/* Explainer - One line to clarify meaning */}
+            <p className="text-sm sm:text-base text-white/70 mb-4 sm:mb-6 max-w-lg mx-auto lg:mx-0">
+              Compare AI probabilities vs market prices—then decide for yourself.
+            </p>
 
             {/* Subheadline - Glassmorphism card */}
             <p className="text-base sm:text-lg text-white/90 leading-relaxed mb-6 sm:mb-8 max-w-xl mx-auto lg:mx-0 card-glass px-5 py-4">
@@ -56,14 +61,14 @@ export default function Hero() {
 
             {/* CTA Buttons - Stack on mobile */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
-              <Link 
-                href="/matches" 
+              <Link
+                href="/matches"
                 className="btn-primary text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto glow-accent-strong"
               >
                 Browse Matches
               </Link>
-              <Link 
-                href="/ai-desk" 
+              <Link
+                href="/ai-desk"
                 className="btn-secondary inline-flex items-center justify-center gap-2 text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto"
               >
                 <span>🧠</span>
