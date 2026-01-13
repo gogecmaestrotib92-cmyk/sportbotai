@@ -45,7 +45,7 @@ async function translateAnalysisToSerbian(data: any): Promise<any> {
     // Collect all text that needs translation
     const textsToTranslate: string[] = [];
     const textMap: { field: string; index: number }[] = [];
-    
+
     // Story narrative and snapshot
     if (data.story?.narrative) {
       textMap.push({ field: 'story.narrative', index: textsToTranslate.length });
@@ -63,7 +63,7 @@ async function translateAnalysisToSerbian(data: any): Promise<any> {
         textsToTranslate.push(text);
       });
     }
-    
+
     // Universal signals descriptions
     if (data.universalSignals) {
       ['form', 'edge', 'tempo', 'efficiency', 'availability'].forEach((signal) => {
@@ -73,12 +73,12 @@ async function translateAnalysisToSerbian(data: any): Promise<any> {
         }
       });
     }
-    
+
     if (textsToTranslate.length === 0) return data;
-    
+
     // Batch translate all texts
     const translations = await Promise.all(
-      textsToTranslate.map(text => 
+      textsToTranslate.map(text =>
         fetch('/api/translate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -86,7 +86,7 @@ async function translateAnalysisToSerbian(data: any): Promise<any> {
         }).then(res => res.json()).then(r => r.translated || text)
       )
     );
-    
+
     // Apply translations back to data
     const translatedData = JSON.parse(JSON.stringify(data));
     textMap.forEach(({ field, index }) => {
@@ -97,7 +97,7 @@ async function translateAnalysisToSerbian(data: any): Promise<any> {
       }
       obj[parts[parts.length - 1]] = translations[index];
     });
-    
+
     return translatedData;
   } catch (error) {
     console.error('Translation failed:', error);
@@ -128,18 +128,18 @@ function normalizeSignalsWithInjuries(
   // If signals already has display property with proper structure, just merge injuries
   if (signals?.display?.availability) {
     // ALWAYS prefer top-level injuries if they have data (they're fresher)
-    const finalHomeInjuries = (injuries?.home?.length || 0) > 0 
-      ? injuries!.home 
+    const finalHomeInjuries = (injuries?.home?.length || 0) > 0
+      ? injuries!.home
       : signals.display.availability.homeInjuries || [];
-    const finalAwayInjuries = (injuries?.away?.length || 0) > 0 
-      ? injuries!.away 
+    const finalAwayInjuries = (injuries?.away?.length || 0) > 0
+      ? injuries!.away
       : signals.display.availability.awayInjuries || [];
-    
+
     console.log('[normalizeSignalsWithInjuries] Using injuries:', {
       finalHome: finalHomeInjuries.length,
       finalAway: finalAwayInjuries.length,
     });
-    
+
     return {
       ...signals,
       display: {
@@ -152,18 +152,18 @@ function normalizeSignalsWithInjuries(
       },
     };
   }
-  
+
   // Transform flat demo format to full format
   if (signals?.form && signals?.availability) {
     const homeInjuries = injuries?.home || [];
     const awayInjuries = injuries?.away || [];
     const totalInjuries = homeInjuries.length + awayInjuries.length;
-    
+
     // Determine availability level based on injury count
-    const availabilityLevel = totalInjuries >= 5 ? 'high' 
-      : totalInjuries >= 2 ? 'medium' 
-      : 'low';
-    
+    const availabilityLevel = totalInjuries >= 5 ? 'high'
+      : totalInjuries >= 2 ? 'medium'
+        : 'low';
+
     return {
       form: signals.form?.label || 'Form data',
       strength_edge: signals.edge?.label || 'Edge data',
@@ -202,7 +202,7 @@ function normalizeSignalsWithInjuries(
       },
     };
   }
-  
+
   // Return as-is if neither format matches
   return signals;
 }
@@ -248,19 +248,19 @@ function getLeagueInfo(leagueName: string, sport: string): { id: number; sport: 
   if (LEAGUE_NAME_TO_ID[normalized]) {
     return LEAGUE_NAME_TO_ID[normalized];
   }
-  
+
   // Try partial match
   for (const [key, value] of Object.entries(LEAGUE_NAME_TO_ID)) {
     if (normalized.includes(key) || key.includes(normalized)) {
       return value;
     }
   }
-  
+
   // Default by sport
   if (sport === 'basketball' || sport === 'nba') return { id: 12, sport: 'basketball' };
   if (sport === 'hockey' || sport === 'nhl') return { id: 57, sport: 'hockey' };
   if (sport === 'nfl' || sport === 'american_football') return { id: 1, sport: 'nfl' };
-  
+
   return null;
 }
 
@@ -280,14 +280,14 @@ function parseMatchIdClient(matchId: string): { homeTeam: string; awayTeam: stri
       };
     }
   }
-  
+
   // Try new SEO-friendly slug format: home-team-vs-away-team-sport-date
   const parsed = parseMatchSlug(matchId);
   if (parsed) {
     // Convert slugs back to display names (capitalize words)
-    const toDisplayName = (slug: string) => 
+    const toDisplayName = (slug: string) =>
       slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    
+
     // Map sport code to proper sport key
     const sportCodeMap: Record<string, string> = {
       'nba': 'basketball_nba',
@@ -302,7 +302,7 @@ function parseMatchIdClient(matchId: string): { homeTeam: string; awayTeam: stri
       'mls': 'soccer_usa_mls',
     };
     const sport = sportCodeMap[parsed.sportCode] || `soccer_${parsed.sportCode}`;
-    
+
     return {
       homeTeam: toDisplayName(parsed.homeSlug),
       awayTeam: toDisplayName(parsed.awaySlug),
@@ -311,7 +311,7 @@ function parseMatchIdClient(matchId: string): { homeTeam: string; awayTeam: stri
       kickoff: parsed.date ? `${parsed.date}T12:00:00Z` : new Date().toISOString(),
     };
   }
-  
+
   // Fallback: parse underscore-separated format (old format)
   const parts = matchId.split('_');
   if (parts.length >= 3) {
@@ -323,7 +323,7 @@ function parseMatchIdClient(matchId: string): { homeTeam: string; awayTeam: stri
       kickoff: parts[3] ? new Date(parseInt(parts[3])).toISOString() : new Date().toISOString(),
     };
   }
-  
+
   return null;
 }
 
@@ -434,28 +434,28 @@ interface UsageLimitData {
 // Time until midnight UTC component
 function TimeUntilMidnight() {
   const [timeLeft, setTimeLeft] = useState('');
-  
+
   useEffect(() => {
     function calculateTimeLeft() {
       const now = new Date();
       const midnight = new Date(now);
       midnight.setUTCHours(24, 0, 0, 0);
       const diff = midnight.getTime() - now.getTime();
-      
+
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      
+
       return `${hours}h ${minutes}m`;
     }
-    
+
     setTimeLeft(calculateTimeLeft());
     const interval = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, 60000); // Update every minute
-    
+
     return () => clearInterval(interval);
   }, []);
-  
+
   return <span className="text-white font-medium">{timeLeft}</span>;
 }
 
@@ -647,7 +647,7 @@ const translations = {
 function getBackNavigationLeague(league: string, sport: string): string | null {
   const l = league.toLowerCase();
   const s = sport.toLowerCase();
-  
+
   // Soccer leagues
   if (l.includes('premier league') || l === 'epl') return 'soccer_epl';
   if (l.includes('la liga')) return 'soccer_spain_la_liga';
@@ -661,23 +661,23 @@ function getBackNavigationLeague(league: string, sport: string): string | null {
   if (l.includes('scottish')) return 'soccer_spl';
   if (l.includes('süper lig') || l.includes('super lig')) return 'soccer_turkey_super_league';
   if (l.includes('jupiler') || l.includes('belgian')) return 'soccer_belgium_first_div';
-  
+
   // Basketball
   if (l === 'nba' || s.includes('nba') || s.includes('basketball')) return 'basketball_nba';
   if (l.includes('euroleague')) return 'basketball_euroleague';
-  
+
   // American Football
   if (l === 'nfl' || s.includes('nfl') || s.includes('american')) return 'americanfootball_nfl';
   if (l.includes('ncaa')) return 'americanfootball_ncaaf';
-  
+
   // Hockey
   if (l === 'nhl' || s.includes('nhl') || s.includes('hockey')) return 'icehockey_nhl';
-  
+
   // Default by sport category
   if (s.includes('soccer') || s.includes('football')) return 'soccer_epl';
   if (s.includes('basket')) return 'basketball_nba';
   if (s.includes('hockey') || s.includes('ice')) return 'icehockey_nhl';
-  
+
   return null;
 }
 
@@ -691,21 +691,22 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
   const [loadingMessage, setLoadingMessage] = useState(t.analyzing);
   const [error, setError] = useState<string | null>(null);
   const [usageLimit, setUsageLimit] = useState<UsageLimitData | null>(null);
-  
+  const [showStickyCTA, setShowStickyCTA] = useState(false);
+
   // Check for forceRefresh in URL (for cache bypass)
-  const forceRefresh = typeof window !== 'undefined' 
+  const forceRefresh = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('forceRefresh') === 'true'
     : false;
-  
+
   // Parse matchId immediately to show header while loading
   const parsedMatch = useMemo(() => parseMatchIdClient(matchId), [matchId]);
-  
+
   // Compute back URL based on match league/sport
   const backUrl = useMemo(() => {
     const league = data?.matchInfo?.league || parsedMatch?.league || '';
     const sport = data?.matchInfo?.sport || parsedMatch?.sport || '';
     const sportKey = getBackNavigationLeague(league, sport);
-    
+
     if (sportKey) {
       return `${localePath}/matches?league=${sportKey}`;
     }
@@ -736,6 +737,15 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
+  // Show sticky CTA after scrolling past the hero section (400px)
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowStickyCTA(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   useEffect(() => {
     const fetchMatchPreview = async () => {
       try {
@@ -743,7 +753,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
         setError(null);
         setUsageLimit(null);
         setLoadingMessage(t.analyzing);
-        
+
         // Loading message progression
         const loadingTimer1 = setTimeout(() => setLoadingMessage(t.gatheringStats), 3000);
         const loadingTimer2 = setTimeout(() => setLoadingMessage(t.processingSignals), 6000);
@@ -752,7 +762,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
           setError(t.loadingLonger);
           setLoading(false);
         }, 30000); // 30 second timeout
-        
+
         // Add cache-busting timestamp to force fresh fetch (no browser cache)
         // Also pass forceRefresh if present in URL to bypass server cache
         const queryParams = new URLSearchParams();
@@ -764,31 +774,31 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
           credentials: 'include', // Ensure cookies are sent
           cache: 'no-store', // Don't use browser cache
         });
-        
+
         // Clear timers on success
         clearTimeout(loadingTimer1);
         clearTimeout(loadingTimer2);
         clearTimeout(loadingTimer3);
         clearTimeout(timeoutTimer);
-        
+
         const result = await response.json();
-        
+
         // Handle 429 (usage limit reached) specifically
         if (response.status === 429 && result.usageLimitReached) {
           setUsageLimit(result as UsageLimitData);
           return;
         }
-        
+
         // Handle match too far away (>48h) - API now returns this directly
         if (result.tooFarAway) {
           setData(result); // Store for rendering the "coming soon" UI
           return;
         }
-        
+
         if (!response.ok) {
           throw new Error(result.error || 'Failed to load match preview');
         }
-        
+
         // DEBUG: Log what we got from API
         console.log('[MatchPreview] API Response:', {
           isDemo: result.isDemo,
@@ -805,12 +815,12 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
           signalsHomeInjuries: result.universalSignals?.display?.availability?.homeInjuries?.length || 0,
           signalsAwayInjuries: result.universalSignals?.display?.availability?.awayInjuries?.length || 0,
         });
-        
+
         // Successful analysis - show toast for FREE users
         if (result.creditUsed) {
           showToast(t.creditUsed, 'info');
         }
-        
+
         // Translate to Serbian if needed
         if (locale === 'sr' && result.story) {
           setLoadingMessage('Prevođenje na srpski...');
@@ -837,10 +847,10 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
         <div className="absolute top-1/3 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
         <div className="fixed inset-0 bg-gradient-to-b from-white/[0.01] via-transparent to-transparent pointer-events-none" />
-        
+
         <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
           {/* Back navigation */}
-          <Link 
+          <Link
             href={backUrl}
             className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8"
           >
@@ -851,7 +861,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
           </Link>
 
           {/* Show real match header immediately */}
-          <PremiumMatchHeader 
+          <PremiumMatchHeader
             homeTeam={parsedMatch.homeTeam}
             awayTeam={parsedMatch.awayTeam}
             league={parsedMatch.league}
@@ -893,7 +903,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
   const isTooFarAway = matchTiming?.isTooFarAway || data?.tooFarAway;
   const daysUntil = data?.daysUntilKickoff || matchTiming?.daysUntilKickoff || 0;
   const availableDateStr = data?.availableDate || (matchTiming?.kickoffDate ? new Date(matchTiming.kickoffDate.getTime() - 48 * 60 * 60 * 1000).toISOString() : null);
-  
+
   if (isTooFarAway && (parsedMatch || data?.matchInfo)) {
     const matchForHeader = data?.matchInfo || parsedMatch;
     return (
@@ -901,10 +911,10 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
         {/* Ambient Background Glows */}
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
         <div className="fixed inset-0 bg-gradient-to-b from-white/[0.01] via-transparent to-transparent pointer-events-none" />
-        
+
         <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
           {/* Back navigation */}
-          <Link 
+          <Link
             href={backUrl}
             className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8"
           >
@@ -916,7 +926,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
 
           {/* Match header */}
           {matchForHeader && (
-            <PremiumMatchHeader 
+            <PremiumMatchHeader
               homeTeam={matchForHeader.homeTeam}
               awayTeam={matchForHeader.awayTeam}
               league={matchForHeader.league}
@@ -940,13 +950,13 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
                 </h3>
               </div>
             </div>
-            
+
             <p className="text-zinc-500 text-sm leading-relaxed mb-4">
-              {locale === 'sr' 
+              {locale === 'sr'
                 ? <>Naša AI analiza postaje dostupna <span className="text-zinc-300">48 sati pre početka</span> kada imamo najtačnije podatke.</>
                 : <>Our AI analysis becomes available <span className="text-zinc-300">48 hours before kickoff</span> when we have the most accurate data.</>}
             </p>
-            
+
             {availableDateStr && (
               <div className="flex items-center gap-2 text-zinc-500 text-xs">
                 <svg className="w-3.5 h-3.5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -985,7 +995,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
 
           {/* CTA to browse other matches */}
           <div className="mt-6 text-center">
-            <Link 
+            <Link
               href={backUrl}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] rounded-lg text-sm text-zinc-300 hover:text-white transition-colors"
             >
@@ -1008,10 +1018,10 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
         {/* Ambient Background Glows */}
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
         <div className="fixed inset-0 bg-gradient-to-b from-white/[0.01] via-transparent to-transparent pointer-events-none" />
-        
+
         <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
           {/* Back navigation */}
-          <Link 
+          <Link
             href={backUrl}
             className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8"
           >
@@ -1023,7 +1033,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
 
           {/* Show match header */}
           {matchForHeader && (
-            <PremiumMatchHeader 
+            <PremiumMatchHeader
               homeTeam={matchForHeader.homeTeam}
               awayTeam={matchForHeader.awayTeam}
               league={matchForHeader.league}
@@ -1035,12 +1045,12 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
           {/* Upgrade Card - Conversion optimized */}
           <div className={`mt-6 sm:mt-8 card-glass ${usageLimit.plan === 'FREE' ? 'border-violet/30' : 'border-violet-light/30'} p-5 sm:p-8 text-center`}>
             <div className="text-3xl sm:text-4xl mb-3 opacity-80">🔒</div>
-            
+
             {/* Headline - value-focused, larger */}
             <h1 className="text-2xl sm:text-4xl font-bold text-white mb-3 sm:mb-4">
               {t.reachLimit}
             </h1>
-            
+
             {/* What you're missing - locked value reminder */}
             <div className="flex flex-col items-center gap-1.5 mb-4 text-sm">
               <span className="text-zinc-500 flex items-center gap-2">
@@ -1053,12 +1063,12 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
                 <span>🔒</span> {t.oddsThresholds}
               </span>
             </div>
-            
+
             {/* Status message */}
             <p className="text-zinc-400 mb-2">
               {t.usedAllCredits}
             </p>
-            
+
             {/* Time until next free - urgency */}
             <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-white/5 rounded-full border border-white/10 mb-4 text-xs sm:text-sm">
               <span className="text-zinc-500">⏳</span>
@@ -1077,7 +1087,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
             </p>
 
             {/* CTA Button - premium feel, mobile-friendly touch target */}
-            <Link 
+            <Link
               href={`${localePath}/pricing`}
               className="btn-secondary inline-block text-base sm:text-lg px-6 sm:px-8 py-3.5 font-medium"
             >
@@ -1086,7 +1096,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
 
             {/* Secondary action - keep user in funnel */}
             <p className="mt-4 text-zinc-600 text-sm">
-              <Link 
+              <Link
                 href={backUrl}
                 className="text-zinc-500 hover:text-zinc-400 transition-colors underline underline-offset-2"
               >
@@ -1104,7 +1114,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
       <div className="min-h-screen bg-bg relative overflow-hidden flex items-center justify-center p-4">
         {/* Ambient Background Glows */}
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
-        
+
         <div className="text-center max-w-md relative">
           <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-500/20">
             <span className="text-3xl">⚠️</span>
@@ -1113,7 +1123,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
           <p className="text-zinc-500 mb-6 text-sm">
             {error || t.couldntFindMatch}
           </p>
-          <Link 
+          <Link
             href={backUrl}
             className="btn-gradient-border inline-flex items-center gap-2 text-sm"
           >
@@ -1134,18 +1144,18 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
 
   // Build snapshot from old format if not present
   const snapshot = data.story.snapshot || (data.story.supportingStats?.map(s => `${s.stat}: ${s.context}`) || []);
-  
+
   // Build game flow from narrative
   const gameFlow = data.story.narrative || '';
-  
+
   // Build risk factors
   const riskFactors = data.story.riskFactors || [];
 
   // Check if this is a demo match being shown to anonymous user
   const isDemo = data.isDemo && !session;
-  const requestedDifferentMatch = data.requestedMatch && 
-    (data.requestedMatch.homeTeam !== data.matchInfo.homeTeam || 
-     data.requestedMatch.awayTeam !== data.matchInfo.awayTeam);
+  const requestedDifferentMatch = data.requestedMatch &&
+    (data.requestedMatch.homeTeam !== data.matchInfo.homeTeam ||
+      data.requestedMatch.awayTeam !== data.matchInfo.awayTeam);
 
   // 3-TIER ACCESS MODEL:
   // Guest (not logged in): canSeeAnalysis = false, canSeeExactNumbers = false
@@ -1154,14 +1164,14 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
 
   // canSeeAnalysis: Can see full explanations (logged in + used credit OR is PRO)
   const canSeeAnalysis = Boolean(
-    session?.user?.plan === 'PRO' || 
+    session?.user?.plan === 'PRO' ||
     session?.user?.plan === 'PREMIUM' ||
     (session && !isDemo) // FREE user with valid session who got real data = used their credit
   );
 
   // canSeeExactNumbers: Can see exact Win Prob %, Edge %, etc (PRO/PREMIUM ONLY)
   const canSeeExactNumbers = Boolean(
-    session?.user?.plan === 'PRO' || 
+    session?.user?.plan === 'PRO' ||
     session?.user?.plan === 'PREMIUM'
   );
 
@@ -1173,13 +1183,13 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
       {/* Ambient Background Glows */}
       <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute top-1/3 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
-      
+
       {/* Subtle gradient overlay */}
       <div className="fixed inset-0 bg-gradient-to-b from-white/[0.01] via-transparent to-transparent pointer-events-none" />
-      
+
       <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
         {/* Back navigation - Minimal */}
-        <Link 
+        <Link
           href={backUrl}
           className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8"
         >
@@ -1190,7 +1200,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
         </Link>
 
         {/* Match Header - Clean and premium */}
-        <PremiumMatchHeader 
+        <PremiumMatchHeader
           homeTeam={data.matchInfo.homeTeam}
           awayTeam={data.matchInfo.awayTeam}
           league={data.matchInfo.league}
@@ -1256,7 +1266,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
         )}
 
         {/* LAYER 1: Registration Blur - Universal Signals & Risk Factors */}
-        <RegistrationBlur 
+        <RegistrationBlur
           isAuthenticated={!!session}
           title={t.unlockSignals}
           description={t.createFreeDesc}
@@ -1337,7 +1347,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
                   isPro={canSeeExactNumbers}
                   title=""
                   teaserBullets={
-                    locale === 'sr' 
+                    locale === 'sr'
                       ? ['Rezime AI modela', 'Obrazloženje ivice i analiza', 'Kalibracija rizika']
                       : ['AI model summary', 'Edge reasoning & pattern analysis', 'Risk calibration']
                   }
@@ -1414,7 +1424,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
         {(() => {
           const leagueInfo = getLeagueInfo(data.matchInfo.league, data.matchInfo.sport);
           if (!leagueInfo) return null;
-          
+
           return (
             <div className="mt-6">
               <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wide mb-4 flex items-center gap-3">
@@ -1467,6 +1477,33 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
           </p>
         </div>
       </div>
+
+      {/* Sticky Upgrade CTA - Shows for free registered users after scrolling */}
+      {session && !canSeeExactNumbers && showStickyCTA && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-gradient-to-r from-violet-600/95 via-violet-500/95 to-purple-600/95 backdrop-blur-xl border-t border-white/10">
+            <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-xl flex-shrink-0">💎</span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">
+                    {locale === 'sr' ? 'Otključaj tačne brojeve' : 'Unlock Exact Numbers'}
+                  </p>
+                  <p className="text-xs text-white/70 truncate hidden sm:block">
+                    {locale === 'sr' ? 'Vidi tačne % pobede i ivice' : 'See exact win % & edge magnitude'}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href={`${localePath}/pricing`}
+                className="flex-shrink-0 px-4 py-2 bg-white text-violet-700 font-semibold text-sm rounded-lg hover:bg-white/90 transition-colors shadow-lg"
+              >
+                {locale === 'sr' ? 'Nadogradi' : 'Upgrade'}
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1482,7 +1519,7 @@ function PremiumSkeleton({ message, locale = 'en' }: { message?: string; locale?
       <div className="max-w-2xl mx-auto px-4 py-10">
         {/* Back button skeleton */}
         <div className="h-4 w-24 bg-white/5 rounded mb-8" />
-        
+
         {/* Header skeleton */}
         <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-8 mb-8">
           <div className="flex items-center justify-between mb-8">
