@@ -61,11 +61,72 @@ export async function withTimeout<T>(
 }
 
 // ============================================
-// ODDS FETCHING
+// ODDS CACHING (30 minute TTL)
+// ============================================
+
+interface CachedOdds {
+    home: number;
+    draw: number | null;
+    away: number;
+    cachedAt: number;
+}
+
+// In-memory cache for odds (key: "sport:home:away")
+const oddsCache = new Map<string, CachedOdds>();
+const ODDS_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+function getOddsCacheKey(sport: string, homeTeam: string, awayTeam: string): string {
+    return `${sport}:${homeTeam.toLowerCase()}:${awayTeam.toLowerCase()}`;
+}
+
+function getCachedOdds(sport: string, homeTeam: string, awayTeam: string): { home: number; draw: number | null; away: number } | null {
+    const key = getOddsCacheKey(sport, homeTeam, awayTeam);
+    const cached = oddsCache.get(key);
+
+    if (cached && Date.now() - cached.cachedAt < ODDS_CACHE_TTL_MS) {
+        console.log(`[Chat-Utils] 💾 Using cached odds for ${homeTeam} vs ${awayTeam} (${((Date.now() - cached.cachedAt) / 60000).toFixed(1)} min old)`);
+        return { home: cached.home, draw: cached.draw, away: cached.away };
+    }
+
+    // Expired or not found
+    if (cached) {
+        oddsCache.delete(key);
+    }
+    return null;
+}
+
+function setCachedOdds(sport: string, homeTeam: string, awayTeam: string, odds: { home: number; draw: number | null; away: number }): void {
+    const key = getOddsCacheKey(sport, homeTeam, awayTeam);
+    oddsCache.set(key, {
+        ...odds,
+        cachedAt: Date.now()
+    });
+    console.log(`[Chat-Utils] 💾 Cached odds for ${homeTeam} vs ${awayTeam} (TTL: 30 min)`);
+}
+
+// Cleanup expired entries periodically (every 10 minutes)
+setInterval(() => {
+    const now = Date.now();
+    let cleaned = 0;
+    const entries = Array.from(oddsCache.entries());
+    for (const [key, value] of entries) {
+        if (now - value.cachedAt >= ODDS_CACHE_TTL_MS) {
+            oddsCache.delete(key);
+            cleaned++;
+        }
+    }
+    if (cleaned > 0) {
+        console.log(`[Chat-Utils] 🧹 Cleaned ${cleaned} expired odds cache entries`);
+    }
+}, 10 * 60 * 1000);
+
+// ============================================
+// ODDS FETCHING (with caching)
 // ============================================
 
 /**
  * Fetch real bookmaker odds for a match
+ * Uses 30-minute cache to reduce API quota usage
  * Returns default odds if fetch fails
  */
 export async function fetchRealOdds(
@@ -80,12 +141,18 @@ export async function fetchRealOdds(
         away: 2.0,
     };
 
+    // Check cache first
+    const cached = getCachedOdds(sport, homeTeam, awayTeam);
+    if (cached) {
+        return cached;
+    }
+
     try {
         if (!theOddsClient.isConfigured() || sport === 'unknown') {
             return defaultOdds;
         }
 
-        console.log(`[Chat-Utils] Fetching real odds for ${homeTeam} vs ${awayTeam} (${sport})...`);
+        console.log(`[Chat-Utils] 🌐 Fetching real odds for ${homeTeam} vs ${awayTeam} (${sport})...`);
 
         // Get events for this sport
         const { data: events } = await theOddsClient.getEvents(sport);
@@ -118,8 +185,13 @@ export async function fetchRealOdds(
         const avgOdds = calculateAverageOdds(eventWithOdds);
 
         if (avgOdds.home > 0 && avgOdds.away > 0) {
-            console.log(`[Chat-Utils] ✅ Real odds: Home=${avgOdds.home}, Draw=${avgOdds.draw}, Away=${avgOdds.away}`);
-            return { home: avgOdds.home, draw: avgOdds.draw, away: avgOdds.away };
+            const result = { home: avgOdds.home, draw: avgOdds.draw, away: avgOdds.away };
+            console.log(`[Chat-Utils] ✅ Real odds: Home=${result.home}, Draw=${result.draw}, Away=${result.away}`);
+
+            // Cache the result
+            setCachedOdds(sport, homeTeam, awayTeam, result);
+
+            return result;
         }
 
         return defaultOdds;
@@ -128,6 +200,7 @@ export async function fetchRealOdds(
         return defaultOdds;
     }
 }
+
 
 // ============================================
 // MATCH PREVIEW FORMATTING
