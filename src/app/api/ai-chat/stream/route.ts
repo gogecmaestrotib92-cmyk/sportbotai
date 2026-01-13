@@ -54,6 +54,16 @@ import { getUpcomingMatchPrediction, formatMatchPredictionContext } from '@/lib/
 import { trackQuery as trackQueryForLearning, detectMismatch, recordMismatch, type QueryTrackingData } from '@/lib/query-learning';
 // A/B Testing
 import { getVariantFromCookies, getTestCookieName, type Variant } from '@/lib/ab-testing';
+// Shared Chat Utilities (consolidated)
+import {
+  withTimeout,
+  fetchMatchPreviewOrAnalysis,
+  formatMatchPreviewForChat,
+  formatAnalysisForChat,
+  fetchRealOdds,
+  detectSportFromTeams,
+  stripMarkdown,
+} from '@/lib/chat-utils';
 
 // ============================================
 // TYPES
@@ -77,52 +87,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// ============================================
-// TIMEOUT UTILITY
-// ============================================
-
-/**
- * Wrap a promise with a timeout
- * Returns null if timeout is reached instead of throwing
- */
-async function withTimeout<T>(
-  promise: Promise<T>,
-  ms: number,
-  label: string
-): Promise<T | null> {
-  const timeoutPromise = new Promise<null>((resolve) => {
-    setTimeout(() => {
-      console.log(`[AI-Chat-Stream] ⏱️ ${label} timed out after ${ms}ms`);
-      resolve(null);
-    }, ms);
-  });
-
-  return Promise.race([promise, timeoutPromise]);
-}
-
-// ============================================
-// HELPER FUNCTIONS (simplified from main route)
-// ============================================
-
-/**
- * Strip markdown formatting from AI responses
- * Removes bold (**text**), headers (##), and other markdown syntax
- */
-function stripMarkdown(text: string): string {
-  return text
-    // Remove bold/italic markers: **text** or __text__ or *text* or _text_
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/__([^_]+)__/g, '$1')
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/_([^_]+)_/g, '$1')
-    // Remove headers: ## text or ### text
-    .replace(/^#{1,6}\s+/gm, '')
-    // Remove bullet points that look like markdown lists
-    .replace(/^\s*[-*]\s+/gm, '• ')
-    // Clean up any double spaces
-    .replace(/  +/g, ' ')
-    .trim();
-}
+// withTimeout and stripMarkdown are now imported from @/lib/chat-utils
 
 /**
  * Format live analyze API response for chat context
@@ -302,252 +267,11 @@ function formatLiveAnalysisForChat(analysis: any, homeTeam: string, awayTeam: st
   return context;
 }
 
-/**
- * Format match-preview data for chat display
- * This is specifically for the full Match Insights data from /api/match-preview
- */
-function formatMatchPreviewForChat(data: any, homeTeam: string, awayTeam: string): string {
-  let context = `\n=== SPORTBOT MATCH PREVIEW: ${homeTeam} vs ${awayTeam} ===\n\n`;
 
-  // Story/Narrative (most important for rich context)
-  if (data.story?.narrative) {
-    context += `📋 MATCH NARRATIVE:\n${data.story.narrative}\n\n`;
-  }
+// formatMatchPreviewForChat is now imported from @/lib/chat-utils
 
-  // Prediction/Verdict
-  if (data.story?.favored) {
-    const favored = data.story.favored;
-    const confidence = data.story.confidence;
-    const team = favored === 'home' ? homeTeam : favored === 'away' ? awayTeam : 'Draw';
-    context += `🎯 PREDICTION: ${team} (${confidence} confidence)\n\n`;
-  }
 
-  // Market Edge (the KEY differentiator)
-  if (data.marketIntel?.valueEdge?.hasValue) {
-    const edge = data.marketIntel.valueEdge;
-    context += `💎 VALUE EDGE DETECTED:\n`;
-    context += `• Side: ${edge.side}\n`;
-    context += `• Odds: ${edge.odds?.toFixed(2)}\n`;
-    context += `• Edge: ${edge.edgePercent?.toFixed(1)}%\n`;
-    context += `• Our probability: ${edge.ourProb?.toFixed(1)}% vs Market: ${edge.impliedProb?.toFixed(1)}%\n\n`;
-  }
-
-  // Bookmaker Odds (show the actual market odds)
-  if (data.odds || data.marketIntel?.odds) {
-    const odds = data.odds || data.marketIntel?.odds;
-    context += `📊 BOOKMAKER ODDS:\n`;
-    if (odds.home) context += `• ${homeTeam}: ${odds.home.toFixed(2)}\n`;
-    if (odds.draw) context += `• Draw: ${odds.draw.toFixed(2)}\n`;
-    if (odds.away) context += `• ${awayTeam}: ${odds.away.toFixed(2)}\n`;
-    context += '\n';
-  }
-
-  // AI Probabilities
-  if (data.probabilities) {
-    context += `📈 AI PROBABILITY ESTIMATES:\n`;
-    if (data.probabilities.homeWin) context += `• ${homeTeam} win: ${Math.round(data.probabilities.homeWin * 100)}%\n`;
-    if (data.probabilities.draw !== null && data.probabilities.draw !== undefined) {
-      context += `• Draw: ${Math.round(data.probabilities.draw * 100)}%\n`;
-    }
-    if (data.probabilities.awayWin) context += `• ${awayTeam} win: ${Math.round(data.probabilities.awayWin * 100)}%\n`;
-    context += '\n';
-  }
-
-  // Form Data
-  if (data.momentumAndForm?.homeForm?.length > 0 || data.momentumAndForm?.awayForm?.length > 0) {
-    context += `📊 RECENT FORM:\n`;
-    if (data.momentumAndForm.homeForm?.length > 0) {
-      const formStr = data.momentumAndForm.homeForm.slice(0, 5).map((m: any) =>
-        m.result === 'W' ? 'W' : m.result === 'L' ? 'L' : 'D'
-      ).join('-');
-      context += `• ${homeTeam}: ${formStr}\n`;
-    }
-    if (data.momentumAndForm.awayForm?.length > 0) {
-      const formStr = data.momentumAndForm.awayForm.slice(0, 5).map((m: any) =>
-        m.result === 'W' ? 'W' : m.result === 'L' ? 'L' : 'D'
-      ).join('-');
-      context += `• ${awayTeam}: ${formStr}\n`;
-    }
-    context += '\n';
-  }
-
-  // Universal Signals / Key Factors
-  if (data.universalSignals?.length > 0) {
-    context += `🔑 KEY FACTORS:\n`;
-    for (const signal of data.universalSignals.slice(0, 4)) {
-      const emoji = signal.favors === 'home' ? '🏠' : signal.favors === 'away' ? '✈️' : '⚖️';
-      context += `${emoji} ${signal.name}: ${signal.insight || signal.description}\n`;
-    }
-    context += '\n';
-  }
-
-  // Injuries
-  if (data.injuries?.home?.length > 0 || data.injuries?.away?.length > 0) {
-    context += `🏥 INJURIES:\n`;
-    if (data.injuries.home?.length > 0) {
-      context += `• ${homeTeam}: ${data.injuries.home.slice(0, 3).map((i: any) => i.player).join(', ')}\n`;
-    }
-    if (data.injuries.away?.length > 0) {
-      context += `• ${awayTeam}: ${data.injuries.away.slice(0, 3).map((i: any) => i.player).join(', ')}\n`;
-    }
-    context += '\n';
-  }
-
-  // Risk Level
-  if (data.riskFlags?.riskLevel) {
-    const riskEmoji = data.riskFlags.riskLevel === 'LOW' ? '🟢' : data.riskFlags.riskLevel === 'MEDIUM' ? '🟡' : '🔴';
-    context += `⚠️ RISK: ${riskEmoji} ${data.riskFlags.riskLevel}\n`;
-    if (data.riskFlags.warnings?.length > 0) {
-      context += `Warnings: ${data.riskFlags.warnings.slice(0, 2).join(', ')}\n`;
-    }
-    context += '\n';
-  }
-
-  context += `⚠️ DISCLAIMER: This is educational analysis, not betting advice. Always gamble responsibly.\n`;
-  context += `=== END SPORTBOT MATCH PREVIEW ===\n`;
-
-  return context;
-}
-
-/**
- * Fetch full match analysis - tries match-preview first, then analyze API
- * This ensures chat uses the SAME data as the main Match Insights page
- */
-async function fetchMatchPreviewOrAnalysis(
-  homeTeam: string,
-  awayTeam: string,
-  sport: string,
-  request: NextRequest
-): Promise<{ success: boolean; context: string; source: 'preview' | 'analyze' }> {
-  const protocol = request.headers.get('x-forwarded-proto') || 'https';
-  const host = request.headers.get('host') || 'sportbot.ai';
-  const baseUrl = `${protocol}://${host}`;
-  const cookies = request.headers.get('cookie') || '';
-  const authHeader = request.headers.get('authorization') || '';
-
-  // Generate match ID for match-preview endpoint
-  const slugify = (text: string) => text.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-  const getSportCode = (sportKey: string) => {
-    const parts = sportKey.split('_');
-    return parts.length >= 2 ? parts.slice(1).join('-') : sportKey;
-  };
-
-  const homeSlug = slugify(homeTeam);
-  const awaySlug = slugify(awayTeam);
-  const sportCode = getSportCode(sport);
-  const today = new Date().toISOString().split('T')[0];
-  const matchId = `${homeSlug}-vs-${awaySlug}-${sportCode}-${today}`;
-
-  console.log(`[AI-Chat-Stream] Trying match-preview first for: ${homeTeam} vs ${awayTeam} (${matchId})`);
-
-  // 1. TRY MATCH-PREVIEW FIRST (full Match Insights data)
-  try {
-    const previewResponse = await withTimeout(
-      fetch(`${baseUrl}/api/match-preview/${encodeURIComponent(matchId)}`, {
-        method: 'GET',
-        headers: {
-          'Cookie': cookies,
-          'Authorization': authHeader,
-        },
-      }),
-      10000,
-      'Match Preview API'
-    );
-
-    if (previewResponse?.ok) {
-      const previewData = await previewResponse.json();
-
-      // Check if this is actually good data (not a demo/fallback)
-      if (!previewData.isDemo && previewData.story?.narrative) {
-        console.log(`[AI-Chat-Stream] ✅ Got full Match Preview data!`);
-        const context = formatMatchPreviewForChat(previewData, homeTeam, awayTeam);
-        return { success: true, context, source: 'preview' };
-      } else {
-        console.log(`[AI-Chat-Stream] Match-preview returned demo/fallback, trying analyze API...`);
-      }
-    } else {
-      console.log(`[AI-Chat-Stream] Match-preview failed (${previewResponse?.status}), trying analyze API...`);
-    }
-  } catch (previewError) {
-    console.log(`[AI-Chat-Stream] Match-preview error:`, previewError);
-  }
-
-  // 2. FALLBACK TO ANALYZE API with real odds
-  console.log(`[AI-Chat-Stream] Falling back to analyze API for ${homeTeam} vs ${awayTeam}...`);
-
-  // Fetch real odds
-  let realOdds = {
-    home: 2.0,
-    draw: sport.includes('soccer') ? 3.5 : null,
-    away: 2.0
-  };
-
-  try {
-    if (theOddsClient.isConfigured() && sport !== 'unknown') {
-      const { data: events } = await theOddsClient.getEvents(sport);
-      const matchEvent = events.find(e => {
-        const homeMatch = e.home_team.toLowerCase().includes(homeTeam.toLowerCase()) ||
-          homeTeam.toLowerCase().includes(e.home_team.toLowerCase());
-        const awayMatch = e.away_team.toLowerCase().includes(awayTeam.toLowerCase()) ||
-          awayTeam.toLowerCase().includes(e.away_team.toLowerCase());
-        return homeMatch && awayMatch;
-      });
-
-      if (matchEvent) {
-        const { data: eventWithOdds } = await theOddsClient.getEventOdds(sport, matchEvent.id, {
-          regions: ['eu', 'uk'],
-          markets: ['h2h']
-        });
-        const avgOdds = await import('@/lib/theOdds/theOddsClient').then(m => m.calculateAverageOdds(eventWithOdds));
-        if (avgOdds.home > 0 && avgOdds.away > 0) {
-          realOdds = { home: avgOdds.home, draw: avgOdds.draw, away: avgOdds.away };
-          console.log(`[AI-Chat-Stream] Using real odds: ${realOdds.home} / ${realOdds.draw} / ${realOdds.away}`);
-        }
-      }
-    }
-  } catch (oddsErr) {
-    console.log(`[AI-Chat-Stream] Odds fetch failed, using defaults`);
-  }
-
-  // Call analyze API
-  try {
-    const analyzeResponse = await withTimeout(
-      fetch(`${baseUrl}/api/analyze`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cookie': cookies,
-        },
-        body: JSON.stringify({
-          matchData: {
-            sport,
-            league: 'Auto-detected',
-            homeTeam,
-            awayTeam,
-            matchDate: new Date().toISOString(),
-            sourceType: 'chat-stream',
-            odds: realOdds,
-          },
-        }),
-      }),
-      30000,
-      'Analyze API'
-    );
-
-    if (analyzeResponse?.ok) {
-      const analysisData = await analyzeResponse.json();
-      if (analysisData.success) {
-        console.log(`[AI-Chat-Stream] ✅ Got analysis from analyze API`);
-        const context = formatLiveAnalysisForChat(analysisData, homeTeam, awayTeam);
-        return { success: true, context, source: 'analyze' };
-      }
-    }
-  } catch (analyzeErr) {
-    console.log(`[AI-Chat-Stream] Analyze API error:`, analyzeErr);
-  }
-
-  return { success: false, context: '', source: 'analyze' };
-}
+// fetchMatchPreviewOrAnalysis is now imported from @/lib/chat-utils
 
 // ============================================
 // CONVERSATION MEMORY: Reference Resolution
@@ -2900,7 +2624,7 @@ If their favorite team has a match today/tonight, lead with that information.`;
                   if (result.success) {
                     verifiedMatchPredictionContext = result.context;
                     console.log(`[AI-Chat-Stream] ✅ Got analysis from ${result.source}`);
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: `✅ ${result.source === 'preview' ? 'Match Preview' : 'Live analysis'} ready!` })}\n\n`));
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: `✅ ${result.source === 'match-preview' ? 'Match Preview' : 'Live analysis'} ready!` })}\n\n`));
                     // Use our data, not Perplexity
                     perplexityContext = '';
                     citations = [];

@@ -118,7 +118,7 @@ function transformToNewsContent(
   return newsArticle;
 }
 
-async function main() {
+async function main() { 
   console.log('🔄 Regenerating newsContent for match previews...\n');
   
   const posts = await prisma.blogPost.findMany({
