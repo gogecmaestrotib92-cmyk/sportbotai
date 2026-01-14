@@ -2765,7 +2765,8 @@ If their favorite team has a match today/tonight, lead with that information.`;
           }
 
           // STRICTER DATA REFUSAL: For data-critical queries with no data, refuse instead of hallucinating
-          const DATA_CRITICAL_CATEGORIES = ['STATS', 'STANDINGS', 'BETTING_ADVICE', 'PLAYER_PROP', 'OUR_PREDICTION', 'INJURY', 'COMPARISON'];
+          // Note: INJURY is intentionally excluded - it should use Perplexity real-time search
+          const DATA_CRITICAL_CATEGORIES = ['STATS', 'STANDINGS', 'BETTING_ADVICE', 'PLAYER_PROP', 'OUR_PREDICTION', 'COMPARISON'];
           const isDataCriticalQuery = DATA_CRITICAL_CATEGORIES.includes(queryCategory.toUpperCase());
 
           // EXCEPTIONS: Don't refuse if we have good enough data to answer
@@ -2780,12 +2781,16 @@ If their favorite team has a match today/tonight, lead with that information.`;
           // 3. If we have Perplexity data, that's good enough for general questions
           const hasPerplexityFallback = !!perplexityContext && perplexityContext.length > 100;
 
+          // 4. Injury queries should ALWAYS use Perplexity if available - it's the best source for real-time injury info
+          const isInjuryQueryWithData = queryCategory.toUpperCase() === 'INJURY' && hasPerplexityFallback;
+
           // Only refuse if: no data confidence AND is data-critical AND none of the exceptions apply
           const shouldRefuse = !dataConfidence.canAnswer &&
             isDataCriticalQuery &&
             !isBasicKnowledgeQuery &&
             !isGeneralTeamQuestion &&
-            !hasPerplexityFallback;
+            !hasPerplexityFallback &&
+            !isInjuryQueryWithData;
 
           if (shouldRefuse) {
             console.log(`[AI-Chat-Stream] 🛑 REFUSING to answer - data-critical query with insufficient data`);
