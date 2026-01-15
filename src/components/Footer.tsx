@@ -18,7 +18,7 @@ export default function Footer() {
     <footer className="bg-bg text-text-secondary">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
           {/* Brand Column */}
           <div className="md:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 mb-4">
@@ -83,6 +83,11 @@ export default function Footer() {
             <h3 className="text-text-primary font-semibold mb-4 text-sm uppercase tracking-wider">Resources</h3>
             <ul className="space-y-1">
               <li>
+                <Link href="/tools" className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
+                  Betting Tools
+                </Link>
+              </li>
+              <li>
                 <Link href="/partners" className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
                   Featured Tools
                 </Link>
@@ -90,6 +95,33 @@ export default function Footer() {
               <li>
                 <Link href="/blog" className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
                   Blog
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Sports */}
+          <div>
+            <h3 className="text-text-primary font-semibold mb-4 text-sm uppercase tracking-wider">Sports</h3>
+            <ul className="space-y-1">
+              <li>
+                <Link href="/nba" className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
+                  NBA Odds
+                </Link>
+              </li>
+              <li>
+                <Link href="/nfl" className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
+                  NFL Lines
+                </Link>
+              </li>
+              <li>
+                <Link href="/nhl" className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
+                  NHL Odds
+                </Link>
+              </li>
+              <li>
+                <Link href="/soccer" className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
+                  Soccer Odds
                 </Link>
               </li>
             </ul>
