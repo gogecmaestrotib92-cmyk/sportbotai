@@ -16,12 +16,12 @@ import LeagueLogo from '@/components/ui/LeagueLogo';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import SportLeagueSelector from '@/components/SportLeagueSelector';
-import { 
-  getTrendingMatches, 
-  TrendingMatch, 
-  getValueFlaggedMatches, 
+import {
+  getTrendingMatches,
+  TrendingMatch,
+  getValueFlaggedMatches,
   ValueFlaggedMatch,
-  getValueContextLine 
+  getValueContextLine
 } from '@/components/match-selector/trending';
 
 // View mode type
@@ -37,7 +37,7 @@ interface MatchBrowserProps {
 // Generate context line based on match hot factors (for Hot section)
 function getMatchContext(match: TrendingMatch): string {
   const factors = match.hotFactors;
-  
+
   if (factors.derbyScore >= 10) {
     return 'Rivalry match • High market interest';
   }
@@ -125,14 +125,14 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [leagueMatchCounts, setLeagueMatchCounts] = useState<Record<string, number>>({});
-  
+
   // AI Picks from pre-analyzed predictions (real AI data)
   // Using matchKey (team names) for reliable matching instead of matchId
   const [aiPicksData, setAiPicksData] = useState<{
     flaggedMatchKeys: Record<string, boolean>;  // Changed from matchIds to matchKeys
     aiPicksMap: Record<string, AiPickData>;     // Keyed by matchKey
   }>({ flaggedMatchKeys: {}, aiPicksMap: {} });
-  
+
   // New state for filters
   const [viewMode, setViewMode] = useState<ViewMode>('ai-picks');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('today');
@@ -145,7 +145,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
   // Tournaments that have off-seasons or breaks
   const SEASONAL_LEAGUES = [
     'soccer_uefa_champs_league',
-    'soccer_uefa_europa_league', 
+    'soccer_uefa_europa_league',
     'soccer_uefa_europa_conference_league',
     'americanfootball_ncaaf',
   ];
@@ -154,7 +154,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
   useEffect(() => {
     if (initialLeague) {
       // Find which sport contains this league
-      const sportWithLeague = SPORTS.find(s => 
+      const sportWithLeague = SPORTS.find(s =>
         s.leagues.some(l => l.key === initialLeague)
       );
       if (sportWithLeague) {
@@ -181,7 +181,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
     async function fetchLeagueCounts() {
       const counts: Record<string, number> = {};
       const allLeagues = SPORTS.flatMap(sport => sport.leagues);
-      
+
       // Fetch counts in parallel for all leagues across all sports
       await Promise.all(
         allLeagues.map(async (league) => {
@@ -198,7 +198,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
           }
         })
       );
-      
+
       setLeagueMatchCounts(counts);
     }
 
@@ -214,7 +214,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
         if (data.success && data.aiPicks) {
           const flaggedKeys: Record<string, boolean> = {};
           const picksMap: Record<string, AiPickData> = {};
-          
+
           // Use matchKey for reliable matching (team-name based)
           for (const pick of data.aiPicks) {
             const matchKey = pick.matchKey || createMatchKey(pick.homeTeam, pick.awayTeam);
@@ -225,7 +225,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
               conviction: pick.conviction,
             };
           }
-          
+
           setAiPicksData({ flaggedMatchKeys: flaggedKeys, aiPicksMap: picksMap });
         }
       }
@@ -246,7 +246,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
       setError(null);
 
       const response = await fetch(`/api/match-data?sportKey=${selectedLeague}&includeOdds=false`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch matches');
       }
@@ -298,7 +298,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
   // Falls back to client-side heuristics if no API data available
   const aiFlaggedMatches = useMemo(() => {
     if (!matches || matches.length === 0) return [];
-    
+
     // Primary: Use real AI picks from pre-analyze cron (stored in DB)
     const hasFlaggedData = Object.keys(aiPicksData.flaggedMatchKeys).length > 0;
     if (hasFlaggedData) {
@@ -308,7 +308,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
         const matchKey = createMatchKey(m.homeTeam, m.awayTeam);
         return aiPicksData.flaggedMatchKeys[matchKey];
       });
-      
+
       // If we have flagged matches for THIS league, use them
       if (flagged.length > 0) {
         // Sort by edge/conviction (highest value first)
@@ -324,7 +324,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
       }
       // If no matches for this league, fall through to heuristic
     }
-    
+
     // Fallback: Use client-side heuristic if no pre-analyzed data for current matches
     return getValueFlaggedMatches(matches, Math.min(10, matches.length)) as MatchData[];
   }, [matches, aiPicksData]);
@@ -344,23 +344,23 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
   // Apply filters to get final match list
   const filteredMatches = useMemo(() => {
     let result = matches;
-    
+
     // Apply time filter first
     result = filterMatchesByTime(result, timeFilter);
-    
+
     // Apply view mode filter
     // Only filter to AI picks if there are flagged matches in this time period
     if (viewMode === 'ai-picks') {
       const flaggedIds = new Set(aiFlaggedMatches.map(m => m.matchId));
       const aiPicksInTimeFilter = result.filter(m => flaggedIds.has(m.matchId));
-      
+
       // Only apply filter if there are AI picks in this time period
       // Otherwise show all matches (graceful degradation)
       if (aiPicksInTimeFilter.length > 0) {
         result = aiPicksInTimeFilter;
       }
     }
-    
+
     return result;
   }, [matches, timeFilter, viewMode, aiFlaggedMatches, filterMatchesByTime]);
 
@@ -396,13 +396,13 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
   return (
     <section className="py-8 sm:py-12">
       {/* Pull to Refresh Indicator */}
-      <PullToRefreshIndicator 
-        pullDistance={pullDistance} 
-        isRefreshing={isRefreshing} 
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
       />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Sport & League Selector - Responsive Design */}
         <SportLeagueSelector
           sports={SPORTS}
@@ -419,36 +419,32 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
           <div className="flex items-center gap-1 bg-bg-elevated rounded-lg p-1">
             <button
               onClick={() => setViewMode('ai-picks')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                viewMode === 'ai-picks'
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === 'ai-picks'
                   ? 'bg-accent text-bg-primary shadow-sm'
                   : 'text-text-muted hover:text-white'
-              }`}
+                }`}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
               </svg>
               AI Picks
               {aiFlaggedMatches.length > 0 && (
-                <span className={`text-xs px-1.5 py-0.5 rounded ${
-                  viewMode === 'ai-picks' ? 'bg-bg-primary/30' : 'bg-white/10'
-                }`}>
+                <span className={`text-xs px-1.5 py-0.5 rounded ${viewMode === 'ai-picks' ? 'bg-bg-primary/30' : 'bg-white/10'
+                  }`}>
                   {flaggedCountsByTime[timeFilter]}
                 </span>
               )}
             </button>
             <button
               onClick={() => setViewMode('all')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                viewMode === 'all'
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === 'all'
                   ? 'bg-white/10 text-white shadow-sm'
                   : 'text-text-muted hover:text-white'
-              }`}
+                }`}
             >
               All Matches
-              <span className={`text-xs px-1.5 py-0.5 rounded ${
-                viewMode === 'all' ? 'bg-white/20' : 'bg-white/10'
-              }`}>
+              <span className={`text-xs px-1.5 py-0.5 rounded ${viewMode === 'all' ? 'bg-white/20' : 'bg-white/10'
+                }`}>
                 {matchCountsByTime[timeFilter]}
               </span>
             </button>
@@ -458,46 +454,40 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
           <div className="flex items-center gap-1 bg-bg-elevated rounded-lg p-1">
             <button
               onClick={() => setTimeFilter('today')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                timeFilter === 'today'
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${timeFilter === 'today'
                   ? 'bg-white/10 text-white'
                   : 'text-text-muted hover:text-white'
-              }`}
+                }`}
             >
               Today
-              <span className={`text-xs px-1.5 py-0.5 rounded ${
-                timeFilter === 'today' ? 'bg-accent/20 text-accent' : 'bg-white/5'
-              }`}>
+              <span className={`text-xs px-1.5 py-0.5 rounded ${timeFilter === 'today' ? 'bg-accent/20 text-accent' : 'bg-white/5'
+                }`}>
                 {viewMode === 'ai-picks' ? flaggedCountsByTime.today : matchCountsByTime.today}
               </span>
             </button>
             <button
               onClick={() => setTimeFilter('tomorrow')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                timeFilter === 'tomorrow'
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${timeFilter === 'tomorrow'
                   ? 'bg-white/10 text-white'
                   : 'text-text-muted hover:text-white'
-              }`}
+                }`}
             >
               Tomorrow
-              <span className={`text-xs px-1.5 py-0.5 rounded ${
-                timeFilter === 'tomorrow' ? 'bg-accent/20 text-accent' : 'bg-white/5'
-              }`}>
+              <span className={`text-xs px-1.5 py-0.5 rounded ${timeFilter === 'tomorrow' ? 'bg-accent/20 text-accent' : 'bg-white/5'
+                }`}>
                 {viewMode === 'ai-picks' ? flaggedCountsByTime.tomorrow : matchCountsByTime.tomorrow}
               </span>
             </button>
             <button
               onClick={() => setTimeFilter('later')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                timeFilter === 'later'
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${timeFilter === 'later'
                   ? 'bg-white/10 text-white'
                   : 'text-text-muted hover:text-white'
-              }`}
+                }`}
             >
               Later
-              <span className={`text-xs px-1.5 py-0.5 rounded ${
-                timeFilter === 'later' ? 'bg-accent/20 text-accent' : 'bg-white/5'
-              }`}>
+              <span className={`text-xs px-1.5 py-0.5 rounded ${timeFilter === 'later' ? 'bg-accent/20 text-accent' : 'bg-white/5'
+                }`}>
                 {viewMode === 'ai-picks' ? flaggedCountsByTime.later : matchCountsByTime.later}
               </span>
             </button>
@@ -543,13 +533,13 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
                 </div>
               )}
             </div>
-            <div 
+            <div
               id="hot-matches-scroll"
               className="flex gap-4 overflow-x-auto pb-3 px-4 md:px-0 scrollbar-hide snap-x snap-mandatory overflow-y-visible pt-3 scroll-px-4 md:scroll-px-0"
             >
               {hotMatches.map((match, index) => (
-                <div 
-                  key={match.matchId} 
+                <div
+                  key={match.matchId}
                   className="flex-shrink-0 w-[280px] sm:w-[320px] snap-start md:snap-start"
                 >
                   <MatchCard
@@ -576,7 +566,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
             <h3 className="text-lg font-bold text-white tracking-tight">{currentLeague.name}</h3>
             <p className="text-sm text-text-muted">
               {isLoading ? 'Loading matches...' : (
-                viewMode === 'ai-picks' 
+                viewMode === 'ai-picks'
                   ? flaggedCountsByTime[timeFilter] > 0
                     ? `${flaggedCountsByTime[timeFilter]} AI-flagged matches`
                     : `${filteredMatches.length} matches • No AI picks for ${timeFilter}`
@@ -586,9 +576,9 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
           </div>
         </div>
 
-        {/* Loading State with Skeletons */}
+        {/* Loading State with Skeletons - min-height prevents CLS */}
         {isLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[500px]">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="card-glass rounded-xl p-4">
                 {/* League & Time Skeleton */}
@@ -633,8 +623,8 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
             <p className="text-gray-400 mb-6 max-w-sm mx-auto">
               We couldn&apos;t load matches from {currentLeague.name}. This might be a temporary issue.
             </p>
-            <button 
-              onClick={() => setSelectedLeague(selectedLeague)} 
+            <button
+              onClick={() => setSelectedLeague(selectedLeague)}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/15 text-white rounded-lg font-medium transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -645,20 +635,20 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
           </div>
         )}
 
-        {/* Matches Grid */}
+        {/* Matches Grid - min-height prevents CLS */}
         {!isLoading && !error && filteredMatches && filteredMatches.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[400px]">
             {filteredMatches.slice(0, maxMatches).map((match, index) => {
               // Get AI data using matchKey for reliable matching
               const matchKey = createMatchKey(match.homeTeam, match.awayTeam);
               const aiPickData = aiPicksData.aiPicksMap[matchKey];
               const valueFlagged = valueFlaggedMap.get(match.matchId);
               const trendingMatch = hotMatches.find(m => m.matchId === match.matchId);
-              
+
               // Determine badge and context based on view mode
               let badge: string | undefined;
               let contextLine: string | undefined;
-              
+
               if (viewMode === 'ai-picks') {
                 badge = '🎯 AI Flagged';
                 // Priority: Real AI reason > fallback heuristic > generic
@@ -670,7 +660,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
               } else if (trendingMatch) {
                 contextLine = getMatchContext(trendingMatch);
               }
-              
+
               return (
                 <StaggeredItem key={match.matchId} index={index} staggerDelay={50} initialDelay={80}>
                   <MatchCard
@@ -698,7 +688,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">
-              {matchCountsByTime[timeFilter] === 0 
+              {matchCountsByTime[timeFilter] === 0
                 ? `No matches ${timeFilter === 'today' ? 'today' : timeFilter === 'tomorrow' ? 'tomorrow' : 'this week'}`
                 : 'No AI Picks for this timeframe'
               }
@@ -750,7 +740,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
               {SEASONAL_LEAGUES.includes(selectedLeague) ? 'Competition on Break' : 'No Upcoming Matches'}
             </h3>
             <p className="text-gray-400 mb-2 max-w-sm mx-auto">
-              {SEASONAL_LEAGUES.includes(selectedLeague) 
+              {SEASONAL_LEAGUES.includes(selectedLeague)
                 ? `${currentLeague.name} is currently between matchdays. Next fixtures will appear once scheduled.`
                 : `There are no scheduled matches in ${currentLeague.name} at the moment.`
               }
@@ -766,16 +756,16 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
                 .filter(l => l.key !== selectedLeague && (leagueMatchCounts[l.key] || 0) > 0)
                 .slice(0, 3)
                 .map((league) => (
-                <button
-                  key={league.key}
-                  onClick={() => setSelectedLeague(league.key)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors"
-                >
-                  <LeagueLogo leagueName={league.name} sport={league.key} size="xs" />
-                  {league.name}
-                  <span className="text-xs text-primary">({leagueMatchCounts[league.key]})</span>
-                </button>
-              ))}
+                  <button
+                    key={league.key}
+                    onClick={() => setSelectedLeague(league.key)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors"
+                  >
+                    <LeagueLogo leagueName={league.name} sport={league.key} size="xs" />
+                    {league.name}
+                    <span className="text-xs text-primary">({leagueMatchCounts[league.key]})</span>
+                  </button>
+                ))}
             </div>
           </div>
         )}

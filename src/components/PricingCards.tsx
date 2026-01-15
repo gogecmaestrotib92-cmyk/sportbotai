@@ -229,8 +229,8 @@ export default function PricingCards() {
           <span className="font-bold">Pay</span><span className="font-bold text-[#003087]">Pal</span>
         </button>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
+      {/* Pricing cards grid - min-height prevents CLS during hydration */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto min-h-[580px] sm:min-h-[520px]">
         {/* Free Plan Card */}
         <div className={`card-glass p-5 sm:p-6 border border-accent/20 ${currentPlan === 'FREE' ? 'border-2 border-accent shadow-glow-accent' : ''
           } relative`}>

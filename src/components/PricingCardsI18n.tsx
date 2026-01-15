@@ -287,8 +287,8 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
           <span className="ml-2 text-xs bg-accent-dark/30 text-white px-2 py-0.5 rounded-full">{t.saveUpTo}</span>
         </span>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
+      {/* Pricing cards grid - min-height prevents CLS during hydration */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto min-h-[580px] sm:min-h-[520px]">
         {/* Free Plan Card */}
         <div className={`card-glass p-5 sm:p-6 ${currentPlan === 'FREE' ? 'border-2 border-accent shadow-glow-accent' : ''
           } relative`}>
@@ -320,8 +320,8 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
             onClick={handleFreePlan}
             disabled={currentPlan === 'FREE'}
             className={`w-full py-3 px-6 rounded-btn font-semibold transition-all duration-200 min-h-[48px] ${currentPlan === 'FREE'
-                ? 'bg-accent/20 text-accent border border-accent/30 cursor-default'
-                : 'bg-bg-elevated text-white hover:bg-bg-elevated/80 border border-divider'
+              ? 'bg-accent/20 text-accent border border-accent/30 cursor-default'
+              : 'bg-bg-elevated text-white hover:bg-bg-elevated/80 border border-divider'
               }`}
           >
             {currentPlan === 'FREE' ? t.currentPlan : t.startFree}
@@ -359,12 +359,12 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
             <div
               key={plan.id}
               className={`card-glass p-5 sm:p-6 relative ${isCurrentPlan
-                  ? 'border-2 border-accent shadow-glow-accent'
-                  : plan.highlighted && canUpgrade
-                    ? 'border-2 border-accent/50 md:scale-105'
-                    : isPremium && canUpgrade
-                      ? 'border-2 border-accent/30'
-                      : ''
+                ? 'border-2 border-accent shadow-glow-accent'
+                : plan.highlighted && canUpgrade
+                  ? 'border-2 border-accent/50 md:scale-105'
+                  : isPremium && canUpgrade
+                    ? 'border-2 border-accent/30'
+                    : ''
                 }`}
             >
               {/* Badge */}
@@ -428,14 +428,14 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
                 onClick={handleButtonClick}
                 disabled={loading === checkoutId || isCurrentPlan}
                 className={`w-full py-3 px-6 rounded-btn font-semibold transition-all duration-200 min-h-[48px] ${isCurrentPlan
-                    ? 'bg-accent/20 text-accent border border-accent/30 cursor-default'
-                    : isDowngrade
-                      ? 'btn-gradient-border'
-                      : plan.highlighted
-                        ? 'bg-accent-dark hover:bg-accent text-white'
-                        : isPremium
-                          ? 'bg-accent-dark/80 hover:bg-accent-dark text-white border border-accent/30'
-                          : 'btn-gradient-border'
+                  ? 'bg-accent/20 text-accent border border-accent/30 cursor-default'
+                  : isDowngrade
+                    ? 'btn-gradient-border'
+                    : plan.highlighted
+                      ? 'bg-accent-dark hover:bg-accent text-white'
+                      : isPremium
+                        ? 'bg-accent-dark/80 hover:bg-accent-dark text-white border border-accent/30'
+                        : 'btn-gradient-border'
                   } ${loading === checkoutId ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {loading === checkoutId ? (
