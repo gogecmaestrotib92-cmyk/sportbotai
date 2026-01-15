@@ -30,8 +30,9 @@ export const translations = {
       responsibleGaming: 'Responsible Gaming',
       analyzeMatch: 'Analyze Match',
       yourAccount: 'Your Account',
+      tools: 'Tools',
     },
-    
+
     // Hero Section
     hero: {
       badge: 'Know any match before it happens',
@@ -50,7 +51,7 @@ export const translations = {
       },
       analysesCompleted: 'analyses completed',
     },
-    
+
     // Stats Strip
     stats: {
       sportsCovered: 'Sports Covered',
@@ -58,7 +59,7 @@ export const translations = {
       perAnalysis: 'Per Analysis',
       liveData: 'Live Data',
     },
-    
+
     // How It Works
     howItWorks: {
       label: 'How It Works',
@@ -87,7 +88,7 @@ export const translations = {
         },
       ],
     },
-    
+
     // Why SportBot AI
     whyNotTipster: {
       label: 'Why SportBot AI',
@@ -124,7 +125,7 @@ export const translations = {
         ],
       },
     },
-    
+
     // Features
     features: {
       label: 'Features',
@@ -163,7 +164,7 @@ export const translations = {
         },
       ],
     },
-    
+
     // Pricing Teaser
     pricing: {
       label: 'Pricing',
@@ -216,7 +217,7 @@ export const translations = {
       },
       viewAll: 'View all pricing options',
     },
-    
+
     // Responsible Gambling
     responsibleGambling: {
       title: 'Bet responsibly',
@@ -229,7 +230,7 @@ export const translations = {
         help: 'Need help?',
       },
     },
-    
+
     // Trust Badges
     trustBadges: {
       ssl: 'SSL Secured',
@@ -237,19 +238,19 @@ export const translations = {
       age: '18+ Only',
       responsible: 'Responsible Gambling',
     },
-    
+
     // Testimonials
     testimonials: {
       label: 'Testimonials',
       title: 'What our users say',
     },
-    
+
     // Language
     language: {
       english: 'English',
       serbian: 'Srpski',
     },
-    
+
     // Matches Browser
     matches: {
       pageTitle: 'Browse Matches',
@@ -298,7 +299,7 @@ export const translations = {
         hockey: 'Hockey',
       },
     },
-    
+
     // AI Desk
     aiDesk: {
       pageTitle: 'AI Sports Desk',
@@ -316,7 +317,7 @@ export const translations = {
       signIn: 'Sign in',
       disclaimer: 'AI-generated content for informational purposes only. This is not betting advice. Please gamble responsibly.',
     },
-    
+
     // Pricing Page
     pricingPage: {
       title: 'Simple Pricing',
@@ -343,7 +344,7 @@ export const translations = {
       disclaimer: 'Payment for SportBot AI does not guarantee winnings. Our tool is purely analytical and educational. Bet responsibly and only with money you can afford to lose.',
       note: 'Note:',
     },
-    
+
     // Auth Pages
     auth: {
       welcomeBack: 'Welcome back',
@@ -363,7 +364,7 @@ export const translations = {
       errorOccurred: 'An error occurred. Please try again.',
     },
   },
-  
+
   sr: {
     // Header
     header: {
@@ -387,8 +388,9 @@ export const translations = {
       responsibleGaming: 'Odgovorno Klađenje',
       analyzeMatch: 'Analiziraj Meč',
       yourAccount: 'Tvoj Nalog',
+      tools: 'Alati',
     },
-    
+
     // Hero Section
     hero: {
       badge: 'Poznaj svaki meč pre nego što se desi',
@@ -406,7 +408,7 @@ export const translations = {
       },
       analysesCompleted: 'završenih analiza',
     },
-    
+
     // Stats Strip
     stats: {
       sportsCovered: 'Pokrivenih Sportova',
@@ -414,7 +416,7 @@ export const translations = {
       perAnalysis: 'Po Analizi',
       liveData: 'Podaci Uživo',
     },
-    
+
     // How It Works
     howItWorks: {
       label: 'Kako Funkcioniše',
@@ -443,7 +445,7 @@ export const translations = {
         },
       ],
     },
-    
+
     // Why SportBot AI
     whyNotTipster: {
       label: 'Zašto SportBot AI',
@@ -480,7 +482,7 @@ export const translations = {
         ],
       },
     },
-    
+
     // Features
     features: {
       label: 'Funkcije',
@@ -519,7 +521,7 @@ export const translations = {
         },
       ],
     },
-    
+
     // Pricing Teaser
     pricing: {
       label: 'Cene',
@@ -572,7 +574,7 @@ export const translations = {
       },
       viewAll: 'Pogledaj sve opcije',
     },
-    
+
     // Responsible Gambling
     responsibleGambling: {
       title: 'Kladi se odgovorno',
@@ -585,7 +587,7 @@ export const translations = {
         help: 'Treba ti pomoć?',
       },
     },
-    
+
     // Trust Badges
     trustBadges: {
       ssl: 'SSL Zaštićeno',
@@ -593,19 +595,19 @@ export const translations = {
       age: 'Samo 18+',
       responsible: 'Odgovorno Klađenje',
     },
-    
+
     // Testimonials
     testimonials: {
       label: 'Iskustva Korisnika',
       title: 'Šta naši korisnici kažu',
     },
-    
+
     // Language
     language: {
       english: 'English',
       serbian: 'Srpski',
     },
-    
+
     // Matches Browser
     matches: {
       pageTitle: 'Pregledaj Mečeve',
@@ -654,7 +656,7 @@ export const translations = {
         hockey: 'Hokej',
       },
     },
-    
+
     // AI Desk
     aiDesk: {
       pageTitle: 'AI Sportski Desk',
@@ -672,7 +674,7 @@ export const translations = {
       signIn: 'Prijavi se',
       disclaimer: 'AI-generisan sadržaj samo u informativne svrhe. Ovo nije savet za klađenje. Molimo kladi se odgovorno.',
     },
-    
+
     // Pricing Page
     pricingPage: {
       title: 'Jednostavne Cene',
@@ -699,7 +701,7 @@ export const translations = {
       disclaimer: 'Plaćanje SportBot AI ne garantuje dobitak. Naš alat je čisto analitički i edukativni. Kladi se odgovorno i samo sa novcem koji možeš priuštiti da izgubiš.',
       note: 'Napomena:',
     },
-    
+
     // Auth Pages
     auth: {
       welcomeBack: 'Dobro Došao Nazad',
@@ -743,6 +745,7 @@ export type TranslationsType = {
     responsibleGaming: string;
     analyzeMatch: string;
     yourAccount: string;
+    tools: string;
   };
   hero: {
     badge: string;
