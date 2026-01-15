@@ -10,6 +10,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { trackCheckoutStart, trackUpgradeIntent } from '@/lib/analytics';
 
 // Types for pricing plans
 interface PricingPlan {
@@ -131,6 +132,13 @@ export default function PricingCards() {
 
     setLoading(checkoutId);
     setError(null);
+
+    // Track upgrade intent and checkout start
+    const price = yearly
+      ? parseFloat(plan.yearlyPrice.replace('$', ''))
+      : parseFloat(plan.monthlyPrice.replace('$', ''));
+    trackUpgradeIntent(`pricing-${plan.id}-${yearly ? 'yearly' : 'monthly'}`);
+    trackCheckoutStart({ plan: plan.id, price });
 
     try {
       // Use the selected payment method

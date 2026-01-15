@@ -17,6 +17,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Send, Bot, User, Loader2, Sparkles, Trash2, Volume2, VolumeX, Square, ThumbsUp, ThumbsDown, Mic, MicOff } from 'lucide-react';
+import { trackChatMessage } from '@/lib/analytics';
 
 // ============================================
 // TYPES
@@ -345,7 +346,7 @@ export default function AIDeskHeroChat() {
       if (voiceState === 'listening') {
         // If we have input, send it
         if (input.trim()) {
-          sendMessage(input.trim());
+          sendMessage(input.trim(), true); // isVoice = true
         }
       }
       setVoiceState('idle');
@@ -405,9 +406,12 @@ export default function AIDeskHeroChat() {
     }
   }, []);
 
-  const sendMessage = async (messageText?: string) => {
+  const sendMessage = async (messageText?: string, isVoice: boolean = false) => {
     const text = messageText || input.trim();
     if (!text || isLoading) return;
+
+    // Track chat message in Google Analytics
+    trackChatMessage(text, isVoice);
 
     setError(null);
     setInput('');
@@ -635,8 +639,8 @@ export default function AIDeskHeroChat() {
               >
                 {/* Avatar */}
                 <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ${msg.role === 'user'
-                    ? 'bg-primary/20'
-                    : 'bg-gradient-to-br from-primary/20 to-accent/20'
+                  ? 'bg-primary/20'
+                  : 'bg-gradient-to-br from-primary/20 to-accent/20'
                   }`}>
                   {msg.role === 'user' ? (
                     <User className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
@@ -648,8 +652,8 @@ export default function AIDeskHeroChat() {
                 {/* Message content */}
                 <div className={`flex-1 max-w-[90%] sm:max-w-[85%] ${msg.role === 'user' ? 'text-right' : ''}`}>
                   <div className={`inline-block px-4 sm:px-5 py-3 sm:py-4 rounded-xl sm:rounded-2xl ${msg.role === 'user'
-                      ? 'bg-primary text-white rounded-tr-md'
-                      : 'bg-white/[0.03] text-white/90 rounded-tl-md border border-white/[0.06]'
+                    ? 'bg-primary text-white rounded-tr-md'
+                    : 'bg-white/[0.03] text-white/90 rounded-tl-md border border-white/[0.06]'
                     }`}>
                     {/* Status message while loading */}
                     {msg.role === 'assistant' && msg.statusMessage && !msg.content && (
@@ -662,8 +666,8 @@ export default function AIDeskHeroChat() {
                       </div>
                     )}
                     <p className={`whitespace-pre-wrap ${msg.role === 'user'
-                        ? 'text-[13px] sm:text-sm leading-relaxed'
-                        : 'text-[13px] sm:text-[15px] leading-[1.6] sm:leading-[1.7] tracking-[-0.01em] font-light'
+                      ? 'text-[13px] sm:text-sm leading-relaxed'
+                      : 'text-[13px] sm:text-[15px] leading-[1.6] sm:leading-[1.7] tracking-[-0.01em] font-light'
                       } ${msg.role === 'assistant' && msg.statusMessage && !msg.content ? 'hidden' : ''}`}>
                       {msg.role === 'assistant' ? stripMarkdown(msg.content) : msg.content}
                       {msg.role === 'assistant' && msg.isStreaming && !msg.statusMessage && (
@@ -692,10 +696,10 @@ export default function AIDeskHeroChat() {
                         onClick={() => playMessage(msg.id, msg.content)}
                         disabled={audioState === 'loading' && playingMessageId === msg.id}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all ${playingMessageId === msg.id && audioState === 'playing'
-                            ? 'bg-primary/20 text-primary border border-primary/30'
-                            : playingMessageId === msg.id && audioState === 'loading'
-                              ? 'bg-white/5 text-text-muted cursor-wait'
-                              : 'bg-white/5 text-text-muted hover:bg-white/10 hover:text-white'
+                          ? 'bg-primary/20 text-primary border border-primary/30'
+                          : playingMessageId === msg.id && audioState === 'loading'
+                            ? 'bg-white/5 text-text-muted cursor-wait'
+                            : 'bg-white/5 text-text-muted hover:bg-white/10 hover:text-white'
                           }`}
                         title={playingMessageId === msg.id && audioState === 'playing' ? 'Stop' : 'Listen'}
                       >
@@ -849,8 +853,8 @@ export default function AIDeskHeroChat() {
               disabled={isLoading || voiceState === 'listening'}
               rows={3}
               className={`w-full bg-white/[0.03] border rounded-xl sm:rounded-2xl px-4 sm:px-6 py-4 sm:py-5 pr-28 sm:pr-32 text-sm sm:text-base text-white placeholder-text-muted/50 focus:outline-none focus:bg-white/[0.05] disabled:opacity-50 resize-none min-h-[100px] sm:min-h-[140px] transition-all ${voiceState === 'listening'
-                  ? 'border-red-500/50 animate-pulse'
-                  : 'border-white/10 focus:border-primary/30'
+                ? 'border-red-500/50 animate-pulse'
+                : 'border-white/10 focus:border-primary/30'
                 }`}
             />
             <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 flex items-center gap-2">
@@ -860,8 +864,8 @@ export default function AIDeskHeroChat() {
                   onClick={voiceState === 'listening' ? stopVoiceInput : startVoiceInput}
                   disabled={isLoading}
                   className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 ${voiceState === 'listening'
-                      ? 'bg-red-500 hover:bg-red-600 animate-pulse'
-                      : 'bg-white/10 hover:bg-white/20'
+                    ? 'bg-red-500 hover:bg-red-600 animate-pulse'
+                    : 'bg-white/10 hover:bg-white/20'
                     }`}
                   title={voiceState === 'listening' ? 'Stop listening' : 'Voice input'}
                 >

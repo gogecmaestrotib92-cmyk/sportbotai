@@ -217,3 +217,76 @@ export function trackFeatureUsage(feature: string): void {
     label: feature,
   });
 }
+
+/**
+ * Track chat message sent
+ */
+export function trackChatMessage(query: string, isVoice: boolean = false): void {
+  trackEvent({
+    action: 'chat_message',
+    category: 'Engagement',
+    label: isVoice ? 'voice' : 'text',
+  });
+
+  // Also track query length bucket for analysis
+  const length = query.length;
+  const bucket = length < 20 ? 'short' : length < 50 ? 'medium' : 'long';
+  trackEvent({
+    action: 'chat_query_length',
+    category: 'Engagement',
+    label: bucket,
+  });
+}
+
+/**
+ * Track match analysis page view
+ */
+export function trackMatchView(sport: string, homeTeam: string, awayTeam: string): void {
+  trackEvent({
+    action: 'match_view',
+    category: 'Content',
+    label: `${sport}: ${homeTeam} vs ${awayTeam}`,
+  });
+
+  // Track sport separately for segmentation
+  trackEvent({
+    action: 'sport_viewed',
+    category: 'Content',
+    label: sport,
+  });
+}
+
+/**
+ * Track blog post view
+ */
+export function trackBlogView(slug: string, category: string): void {
+  trackEvent({
+    action: 'blog_view',
+    category: 'Content',
+    label: `${category}: ${slug}`,
+  });
+}
+
+/**
+ * Track PRO upgrade click (pre-purchase intent)
+ */
+export function trackUpgradeIntent(location: string): void {
+  trackEvent({
+    action: 'upgrade_intent',
+    category: 'Conversion',
+    label: location,
+  });
+}
+
+/**
+ * Track share action
+ */
+export function trackShare(contentType: string, method: string): void {
+  const gtag = getGtag();
+  if (!gtag) return;
+
+  gtag('event', 'share', {
+    content_type: contentType,
+    method: method,
+  });
+}

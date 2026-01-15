@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Locale, getTranslations } from '@/lib/i18n/translations';
+import { trackCheckoutStart, trackUpgradeIntent } from '@/lib/analytics';
 
 interface PricingCardsI18nProps {
   locale: Locale;
@@ -144,7 +145,7 @@ const cardTranslations = {
 export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
   const t = cardTranslations[locale];
   const localePath = locale === 'sr' ? '/sr' : '';
-  
+
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isYearlyBilling, setIsYearlyBilling] = useState(false);
@@ -218,6 +219,13 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
     setLoading(checkoutId);
     setError(null);
 
+    // Track upgrade intent and checkout start
+    const price = yearly
+      ? parseFloat(plan.yearlyPrice.replace('$', ''))
+      : parseFloat(plan.monthlyPrice.replace('$', ''));
+    trackUpgradeIntent(`pricing-${plan.id}-${yearly ? 'yearly' : 'monthly'}`);
+    trackCheckoutStart({ plan: plan.id, price });
+
     try {
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
@@ -266,14 +274,12 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
           role="switch"
           aria-checked={isYearlyBilling}
           aria-label="Toggle between monthly and yearly billing"
-          className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
-            isYearlyBilling ? 'bg-accent-dark' : 'bg-gray-600'
-          }`}
+          className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${isYearlyBilling ? 'bg-accent-dark' : 'bg-gray-600'
+            }`}
         >
           <span
-            className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ${
-              isYearlyBilling ? 'translate-x-7' : 'translate-x-0'
-            }`}
+            className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ${isYearlyBilling ? 'translate-x-7' : 'translate-x-0'
+              }`}
           />
         </button>
         <span className={`text-sm font-medium transition-colors ${isYearlyBilling ? 'text-white' : 'text-gray-400'}`}>
@@ -284,9 +290,8 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
         {/* Free Plan Card */}
-        <div className={`card-glass p-5 sm:p-6 ${
-          currentPlan === 'FREE' ? 'border-2 border-accent shadow-glow-accent' : ''
-        } relative`}>
+        <div className={`card-glass p-5 sm:p-6 ${currentPlan === 'FREE' ? 'border-2 border-accent shadow-glow-accent' : ''
+          } relative`}>
           {currentPlan === 'FREE' && (
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-bg text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
               {t.yourPlan}
@@ -314,11 +319,10 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
           <button
             onClick={handleFreePlan}
             disabled={currentPlan === 'FREE'}
-            className={`w-full py-3 px-6 rounded-btn font-semibold transition-all duration-200 min-h-[48px] ${
-              currentPlan === 'FREE'
+            className={`w-full py-3 px-6 rounded-btn font-semibold transition-all duration-200 min-h-[48px] ${currentPlan === 'FREE'
                 ? 'bg-accent/20 text-accent border border-accent/30 cursor-default'
                 : 'bg-bg-elevated text-white hover:bg-bg-elevated/80 border border-divider'
-            }`}
+              }`}
           >
             {currentPlan === 'FREE' ? t.currentPlan : t.startFree}
           </button>
@@ -335,13 +339,13 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
           const isCurrentPlan = currentPlan === planKey;
           const isDowngrade = currentPlanRank > thisPlanRank;
           const canUpgrade = !isCurrentPlan && !isDowngrade;
-          
+
           const getButtonText = () => {
             if (isCurrentPlan) return t.currentPlan;
             if (isDowngrade) return t.manageSubscription;
             return plan.buttonText;
           };
-          
+
           const handleButtonClick = () => {
             if (isCurrentPlan) return;
             if (isDowngrade) {
@@ -350,19 +354,18 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
             }
             handleCheckout(plan);
           };
-          
+
           return (
             <div
               key={plan.id}
-              className={`card-glass p-5 sm:p-6 relative ${
-                isCurrentPlan
+              className={`card-glass p-5 sm:p-6 relative ${isCurrentPlan
                   ? 'border-2 border-accent shadow-glow-accent'
                   : plan.highlighted && canUpgrade
-                  ? 'border-2 border-accent/50 md:scale-105'
-                  : isPremium && canUpgrade
-                  ? 'border-2 border-accent/30'
-                  : ''
-              }`}
+                    ? 'border-2 border-accent/50 md:scale-105'
+                    : isPremium && canUpgrade
+                      ? 'border-2 border-accent/30'
+                      : ''
+                }`}
             >
               {/* Badge */}
               {isCurrentPlan ? (
@@ -387,9 +390,8 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
 
                 {/* Price */}
                 <div className="mb-2">
-                  <span className={`text-4xl font-extrabold ${
-                    plan.highlighted ? 'text-white' : isPremium ? 'text-slate-400' : 'text-white'
-                  }`}>
+                  <span className={`text-4xl font-extrabold ${plan.highlighted ? 'text-white' : isPremium ? 'text-slate-400' : 'text-white'
+                    }`}>
                     {yearly ? plan.yearlyPrice : plan.monthlyPrice}
                   </span>
                   <span className="text-sm text-gray-400">
@@ -425,17 +427,16 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
               <button
                 onClick={handleButtonClick}
                 disabled={loading === checkoutId || isCurrentPlan}
-                className={`w-full py-3 px-6 rounded-btn font-semibold transition-all duration-200 min-h-[48px] ${
-                  isCurrentPlan
+                className={`w-full py-3 px-6 rounded-btn font-semibold transition-all duration-200 min-h-[48px] ${isCurrentPlan
                     ? 'bg-accent/20 text-accent border border-accent/30 cursor-default'
                     : isDowngrade
-                    ? 'btn-gradient-border'
-                    : plan.highlighted
-                    ? 'bg-accent-dark hover:bg-accent text-white'
-                    : isPremium
-                    ? 'bg-accent-dark/80 hover:bg-accent-dark text-white border border-accent/30'
-                    : 'btn-gradient-border'
-                } ${loading === checkoutId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      ? 'btn-gradient-border'
+                      : plan.highlighted
+                        ? 'bg-accent-dark hover:bg-accent text-white'
+                        : isPremium
+                          ? 'bg-accent-dark/80 hover:bg-accent-dark text-white border border-accent/30'
+                          : 'btn-gradient-border'
+                  } ${loading === checkoutId ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {loading === checkoutId ? (
                   <span className="flex items-center justify-center gap-2">

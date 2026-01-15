@@ -12,6 +12,7 @@ import { useSession } from 'next-auth/react';
 import { Send, Bot, User, Loader2, Sparkles, X, MessageCircle, Volume2, VolumeX, Square, ThumbsUp, ThumbsDown, Mic, MicOff, Zap } from 'lucide-react';
 import Link from 'next/link';
 import TypingIndicator from '@/components/ui/TypingIndicator';
+import { trackChatMessage } from '@/lib/analytics';
 
 // ============================================
 // TYPES
@@ -336,7 +337,7 @@ export default function AIDeskChat() {
       if (voiceState === 'listening') {
         // If we have input, send it
         if (input.trim()) {
-          sendMessage(input.trim());
+          sendMessage(input.trim(), true); // isVoice = true
         }
       }
       setVoiceState('idle');
@@ -396,9 +397,12 @@ export default function AIDeskChat() {
     }
   }, []);
 
-  const sendMessage = async (messageText?: string) => {
+  const sendMessage = async (messageText?: string, isVoice: boolean = false) => {
     const text = messageText || input.trim();
     if (!text || isLoading) return;
+
+    // Track chat message in Google Analytics
+    trackChatMessage(text, isVoice);
 
     setError(null);
     setInput('');
@@ -681,8 +685,8 @@ export default function AIDeskChat() {
               >
                 {/* Avatar */}
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${msg.role === 'user'
-                    ? 'bg-primary/20'
-                    : 'bg-gradient-to-br from-primary/20 to-accent/20'
+                  ? 'bg-primary/20'
+                  : 'bg-gradient-to-br from-primary/20 to-accent/20'
                   }`}>
                   {msg.role === 'user' ? (
                     <User className="w-4 h-4 text-primary" />
@@ -694,8 +698,8 @@ export default function AIDeskChat() {
                 {/* Message content */}
                 <div className={`flex-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
                   <div className={`inline-block px-4 py-3 rounded-2xl max-w-[85%] ${msg.role === 'user'
-                      ? 'bg-primary text-white rounded-tr-md'
-                      : 'bg-white/[0.03] text-white/90 rounded-tl-md border border-white/[0.06]'
+                    ? 'bg-primary text-white rounded-tr-md'
+                    : 'bg-white/[0.03] text-white/90 rounded-tl-md border border-white/[0.06]'
                     }`}>
                     {/* Status message (e.g., "Searching real-time data...") */}
                     {msg.role === 'assistant' && msg.statusMessage && !msg.content && (
@@ -705,8 +709,8 @@ export default function AIDeskChat() {
                       </div>
                     )}
                     <p className={`whitespace-pre-wrap ${msg.role === 'user'
-                        ? 'text-sm'
-                        : 'text-[14px] leading-[1.7] tracking-[-0.01em] font-light'
+                      ? 'text-sm'
+                      : 'text-[14px] leading-[1.7] tracking-[-0.01em] font-light'
                       } ${msg.role === 'assistant' && msg.statusMessage && !msg.content ? 'hidden' : ''}`}>
                       {msg.role === 'assistant' ? stripMarkdown(msg.content) : msg.content}
                       {msg.role === 'assistant' && msg.isStreaming && !msg.statusMessage && (
@@ -735,10 +739,10 @@ export default function AIDeskChat() {
                         onClick={() => playMessage(msg.id, msg.content)}
                         disabled={audioState === 'loading' && playingMessageId === msg.id}
                         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-all ${playingMessageId === msg.id && audioState === 'playing'
-                            ? 'bg-primary/20 text-primary border border-primary/30'
-                            : playingMessageId === msg.id && audioState === 'loading'
-                              ? 'bg-white/5 text-text-muted cursor-wait'
-                              : 'bg-white/5 text-text-muted hover:bg-white/10 hover:text-white'
+                          ? 'bg-primary/20 text-primary border border-primary/30'
+                          : playingMessageId === msg.id && audioState === 'loading'
+                            ? 'bg-white/5 text-text-muted cursor-wait'
+                            : 'bg-white/5 text-text-muted hover:bg-white/10 hover:text-white'
                           }`}
                         title={playingMessageId === msg.id && audioState === 'playing' ? 'Stop' : 'Listen'}
                       >
@@ -892,8 +896,8 @@ export default function AIDeskChat() {
             placeholder={voiceState === 'listening' ? 'Listening...' : PLACEHOLDER_EXAMPLES[placeholderIndex]}
             disabled={isLoading || voiceState === 'listening'}
             className={`flex-1 bg-white/5 border rounded-xl px-3 sm:px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none disabled:opacity-50 ${voiceState === 'listening'
-                ? 'border-red-500/50 animate-pulse'
-                : 'border-white/10 focus:border-primary/50'
+              ? 'border-red-500/50 animate-pulse'
+              : 'border-white/10 focus:border-primary/50'
               }`}
           />
 
@@ -903,8 +907,8 @@ export default function AIDeskChat() {
               onClick={voiceState === 'listening' ? stopVoiceInput : startVoiceInput}
               disabled={isLoading}
               className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-colors active:scale-95 ${voiceState === 'listening'
-                  ? 'bg-red-500 hover:bg-red-600 animate-pulse'
-                  : 'bg-white/10 hover:bg-white/20'
+                ? 'bg-red-500 hover:bg-red-600 animate-pulse'
+                : 'bg-white/10 hover:bg-white/20'
                 }`}
               title={voiceState === 'listening' ? 'Stop listening' : 'Voice input'}
             >
