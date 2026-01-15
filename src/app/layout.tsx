@@ -29,7 +29,7 @@ import MicrosoftClarity from '@/components/MicrosoftClarity';
 import CookieConsent from '@/components/CookieConsent';
 
 // Inter font with display swap for better performance
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
 });
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
   authors: [{ name: SITE_CONFIG.name }],
   creator: SITE_CONFIG.name,
   publisher: SITE_CONFIG.name,
-  
+
   // Favicon & Icons - comprehensive for all platforms
   icons: {
     icon: [
@@ -76,10 +76,10 @@ export const metadata: Metadata = {
     ],
     shortcut: '/favicon.svg',
   },
-  
+
   // PWA Manifest
   manifest: '/manifest.json',
-  
+
   // Apple iOS PWA specific - critical for native-like experience
   appleWebApp: {
     capable: true,
@@ -107,12 +107,12 @@ export const metadata: Metadata = {
     'msapplication-TileColor': '#050607',
     'msapplication-tap-highlight': 'no',
   },
-  
+
   // Canonical & Base
   metadataBase: new URL(SITE_CONFIG.url),
   // NOTE: Do NOT set alternates.canonical here - it will be inherited by all pages
   // Each page should set its own canonical URL
-  
+
   // Robots
   robots: {
     index: true,
@@ -125,7 +125,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  
+
   // Open Graph
   openGraph: {
     type: 'website',
@@ -136,7 +136,7 @@ export const metadata: Metadata = {
     description: META.home.description,
     images: OG_DEFAULTS.images,
   },
-  
+
   // Twitter Card
   twitter: {
     card: 'summary_large_image',
@@ -145,11 +145,11 @@ export const metadata: Metadata = {
     images: OG_DEFAULTS.images,
     // creator: '@sportbotai', // Uncomment when Twitter exists
   },
-  
+
   // App specific
   applicationName: SITE_CONFIG.name,
   category: 'Sports Analytics',
-  
+
   // Verification (add when ready)
   // verification: {
   //   google: 'your-google-verification-code',
@@ -165,7 +165,7 @@ export default async function RootLayout({
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || headersList.get('x-invoke-path') || '';
   const locale = pathname.startsWith('/sr') ? 'sr' : 'en';
-  
+
   // Structured data for SEO
   const organizationSchema = getOrganizationSchema();
   const websiteSchema = getWebsiteSchema();
@@ -174,30 +174,41 @@ export default async function RootLayout({
     <html lang={locale}>
       <head>
         {/* Critical inline CSS - fallback for slow networks/JS failures */}
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style dangerouslySetInnerHTML={{
+          __html: `
           html{background:#0D0D12;color:#fff;font-family:system-ui,-apple-system,sans-serif}
           body{margin:0;min-height:100vh}
           a{color:#8B5CF6}
           .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
         `}} />
-        
-        {/* Preconnect to Google Analytics - improves script load time */}
+
+        {/* Preconnect to Google Analytics & Tag Manager - improves script load time */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://www.google-analytics.com" />
-        
+
+        {/* Google Tag Manager - Head Script */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+          })(window,document,'script','dataLayer','GTM-NL4HRCX3');
+        `}} />
+
         {/* Google Analytics */}
         <GoogleAnalytics />
-        
+
         {/* Microsoft Clarity - Heatmaps & Session Recording */}
         <MicrosoftClarity />
-        
+
         {/* Ahrefs Web Analytics */}
-        <script 
-          src="https://analytics.ahrefs.com/analytics.js" 
-          data-key="P7J/OBKDmyZ1TF6GuRYQsQ" 
-          async 
+        <script
+          src="https://analytics.ahrefs.com/analytics.js"
+          data-key="P7J/OBKDmyZ1TF6GuRYQsQ"
+          async
         />
-        
+
         {/* DNS Prefetch & Preconnect for Logo CDNs - faster image loading */}
         <link rel="dns-prefetch" href="//a.espncdn.com" />
         <link rel="dns-prefetch" href="//media.api-sports.io" />
@@ -211,12 +222,12 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://media.api-sports.io" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://crests.football-data.org" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://flagcdn.com" crossOrigin="anonymous" />
-        
+
         {/* AI/LLM Discovery Links */}
         <link rel="llms" href="/llms.txt" />
         <link rel="llms-full" href="/llms-full.txt" />
         <link rel="humans" href="/humans.txt" />
-        
+
         {/* JSON-LD Structured Data */}
         <script
           type="application/ld+json"
@@ -228,13 +239,23 @@ export default async function RootLayout({
         />
       </head>
       <body className={`${inter.className} ${shareTechMono.variable}`}>
+        {/* Google Tag Manager (noscript) - must be right after body opening */}
+        <noscript>
+          <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-NL4HRCX3"
+            height="0"
+            width="0"
+            style={{ display: 'none', visibility: 'hidden' }}
+          />
+        </noscript>
+
         {/* Fallback for users with JavaScript disabled */}
         <noscript>
-          <div style={{background:'#1a1a2e',color:'#fff',padding:'20px',textAlign:'center',borderBottom:'1px solid #333'}}>
+          <div style={{ background: '#1a1a2e', color: '#fff', padding: '20px', textAlign: 'center', borderBottom: '1px solid #333' }}>
             <strong>JavaScript Required</strong> - Please enable JavaScript for the best experience on SportBot AI.
           </div>
         </noscript>
-        
+
         <AuthProvider>
           <FavoritesProvider>
             <ToastProvider>
@@ -243,50 +264,50 @@ export default async function RootLayout({
                 <Suspense fallback={null}>
                   <NavigationProgress />
                 </Suspense>
-                
+
                 {/* Skip to content link for accessibility */}
                 <a href="#main-content" className="skip-link">
                   Skip to content
                 </a>
-                
+
                 {/* Flex container for sticky footer */}
                 <div className="min-h-screen flex flex-col pb-16 md:pb-0 pt-16">
                   <HeaderI18n />
-                  
+
                   {/* Main content */}
                   <main id="main-content" className="flex-grow" role="main">
                     {children}
                   </main>
-                  
+
                   <FooterI18n />
                 </div>
-                
+
                 {/* Mobile Bottom Navigation */}
                 <MobileBottomNavI18n />
-                
+
                 {/* Mobile Quick Actions FAB */}
                 <MobileQuickActions />
-                
+
                 {/* Scroll to Top Button */}
                 <ScrollToTop />
-                
+
                 {/* Cookie Consent Banner */}
                 <CookieConsent />
-                
+
                 {/* UTM Attribution Tracker */}
                 <Suspense fallback={null}>
                   <UTMTracker />
                 </Suspense>
-                
+
                 {/* Sync referral source for OAuth users */}
                 <ReferralSync />
-                
+
                 {/* Activity tracking for last active */}
                 <ActivityTracker />
-                
+
                 {/* PWA Install Prompt */}
                 <PWAInstallPrompt />
-                
+
                 {/* Service Worker Registration */}
                 <ServiceWorkerRegistration />
               </KeyboardShortcutsProvider>
