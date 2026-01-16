@@ -38,3 +38,6 @@ export { CollapsibleSection } from './CollapsibleSection';
 
 // Interactive Snapshot List
 export { default as SnapshotList } from './SnapshotList';
+
+// Predicted Score Display
+export { default as PredictedScoreDisplay } from './PredictedScoreDisplay';

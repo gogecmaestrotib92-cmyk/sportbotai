@@ -31,6 +31,7 @@ import {
   CollapsibleSection,
   SnapshotList,
   ViralStatsBar,
+  PredictedScoreDisplay,
 } from '@/components/analysis';
 import { isBase64, parseMatchSlug, decodeBase64MatchId } from '@/lib/match-utils';
 import StandingsTable from '@/components/StandingsTable';
@@ -401,6 +402,17 @@ interface MatchPreviewData {
   // Premium Edge Features
   marketIntel?: MarketIntel;
   odds?: OddsData;
+  // Predicted scores from Poisson/Elo model
+  expectedScores?: {
+    home: number;
+    away: number;
+  };
+  // Over/Under market data
+  overUnder?: {
+    line: number;
+    overOdds?: number;
+    underOdds?: number;
+  };
   // Demo match indicators
   isDemo?: boolean;
   demoId?: string;
@@ -1221,6 +1233,20 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
             canSeeExactNumbers={canSeeExactNumbers}
             locale={locale}
           />
+        )}
+
+        {/* Predicted Score Section - Shows expected score from Poisson/Elo model */}
+        {data.expectedScores && (
+          <div className="mt-6">
+            <PredictedScoreDisplay
+              homeTeam={data.matchInfo.homeTeam}
+              awayTeam={data.matchInfo.awayTeam}
+              expectedScores={data.expectedScores}
+              overUnder={data.overUnder}
+              sport={data.matchInfo.sport}
+              locale={locale}
+            />
+          </div>
         )}
 
         {/* Data Availability Notice - Show when limited data */}

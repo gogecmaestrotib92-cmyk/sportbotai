@@ -17,7 +17,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions, canUserAnalyze, incrementAnalysisCount } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { applyConvictionCap } from '@/lib/accuracy-core/types';
+import { applyConvictionCap, type ModelInput } from '@/lib/accuracy-core/types';
+import { getExpectedScores } from '@/lib/accuracy-core/prediction-models';
 import { isBase64, parseMatchSlug, decodeBase64MatchId } from '@/lib/match-utils';
 
 // Force dynamic rendering (uses headers/session)
@@ -61,10 +62,10 @@ async function getHybridInjuries(
   try {
     console.log(`[Match-Preview] Fetching injuries via Perplexity...`);
     const perplexityResult = await getMatchInjuriesViaPerplexity(homeTeam, awayTeam, sport, league);
-    
+
     if (perplexityResult.success && (perplexityResult.home.length > 0 || perplexityResult.away.length > 0)) {
       console.log(`[Match-Preview] Perplexity injuries: home=${perplexityResult.home.length}, away=${perplexityResult.away.length}`);
-      
+
       // Convert Perplexity format to our standard format
       return {
         home: perplexityResult.home.map(i => ({
@@ -84,7 +85,7 @@ async function getHybridInjuries(
   } catch (perplexityError) {
     console.warn(`[Match-Preview] Perplexity injuries failed:`, perplexityError);
   }
-  
+
   // Fallback to API-Sports
   console.log(`[Match-Preview] Falling back to API-Sports for injuries...`);
   try {
@@ -100,20 +101,20 @@ async function getHybridInjuries(
 export async function GET(request: NextRequest, { params }: RouteParams) {
   const startTime = Date.now();
   console.log(`[Match-Preview] === REQUEST RECEIVED at ${new Date().toISOString()} ===`);
-  
+
   // Check for forceRefresh query param to bypass cache
   const forceRefresh = request.nextUrl.searchParams.get('forceRefresh') === 'true';
   if (forceRefresh) {
     console.log(`[Match-Preview] Force refresh requested - will bypass cache`);
   }
-  
+
   try {
     // ==========================================
     // CHECK SESSION FIRST - Fast path for anonymous users
     // ==========================================
     const session = await getServerSession(authOptions);
     const isAnonymous = !session?.user;
-    
+
     const { matchId } = await params;
     console.log(`[Match-Preview] === SESSION DEBUG ===`);
     console.log(`[Match-Preview] Session exists: ${!!session}`);
@@ -124,7 +125,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Parse match ID to extract teams
     const matchInfo = parseMatchId(matchId);
-    
+
     if (!matchInfo) {
       console.error(`[Match-Preview] Failed to parse matchId: ${matchId}`);
       return NextResponse.json(
@@ -134,7 +135,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     console.log(`[Match-Preview] Parsed match: ${matchInfo.homeTeam} vs ${matchInfo.awayTeam} (${matchInfo.sport})`);
-    
+
     // ==========================================
     // CHECK IF MATCH IS TOO FAR AWAY (>48 HOURS)
     // Return early with "coming soon" response instead of mock/fallback analysis
@@ -143,14 +144,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       const kickoffDate = new Date(matchInfo.kickoff);
       const now = new Date();
       const hoursUntilKickoff = (kickoffDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-      
+
       if (hoursUntilKickoff > 48) {
         const availableDate = new Date(kickoffDate.getTime() - 48 * 60 * 60 * 1000);
         const hoursUntilAvailable = (availableDate.getTime() - now.getTime()) / (1000 * 60 * 60);
         const daysUntilAvailable = Math.ceil(hoursUntilAvailable / 24);
-        
+
         console.log(`[Match-Preview] Match too far away: ${hoursUntilKickoff.toFixed(1)}h until kickoff, ${hoursUntilAvailable.toFixed(1)}h until available`);
-        
+
         return NextResponse.json({
           tooFarAway: true,
           hoursUntilKickoff,
@@ -173,10 +174,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (isAnonymous) {
       const demoStartTime = Date.now();
       console.log(`[Match-Preview] Anonymous user - checking for demo match`);
-      
+
       // Try to find a matching demo for this specific matchup
       const matchingDemo = findMatchingDemo(matchInfo.homeTeam, matchInfo.awayTeam, matchInfo.sport);
-      
+
       if (matchingDemo) {
         console.log(`[Match-Preview] Serving demo: ${matchingDemo.id} in ${Date.now() - startTime}ms (exact match)`);
         return NextResponse.json({
@@ -189,11 +190,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           }
         });
       }
-      
+
       // No exact match - serve a random featured demo with registration CTA
       const randomDemo = getRandomFeaturedDemo();
       console.log(`[Match-Preview] Serving featured demo: ${randomDemo.id} in ${Date.now() - startTime}ms`);
-      
+
       return NextResponse.json({
         ...randomDemo.data,
         isDemo: true,
@@ -217,14 +218,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     console.log(`[Match-Preview] Registered user: ${session.user.email} - proceeding with live analysis`);
 
     const userId = session.user.id;
-    
+
     // ==========================================
     // CHECK IF USER ALREADY ANALYZED THIS MATCH TODAY
     // If so, return cached analysis without using a credit
     // ==========================================
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const existingAnalysis = await prisma.analysis.findFirst({
       where: {
         userId,
@@ -234,15 +235,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
       orderBy: { createdAt: 'desc' },
     });
-    
+
     if (existingAnalysis) {
       console.log(`[Match-Preview] User ${session.user.email} already analyzed this match today - checking cache`);
-      
+
       // Build cache key and check for cached response
       const matchDate = matchInfo.kickoff ? new Date(matchInfo.kickoff).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
       const cacheKey = CACHE_KEYS.matchPreview(matchInfo.homeTeam, matchInfo.awayTeam, matchInfo.sport, matchDate);
       const cachedPreview = await cacheGet<any>(cacheKey);
-      
+
       if (cachedPreview) {
         console.log(`[Match-Preview] Returning cached analysis for repeat view (no credit used)`);
         return NextResponse.json({
@@ -251,18 +252,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           repeatView: true,
         });
       }
-      
+
       // If no cache but analysis exists, try to return the stored analysis
       if (existingAnalysis.fullResponse) {
         console.log(`[Match-Preview] Returning stored analysis from DB for repeat view`);
         let responseData = existingAnalysis.fullResponse as any;
-        
+
         // For soccer: ALWAYS fetch fresh injuries (cached data is often stale)
         const storedSport = responseData.matchInfo?.sport || matchInfo.sport;
-        const isSoccerStored = storedSport?.toLowerCase()?.includes('soccer') || 
-                               !['basketball', 'nba', 'americanfootball', 'nfl', 'icehockey', 'nhl', 'hockey', 'baseball', 'mlb', 'mma', 'ufc']
-                                 .some(s => storedSport?.toLowerCase()?.includes(s));
-        
+        const isSoccerStored = storedSport?.toLowerCase()?.includes('soccer') ||
+          !['basketball', 'nba', 'americanfootball', 'nfl', 'icehockey', 'nhl', 'hockey', 'baseball', 'mlb', 'mma', 'ufc']
+            .some(s => storedSport?.toLowerCase()?.includes(s));
+
         if (isSoccerStored) {
           console.log(`[Match-Preview] Soccer match - fetching injuries via Perplexity+API hybrid...`);
           try {
@@ -272,18 +273,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
               storedSport,
               responseData.matchInfo?.league || matchInfo.league
             );
-            
+
             console.log(`[Match-Preview] Fresh injuries fetched - home: ${freshInjuries.home.length}, away: ${freshInjuries.away.length}`);
             if (freshInjuries.home.length > 0) {
               console.log(`[Match-Preview] Sample home injury:`, JSON.stringify(freshInjuries.home[0]));
             }
-            
+
             // ALWAYS merge fresh injuries into response
             responseData = {
               ...responseData,
               injuries: freshInjuries,
             };
-            
+
             // Also update universalSignals if present
             if (responseData.universalSignals?.display?.availability) {
               responseData.universalSignals = {
@@ -302,9 +303,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             console.error(`[Match-Preview] Failed to fetch fresh injuries:`, injuryError);
           }
         }
-        
+
+        // Add expectedScores for DB stored responses (not stored in DB)
+        const dbExpectedScores = responseData.expectedScores || (() => {
+          const favored = responseData.story?.favored || 'draw';
+          if (favored === 'home') return { home: 1.8, away: 1.1 };
+          if (favored === 'away') return { home: 1.1, away: 1.8 };
+          return { home: 1.3, away: 1.3 }; // Draw or unknown
+        })();
+
         return NextResponse.json({
           ...responseData,
+          expectedScores: dbExpectedScores,
+          overUnder: responseData.overUnder || null,
           creditUsed: false,
           repeatView: true,
         });
@@ -317,18 +328,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     console.log(`[Match-Preview] Checking usage for user ${userId} (${session.user.email})`);
     const usageCheck = await canUserAnalyze(userId);
     console.log(`[Match-Preview] Usage check result:`, JSON.stringify(usageCheck));
-    
+
     if (!usageCheck.allowed) {
       console.log(`[Match-Preview] User ${session.user.email} has exceeded daily limit (${usageCheck.limit})`);
       return NextResponse.json(
-        { 
+        {
           usageLimitReached: true,
           error: 'Daily analysis limit reached',
-          message: usageCheck.plan === 'FREE' 
+          message: usageCheck.plan === 'FREE'
             ? 'You\'ve used your free daily analysis. Upgrade to Pro for 30 analyses/day!'
             : usageCheck.plan === 'PRO'
-            ? 'You\'ve reached your Pro limit (30/day). Upgrade to Premium for unlimited!'
-            : 'Daily limit reached. Please try again tomorrow.',
+              ? 'You\'ve reached your Pro limit (30/day). Upgrade to Premium for unlimited!'
+              : 'Daily limit reached. Please try again tomorrow.',
           usage: {
             remaining: usageCheck.remaining,
             limit: usageCheck.limit,
@@ -347,7 +358,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // ==========================================
     const isFreePlan = usageCheck.plan === 'FREE';
     let creditUsedEarly = false;
-    
+
     if (isFreePlan) {
       // FREE users always use their credit (1 analysis = 1 credit, cached or not)
       await incrementAnalysisCount(userId);
@@ -361,10 +372,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // ==========================================
     const matchDate = matchInfo.kickoff ? new Date(matchInfo.kickoff).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
     const cacheKey = CACHE_KEYS.matchPreview(matchInfo.homeTeam, matchInfo.awayTeam, matchInfo.sport, matchDate);
-    
+
     console.log(`[Match-Preview] Cache key: ${cacheKey}`);
     console.log(`[Match-Preview] Match info: home=${matchInfo.homeTeam}, away=${matchInfo.awayTeam}, sport=${matchInfo.sport}, date=${matchDate}`);
-    
+
     const kickoffTime = matchInfo.kickoff ? new Date(matchInfo.kickoff).getTime() : 0;
     const minutesUntilKickoff = kickoffTime ? (kickoffTime - Date.now()) / 60000 : Infinity;
     // Only skip cache for matches 0-30 min before kickoff (for fresh last-minute data)
@@ -372,248 +383,257 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const isLive = minutesUntilKickoff < 0;
     const isAboutToStart = minutesUntilKickoff >= 0 && minutesUntilKickoff < 30;
     const shouldSkipCache = isAboutToStart || forceRefresh; // Skip cache if about to start OR force refresh requested
-    
+
     if (isLive) {
       console.log(`[Match-Preview] Match is LIVE (${Math.abs(Math.round(minutesUntilKickoff))} min into game) - checking cache for pre-match analysis`);
     }
-    
+
     if (!shouldSkipCache) {
       const cachedPreview = await cacheGet<any>(cacheKey);
       if (cachedPreview) {
         // VALIDATION: Check if cached data has complete form data
-        const homeForm = cachedPreview.universalSignals?.form?.home || 
-                         cachedPreview.signals?.form?.home || 
-                         cachedPreview.momentumAndForm?.homeForm;
-        const awayForm = cachedPreview.universalSignals?.form?.away || 
-                         cachedPreview.signals?.form?.away || 
-                         cachedPreview.momentumAndForm?.awayForm;
-        
+        const homeForm = cachedPreview.universalSignals?.form?.home ||
+          cachedPreview.signals?.form?.home ||
+          cachedPreview.momentumAndForm?.homeForm;
+        const awayForm = cachedPreview.universalSignals?.form?.away ||
+          cachedPreview.signals?.form?.away ||
+          cachedPreview.momentumAndForm?.awayForm;
+
         const isValidForm = (form: string | null | undefined): boolean => {
           if (!form) return false;
           if (form === '-----') return false;
           return /[WLD]/i.test(form);
         };
-        
+
         const hasCompleteFormData = isValidForm(homeForm) && isValidForm(awayForm);
-        
+
         if (!hasCompleteFormData) {
           console.log(`[Match-Preview] Cache INVALID - missing form data (home: ${homeForm}, away: ${awayForm}) - will regenerate`);
           // Don't use cache, continue to regenerate
         } else {
           console.log(`[Match-Preview] Cache HIT for ${matchInfo.homeTeam} vs ${matchInfo.awayTeam} (${Date.now() - startTime}ms, preAnalyzed: ${cachedPreview.preAnalyzed || false})`);
-        
-        // Backwards compatibility: transform old cache formats
-        let responseData = cachedPreview;
-        const sportConfig = getSportConfig(cachedPreview.sport || cachedPreview.matchInfo?.sport || matchInfo.sport);
-        
-        // Transform old flat format (no matchInfo wrapper)
-        if (!cachedPreview.matchInfo && cachedPreview.homeTeam) {
-          console.log(`[Match-Preview] Transforming old flat cache format`);
-          responseData = {
-            matchInfo: {
-              id: matchId,
-              homeTeam: cachedPreview.homeTeam || matchInfo.homeTeam,
-              awayTeam: cachedPreview.awayTeam || matchInfo.awayTeam,
-              league: cachedPreview.league || matchInfo.league,
-              sport: cachedPreview.sport || matchInfo.sport,
-              hasDraw: sportConfig.hasDraw,
-              scoringUnit: sportConfig.scoringUnit,
-              kickoff: cachedPreview.kickoff || matchInfo.kickoff,
-              venue: null,
-            },
-            dataAvailability: cachedPreview.dataAvailability || {
-              source: 'API_SPORTS',
-              hasFormData: true,
-              hasH2H: true,
-              hasInjuries: false,
-            },
-            story: cachedPreview.story,
-            signals: cachedPreview.signals,
-            universalSignals: cachedPreview.universalSignals || cachedPreview.signals,
-            // Include injuries if available (may be separate from universalSignals in older cache)
-            injuries: cachedPreview.injuries || { home: [], away: [] },
-            headlines: cachedPreview.headlines,
-            probabilities: cachedPreview.probabilities,
-            marketIntel: cachedPreview.marketIntel,
-            odds: cachedPreview.odds,
-            viralStats: cachedPreview.viralStats || null,
-            preAnalyzed: cachedPreview.preAnalyzed,
-            preAnalyzedAt: cachedPreview.preAnalyzedAt,
-          };
-        }
-        
-        // For soccer: ALWAYS fetch fresh injuries (cached data is often stale)
-        const cachedSport = responseData.matchInfo?.sport || matchInfo.sport;
-        const isSoccerCached = !['basketball', 'basketball_nba', 'nba', 'americanfootball', 'nfl', 'icehockey', 'nhl', 'hockey', 'baseball', 'mlb', 'mma', 'ufc']
-          .includes(cachedSport?.toLowerCase() || '');
-        
-        if (isSoccerCached) {
-          console.log(`[Match-Preview] Soccer match from cache - fetching injuries via Perplexity+API hybrid...`);
-          try {
-            const freshInjuries = await getHybridInjuries(
-              responseData.matchInfo?.homeTeam || matchInfo.homeTeam,
-              responseData.matchInfo?.awayTeam || matchInfo.awayTeam,
-              cachedSport,
-              responseData.matchInfo?.league || matchInfo.league
-            );
-            
-            console.log(`[Match-Preview] Fresh injuries for cached response - home: ${freshInjuries.home.length}, away: ${freshInjuries.away.length}`);
-            if (freshInjuries.home.length > 0) {
-              console.log(`[Match-Preview] Sample home injury:`, JSON.stringify(freshInjuries.home[0]));
-            }
-            
-            // ALWAYS merge fresh injuries
-            responseData.injuries = freshInjuries;
-            if (responseData.universalSignals?.display?.availability) {
-              responseData.universalSignals.display.availability.homeInjuries = freshInjuries.home;
-              responseData.universalSignals.display.availability.awayInjuries = freshInjuries.away;
-            }
-            
-            // Update viralStats.keyAbsence with fresh injury data
-            if (responseData.viralStats && (freshInjuries.home.length > 0 || freshInjuries.away.length > 0)) {
-              const keyAbsence = freshInjuries.home.length > 0 
-                ? { player: freshInjuries.home[0].player, team: 'home' as const, impact: 'star' as const }
-                : { player: freshInjuries.away[0].player, team: 'away' as const, impact: 'star' as const };
-              responseData.viralStats = {
-                ...responseData.viralStats,
-                keyAbsence,
-              };
-              console.log(`[Match-Preview] Updated soccer viralStats.keyAbsence: ${keyAbsence.player} (${keyAbsence.team})`);
-            }
-          } catch (injuryError) {
-            console.error(`[Match-Preview] Failed to fetch fresh injuries for cache:`, injuryError);
-          }
-        }
 
-        // For NHL/NBA/NFL: Also fetch fresh injuries and update viralStats.keyAbsence
-        const isNHLCached = ['icehockey', 'icehockey_nhl', 'nhl', 'hockey'].includes(cachedSport?.toLowerCase() || '');
-        const isNBACached = ['basketball', 'basketball_nba', 'nba'].includes(cachedSport?.toLowerCase() || '');
-        const isNFLCached = ['americanfootball', 'americanfootball_nfl', 'nfl'].includes(cachedSport?.toLowerCase() || '');
-        
-        if (isNHLCached || isNBACached || isNFLCached) {
-          const sportLabel = isNHLCached ? 'NHL' : isNBACached ? 'NBA' : 'NFL';
-          console.log(`[Match-Preview] ${sportLabel} match from cache - fetching fresh injuries via Perplexity...`);
-          try {
-            const perplexityInjuries = await getMatchInjuriesViaPerplexity(
-              responseData.matchInfo?.homeTeam || matchInfo.homeTeam,
-              responseData.matchInfo?.awayTeam || matchInfo.awayTeam,
-              cachedSport,
-              responseData.matchInfo?.league || matchInfo.league
-            );
-            
-            if (perplexityInjuries.success) {
-              const freshInjuries = {
-                home: perplexityInjuries.home.map(i => ({
-                  player: i.playerName,
-                  position: 'Unknown',
-                  reason: i.injury.toLowerCase().includes('suspend') ? 'suspension' as const : 'injury' as const,
-                  details: `${i.injury} - ${i.status}`,
-                })),
-                away: perplexityInjuries.away.map(i => ({
-                  player: i.playerName,
-                  position: 'Unknown',
-                  reason: i.injury.toLowerCase().includes('suspend') ? 'suspension' as const : 'injury' as const,
-                  details: `${i.injury} - ${i.status}`,
-                })),
-              };
-              
-              console.log(`[Match-Preview] ${sportLabel} fresh injuries - home: ${freshInjuries.home.length}, away: ${freshInjuries.away.length}`);
-              
-              // Update injuries
+          // Backwards compatibility: transform old cache formats
+          let responseData = cachedPreview;
+          const sportConfig = getSportConfig(cachedPreview.sport || cachedPreview.matchInfo?.sport || matchInfo.sport);
+
+          // Transform old flat format (no matchInfo wrapper)
+          if (!cachedPreview.matchInfo && cachedPreview.homeTeam) {
+            console.log(`[Match-Preview] Transforming old flat cache format`);
+            responseData = {
+              matchInfo: {
+                id: matchId,
+                homeTeam: cachedPreview.homeTeam || matchInfo.homeTeam,
+                awayTeam: cachedPreview.awayTeam || matchInfo.awayTeam,
+                league: cachedPreview.league || matchInfo.league,
+                sport: cachedPreview.sport || matchInfo.sport,
+                hasDraw: sportConfig.hasDraw,
+                scoringUnit: sportConfig.scoringUnit,
+                kickoff: cachedPreview.kickoff || matchInfo.kickoff,
+                venue: null,
+              },
+              dataAvailability: cachedPreview.dataAvailability || {
+                source: 'API_SPORTS',
+                hasFormData: true,
+                hasH2H: true,
+                hasInjuries: false,
+              },
+              story: cachedPreview.story,
+              signals: cachedPreview.signals,
+              universalSignals: cachedPreview.universalSignals || cachedPreview.signals,
+              // Include injuries if available (may be separate from universalSignals in older cache)
+              injuries: cachedPreview.injuries || { home: [], away: [] },
+              headlines: cachedPreview.headlines,
+              probabilities: cachedPreview.probabilities,
+              marketIntel: cachedPreview.marketIntel,
+              odds: cachedPreview.odds,
+              viralStats: cachedPreview.viralStats || null,
+              preAnalyzed: cachedPreview.preAnalyzed,
+              preAnalyzedAt: cachedPreview.preAnalyzedAt,
+            };
+          }
+
+          // For soccer: ALWAYS fetch fresh injuries (cached data is often stale)
+          const cachedSport = responseData.matchInfo?.sport || matchInfo.sport;
+          const isSoccerCached = !['basketball', 'basketball_nba', 'nba', 'americanfootball', 'nfl', 'icehockey', 'nhl', 'hockey', 'baseball', 'mlb', 'mma', 'ufc']
+            .includes(cachedSport?.toLowerCase() || '');
+
+          if (isSoccerCached) {
+            console.log(`[Match-Preview] Soccer match from cache - fetching injuries via Perplexity+API hybrid...`);
+            try {
+              const freshInjuries = await getHybridInjuries(
+                responseData.matchInfo?.homeTeam || matchInfo.homeTeam,
+                responseData.matchInfo?.awayTeam || matchInfo.awayTeam,
+                cachedSport,
+                responseData.matchInfo?.league || matchInfo.league
+              );
+
+              console.log(`[Match-Preview] Fresh injuries for cached response - home: ${freshInjuries.home.length}, away: ${freshInjuries.away.length}`);
+              if (freshInjuries.home.length > 0) {
+                console.log(`[Match-Preview] Sample home injury:`, JSON.stringify(freshInjuries.home[0]));
+              }
+
+              // ALWAYS merge fresh injuries
               responseData.injuries = freshInjuries;
               if (responseData.universalSignals?.display?.availability) {
                 responseData.universalSignals.display.availability.homeInjuries = freshInjuries.home;
                 responseData.universalSignals.display.availability.awayInjuries = freshInjuries.away;
               }
-              
+
               // Update viralStats.keyAbsence with fresh injury data
               if (responseData.viralStats && (freshInjuries.home.length > 0 || freshInjuries.away.length > 0)) {
-                const keyAbsence = freshInjuries.home.length > 0 
+                const keyAbsence = freshInjuries.home.length > 0
                   ? { player: freshInjuries.home[0].player, team: 'home' as const, impact: 'star' as const }
                   : { player: freshInjuries.away[0].player, team: 'away' as const, impact: 'star' as const };
                 responseData.viralStats = {
                   ...responseData.viralStats,
                   keyAbsence,
                 };
-                console.log(`[Match-Preview] Updated viralStats.keyAbsence: ${keyAbsence.player} (${keyAbsence.team})`);
+                console.log(`[Match-Preview] Updated soccer viralStats.keyAbsence: ${keyAbsence.player} (${keyAbsence.team})`);
               }
+            } catch (injuryError) {
+              console.error(`[Match-Preview] Failed to fetch fresh injuries for cache:`, injuryError);
             }
-          } catch (injuryError) {
-            console.error(`[Match-Preview] Failed to fetch fresh ${sportLabel} injuries for cache:`, injuryError);
           }
-        }
 
-        // Transform old story format (verdict/narrative/confidence number → favored/narrative/snapshot/riskFactors)
-        if (responseData.story && !responseData.story.favored && (responseData.story.verdict || typeof responseData.story.confidence === 'number')) {
-          console.log(`[Match-Preview] Transforming old story format to new format`);
-          const oldStory = responseData.story;
-          const homeTeam = responseData.matchInfo?.homeTeam || matchInfo.homeTeam;
-          const awayTeam = responseData.matchInfo?.awayTeam || matchInfo.awayTeam;
-          
-          // Infer favored from verdict text
-          const verdictLower = (oldStory.verdict || '').toLowerCase();
-          let favored: 'home' | 'away' | 'draw' = sportConfig.hasDraw ? 'draw' : 'home';
-          if (verdictLower.includes(homeTeam.toLowerCase()) || verdictLower.includes('home')) {
-            favored = 'home';
-          } else if (verdictLower.includes(awayTeam.toLowerCase()) || verdictLower.includes('away')) {
-            favored = 'away';
+          // For NHL/NBA/NFL: Also fetch fresh injuries and update viralStats.keyAbsence
+          const isNHLCached = ['icehockey', 'icehockey_nhl', 'nhl', 'hockey'].includes(cachedSport?.toLowerCase() || '');
+          const isNBACached = ['basketball', 'basketball_nba', 'nba'].includes(cachedSport?.toLowerCase() || '');
+          const isNFLCached = ['americanfootball', 'americanfootball_nfl', 'nfl'].includes(cachedSport?.toLowerCase() || '');
+
+          if (isNHLCached || isNBACached || isNFLCached) {
+            const sportLabel = isNHLCached ? 'NHL' : isNBACached ? 'NBA' : 'NFL';
+            console.log(`[Match-Preview] ${sportLabel} match from cache - fetching fresh injuries via Perplexity...`);
+            try {
+              const perplexityInjuries = await getMatchInjuriesViaPerplexity(
+                responseData.matchInfo?.homeTeam || matchInfo.homeTeam,
+                responseData.matchInfo?.awayTeam || matchInfo.awayTeam,
+                cachedSport,
+                responseData.matchInfo?.league || matchInfo.league
+              );
+
+              if (perplexityInjuries.success) {
+                const freshInjuries = {
+                  home: perplexityInjuries.home.map(i => ({
+                    player: i.playerName,
+                    position: 'Unknown',
+                    reason: i.injury.toLowerCase().includes('suspend') ? 'suspension' as const : 'injury' as const,
+                    details: `${i.injury} - ${i.status}`,
+                  })),
+                  away: perplexityInjuries.away.map(i => ({
+                    player: i.playerName,
+                    position: 'Unknown',
+                    reason: i.injury.toLowerCase().includes('suspend') ? 'suspension' as const : 'injury' as const,
+                    details: `${i.injury} - ${i.status}`,
+                  })),
+                };
+
+                console.log(`[Match-Preview] ${sportLabel} fresh injuries - home: ${freshInjuries.home.length}, away: ${freshInjuries.away.length}`);
+
+                // Update injuries
+                responseData.injuries = freshInjuries;
+                if (responseData.universalSignals?.display?.availability) {
+                  responseData.universalSignals.display.availability.homeInjuries = freshInjuries.home;
+                  responseData.universalSignals.display.availability.awayInjuries = freshInjuries.away;
+                }
+
+                // Update viralStats.keyAbsence with fresh injury data
+                if (responseData.viralStats && (freshInjuries.home.length > 0 || freshInjuries.away.length > 0)) {
+                  const keyAbsence = freshInjuries.home.length > 0
+                    ? { player: freshInjuries.home[0].player, team: 'home' as const, impact: 'star' as const }
+                    : { player: freshInjuries.away[0].player, team: 'away' as const, impact: 'star' as const };
+                  responseData.viralStats = {
+                    ...responseData.viralStats,
+                    keyAbsence,
+                  };
+                  console.log(`[Match-Preview] Updated viralStats.keyAbsence: ${keyAbsence.player} (${keyAbsence.team})`);
+                }
+              }
+            } catch (injuryError) {
+              console.error(`[Match-Preview] Failed to fetch fresh ${sportLabel} injuries for cache:`, injuryError);
+            }
           }
-          
-          // Map numeric confidence to string
-          const numConf = typeof oldStory.confidence === 'number' ? oldStory.confidence : 5;
-          const confidence: 'strong' | 'moderate' | 'slight' = numConf >= 7 ? 'strong' : numConf <= 4 ? 'slight' : 'moderate';
-          
-          responseData.story = {
-            favored,
-            confidence,
-            narrative: oldStory.narrative || oldStory.verdict || '',
-            snapshot: oldStory.snapshot || [
-              oldStory.verdict || `${homeTeam} vs ${awayTeam}`,
-              oldStory.narrative || 'Pre-analyzed match',
-            ],
-            riskFactors: oldStory.riskFactors || ['Pre-analyzed - limited context'],
-          };
-        }
-        
-        // Save Analysis record for cached responses too (so admin dashboard shows accurate counts)
-        if (userId && creditUsedEarly) {
-          try {
+
+          // Transform old story format (verdict/narrative/confidence number → favored/narrative/snapshot/riskFactors)
+          if (responseData.story && !responseData.story.favored && (responseData.story.verdict || typeof responseData.story.confidence === 'number')) {
+            console.log(`[Match-Preview] Transforming old story format to new format`);
+            const oldStory = responseData.story;
+            const homeTeam = responseData.matchInfo?.homeTeam || matchInfo.homeTeam;
+            const awayTeam = responseData.matchInfo?.awayTeam || matchInfo.awayTeam;
+
+            // Infer favored from verdict text
+            const verdictLower = (oldStory.verdict || '').toLowerCase();
+            let favored: 'home' | 'away' | 'draw' = sportConfig.hasDraw ? 'draw' : 'home';
+            if (verdictLower.includes(homeTeam.toLowerCase()) || verdictLower.includes('home')) {
+              favored = 'home';
+            } else if (verdictLower.includes(awayTeam.toLowerCase()) || verdictLower.includes('away')) {
+              favored = 'away';
+            }
+
+            // Map numeric confidence to string
+            const numConf = typeof oldStory.confidence === 'number' ? oldStory.confidence : 5;
+            const confidence: 'strong' | 'moderate' | 'slight' = numConf >= 7 ? 'strong' : numConf <= 4 ? 'slight' : 'moderate';
+
+            responseData.story = {
+              favored,
+              confidence,
+              narrative: oldStory.narrative || oldStory.verdict || '',
+              snapshot: oldStory.snapshot || [
+                oldStory.verdict || `${homeTeam} vs ${awayTeam}`,
+                oldStory.narrative || 'Pre-analyzed match',
+              ],
+              riskFactors: oldStory.riskFactors || ['Pre-analyzed - limited context'],
+            };
+          }
+
+          // Save Analysis record for cached responses too (so admin dashboard shows accurate counts)
+          if (userId && creditUsedEarly) {
+            try {
+              const favored = responseData.story?.favored || 'draw';
+              const confidence = responseData.story?.confidence || 'moderate';
+              const matchDateForSave = matchInfo.kickoff ? new Date(matchInfo.kickoff) : new Date();
+
+              await prisma.analysis.create({
+                data: {
+                  userId,
+                  sport: matchInfo.sport,
+                  league: matchInfo.league || responseData.matchInfo?.league || 'Unknown',
+                  homeTeam: matchInfo.homeTeam,
+                  awayTeam: matchInfo.awayTeam,
+                  matchDate: matchDateForSave,
+                  homeWinProb: favored === 'home' ? 0.6 : favored === 'away' ? 0.3 : 0.33,
+                  drawProb: favored === 'draw' ? 0.5 : 0.25,
+                  awayWinProb: favored === 'away' ? 0.6 : favored === 'home' ? 0.3 : 0.33,
+                  riskLevel: confidence === 'strong' ? 'low' : confidence === 'slight' ? 'high' : 'medium',
+                  bestValueSide: favored,
+                  fullResponse: responseData as any,
+                },
+              });
+              console.log(`[Match-Preview] Analysis saved for user ${userId} (cached response)`);
+            } catch (saveError) {
+              console.error(`[Match-Preview] Failed to save analysis for cached response:`, saveError);
+            }
+          }
+          // Add expectedScores for cached responses (fallback based on favored team)
+          const cachedExpectedScores = responseData.expectedScores || (() => {
             const favored = responseData.story?.favored || 'draw';
-            const confidence = responseData.story?.confidence || 'moderate';
-            const matchDateForSave = matchInfo.kickoff ? new Date(matchInfo.kickoff) : new Date();
-            
-            await prisma.analysis.create({
-              data: {
-                userId,
-                sport: matchInfo.sport,
-                league: matchInfo.league || responseData.matchInfo?.league || 'Unknown',
-                homeTeam: matchInfo.homeTeam,
-                awayTeam: matchInfo.awayTeam,
-                matchDate: matchDateForSave,
-                homeWinProb: favored === 'home' ? 0.6 : favored === 'away' ? 0.3 : 0.33,
-                drawProb: favored === 'draw' ? 0.5 : 0.25,
-                awayWinProb: favored === 'away' ? 0.6 : favored === 'home' ? 0.3 : 0.33,
-                riskLevel: confidence === 'strong' ? 'low' : confidence === 'slight' ? 'high' : 'medium',
-                bestValueSide: favored,
-                fullResponse: responseData as any,
-              },
-            });
-            console.log(`[Match-Preview] Analysis saved for user ${userId} (cached response)`);
-          } catch (saveError) {
-            console.error(`[Match-Preview] Failed to save analysis for cached response:`, saveError);
-          }
+            if (favored === 'home') return { home: 1.8, away: 1.1 };
+            if (favored === 'away') return { home: 1.1, away: 1.8 };
+            return { home: 1.3, away: 1.3 }; // Draw or unknown
+          })();
+
+          return NextResponse.json({
+            ...responseData,
+            expectedScores: cachedExpectedScores,
+            overUnder: responseData.overUnder || null, // O/U from cache if available
+            fromCache: true,
+            creditUsed: creditUsedEarly, // Tell client if credit was used
+          }, {
+            headers: {
+              'Cache-Control': 'private, max-age=1800', // 30 min browser cache
+            }
+          });
         }
-        
-        return NextResponse.json({
-          ...responseData,
-          fromCache: true,
-          creditUsed: creditUsedEarly, // Tell client if credit was used
-        }, {
-          headers: {
-            'Cache-Control': 'private, max-age=1800', // 30 min browser cache
-          }
-        });
-      }
       }
       // If we reach here, either cache was empty OR cache had incomplete data
       console.log(`[Match-Preview] Cache MISS or INVALID for key: ${cacheKey} - will generate fresh analysis`);
@@ -636,7 +656,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // ALL sports now use Unified Match Service for core data (form, H2H, stats)
     const normalizedSport = normalizeSport(matchInfo.sport);
     console.log(`[Match-Preview] Using UnifiedMatchService for ${matchInfo.sport} (normalized: ${normalizedSport})`);
-    
+
     try {
       const matchId: MatchIdentifier = {
         homeTeam: matchInfo.homeTeam,
@@ -644,13 +664,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         sport: matchInfo.sport,
         league: matchInfo.league,
       };
-      
+
       const unifiedData = await getUnifiedMatchData(matchId, { includeOdds: false });
-      
+
       // Map to expected format (DATABASE maps to CACHE for compatibility)
-      const mappedDataSource: 'API_SPORTS' | 'CACHE' | 'UNAVAILABLE' = 
+      const mappedDataSource: 'API_SPORTS' | 'CACHE' | 'UNAVAILABLE' =
         unifiedData.enrichedData.dataSource === 'DATABASE' ? 'CACHE' : unifiedData.enrichedData.dataSource;
-      
+
       enrichedData = {
         sport: matchInfo.sport,
         homeForm: unifiedData.enrichedData.homeForm,
@@ -666,7 +686,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         awayStats: unifiedData.enrichedData.awayStats,
         dataSource: mappedDataSource,
       };
-      
+
       console.log(`[Match-Preview] ${matchInfo.sport} data fetched in ${Date.now() - startTime}ms:`, {
         dataSource: enrichedData.dataSource,
         homeFormGames: enrichedData.homeForm?.length || 0,
@@ -687,7 +707,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         dataSource: 'UNAVAILABLE',
       };
     }
-    
+
     // ==========================================
     // FALLBACK: If form data unavailable (match started/in-progress), use cached pre-match data
     // ==========================================
@@ -700,7 +720,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           // Extract form data from cached viral stats
           const cachedHomeForm = cachedPreview.viralStats.form.home || '';
           const cachedAwayForm = cachedPreview.viralStats.form.away || '';
-          
+
           if (cachedHomeForm && cachedHomeForm !== '-----') {
             // Convert form string back to form array for consistency
             enrichedData.homeForm = cachedHomeForm.split('').map((result: string) => ({
@@ -718,12 +738,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
               date: new Date().toISOString(),
             }));
           }
-          
+
           // Also use cached H2H if available and we don't have it
           if (!enrichedData.headToHead && cachedPreview.viralStats?.h2h) {
             enrichedData.h2hSummary = cachedPreview.viralStats.h2h;
           }
-          
+
           if (enrichedData.homeForm || enrichedData.awayForm) {
             enrichedData.dataSource = 'CACHE';
             console.log(`[Match-Preview] Fallback form data restored: home=${cachedHomeForm}, away=${cachedAwayForm}`);
@@ -766,7 +786,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           ),
         ]);
         console.log(`[Match-Preview] Soccer extras fetched in ${Date.now() - startTime}ms`);
-        console.log(`[Match-Preview] Soccer injuries - Home: ${injuries.home.length}, Away: ${injuries.away.length}`, 
+        console.log(`[Match-Preview] Soccer injuries - Home: ${injuries.home.length}, Away: ${injuries.away.length}`,
           injuries.home.length > 0 ? JSON.stringify(injuries.home.slice(0, 2)) : 'none');
       } catch (soccerExtrasError) {
         console.error(`[Match-Preview] Soccer extras error (non-fatal):`, soccerExtrasError);
@@ -777,7 +797,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // NFL-specific: fetch injuries
     const isNFL = ['americanfootball', 'americanfootball_nfl', 'nfl', 'ncaaf']
       .includes(matchInfo.sport.toLowerCase());
-    
+
     if (isNFL) {
       console.log(`[Match-Preview] Fetching NFL injuries via Perplexity...`);
       try {
@@ -788,7 +808,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           matchInfo.sport,
           matchInfo.league
         );
-        
+
         if (perplexityInjuries.success && (perplexityInjuries.home.length > 0 || perplexityInjuries.away.length > 0)) {
           injuries = {
             home: perplexityInjuries.home.map(i => ({
@@ -819,7 +839,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // NHL-specific: fetch injuries via Perplexity
     const isNHL = ['icehockey', 'icehockey_nhl', 'nhl', 'hockey']
       .includes(matchInfo.sport.toLowerCase());
-    
+
     if (isNHL) {
       console.log(`[Match-Preview] Fetching NHL injuries via Perplexity...`);
       try {
@@ -829,7 +849,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           matchInfo.sport,
           matchInfo.league
         );
-        
+
         if (perplexityInjuries.success) {
           injuries = {
             home: perplexityInjuries.home.map(i => ({
@@ -855,7 +875,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // NBA-specific: fetch injuries via Perplexity
     const isNBA = ['basketball', 'basketball_nba', 'nba']
       .includes(matchInfo.sport.toLowerCase());
-    
+
     if (isNBA) {
       console.log(`[Match-Preview] Fetching NBA injuries via Perplexity...`);
       try {
@@ -865,7 +885,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           matchInfo.sport,
           matchInfo.league
         );
-        
+
         if (perplexityInjuries.success) {
           injuries = {
             home: perplexityInjuries.home.map(i => ({
@@ -912,13 +932,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Calculate stats - use actual played count from API if available, otherwise form count
     // Type assertion needed because enrichedData can come from different sources
-    const homeStatsRaw = enrichedData.homeStats as { 
-      goalsScored?: number; goalsConceded?: number; played?: number; 
+    const homeStatsRaw = enrichedData.homeStats as {
+      goalsScored?: number; goalsConceded?: number; played?: number;
       wins?: number; draws?: number; losses?: number;
       averageScored?: number; averageConceded?: number;
     } | null;
-    const awayStatsRaw = enrichedData.awayStats as { 
-      goalsScored?: number; goalsConceded?: number; played?: number; 
+    const awayStatsRaw = enrichedData.awayStats as {
+      goalsScored?: number; goalsConceded?: number; played?: number;
       wins?: number; draws?: number; losses?: number;
       averageScored?: number; averageConceded?: number;
     } | null;
@@ -961,8 +981,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // For impact rating: first injury found = 'star' player assumption (most reported)
     const findKeyAbsence = (): { player: string; team: 'home' | 'away'; impact: 'star' | 'key' | 'rotation' } | null => {
       // Check home team injuries first - priority to key positions
-      const homeKeyPlayer = injuries.home.find(i => 
-        i.position?.toLowerCase().includes('forward') || 
+      const homeKeyPlayer = injuries.home.find(i =>
+        i.position?.toLowerCase().includes('forward') ||
         i.position?.toLowerCase().includes('striker') ||
         i.position?.toLowerCase().includes('quarterback') ||
         i.position?.toLowerCase().includes('center') ||
@@ -977,8 +997,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         };
       }
       // Check away team
-      const awayKeyPlayer = injuries.away.find(i => 
-        i.position?.toLowerCase().includes('forward') || 
+      const awayKeyPlayer = injuries.away.find(i =>
+        i.position?.toLowerCase().includes('forward') ||
         i.position?.toLowerCase().includes('striker') ||
         i.position?.toLowerCase().includes('quarterback') ||
         i.position?.toLowerCase().includes('center') ||
@@ -1060,41 +1080,60 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // PARALLEL EXECUTION: AI + Odds + TTS
     // Run AI analysis and odds fetching in parallel to save ~2 seconds
     // ========================================
-    
+
     // Prepare odds fetch function
-    const fetchOddsAsync = async () => {
+    const fetchOddsAsync = async (): Promise<{ odds: OddsData | null; overUnder: { line: number; overOdds?: number; underOdds?: number } | null }> => {
       try {
         const dataLayer = getDataLayer();
         console.log(`[Match-Preview] Fetching odds for ${matchInfo.homeTeam} vs ${matchInfo.awayTeam}, sport: ${matchInfo.sport}`);
-        
+
         const oddsResult = await dataLayer.getOdds(
           normalizeSport(matchInfo.sport) as 'soccer' | 'basketball' | 'hockey' | 'american_football' | 'baseball' | 'mma' | 'tennis',
           matchInfo.homeTeam,
           matchInfo.awayTeam,
-          { 
-            markets: ['h2h'],
+          {
+            markets: ['h2h', 'totals'],
             sportKey: matchInfo.sport,
           }
         );
-        
+
+        let oddsData: OddsData | null = null;
+        let overUnderData: { line: number; overOdds?: number; underOdds?: number } | null = null;
+
         if (oddsResult.success && oddsResult.data && oddsResult.data.length > 0) {
           const firstBookmaker = oddsResult.data[0];
+
+          // Extract moneyline odds
           if (firstBookmaker.moneyline) {
             console.log(`[Match-Preview] Odds fetched: home=${firstBookmaker.moneyline.home}, away=${firstBookmaker.moneyline.away}`);
-            return {
+            oddsData = {
               homeOdds: firstBookmaker.moneyline.home,
               awayOdds: firstBookmaker.moneyline.away,
               drawOdds: firstBookmaker.moneyline.draw,
               bookmaker: firstBookmaker.bookmaker,
               lastUpdate: firstBookmaker.lastUpdate?.toISOString(),
-            } as OddsData;
+            };
+          }
+
+          // Extract totals (O/U) odds - property is 'total' not 'totals'
+          const totalData = (firstBookmaker as { total?: { line?: number; over?: number; under?: number } }).total;
+          if (totalData && totalData.line) {
+            console.log(`[Match-Preview] O/U fetched: line=${totalData.line}, over=${totalData.over}, under=${totalData.under}`);
+            overUnderData = {
+              line: totalData.line,
+              overOdds: totalData.over,
+              underOdds: totalData.under,
+            };
           }
         }
-        console.log(`[Match-Preview] No odds available: ${oddsResult.error?.message || 'no data'}`);
-        return null;
+
+        if (!oddsData) {
+          console.log(`[Match-Preview] No odds available: ${oddsResult.error?.message || 'no data'}`);
+        }
+        return { odds: oddsData, overUnder: overUnderData };
       } catch (error) {
         console.error('[Match-Preview] Odds fetch failed:', error);
-        return null;
+        return { odds: null, overUnder: null };
       }
     };
 
@@ -1151,12 +1190,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     // Run AI and Odds in PARALLEL - saves ~1-2 seconds
-    const [aiAnalysis, odds] = await Promise.all([
+    const [aiAnalysis, oddsResult] = await Promise.all([
       aiAnalysisPromise,
       fetchOddsAsync(),
     ]);
 
-    console.log(`[Match-Preview] Parallel fetch complete in ${Date.now() - startTime}ms - AI: ${aiAnalysis?.story?.favored || 'unknown'}, Odds: ${odds ? 'yes' : 'no'}`);
+    // Extract odds and overUnder from result
+    const odds = oddsResult.odds;
+    const overUnder = oddsResult.overUnder;
+
+    console.log(`[Match-Preview] Parallel fetch complete in ${Date.now() - startTime}ms - AI: ${aiAnalysis?.story?.favored || 'unknown'}, Odds: ${odds ? 'yes' : 'no'}, O/U: ${overUnder ? overUnder.line : 'no'}`);
 
     // Try to fetch opening odds from existing prediction for steam/RLM detection
     let previousOdds: OddsData | undefined;
@@ -1169,7 +1212,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         },
         select: { openingOdds: true },
       });
-      
+
       if (existingPred?.openingOdds && odds) {
         // Parse opening odds (stored as decimal, e.g., 2.10)
         const openingDecimal = parseFloat(existingPred.openingOdds.toString());
@@ -1214,7 +1257,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Get sport config for terminology
     const sportConfig = getSportConfig(matchInfo.sport);
-    
+
     const response = {
       matchInfo: {
         id: matchId,
@@ -1233,7 +1276,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         hasFormData: hasRealFormData,
         hasH2H: !!(enrichedData.headToHead?.length),
         hasInjuries: !!(injuries.home.length || injuries.away.length),
-        message: !hasRealFormData 
+        message: !hasRealFormData
           ? `Historical data not available for ${matchInfo.sport.toUpperCase()}. Analysis based on AI estimation.`
           : undefined,
       },
@@ -1292,6 +1335,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       // Premium Edge Features
       marketIntel: marketIntel,
       odds: odds,
+      // Predicted scores from Poisson/Elo model
+      expectedScores: aiAnalysis.expectedScores,
+      // Over/Under market data
+      overUnder: overUnder,
     };
 
     // ========================================
@@ -1301,13 +1348,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       const userId = session?.user?.id;
       const userEmail = session?.user?.email;
       console.log(`[Match-Preview] Save check - userId: ${userId}, email: ${userEmail}, session exists: ${!!session}`);
-      
+
       if (userId) {
         const matchRef = `${matchInfo.homeTeam} vs ${matchInfo.awayTeam}`;
         const favored = aiAnalysis?.story?.favored || 'draw';
         const confidence = aiAnalysis?.story?.confidence || 'moderate';
         const matchDate = matchInfo.kickoff ? new Date(matchInfo.kickoff) : new Date();
-        
+
         // Save to Analysis table (for history + stats counter)
         await prisma.analysis.create({
           data: {
@@ -1326,7 +1373,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           },
         });
         console.log(`[Match-Preview] Analysis saved for user ${userId}`);
-        
+
         // Also create Prediction for tracking accuracy
         // Check if prediction already exists for this match from ANY source
         const existingPrediction = await prisma.prediction.findFirst({
@@ -1335,95 +1382,95 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
           },
         });
-        
+
         if (!existingPrediction) {
-          const predictedScenario = favored === 'home' 
-            ? `Home Win - ${matchInfo.homeTeam}` 
-            : favored === 'away' 
-              ? `Away Win - ${matchInfo.awayTeam}` 
+          const predictedScenario = favored === 'home'
+            ? `Home Win - ${matchInfo.homeTeam}`
+            : favored === 'away'
+              ? `Away Win - ${matchInfo.awayTeam}`
               : 'Draw';
-          
+
           // Apply sport-specific conviction cap
           const sportKey = matchInfo.sport || 'unknown';
           const rawConviction = confidence === 'strong' ? 8 : confidence === 'moderate' ? 6 : 4;
           const cappedConviction = applyConvictionCap(rawConviction, sportKey);
-          
+
           // QUALITY GATE: Only save predictions with conviction >= 5 and real edge data
           // Low conviction predictions have 27% win rate - don't track them
           const shouldSavePrediction = cappedConviction >= 5 && marketIntel;
-          
+
           if (!shouldSavePrediction) {
             console.log(`[Match-Preview] Skipped prediction: ${matchRef} (conviction: ${cappedConviction}, hasMarketIntel: ${!!marketIntel})`);
           } else {
-          // Extract edge tracking data from marketIntel if available
-          let modelProbability: number | null = null;
-          let marketProbabilityFair: number | null = null;
-          let edgeValue: number | null = null;
-          let edgeBucket: 'SMALL' | 'MEDIUM' | 'HIGH' | null = null;
-          let selectionText: string | null = null;
-          let marketOddsAtPrediction: number | null = null;
-          
-          if (marketIntel) {
-            // Get the probability and edge for the favored side
-            const modelProbs = marketIntel.modelProbability || {};
-            const impliedProbs = marketIntel.impliedProbability || {};
-            
-            if (favored === 'home') {
-              modelProbability = modelProbs.home || null;
-              marketProbabilityFair = impliedProbs.home || null;
-              marketOddsAtPrediction = odds?.homeOdds || null;
-              selectionText = matchInfo.homeTeam;
-            } else if (favored === 'away') {
-              modelProbability = modelProbs.away || null;
-              marketProbabilityFair = impliedProbs.away || null;
-              marketOddsAtPrediction = odds?.awayOdds || null;
-              selectionText = matchInfo.awayTeam;
-            } else {
-              modelProbability = modelProbs.draw || null;
-              marketProbabilityFair = impliedProbs.draw || null;
-              marketOddsAtPrediction = odds?.drawOdds || null;
-              selectionText = 'Draw';
+            // Extract edge tracking data from marketIntel if available
+            let modelProbability: number | null = null;
+            let marketProbabilityFair: number | null = null;
+            let edgeValue: number | null = null;
+            let edgeBucket: 'SMALL' | 'MEDIUM' | 'HIGH' | null = null;
+            let selectionText: string | null = null;
+            let marketOddsAtPrediction: number | null = null;
+
+            if (marketIntel) {
+              // Get the probability and edge for the favored side
+              const modelProbs = marketIntel.modelProbability || {};
+              const impliedProbs = marketIntel.impliedProbability || {};
+
+              if (favored === 'home') {
+                modelProbability = modelProbs.home || null;
+                marketProbabilityFair = impliedProbs.home || null;
+                marketOddsAtPrediction = odds?.homeOdds || null;
+                selectionText = matchInfo.homeTeam;
+              } else if (favored === 'away') {
+                modelProbability = modelProbs.away || null;
+                marketProbabilityFair = impliedProbs.away || null;
+                marketOddsAtPrediction = odds?.awayOdds || null;
+                selectionText = matchInfo.awayTeam;
+              } else {
+                modelProbability = modelProbs.draw || null;
+                marketProbabilityFair = impliedProbs.draw || null;
+                marketOddsAtPrediction = odds?.drawOdds || null;
+                selectionText = 'Draw';
+              }
+
+              // Calculate edge
+              if (modelProbability !== null && marketProbabilityFair !== null) {
+                edgeValue = modelProbability - marketProbabilityFair;
+                edgeBucket = edgeValue >= 8 ? 'HIGH' : edgeValue >= 5 ? 'MEDIUM' : edgeValue >= 2 ? 'SMALL' : null;
+              }
             }
-            
-            // Calculate edge
-            if (modelProbability !== null && marketProbabilityFair !== null) {
-              edgeValue = modelProbability - marketProbabilityFair;
-              edgeBucket = edgeValue >= 8 ? 'HIGH' : edgeValue >= 5 ? 'MEDIUM' : edgeValue >= 2 ? 'SMALL' : null;
-            }
-          }
-          
-          await prisma.prediction.create({
-            data: {
-              matchId: matchRef.replace(/\s+/g, '_').toLowerCase(),
-              matchName: matchRef,
-              sport: sportKey,
-              league: matchInfo.league || 'Unknown',
-              kickoff: matchDate,
-              type: 'MATCH_RESULT',
-              prediction: predictedScenario,
-              reasoning: aiAnalysis?.story?.narrative?.substring(0, 500) || `Analysis: ${matchRef}`,
-              conviction: cappedConviction,
-              odds: odds?.homeOdds || null,
-              impliedProb: marketIntel?.impliedProbability?.home || null,
-              source: 'MATCH_ANALYSIS',
-              outcome: 'PENDING',
-              // V2 Edge Tracking fields
-              modelVersion: 'v2',
-              selection: selectionText,
-              modelProbability,
-              marketProbabilityRaw: marketProbabilityFair, // Same as fair for now
-              marketProbabilityFair,
-              marketOddsAtPrediction,
-              edgeValue,
-              edgeBucket,
-              marketType: 'MONEYLINE',
-              predictionTimestamp: new Date(),
-            },
-          });
-          console.log(`[Match-Preview] Prediction saved: ${matchRef} -> ${predictedScenario} (conviction: ${rawConviction} -> ${cappedConviction}, edge: ${edgeValue?.toFixed(1) || 'N/A'}%)`);
+
+            await prisma.prediction.create({
+              data: {
+                matchId: matchRef.replace(/\s+/g, '_').toLowerCase(),
+                matchName: matchRef,
+                sport: sportKey,
+                league: matchInfo.league || 'Unknown',
+                kickoff: matchDate,
+                type: 'MATCH_RESULT',
+                prediction: predictedScenario,
+                reasoning: aiAnalysis?.story?.narrative?.substring(0, 500) || `Analysis: ${matchRef}`,
+                conviction: cappedConviction,
+                odds: odds?.homeOdds || null,
+                impliedProb: marketIntel?.impliedProbability?.home || null,
+                source: 'MATCH_ANALYSIS',
+                outcome: 'PENDING',
+                // V2 Edge Tracking fields
+                modelVersion: 'v2',
+                selection: selectionText,
+                modelProbability,
+                marketProbabilityRaw: marketProbabilityFair, // Same as fair for now
+                marketProbabilityFair,
+                marketOddsAtPrediction,
+                edgeValue,
+                edgeBucket,
+                marketType: 'MONEYLINE',
+                predictionTimestamp: new Date(),
+              },
+            });
+            console.log(`[Match-Preview] Prediction saved: ${matchRef} -> ${predictedScenario} (conviction: ${rawConviction} -> ${cappedConviction}, edge: ${edgeValue?.toFixed(1) || 'N/A'}%)`);
           } // Close shouldSavePrediction if block
         }
-        
+
         // ========================================
         // UPDATE MARKET ALERTS WITH REAL AI EDGE
         // ========================================
@@ -1433,20 +1480,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           try {
             const modelProb = marketIntel.modelProbability;
             const valueEdge = marketIntel.valueEdge;
-            
+
             // Calculate individual edges
             const homeEdge = modelProb.home - (marketIntel.impliedProbability?.home || 0);
             const awayEdge = modelProb.away - (marketIntel.impliedProbability?.away || 0);
-            const drawEdge = modelProb.draw && marketIntel.impliedProbability?.draw 
-              ? modelProb.draw - marketIntel.impliedProbability.draw 
+            const drawEdge = modelProb.draw && marketIntel.impliedProbability?.draw
+              ? modelProb.draw - marketIntel.impliedProbability.draw
               : null;
-            
+
             // Determine alert level based on edge
             const bestEdgePercent = valueEdge?.edgePercent || Math.max(homeEdge, awayEdge, drawEdge || 0);
-            const alertLevel = bestEdgePercent >= 10 ? 'HIGH' : 
-                              bestEdgePercent >= 5 ? 'MEDIUM' : 
-                              bestEdgePercent >= 3 ? 'LOW' : null;
-            
+            const alertLevel = bestEdgePercent >= 10 ? 'HIGH' :
+              bestEdgePercent >= 5 ? 'MEDIUM' :
+                bestEdgePercent >= 3 ? 'LOW' : null;
+
             // Upsert to OddsSnapshot
             await prisma.oddsSnapshot.upsert({
               where: {
@@ -1541,12 +1588,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     console.error(`[Match-Preview] FATAL ERROR after ${Date.now() - startTime}ms:`, errorMessage);
     console.error('[Match-Preview] Stack:', errorStack);
     console.error('[Match-Preview] Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
-    
+
     // Return more details in dev/preview for debugging
     const isDev = process.env.NODE_ENV !== 'production';
     return NextResponse.json(
-      { 
-        error: 'Failed to generate match preview', 
+      {
+        error: 'Failed to generate match preview',
         details: errorMessage,
         ...(isDev && { stack: errorStack, timestamp: new Date().toISOString() })
       },
@@ -1611,7 +1658,7 @@ function normalizeLeagueName(league: string): string {
  */
 function detectSportFromLeague(league: string): string | null {
   const lower = league.toLowerCase();
-  
+
   // Basketball - detect specific leagues
   if (lower.includes('euroleague')) {
     return 'basketball_euroleague';
@@ -1619,31 +1666,31 @@ function detectSportFromLeague(league: string): string | null {
   if (lower.includes('nba')) {
     return 'basketball_nba';
   }
-  if (lower.includes('basketball') || lower.includes('ncaab') || lower.includes('wnba') || 
-      lower.includes('nbl') || lower.includes('acb')) {
+  if (lower.includes('basketball') || lower.includes('ncaab') || lower.includes('wnba') ||
+    lower.includes('nbl') || lower.includes('acb')) {
     return 'basketball';
   }
-  
+
   // American Football
   if (lower.includes('nfl') || lower.includes('ncaaf') || lower.includes('american football')) {
     return 'americanfootball';
   }
-  
+
   // Ice Hockey
   if (lower.includes('nhl') || lower.includes('hockey') || lower.includes('khl')) {
     return 'icehockey';
   }
-  
+
   // Baseball
   if (lower.includes('mlb') || lower.includes('baseball')) {
     return 'baseball';
   }
-  
+
   // Tennis
   if (lower.includes('atp') || lower.includes('wta') || lower.includes('tennis')) {
     return 'tennis';
   }
-  
+
   return null;
 }
 
@@ -1662,7 +1709,7 @@ function getSportConfig(sport: string) {
     'baseball': { hasDraw: false, scoringUnit: 'runs', matchTerm: 'game', analystType: 'baseball analyst' },
     'tennis': { hasDraw: false, scoringUnit: 'sets', matchTerm: 'match', analystType: 'tennis analyst' },
   };
-  
+
   return configs[sport] || configs['soccer'];
 }
 
@@ -1681,33 +1728,33 @@ function parseMatchId(matchId: string) {
       };
     }
   }
-  
+
   // Try new SEO-friendly slug format: home-team-vs-away-team-sport-date
   const parsed = parseMatchSlug(matchId);
   if (parsed) {
-    const toDisplayName = (slug: string) => 
+    const toDisplayName = (slug: string) =>
       slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    
+
     // Map sport code to sport key (e.g., "nba" -> "basketball_nba")
     // Convert hyphens to underscores: "italy-serie-a" -> "italy_serie_a"
     const sportCode = parsed.sportCode.replace(/-/g, '_');
-    
+
     // detectSportFromLeague may return full sport key (basketball_nba) or just type (basketball)
     const detectedSport = detectSportFromLeague(sportCode.toUpperCase());
-    
+
     // If detectSportFromLeague returns a full key (contains underscore), use it directly
     // Otherwise, build it from type + code
     let finalSport: string;
     if (detectedSport && detectedSport.includes('_')) {
       finalSport = detectedSport;
     } else {
-      const sportType = detectedSport || 
-        (sportCode.includes('nba') || sportCode.includes('euroleague') ? 'basketball' : 
-         sportCode.includes('nfl') ? 'americanfootball' :
-         sportCode.includes('nhl') ? 'icehockey' : 'soccer');
+      const sportType = detectedSport ||
+        (sportCode.includes('nba') || sportCode.includes('euroleague') ? 'basketball' :
+          sportCode.includes('nfl') ? 'americanfootball' :
+            sportCode.includes('nhl') ? 'icehockey' : 'soccer');
       finalSport = `${sportType}_${sportCode}`;
     }
-    
+
     return {
       homeTeam: toDisplayName(parsed.homeSlug),
       awayTeam: toDisplayName(parsed.awaySlug),
@@ -1717,7 +1764,7 @@ function parseMatchId(matchId: string) {
       venue: null,
     };
   }
-  
+
   // Fallback: underscore-separated format
   const parts = matchId.split('_');
   if (parts.length >= 3) {
@@ -1736,10 +1783,10 @@ function parseMatchId(matchId: string) {
 
 function buildH2HHeadline(homeTeam: string, awayTeam: string, h2h: { totalMeetings: number; homeWins: number; awayWins: number; draws: number }) {
   if (h2h.totalMeetings === 0) return 'First ever meeting';
-  
+
   const dominantTeam = h2h.homeWins > h2h.awayWins ? homeTeam : awayTeam;
   const dominantWins = Math.max(h2h.homeWins, h2h.awayWins);
-  
+
   if (dominantWins >= 5) {
     return `${dominantTeam}: ${dominantWins} wins in last ${h2h.totalMeetings}`;
   }
@@ -1759,7 +1806,7 @@ function detectStreak(homeForm: string, awayForm: string, homeTeam: string, away
   if (awayWinStreak >= 3) return { text: `${awayWinStreak} wins in a row`, team: 'away' as const };
   if (homeUnbeaten >= 5) return { text: `${homeUnbeaten} unbeaten`, team: 'home' as const };
   if (awayUnbeaten >= 5) return { text: `${awayUnbeaten} unbeaten`, team: 'away' as const };
-  
+
   return null;
 }
 
@@ -1853,32 +1900,32 @@ function formatEnrichedContext(data: {
   injuries?: { home: Array<{ player: string; reason?: string }>; away: Array<{ player: string; reason?: string }> };
 }): string {
   const lines: string[] = [];
-  
+
   // SEASON STATS - use pre-calculated averages from API if available, otherwise calculate
   if (data.homeStats && data.homeStats.played > 0) {
     const hs = data.homeStats;
     // Use API-provided averages if available (more accurate), otherwise calculate
-    const ppg = hs.averageScored !== undefined && hs.averageScored > 0 
-      ? hs.averageScored.toFixed(1) 
+    const ppg = hs.averageScored !== undefined && hs.averageScored > 0
+      ? hs.averageScored.toFixed(1)
       : (hs.goalsScored / hs.played).toFixed(1);
-    const cpg = hs.averageConceded !== undefined && hs.averageConceded > 0 
-      ? hs.averageConceded.toFixed(1) 
+    const cpg = hs.averageConceded !== undefined && hs.averageConceded > 0
+      ? hs.averageConceded.toFixed(1)
       : (hs.goalsConceded / hs.played).toFixed(1);
     lines.push(`${data.homeTeam} season (${hs.played} games): ${hs.wins}W-${hs.draws}D-${hs.losses}L (${ppg} scored, ${cpg} conceded per game)`);
   }
-  
+
   if (data.awayStats && data.awayStats.played > 0) {
     const as = data.awayStats;
     // Use API-provided averages if available (more accurate), otherwise calculate
-    const ppg = as.averageScored !== undefined && as.averageScored > 0 
-      ? as.averageScored.toFixed(1) 
+    const ppg = as.averageScored !== undefined && as.averageScored > 0
+      ? as.averageScored.toFixed(1)
       : (as.goalsScored / as.played).toFixed(1);
-    const cpg = as.averageConceded !== undefined && as.averageConceded > 0 
-      ? as.averageConceded.toFixed(1) 
+    const cpg = as.averageConceded !== undefined && as.averageConceded > 0
+      ? as.averageConceded.toFixed(1)
       : (as.goalsConceded / as.played).toFixed(1);
     lines.push(`${data.awayTeam} season (${as.played} games): ${as.wins}W-${as.draws}D-${as.losses}L (${ppg} scored, ${cpg} conceded per game)`);
   }
-  
+
   // FORM STRING - last 5 results
   if (data.homeForm) {
     lines.push(`${data.homeTeam} form (last 5): ${data.homeForm}`);
@@ -1886,27 +1933,27 @@ function formatEnrichedContext(data: {
   if (data.awayForm) {
     lines.push(`${data.awayTeam} form (last 5): ${data.awayForm}`);
   }
-  
+
   // Recent Form with actual results (if available)
   if (data.homeFormDetails && data.homeFormDetails.length > 0) {
-    const formResults = data.homeFormDetails.slice(0, 5).map(m => 
+    const formResults = data.homeFormDetails.slice(0, 5).map(m =>
       `${m.result} ${m.score} vs ${m.opponent}`
     ).join(', ');
     lines.push(`${data.homeTeam} recent matches: ${formResults}`);
   }
-  
+
   if (data.awayFormDetails && data.awayFormDetails.length > 0) {
-    const formResults = data.awayFormDetails.slice(0, 5).map(m => 
+    const formResults = data.awayFormDetails.slice(0, 5).map(m =>
       `${m.result} ${m.score} vs ${m.opponent}`
     ).join(', ');
     lines.push(`${data.awayTeam} recent matches: ${formResults}`);
   }
-  
+
   // H2H SUMMARY - actual numbers
   if (data.h2h && data.h2h.totalMeetings > 0) {
     lines.push(`H2H record (${data.h2h.totalMeetings} meetings): ${data.homeTeam} ${data.h2h.homeWins}W, Draws ${data.h2h.draws}, ${data.awayTeam} ${data.h2h.awayWins}W`);
   }
-  
+
   // H2H with actual scores (if available)
   if (data.h2hMatches && data.h2hMatches.length > 0) {
     const h2hResults = data.h2hMatches.slice(0, 3).map(m => {
@@ -1916,25 +1963,25 @@ function formatEnrichedContext(data: {
     }).join(' | ');
     lines.push(`Recent H2H: ${h2hResults}`);
   }
-  
+
   // Key absences
   const homeAbsences = data.injuries?.home?.slice(0, 3) || [];
   const awayAbsences = data.injuries?.away?.slice(0, 3) || [];
-  
+
   if (homeAbsences.length > 0) {
     const names = homeAbsences.map(i => i.player).join(', ');
     lines.push(`${data.homeTeam} missing: ${names}`);
   } else {
     lines.push(`${data.homeTeam} injuries: None reported`);
   }
-  
+
   if (awayAbsences.length > 0) {
     const names = awayAbsences.map(i => i.player).join(', ');
     lines.push(`${data.awayTeam} missing: ${names}`);
   } else {
     lines.push(`${data.awayTeam} injuries: None reported`);
   }
-  
+
   return lines.length > 0 ? lines.join('\n') : 'No detailed match data available.';
 }
 
@@ -1959,7 +2006,7 @@ async function generateAIAnalysis(data: {
   };
 }) {
   const sportConfig = getSportConfig(data.sport);
-  
+
   // Build input for Universal Signals Framework
   const signalInput: RawMatchInput = {
     sport: data.sport,
@@ -1994,17 +2041,17 @@ async function generateAIAnalysis(data: {
     homeInjuryDetails: data.enrichedContext?.injuryDetails?.home || [],
     awayInjuryDetails: data.enrichedContext?.injuryDetails?.away || [],
   };
-  
+
   console.log(`[Match-Preview] SignalInput injuries - home: ${signalInput.homeInjuryDetails?.length || 0}, away: ${signalInput.awayInjuryDetails?.length || 0}`);
-  
+
   // Generate Universal Signals (the core of the system)
   const universalSignals = normalizeToUniversalSignals(signalInput);
-  
+
   console.log(`[Match-Preview] UniversalSignals availability - homeInjuries: ${universalSignals.display?.availability?.homeInjuries?.length || 0}, awayInjuries: ${universalSignals.display?.availability?.awayInjuries?.length || 0}`);
-  
+
   // For no-draw sports, don't include draw option in prompt
   const favoredOptions = sportConfig.hasDraw ? '"home" | "away" | "draw"' : '"home" | "away"';
-  
+
   // Build enriched context for richer AI content
   const enrichedContextStr = formatEnrichedContext({
     homeTeam: data.homeTeam,
@@ -2019,7 +2066,7 @@ async function generateAIAnalysis(data: {
     h2hMatches: data.enrichedContext?.h2hMatches,
     injuries: data.enrichedContext?.injuryDetails,
   });
-  
+
   // SportBot AIXBT-style System Prompt with data requirements
   const systemPrompt = `${ANALYSIS_PERSONALITY}
 
@@ -2128,7 +2175,7 @@ ${!sportConfig.hasDraw ? 'NO DRAWS in this sport. Pick a winner.' : 'Draw is val
 
     const content = completion.choices[0].message.content;
     if (!content) throw new Error('No content');
-    
+
     // Normalize unicode characters
     const normalizedContent = content
       .replace(/[\u2018\u2019]/g, "'")
@@ -2136,25 +2183,65 @@ ${!sportConfig.hasDraw ? 'NO DRAWS in this sport. Pick a winner.' : 'Draw is val
       .replace(/\u2013/g, '-')
       .replace(/\u2014/g, '--')
       .replace(/\u2026/g, '...');
-    
+
     const result = JSON.parse(normalizedContent);
-    
+
     // Ensure no-draw sports don't return draw
     if (!sportConfig.hasDraw && result.analysis?.favored === 'draw') {
       result.analysis.favored = 'home';
     }
-    
+
     // Sanitize snapshot - remove any "undefined" strings that AI might output
     const sanitizeSnapshot = (snapshot: string[] | undefined): string[] => {
       if (!snapshot || !Array.isArray(snapshot)) return [];
-      return snapshot.map(s => 
-        typeof s === 'string' 
+      return snapshot.map(s =>
+        typeof s === 'string'
           ? s.replace(/\bundefined\b/gi, 'unconfirmed').replace(/\bnull\b/gi, 'unknown')
           : s
       );
     };
-    
+
     // Build response with Universal Signals
+    // Calculate expected scores using Poisson/Elo model
+    const sportType = data.sport.includes('basketball') ? 'basketball'
+      : data.sport.includes('nfl') || data.sport.includes('american') ? 'football'
+        : data.sport.includes('nhl') || data.sport.includes('hockey') ? 'hockey'
+          : 'soccer';
+
+    const modelInput: ModelInput = {
+      sport: sportType,
+      homeTeam: data.homeTeam,
+      awayTeam: data.awayTeam,
+      league: data.league,
+      homeStats: {
+        played: data.homeStats.played,
+        wins: data.homeStats.wins,
+        draws: data.homeStats.draws,
+        losses: data.homeStats.losses,
+        scored: data.homeStats.goalsScored,
+        conceded: data.homeStats.goalsConceded,
+      },
+      awayStats: {
+        played: data.awayStats.played,
+        wins: data.awayStats.wins,
+        draws: data.awayStats.draws,
+        losses: data.awayStats.losses,
+        scored: data.awayStats.goalsScored,
+        conceded: data.awayStats.goalsConceded,
+      },
+      homeForm: data.homeForm,
+      awayForm: data.awayForm,
+    };
+
+    console.log(`[Match-Preview] ModelInput for scores:`, JSON.stringify({
+      homeStats: modelInput.homeStats,
+      awayStats: modelInput.awayStats,
+    }));
+
+    const expectedScores = getExpectedScores(modelInput);
+
+    console.log(`[Match-Preview] Expected scores calculated:`, expectedScores);
+
     return {
       story: {
         favored: result.analysis?.favored || 'draw',
@@ -2168,6 +2255,8 @@ ${!sportConfig.hasDraw ? 'NO DRAWS in this sport. Pick a winner.' : 'Draw is val
       ] : [],
       // Universal Signals for UI display
       universalSignals,
+      // Expected scores from Poisson/Elo model
+      expectedScores,
       // Legacy format for backwards compatibility
       signals: {
         formLabel: universalSignals.form,
@@ -2180,14 +2269,47 @@ ${!sportConfig.hasDraw ? 'NO DRAWS in this sport. Pick a winner.' : 'Draw is val
     };
   } catch (error) {
     console.error('AI generation failed:', error);
-    
+
     // Fallback using Universal Signals with meaningful snapshot
-    const favored = universalSignals.display?.edge?.direction === 'even' 
+    const favored = universalSignals.display?.edge?.direction === 'even'
       ? (sportConfig.hasDraw ? 'draw' : 'home')
       : (universalSignals.display?.edge?.direction || 'home');
-    
+
     const favoredTeam = favored === 'home' ? data.homeTeam : favored === 'away' ? data.awayTeam : 'Neither';
     const edgePercentage = universalSignals.display?.edge?.percentage || 50;
+
+    // Calculate expected scores for fallback too
+    const sportType = data.sport.includes('basketball') ? 'basketball'
+      : data.sport.includes('nfl') || data.sport.includes('american') ? 'football'
+        : data.sport.includes('nhl') || data.sport.includes('hockey') ? 'hockey'
+          : 'soccer';
+
+    const fallbackModelInput: ModelInput = {
+      sport: sportType,
+      homeTeam: data.homeTeam,
+      awayTeam: data.awayTeam,
+      league: data.league,
+      homeStats: {
+        played: data.homeStats.played,
+        wins: data.homeStats.wins,
+        draws: data.homeStats.draws,
+        losses: data.homeStats.losses,
+        scored: data.homeStats.goalsScored,
+        conceded: data.homeStats.goalsConceded,
+      },
+      awayStats: {
+        played: data.awayStats.played,
+        wins: data.awayStats.wins,
+        draws: data.awayStats.draws,
+        losses: data.awayStats.losses,
+        scored: data.awayStats.goalsScored,
+        conceded: data.awayStats.goalsConceded,
+      },
+      homeForm: data.homeForm,
+      awayForm: data.awayForm,
+    };
+
+    const fallbackExpectedScores = getExpectedScores(fallbackModelInput);
 
     return {
       story: {
@@ -2206,6 +2328,7 @@ ${!sportConfig.hasDraw ? 'NO DRAWS in this sport. Pick a winner.' : 'Draw is val
         { icon: '📊', text: `${data.homeTeam} vs ${data.awayTeam}`, favors: 'neutral', viral: false }
       ],
       universalSignals,
+      expectedScores: fallbackExpectedScores,
       signals: {
         formLabel: universalSignals.form,
         strengthEdgeLabel: universalSignals.strength_edge,
@@ -2260,16 +2383,16 @@ function calculateNormalizedSignals(
 
   const homeFormRating = calculateFormRating(data.homeForm);
   const awayFormRating = calculateFormRating(data.awayForm);
-  
+
   const formLabel = (rating: number): string => {
     if (rating >= 65) return 'strong';
     if (rating <= 35) return 'weak';
     return 'neutral';
   };
-  
+
   const homeFormLabel = formLabel(homeFormRating);
   const awayFormLabel = formLabel(awayFormRating);
-  
+
   // Form comparison
   let formComparison: string;
   if (homeFormRating > awayFormRating + 15) {
@@ -2279,17 +2402,17 @@ function calculateNormalizedSignals(
   } else {
     formComparison = 'Both sides in similar form';
   }
-  
+
   // Strength edge
   const homeWinRate = data.homeStats.played > 0 ? data.homeStats.wins / data.homeStats.played : 0.5;
   const awayWinRate = data.awayStats.played > 0 ? data.awayStats.wins / data.awayStats.played : 0.5;
   const homeGD = data.homeStats.played > 0 ? (data.homeStats.goalsScored - data.homeStats.goalsConceded) / data.homeStats.played : 0;
   const awayGD = data.awayStats.played > 0 ? (data.awayStats.goalsScored - data.awayStats.goalsConceded) / data.awayStats.played : 0;
   const h2hFactor = data.h2h.totalMeetings > 0 ? (data.h2h.homeWins - data.h2h.awayWins) / data.h2h.totalMeetings * 0.1 : 0;
-  
+
   const totalEdge = ((homeWinRate - awayWinRate) + (homeGD - awayGD) * 0.05 + h2hFactor + 0.03) * 100;
   const clampedEdge = Math.max(-20, Math.min(20, totalEdge));
-  
+
   let strengthEdgeDirection: 'home' | 'away' | 'even';
   let strengthEdgeLabel: string;
   if (Math.abs(clampedEdge) < 3) {
@@ -2302,40 +2425,40 @@ function calculateNormalizedSignals(
     strengthEdgeDirection = 'away';
     strengthEdgeLabel = `Away +${Math.abs(Math.round(clampedEdge))}%`;
   }
-  
+
   // Tempo
   const homeScoring = data.homeStats.played > 0 ? data.homeStats.goalsScored / data.homeStats.played : 0;
   const awayScoring = data.awayStats.played > 0 ? data.awayStats.goalsScored / data.awayStats.played : 0;
   const avgScoring = (homeScoring + awayScoring) / 2;
-  
+
   const tempoThresholds: Record<string, { low: number; high: number }> = {
     'soccer': { low: 1.2, high: 1.8 },
     'basketball': { low: 105, high: 115 },
     'americanfootball': { low: 20, high: 28 },
     'icehockey': { low: 2.5, high: 3.5 },
   };
-  
-  const sportKey = data.sport.includes('basketball') ? 'basketball' 
+
+  const sportKey = data.sport.includes('basketball') ? 'basketball'
     : data.sport.includes('american') || data.sport.includes('nfl') ? 'americanfootball'
-    : data.sport.includes('hockey') || data.sport.includes('nhl') ? 'icehockey'
-    : 'soccer';
-  
+      : data.sport.includes('hockey') || data.sport.includes('nhl') ? 'icehockey'
+        : 'soccer';
+
   const t = tempoThresholds[sportKey] || tempoThresholds.soccer;
   let tempoLabel: string;
   if (avgScoring < t.low) tempoLabel = 'Low tempo expected';
   else if (avgScoring > t.high) tempoLabel = 'High tempo expected';
   else tempoLabel = 'Medium tempo expected';
-  
+
   // Efficiency
   const homeOffEff = data.homeStats.played > 0 ? data.homeStats.goalsScored / data.homeStats.played : 0;
   const awayOffEff = data.awayStats.played > 0 ? data.awayStats.goalsScored / data.awayStats.played : 0;
   const homeDefEff = data.homeStats.played > 0 ? data.homeStats.goalsConceded / data.homeStats.played : 999;
   const awayDefEff = data.awayStats.played > 0 ? data.awayStats.goalsConceded / data.awayStats.played : 999;
-  
+
   const homeNet = homeOffEff - homeDefEff;
   const awayNet = awayOffEff - awayDefEff;
   const effDiff = homeNet - awayNet;
-  
+
   let efficiencyLabel: string;
   if (Math.abs(effDiff) < 0.2) {
     efficiencyLabel = 'No clear efficiency edge';
@@ -2344,7 +2467,7 @@ function calculateNormalizedSignals(
   } else {
     efficiencyLabel = 'Away team more efficient';
   }
-  
+
   // Sport label for AI
   const sportLabels: Record<string, string> = {
     'soccer': 'Soccer',
@@ -2355,7 +2478,7 @@ function calculateNormalizedSignals(
     'icehockey': 'Ice Hockey',
     'icehockey_nhl': 'NHL Hockey',
   };
-  
+
   return {
     sportLabel: sportLabels[data.sport] || 'Soccer',
     formLabel: formComparison,
@@ -2422,7 +2545,7 @@ function buildGoalsTimingFromData(
     home: {
       scoring: goalTimingData.home.scoring,
       conceding: goalTimingData.home.conceding,
-      insight: goalTimingData.home.totalGoals > 5 
+      insight: goalTimingData.home.totalGoals > 5
         ? `${homeTeam} tend to score ${periodLabels[homePeak] || 'late'} in matches`
         : null,
     },
@@ -2448,7 +2571,7 @@ function buildTTSScript(
 ): string {
   const favoredTeam = favored === 'home' ? homeTeam : favored === 'away' ? awayTeam : 'a draw';
   const confidenceText = confidence === 'strong' ? 'strongly' : confidence === 'moderate' ? '' : 'slightly';
-  
+
   // Clean narrative for TTS (remove markdown, excessive punctuation)
   const cleanNarrative = narrative
     .replace(/\n+/g, '. ')
@@ -2464,10 +2587,10 @@ function buildTTSScript(
 async function generateTTSAudio(text: string, matchId: string): Promise<string | undefined> {
   try {
     // Call our TTS API endpoint
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
       : 'http://localhost:3000';
-    
+
     const response = await fetch(`${baseUrl}/api/tts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2480,7 +2603,7 @@ async function generateTTSAudio(text: string, matchId: string): Promise<string |
     }
 
     const result = await response.json();
-    
+
     if (result.success && result.audioBase64) {
       // Return as data URL for immediate playback
       return `data:${result.contentType || 'audio/mpeg'};base64,${result.audioBase64}`;
