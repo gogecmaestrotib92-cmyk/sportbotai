@@ -9,21 +9,32 @@ const STATIC_PAGES = [
   { path: '', priority: 1, changeFreq: 'daily' as const },
   { path: '/matches', priority: 0.95, changeFreq: 'hourly' as const },
   { path: '/ai-desk', priority: 0.95, changeFreq: 'hourly' as const },
-  
+
+  // Sport Landing Pages (Authority Hubs)
+  { path: '/nba', priority: 0.9, changeFreq: 'daily' as const },
+  { path: '/nfl', priority: 0.9, changeFreq: 'daily' as const },
+  { path: '/nhl', priority: 0.9, changeFreq: 'daily' as const },
+  { path: '/soccer', priority: 0.9, changeFreq: 'daily' as const },
+
+  // Betting Tools (High-value SEO pages)
+  { path: '/tools/odds-converter', priority: 0.85, changeFreq: 'monthly' as const },
+  { path: '/tools/hedge-calculator', priority: 0.85, changeFreq: 'monthly' as const },
+  { path: '/tools/parlay-calculator', priority: 0.85, changeFreq: 'monthly' as const },
+
   // News Section (Google News eligible)
   { path: '/news', priority: 0.95, changeFreq: 'hourly' as const },
-  
+
   // Content & Conversion
   { path: '/blog', priority: 0.85, changeFreq: 'daily' as const },
   { path: '/partners', priority: 0.7, changeFreq: 'weekly' as const },
   { path: '/pricing', priority: 0.8, changeFreq: 'monthly' as const },
   { path: '/contact', priority: 0.6, changeFreq: 'monthly' as const },
-  
+
   // Legal & Compliance
   { path: '/responsible-gambling', priority: 0.5, changeFreq: 'monthly' as const },
   { path: '/terms', priority: 0.3, changeFreq: 'yearly' as const },
   { path: '/privacy', priority: 0.3, changeFreq: 'yearly' as const },
-  
+
   // AI/LLM Discovery Files
   { path: '/llms.txt', priority: 0.4, changeFreq: 'monthly' as const },
   { path: '/llms-full.txt', priority: 0.4, changeFreq: 'monthly' as const },
@@ -45,7 +56,7 @@ const SERBIAN_STATIC_PAGES = [
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const currentDate = new Date().toISOString();
-  
+
   // Build static pages (English)
   const staticEntries: MetadataRoute.Sitemap = STATIC_PAGES.map(page => ({
     url: `${BASE_URL}${page.path}`,
@@ -68,7 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let serbianBlogEntries: MetadataRoute.Sitemap = [];
   try {
     const blogPosts = await prisma.blogPost.findMany({
-      where: { 
+      where: {
         status: 'PUBLISHED',
         publishedAt: { not: null },
         // Exclude match previews and news - they go to /news section
@@ -164,11 +175,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const teamEntries: MetadataRoute.Sitemap = [];
 
   return [
-    ...staticEntries, 
+    ...staticEntries,
     ...serbianStaticEntries,
-    ...newsEntries, 
+    ...newsEntries,
     ...serbianNewsEntries,
-    ...blogEntries, 
+    ...blogEntries,
     ...serbianBlogEntries,
     ...teamEntries,
   ];

@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import OpenAI from 'openai';
 import { applyConvictionCap } from '@/lib/accuracy-core/types';
+import { normalizeTeamName, teamsMatch } from '@/lib/team-aliases';
 
 export const maxDuration = 120;
 
@@ -97,7 +98,7 @@ function marketEdgeToPrediction(
   // Calculate confidence based on probability difference
   const probs = { HOME: homeWinProb, DRAW: drawProb, AWAY: awayWinProb };
   const predictedProb = probs[bestValueSide as keyof typeof probs] || 0;
-  
+
   // Convert probability to confidence (1-10 scale)
   const confidence = Math.min(10, Math.max(1, Math.round((predictedProb || 50) / 10)));
 
@@ -119,28 +120,32 @@ function marketEdgeToPrediction(
 async function getMatchResult(homeTeam: string, awayTeam: string, matchDate: Date, league?: string | null, sport?: string | null): Promise<MatchResult | null> {
   const apiKey = process.env.API_FOOTBALL_KEY;
   if (!apiKey) return null;
-  
+
   const dateStr = matchDate.toISOString().split('T')[0];
   // Also try the next day in case match crossed midnight or API has different timezone
   const nextDay = new Date(matchDate.getTime() + 24 * 60 * 60 * 1000);
   const nextDayStr = nextDay.toISOString().split('T')[0];
-  
-  const searchHome = homeTeam.toLowerCase();
-  const searchAway = awayTeam.toLowerCase();
+
+  // Normalize team names using aliases
+  const sportKey = sport || 'soccer';
+  const normalizedHome = normalizeTeamName(homeTeam, sportKey);
+  const normalizedAway = normalizeTeamName(awayTeam, sportKey);
+  const searchHome = normalizedHome.toLowerCase();
+  const searchAway = normalizedAway.toLowerCase();
   const sportLower = sport?.toLowerCase() || '';
   const leagueLower = league?.toLowerCase() || '';
-  
+
   // Detect sport from sport field, league, or team names
-  const isNBA = sportLower.includes('basketball_nba') || sportLower.includes('basketball') || leagueLower.includes('nba') || 
+  const isNBA = sportLower.includes('basketball_nba') || sportLower.includes('basketball') || leagueLower.includes('nba') ||
     ['lakers', 'celtics', 'bulls', 'heat', 'warriors', 'nuggets', 'suns', 'bucks', 'nets', 'knicks', 'clippers', 'mavs', 'mavericks', 'rockets', 'spurs', 'jazz', 'thunder', 'grizzlies', 'pelicans', 'timberwolves', 'blazers', 'kings', 'magic', 'hawks', 'hornets', 'pistons', 'pacers', 'cavaliers', '76ers', 'raptors', 'wizards'].some(t => searchHome.includes(t) || searchAway.includes(t));
-  
+
   const isEuroLeague = sportLower.includes('euroleague') || leagueLower.includes('euroleague') ||
     ['olympiacos', 'panathinaikos', 'fenerbahce', 'anadolu efes', 'real madrid', 'barcelona', 'maccabi', 'partizan', 'crvena zvezda', 'zalgiris', 'žalgiris', 'virtus', 'baskonia', 'milano', 'asvel', 'bayern munich', 'alba berlin'].some(t => searchHome.includes(t) || searchAway.includes(t));
-  
-  const isNHL = sportLower.includes('hockey') || sportLower.includes('icehockey') || leagueLower.includes('nhl') || 
+
+  const isNHL = sportLower.includes('hockey') || sportLower.includes('icehockey') || leagueLower.includes('nhl') ||
     ['bruins', 'rangers', 'penguins', 'capitals', 'flyers', 'devils', 'islanders', 'canadiens', 'senators', 'maple leafs', 'lightning', 'panthers', 'hurricanes', 'predators', 'blue jackets', 'red wings', 'blackhawks', 'wild', 'blues', 'jets', 'avalanche', 'stars', 'coyotes', 'ducks', 'kings', 'sharks', 'kraken', 'golden knights', 'flames', 'oilers', 'canucks'].some(t => searchHome.includes(t) || searchAway.includes(t));
 
-  const isNFL = sportLower.includes('americanfootball') || sportLower.includes('nfl') || leagueLower.includes('nfl') || 
+  const isNFL = sportLower.includes('americanfootball') || sportLower.includes('nfl') || leagueLower.includes('nfl') ||
     ['chiefs', 'bills', 'ravens', 'bengals', 'dolphins', 'patriots', 'jets', 'steelers', 'browns', 'titans', 'colts', 'jaguars', 'texans', 'broncos', 'raiders', 'chargers', 'eagles', 'cowboys', 'giants', 'commanders', 'lions', 'packers', 'vikings', 'bears', 'buccaneers', 'saints', 'falcons', 'panthers', 'seahawks', '49ers', 'cardinals', 'rams'].some(t => searchHome.includes(t) || searchAway.includes(t));
 
   // Try both the match date and next day
@@ -151,25 +156,25 @@ async function getMatchResult(homeTeam: string, awayTeam: string, matchDate: Dat
         const euroResult = await fetchSportResult('basketball', 120, tryDate, searchHome, searchAway, apiKey);
         if (euroResult) return euroResult;
       }
-      
+
       // Try NBA API (league 12)
       if (isNBA) {
         const nbaResult = await fetchSportResult('basketball', 12, tryDate, searchHome, searchAway, apiKey);
         if (nbaResult) return nbaResult;
       }
-      
+
       // Try NHL API
       if (isNHL) {
         const nhlResult = await fetchSportResult('hockey', 57, tryDate, searchHome, searchAway, apiKey);
         if (nhlResult) return nhlResult;
       }
-      
+
       // Try NFL API
       if (isNFL) {
         const nflResult = await fetchNFLResult(tryDate, searchHome, searchAway, apiKey);
         if (nflResult) return nflResult;
       }
-      
+
       // Try Football API (default for soccer)
       if (!isNBA && !isEuroLeague && !isNHL && !isNFL) {
         const response = await fetch(
@@ -225,18 +230,18 @@ function getSeasonForDate(dateStr: string, sport: 'nba' | 'nhl' | 'nfl' = 'nba')
   const date = new Date(dateStr);
   const year = date.getFullYear();
   const month = date.getMonth() + 1; // 1-12
-  
+
   if (sport === 'nfl') {
     // NFL season is just the year (e.g., "2025" for 2025-2026 season)
     return String(year);
   }
-  
+
   if (sport === 'nhl') {
     // NHL API uses integer season (2024, 2025)
     // Season starts in October, ends in June
     return month >= 10 ? String(year) : String(year - 1);
   }
-  
+
   // NBA: Season spans two years in format "2024-2025"
   // October-December = first year of season
   // January-June = second year of season
@@ -259,14 +264,14 @@ async function fetchSportResult(
   apiKey: string
 ): Promise<MatchResult | null> {
   try {
-    const baseUrl = sport === 'basketball' 
-      ? 'https://v1.basketball.api-sports.io' 
+    const baseUrl = sport === 'basketball'
+      ? 'https://v1.basketball.api-sports.io'
       : 'https://v1.hockey.api-sports.io';
-    
+
     const seasonType = sport === 'basketball' ? 'nba' : 'nhl';
     const season = getSeasonForDate(dateStr, seasonType);
     console.log(`[Track-Predictions] Fetching ${sport} games for ${dateStr}, season ${season}`);
-    
+
     const response = await fetch(
       `${baseUrl}/games?date=${dateStr}&league=${leagueId}&season=${season}`,
       {
@@ -290,19 +295,21 @@ async function fetchSportResult(
       // Only count finished games
       if (!['FT', 'AOT', 'AP'].includes(status)) continue;
 
+      // Use improved team matching with aliases
+      const sportKey = sport === 'basketball' ? 'basketball_nba' : 'icehockey_nhl';
       if (
-        (home.includes(searchHome) || searchHome.includes(home)) &&
-        (away.includes(searchAway) || searchAway.includes(away))
+        teamsMatch(home, searchHome, sportKey) &&
+        teamsMatch(away, searchAway, sportKey)
       ) {
         // Hockey API returns scores directly as numbers: { home: 2, away: 3 }
         // Basketball API returns scores as objects: { home: { total: 100, points: 100 }, ... }
-        const homeScore = typeof game.scores?.home === 'number' 
-          ? game.scores.home 
+        const homeScore = typeof game.scores?.home === 'number'
+          ? game.scores.home
           : (game.scores?.home?.total ?? game.scores?.home?.points ?? 0);
-        const awayScore = typeof game.scores?.away === 'number' 
-          ? game.scores.away 
+        const awayScore = typeof game.scores?.away === 'number'
+          ? game.scores.away
           : (game.scores?.away?.total ?? game.scores?.away?.points ?? 0);
-        
+
         return {
           homeTeam: game.teams.home.name,
           awayTeam: game.teams.away.name,
@@ -332,7 +339,7 @@ async function fetchNFLResult(
   try {
     const season = getSeasonForDate(dateStr, 'nfl');
     console.log(`[Track-Predictions] Fetching NFL games for ${dateStr}, season ${season}`);
-    
+
     const response = await fetch(
       `https://v1.american-football.api-sports.io/games?date=${dateStr}&league=1&season=${season}`,
       {
@@ -426,10 +433,10 @@ export async function GET(request: NextRequest) {
     const vercelCron = request.headers.get('x-vercel-cron');
     const url = new URL(request.url);
     const secretParam = url.searchParams.get('secret');
-    
+
     const isVercelCron = vercelCron === '1' || vercelCron === 'true';
     const isAuthorized = !CRON_SECRET || authHeader === `Bearer ${CRON_SECRET}` || secretParam === CRON_SECRET;
-    
+
     console.log(`[Track-Predictions] Auth check: isVercelCron=${isVercelCron}, isAuthorized=${isAuthorized}`);
 
     if (!isVercelCron && !isAuthorized) {
@@ -440,6 +447,7 @@ export async function GET(request: NextRequest) {
       newPredictions: 0,
       newAnalysisPredictions: 0,
       updatedOutcomes: 0,
+      stuckPredictions: 0,
       errors: [] as string[],
     };
 
@@ -470,7 +478,7 @@ export async function GET(request: NextRequest) {
 
     for (const post of recentPosts) {
       const matchName = post.matchRef || `${post.homeTeam} vs ${post.awayTeam}`;
-      
+
       // Check if ANY prediction already exists for this match (from ANY source)
       const existingPrediction = await prisma.prediction.findFirst({
         where: {
@@ -513,7 +521,7 @@ export async function GET(request: NextRequest) {
           } else if (leagueLower.includes('nhl') || leagueLower.includes('hockey')) {
             sport = 'icehockey_nhl';
           }
-          
+
           // Try to find a PRE_ANALYZE prediction to get correct kickoff time
           const preAnalyzePred = await prisma.prediction.findFirst({
             where: {
@@ -529,11 +537,11 @@ export async function GET(request: NextRequest) {
               ],
             },
           });
-          
+
           // Use PRE_ANALYZE kickoff if found, otherwise use 24 hours from now as estimate
           const kickoffTime = preAnalyzePred?.kickoff || new Date(Date.now() + 24 * 60 * 60 * 1000);
           const matchIdToUse = preAnalyzePred?.matchId || matchName.replace(/\s+/g, '_').toLowerCase();
-          
+
           const newPrediction = await prisma.prediction.create({
             data: {
               matchId: matchIdToUse,
@@ -549,7 +557,7 @@ export async function GET(request: NextRequest) {
               outcome: 'PENDING',
             },
           });
-          
+
           results.newPredictions++;
           console.log(`[Track-Predictions] Created prediction for ${post.matchRef} (${sport}, kickoff: ${kickoffTime.toISOString()})`);
         } catch (error) {
@@ -587,7 +595,7 @@ export async function GET(request: NextRequest) {
 
     for (const analysis of recentAnalyses) {
       const matchRef = `${analysis.homeTeam} vs ${analysis.awayTeam}`;
-      
+
       // Check if prediction already exists from ANY source (skip to avoid duplicates)
       const existingPrediction = await prisma.prediction.findFirst({
         where: {
@@ -617,7 +625,7 @@ export async function GET(request: NextRequest) {
           const sportKey = analysis.sport || 'soccer';
           const rawConviction = Math.round(prediction.confidenceLevel / 10);
           const cappedConviction = applyConvictionCap(rawConviction, sportKey);
-          
+
           await prisma.prediction.create({
             data: {
               matchId: matchRef.replace(/\s+/g, '_').toLowerCase(),
@@ -665,14 +673,14 @@ export async function GET(request: NextRequest) {
     for (const pred of pendingPredictions) {
       // Parse teams from matchName
       const [homeTeam, awayTeam] = pred.matchName.split(' vs ').map(t => t.trim());
-      
+
       if (!homeTeam || !awayTeam) continue;
 
       console.log(`[Track-Predictions] Checking: ${pred.matchName} (${pred.sport})`);
-      
+
       // Get match result (pass sport and league for sport detection)
       const result = await getMatchResult(homeTeam, awayTeam, pred.kickoff, pred.league, pred.sport);
-      
+
       console.log(`[Track-Predictions] Result for ${pred.matchName}: ${result ? `${result.homeScore}-${result.awayScore}` : 'NOT FOUND'}`);
 
       if (result && result.completed && pred.prediction) {
@@ -685,10 +693,10 @@ export async function GET(request: NextRequest) {
         // Also evaluate value bet if present
         let valueBetOutcome: 'HIT' | 'MISS' | null = null;
         let valueBetProfit: number | null = null;
-        
+
         if (pred.valueBetSide && pred.valueBetOdds) {
-          const actualWinner = result.homeScore > result.awayScore ? 'HOME' : 
-                               result.awayScore > result.homeScore ? 'AWAY' : 'DRAW';
+          const actualWinner = result.homeScore > result.awayScore ? 'HOME' :
+            result.awayScore > result.homeScore ? 'AWAY' : 'DRAW';
           const valueBetWon = pred.valueBetSide === actualWinner;
           valueBetOutcome = valueBetWon ? 'HIT' : 'MISS';
           // Calculate profit: if won, profit = odds - 1; if lost, profit = -1
@@ -715,6 +723,40 @@ export async function GET(request: NextRequest) {
           console.error(`[Track-Predictions] Error updating outcome:`, error);
           results.errors.push(`Failed to update outcome for ${pred.matchName}: ${error instanceof Error ? error.message : 'Unknown'}`);
         }
+      }
+    }
+
+    // ============================================
+    // STEP 4: Flag stuck predictions (PENDING > 24h after kickoff)
+    // ============================================
+    console.log('[Track-Predictions] Step 4: Checking for stuck predictions...');
+
+    const stuckPredictions = await prisma.prediction.findMany({
+      where: {
+        outcome: 'PENDING',
+        kickoff: {
+          lte: new Date(Date.now() - 24 * 60 * 60 * 1000), // 24h+ ago
+          gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // Within last 2 weeks
+        },
+      },
+      select: {
+        id: true,
+        matchName: true,
+        sport: true,
+        kickoff: true,
+      },
+    });
+
+    results.stuckPredictions = stuckPredictions.length;
+
+    if (stuckPredictions.length > 0) {
+      console.warn(`[Track-Predictions] ⚠️ ${stuckPredictions.length} STUCK predictions (PENDING > 24h):`);
+      for (const pred of stuckPredictions.slice(0, 10)) {
+        const hoursAgo = Math.round((Date.now() - new Date(pred.kickoff).getTime()) / (1000 * 60 * 60));
+        console.warn(`  - ${pred.matchName} (${pred.sport}) - ${hoursAgo}h ago`);
+      }
+      if (stuckPredictions.length > 10) {
+        console.warn(`  ... and ${stuckPredictions.length - 10} more`);
       }
     }
 

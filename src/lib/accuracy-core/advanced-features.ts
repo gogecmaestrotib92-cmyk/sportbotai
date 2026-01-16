@@ -6,9 +6,11 @@
  * 2. Market-Based Calibration (respect sharp bookmaker consensus)
  * 3. Ensemble Probability Blending
  * 4. Historical Accuracy Weighting by Sport/League
+ * 5. Dynamic Weight Adjustment Based on Live Performance
  */
 
 import { SportType, RawProbabilities } from './types';
+import { getLiveHistoricalAccuracy } from './accuracy-metrics';
 
 // ============================================
 // 1. SITUATIONAL FACTORS
@@ -27,7 +29,7 @@ export interface SituationalFactors {
   motivationLevel?: 'high' | 'normal' | 'low'; // Playoff race, nothing to play for, etc.
   isPlayoffs?: boolean;
   isDerby?: boolean; // Local rivalry
-  
+
   // Injury factors (NEW) - optional since not all sources provide this
   homeInjuriesOut?: number; // Players confirmed OUT
   awayInjuriesOut?: number;
@@ -105,11 +107,11 @@ export function calculateSituationalAdjustment(
   factors: SituationalFactors
 ): { homeAdjust: number; awayAdjust: number; reasons: string[] } {
   const adjustments = SITUATIONAL_ADJUSTMENTS[sport] || SITUATIONAL_ADJUSTMENTS.soccer;
-  
+
   let homeAdjust = 0;
   let awayAdjust = 0;
   const reasons: string[] = [];
-  
+
   // Back-to-back adjustments
   if (factors.isHomeBackToBack) {
     homeAdjust += adjustments.backToBack;
@@ -120,7 +122,7 @@ export function calculateSituationalAdjustment(
     awayAdjust += roadB2B;
     reasons.push(`Away team on road B2B (-${Math.abs(roadB2B * 100).toFixed(0)}%)`);
   }
-  
+
   // Rest advantage
   const restDiff = factors.homeRestDays - factors.awayRestDays;
   if (restDiff >= 3 && adjustments.restAdvantage3Plus) {
@@ -130,7 +132,7 @@ export function calculateSituationalAdjustment(
     awayAdjust += adjustments.restAdvantage3Plus;
     reasons.push(`Away has ${Math.abs(restDiff)}+ day rest advantage`);
   }
-  
+
   // Schedule density
   if (factors.homeGamesLast7Days >= 4) {
     homeAdjust -= 0.02; // -2% for heavy schedule
@@ -140,25 +142,25 @@ export function calculateSituationalAdjustment(
     awayAdjust -= 0.02;
     reasons.push('Away team on heavy schedule (4+ games in 7 days)');
   }
-  
+
   // Playoff boost
   if (factors.isPlayoffs && adjustments.playoffHome) {
     homeAdjust += adjustments.playoffHome;
     reasons.push('Playoff home court advantage');
   }
-  
+
   // Derby/rivalry boost
   if (factors.isDerby && adjustments.derbyBoost) {
     homeAdjust += adjustments.derbyBoost;
     reasons.push('Derby match - elevated home support');
   }
-  
+
   // Revenge game
   if (factors.isRevenge && adjustments.revengeGame) {
     // Apply to the team seeking revenge
     reasons.push('Revenge narrative may boost motivation');
   }
-  
+
   // Motivation level
   if (factors.motivationLevel === 'low') {
     if (adjustments.endOfSeason) {
@@ -166,14 +168,14 @@ export function calculateSituationalAdjustment(
       reasons.push('Low motivation detected (eliminated/nothing to play for)');
     }
   }
-  
+
   // ========================================
   // INJURY ADJUSTMENTS (NEW)
   // ========================================
   const injuryPerOut = adjustments.injuryPerPlayerOut || -0.02;
   const injuryPerDoubtful = adjustments.injuryPerPlayerDoubtful || -0.01;
   const injuryKeyPlayer = adjustments.injuryKeyPlayer || -0.05;
-  
+
   // Home team injuries
   const homeOutCount = factors.homeInjuriesOut || 0;
   const homeDoubtfulCount = factors.homeInjuriesDoubtful || 0;
@@ -191,7 +193,7 @@ export function calculateSituationalAdjustment(
     homeAdjust += injuryKeyPlayer;
     reasons.push(`Home key player OUT (${(injuryKeyPlayer * 100).toFixed(0)}%)`);
   }
-  
+
   // Away team injuries
   const awayOutCount = factors.awayInjuriesOut || 0;
   const awayDoubtfulCount = factors.awayInjuriesDoubtful || 0;
@@ -209,7 +211,7 @@ export function calculateSituationalAdjustment(
     awayAdjust += injuryKeyPlayer;
     reasons.push(`Away key player OUT (${(injuryKeyPlayer * 100).toFixed(0)}%)`);
   }
-  
+
   return { homeAdjust, awayAdjust, reasons };
 }
 
@@ -267,12 +269,12 @@ export function blendEnsemble(
   input: EnsembleInput
 ): RawProbabilities {
   const weights = ENSEMBLE_WEIGHTS[sport] || ENSEMBLE_WEIGHTS.soccer;
-  
+
   let homeBlend = 0;
   let awayBlend = 0;
   let drawBlend = 0;
   let totalWeight = 0;
-  
+
   // Our model
   if (input.ourModel) {
     homeBlend += input.ourModel.home * weights.ourModel;
@@ -280,7 +282,7 @@ export function blendEnsemble(
     drawBlend += (input.ourModel.draw || 0) * weights.ourModel;
     totalWeight += weights.ourModel;
   }
-  
+
   // Market implied
   if (input.marketImplied) {
     homeBlend += input.marketImplied.home * weights.market;
@@ -288,7 +290,7 @@ export function blendEnsemble(
     drawBlend += (input.marketImplied.draw || 0) * weights.market;
     totalWeight += weights.market;
   }
-  
+
   // Elo model (if available)
   if (input.eloModel && weights.elo) {
     homeBlend += input.eloModel.home * weights.elo;
@@ -296,7 +298,7 @@ export function blendEnsemble(
     drawBlend += (input.eloModel.draw || 0) * weights.elo;
     totalWeight += weights.elo;
   }
-  
+
   // Poisson model (if available)
   if (input.poissonModel && weights.poisson) {
     homeBlend += input.poissonModel.home * weights.poisson;
@@ -304,10 +306,10 @@ export function blendEnsemble(
     drawBlend += (input.poissonModel.draw || 0) * weights.poisson;
     totalWeight += weights.poisson;
   }
-  
+
   // Normalize
   if (totalWeight === 0) totalWeight = 1;
-  
+
   return {
     home: homeBlend / totalWeight,
     away: awayBlend / totalWeight,
@@ -337,7 +339,7 @@ export const HISTORICAL_ACCURACY: Record<string, number> = {
   'soccer_italy_serie_a': 0.400, // 40.0%
   'soccer_epl': 0.394, // 39.4%
   'icehockey_nhl': 0.194, // 19.4% - Terrible (now fixed)
-  
+
   // Default
   'default': 0.450,
 };
@@ -360,7 +362,7 @@ export function adjustConvictionForHistory(
   sport: string
 ): number {
   const accuracy = getHistoricalAccuracy(sport);
-  
+
   // If accuracy is below 50%, reduce conviction significantly
   if (accuracy < 0.45) {
     return Math.max(1, Math.round(rawConviction * 0.6)); // 40% reduction
@@ -369,8 +371,147 @@ export function adjustConvictionForHistory(
   } else if (accuracy > 0.65) {
     return Math.min(10, Math.round(rawConviction * 1.1)); // 10% boost
   }
-  
+
   return rawConviction;
+}
+
+/**
+ * ASYNC version - uses live accuracy from database
+ * Adjust conviction based on actual rolling 30-day accuracy
+ */
+export async function adjustConvictionForHistoryAsync(
+  rawConviction: number,
+  sport: string
+): Promise<number> {
+  const accuracy = await getLiveHistoricalAccuracy(sport);
+
+  // If accuracy is below 50%, reduce conviction significantly
+  if (accuracy < 0.45) {
+    return Math.max(1, Math.round(rawConviction * 0.6)); // 40% reduction
+  } else if (accuracy < 0.50) {
+    return Math.max(1, Math.round(rawConviction * 0.8)); // 20% reduction
+  } else if (accuracy > 0.60) {
+    return Math.min(10, Math.round(rawConviction * 1.15)); // 15% boost
+  } else if (accuracy > 0.55) {
+    return Math.min(10, Math.round(rawConviction * 1.1)); // 10% boost
+  }
+
+  return rawConviction;
+}
+
+// ============================================
+// 3B. DYNAMIC ENSEMBLE WEIGHTS
+// ============================================
+
+export interface DynamicEnsembleWeights {
+  ourModel: number;
+  market: number;
+  secondary: number; // elo or poisson
+  reason: string;
+}
+
+/**
+ * Get dynamic ensemble weights based on live model accuracy
+ * 
+ * If model is performing well (>55%), increase model weight
+ * If model is performing poorly (<45%), trust market more
+ */
+export async function getDynamicEnsembleWeights(
+  sport: SportType
+): Promise<DynamicEnsembleWeights> {
+  const baseWeights = ENSEMBLE_WEIGHTS[sport] || ENSEMBLE_WEIGHTS.soccer;
+  const liveAccuracy = await getLiveHistoricalAccuracy(sport);
+
+  // Base weights
+  let ourModel = baseWeights.ourModel;
+  let market = baseWeights.market;
+  const secondary = baseWeights.elo || baseWeights.poisson || 0.10;
+  let reason = 'Default weights';
+
+  // Excellent performance: boost model weight
+  if (liveAccuracy >= 0.60) {
+    ourModel = Math.min(0.55, ourModel + 0.12);
+    market = Math.max(0.30, market - 0.10);
+    reason = `Model at ${(liveAccuracy * 100).toFixed(0)}% - boosted weight`;
+  }
+  // Good performance: slight boost
+  else if (liveAccuracy >= 0.55) {
+    ourModel = Math.min(0.50, ourModel + 0.08);
+    market = Math.max(0.35, market - 0.05);
+    reason = `Model at ${(liveAccuracy * 100).toFixed(0)}% - slight boost`;
+  }
+  // Poor performance: trust market more
+  else if (liveAccuracy < 0.45) {
+    ourModel = Math.max(0.20, ourModel - 0.12);
+    market = Math.min(0.65, market + 0.15);
+    reason = `Model at ${(liveAccuracy * 100).toFixed(0)}% - trusting market`;
+  }
+  // Below average: slight reduction
+  else if (liveAccuracy < 0.48) {
+    ourModel = Math.max(0.25, ourModel - 0.08);
+    market = Math.min(0.55, market + 0.08);
+    reason = `Model at ${(liveAccuracy * 100).toFixed(0)}% - reduced weight`;
+  }
+
+  // Normalize to sum to ~1.0
+  const total = ourModel + market + secondary;
+
+  return {
+    ourModel: ourModel / total,
+    market: market / total,
+    secondary: secondary / total,
+    reason,
+  };
+}
+
+/**
+ * Async version of blendEnsemble that uses dynamic weights
+ */
+export async function blendEnsembleDynamic(
+  sport: SportType,
+  input: EnsembleInput
+): Promise<RawProbabilities> {
+  const dynamicWeights = await getDynamicEnsembleWeights(sport);
+
+  let homeBlend = 0;
+  let awayBlend = 0;
+  let drawBlend = 0;
+  let totalWeight = 0;
+
+  // Our model
+  if (input.ourModel) {
+    homeBlend += input.ourModel.home * dynamicWeights.ourModel;
+    awayBlend += input.ourModel.away * dynamicWeights.ourModel;
+    drawBlend += (input.ourModel.draw || 0) * dynamicWeights.ourModel;
+    totalWeight += dynamicWeights.ourModel;
+  }
+
+  // Market implied
+  if (input.marketImplied) {
+    homeBlend += input.marketImplied.home * dynamicWeights.market;
+    awayBlend += input.marketImplied.away * dynamicWeights.market;
+    drawBlend += (input.marketImplied.draw || 0) * dynamicWeights.market;
+    totalWeight += dynamicWeights.market;
+  }
+
+  // Secondary model (Elo or Poisson)
+  const secondaryModel = input.eloModel || input.poissonModel;
+  if (secondaryModel) {
+    homeBlend += secondaryModel.home * dynamicWeights.secondary;
+    awayBlend += secondaryModel.away * dynamicWeights.secondary;
+    drawBlend += (secondaryModel.draw || 0) * dynamicWeights.secondary;
+    totalWeight += dynamicWeights.secondary;
+  }
+
+  // Normalize
+  if (totalWeight === 0) totalWeight = 1;
+
+  return {
+    home: homeBlend / totalWeight,
+    away: awayBlend / totalWeight,
+    draw: drawBlend > 0 ? drawBlend / totalWeight : undefined,
+    method: `ensemble-dynamic (${dynamicWeights.reason})`,
+  };
 }
 
 // ============================================
@@ -433,7 +574,7 @@ export function shouldTrustModel(clvMetrics: CLVMetrics): {
       convictionMultiplier: 0.8,
     };
   }
-  
+
   // Excellent CLV (sharp money behavior)
   if (clvMetrics.avgCLV >= 3 && clvMetrics.clvPositiveRate >= 0.55) {
     return {
@@ -442,7 +583,7 @@ export function shouldTrustModel(clvMetrics: CLVMetrics): {
       convictionMultiplier: 1.15,
     };
   }
-  
+
   // Positive CLV (have some edge)
   if (clvMetrics.avgCLV >= 1 && clvMetrics.clvPositiveRate >= 0.50) {
     return {
@@ -451,7 +592,7 @@ export function shouldTrustModel(clvMetrics: CLVMetrics): {
       convictionMultiplier: 1.0,
     };
   }
-  
+
   // Negative CLV (market beating us)
   if (clvMetrics.avgCLV < 0) {
     return {
@@ -460,7 +601,7 @@ export function shouldTrustModel(clvMetrics: CLVMetrics): {
       convictionMultiplier: 0.7,
     };
   }
-  
+
   return {
     trustLevel: 'medium',
     reason: 'CLV metrics inconclusive',
@@ -502,7 +643,7 @@ export function detectTrapGame(factors: TrapGameFactors): {
       convictionAdjust: -2,
     };
   }
-  
+
   // Lookahead
   if (factors.hasLookaheadGame && factors.opponentQuality !== 'elite') {
     return {
@@ -512,7 +653,7 @@ export function detectTrapGame(factors: TrapGameFactors): {
       convictionAdjust: -1,
     };
   }
-  
+
   // Public overconfidence
   if (factors.trendDirection === 'overvalued' && factors.isHeavyFavorite) {
     return {
@@ -522,7 +663,7 @@ export function detectTrapGame(factors: TrapGameFactors): {
       convictionAdjust: -1,
     };
   }
-  
+
   return {
     isTrap: false,
     trapType: null,

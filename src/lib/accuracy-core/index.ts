@@ -96,13 +96,13 @@ import {
 export interface PipelineConfig {
   // Whether to log predictions to storage
   logPredictions: boolean;
-  
+
   // Calibration settings
   calibrationMethod: 'platt' | 'isotonic' | 'hybrid';
-  
+
   // Quality thresholds
   minDataQualityForEdge: DataQuality['level'];
-  
+
   // Suppress edge below this value
   minEdgeToShow: number;
 }
@@ -126,7 +126,7 @@ export interface PipelineInput {
   homeTeam: string;
   awayTeam: string;
   kickoff: Date;
-  
+
   // Team statistics
   homeStats: {
     played: number;
@@ -144,11 +144,11 @@ export interface PipelineInput {
     scored: number;
     conceded: number;
   };
-  
+
   // Recent form
   homeForm: string;
   awayForm: string;
-  
+
   // Head-to-head (optional)
   h2h?: {
     total: number;
@@ -156,16 +156,16 @@ export interface PipelineInput {
     awayWins: number;
     draws: number;
   };
-  
+
   // Odds data
   odds: BookmakerOdds[];
-  
+
   // Situational factors (optional)
   situational?: Partial<SituationalFactors>;
-  
+
   // Trap game detection (optional)
   trapFactors?: Partial<TrapGameFactors>;
-  
+
   // Optional overrides
   config?: Partial<PipelineConfig>;
 }
@@ -173,7 +173,7 @@ export interface PipelineInput {
 export interface PipelineResult {
   // Main output for LLM consumption
   output: PipelineOutput;
-  
+
   // Detailed breakdowns (for debugging/UI)
   details: {
     marketProbabilities: MarketProbabilities;
@@ -184,7 +184,7 @@ export interface PipelineResult {
     volatility: VolatilityMetrics;
     expectedScores: { home: number; away: number };
   };
-  
+
   // Prediction ID if logged
   predictionId?: string;
 }
@@ -199,11 +199,11 @@ export async function runAccuracyPipeline(
   input: PipelineInput
 ): Promise<PipelineResult> {
   const config = { ...DEFAULT_CONFIG, ...input.config };
-  
+
   // Detect sport type
   const sportType = detectSportType(input.sport);
   const hasDraw = sportType === 'soccer' || sportType === 'football';
-  
+
   // ========================================
   // STEP 1: Market Probabilities
   // ========================================
@@ -215,7 +215,7 @@ export async function runAccuracyPipeline(
       consensusMethod: 'median',
     }
   );
-  
+
   // ========================================
   // STEP 2: Model Prediction
   // ========================================
@@ -230,15 +230,15 @@ export async function runAccuracyPipeline(
     awayForm: input.awayForm,
     h2h: input.h2h,
   };
-  
+
   const rawProbabilities = predictMatch(modelInput);
   const expectedScores = getExpectedScores(modelInput);
-  
+
   // ========================================
   // STEP 2.5: Situational Adjustments (NEW)
   // ========================================
   let situationalAdjust = { homeAdjust: 0, awayAdjust: 0, reasons: [] as string[] };
-  
+
   if (input.situational) {
     const situationalInput: SituationalFactors = {
       homeRestDays: input.situational.homeRestDays ?? 3,
@@ -255,12 +255,12 @@ export async function runAccuracyPipeline(
     };
     situationalAdjust = calculateSituationalAdjustment(sportType, situationalInput);
   }
-  
+
   // ========================================
   // STEP 2.6: Trap Game Detection (NEW)
   // ========================================
   let trapGameInfo = { isTrap: false, trapType: null as string | null, warning: null as string | null, convictionAdjust: 0 };
-  
+
   if (input.trapFactors) {
     const trapInput: TrapGameFactors = {
       isHeavyFavorite: input.trapFactors.isHeavyFavorite ?? false,
@@ -271,7 +271,7 @@ export async function runAccuracyPipeline(
     };
     trapGameInfo = detectTrapGame(trapInput);
   }
-  
+
   // ========================================
   // STEP 2.7: Ensemble Blending (NEW)
   // ========================================
@@ -280,7 +280,7 @@ export async function runAccuracyPipeline(
   if (situationalAdjust.homeAdjust !== 0 || situationalAdjust.awayAdjust !== 0) {
     const homeAdj = adjustedRaw.home + situationalAdjust.homeAdjust - situationalAdjust.awayAdjust;
     const awayAdj = adjustedRaw.away - situationalAdjust.homeAdjust + situationalAdjust.awayAdjust;
-    
+
     // Renormalize
     const total = homeAdj + awayAdj + (adjustedRaw.draw || 0);
     adjustedRaw = {
@@ -290,7 +290,7 @@ export async function runAccuracyPipeline(
       draw: adjustedRaw.draw ? adjustedRaw.draw / total : undefined,
     };
   }
-  
+
   // Blend with market consensus
   const ensembleInput: EnsembleInput = {
     ourModel: adjustedRaw,
@@ -302,12 +302,12 @@ export async function runAccuracyPipeline(
     },
   };
   const blendedProbabilities = blendEnsemble(sportType, ensembleInput);
-  
+
   // ========================================
   // STEP 3: Calibration
   // ========================================
   const dataQuality = assessDataQuality(modelInput, marketProbabilities.bookmakerCount);
-  
+
   // Use blended probabilities for calibration
   const calibratedProbabilities = calibrateProbabilities(
     blendedProbabilities, // Changed from rawProbabilities
@@ -318,23 +318,23 @@ export async function runAccuracyPipeline(
       dataQualityScore: dataQuality.score,
     }
   );
-  
+
   // ========================================
   // STEP 4: Edge Quality
   // ========================================
   const volatility = assessVolatility(input.odds, input.homeForm, input.awayForm);
-  
+
   const qualityCheck = runCompleteQualityCheck({
     calibratedProbs: calibratedProbabilities,
     marketProbs: marketProbabilities,
     modelInput,
     odds: input.odds,
   });
-  
+
   const edge = qualityCheck.edge;
-  
+
   // Note: trapGameInfo.convictionAdjust is applied in the LLM layer, not here
-  
+
   // ========================================
   // STEP 5: Build LLM Output
   // ========================================
@@ -349,12 +349,12 @@ export async function runAccuracyPipeline(
     situationalAdjust.reasons,
     trapGameInfo.warning
   );
-  
+
   // ========================================
   // STEP 6: Log Prediction (optional)
   // ========================================
   let predictionId: string | undefined;
-  
+
   if (config.logPredictions) {
     try {
       const record = await logPrediction({
@@ -376,7 +376,7 @@ export async function runAccuracyPipeline(
       console.error('Failed to log prediction:', error);
     }
   }
-  
+
   return {
     output,
     details: {
@@ -424,7 +424,7 @@ function buildPipelineOutput(
   // Determine favored outcome
   let favored: 'home' | 'away' | 'draw' | 'even';
   const probDiff = Math.abs(calibrated.home - calibrated.away);
-  
+
   if (probDiff < 0.05) {
     favored = 'even';
   } else if (calibrated.home > calibrated.away && calibrated.home > (calibrated.draw || 0)) {
@@ -436,11 +436,11 @@ function buildPipelineOutput(
   } else {
     favored = 'even';
   }
-  
+
   // Determine confidence
   let confidence: 'high' | 'medium' | 'low';
   const maxProb = Math.max(calibrated.home, calibrated.away, calibrated.draw || 0);
-  
+
   if (maxProb >= 0.60 && dataQuality.level === 'HIGH') {
     confidence = 'high';
   } else if (maxProb >= 0.50 && dataQuality.level !== 'LOW') {
@@ -448,35 +448,35 @@ function buildPipelineOutput(
   } else {
     confidence = 'low';
   }
-  
+
   // Check suppression conditions
   const suppressReasons: string[] = [];
   let suppressEdge = false;
-  
+
   if (edge.primaryEdge.quality === 'SUPPRESSED') {
     suppressEdge = true;
     suppressReasons.push(...edge.reasons);
   }
-  
+
   if (edge.primaryEdge.value < config.minEdgeToShow) {
     suppressEdge = true;
     suppressReasons.push('Edge below minimum threshold');
   }
-  
+
   const qualityLevels: DataQuality['level'][] = ['INSUFFICIENT', 'LOW', 'MEDIUM', 'HIGH'];
   const minQualityIdx = qualityLevels.indexOf(config.minDataQualityForEdge);
   const actualQualityIdx = qualityLevels.indexOf(dataQuality.level);
-  
+
   if (actualQualityIdx < minQualityIdx) {
     suppressEdge = true;
     suppressReasons.push('Data quality below threshold');
   }
-  
+
   // Add trap game warning if present
   if (trapWarning) {
     suppressReasons.push(trapWarning);
   }
-  
+
   return {
     probabilities: calibrated,
     edge: {
@@ -534,7 +534,7 @@ export async function quickAnalysis(params: {
     }],
     config: { logPredictions: false },
   };
-  
+
   const result = await runAccuracyPipeline(input);
   return result.output;
 }
@@ -563,3 +563,4 @@ export * from './prediction-logging';
 export * from './llm-integration';
 export * from './api-adapter';
 export * from './advanced-features';
+export * from './accuracy-metrics';

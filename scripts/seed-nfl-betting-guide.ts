@@ -14,6 +14,8 @@ const NFL_BETTING_GUIDE = {
     metaTitle: 'NFL Betting Guide 2025: How to Bet on NFL Odds, Spreads & Props',
     metaDescription: 'Complete NFL betting guide. Learn how to bet on NFL odds, understand point spreads, moneylines, totals, and prop bets. Expert tips for the 2025 NFL season.',
     excerpt: 'Master NFL betting with our comprehensive guide covering odds, spreads, moneylines, player props, and futures. Everything you need to bet on the NFL like a pro.',
+    featuredImage: '/sports/football.jpg',
+    imageAlt: 'NFL football betting odds guide - American football game action',
     category: 'Betting Guides',
     tags: ['NFL', 'betting guide', 'NFL odds', 'point spread', 'moneyline', 'player props', 'NFL betting', 'sports betting'],
     content: `

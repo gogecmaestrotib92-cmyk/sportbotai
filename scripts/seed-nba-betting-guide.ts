@@ -13,6 +13,8 @@ const NBA_BETTING_GUIDE = {
     metaTitle: 'NBA Betting Odds Guide 2025: Lines, Spreads, Props & Futures',
     metaDescription: 'Your complete resource for NBA betting odds. Learn how to read NBA lines, point spreads, moneylines, totals, player props, and futures. Expert NBA betting tips.',
     excerpt: 'Master NBA betting with our comprehensive guide to odds, lines, and spreads. Learn how to read NBA betting odds, find value in player props, and bet on NBA futures.',
+    featuredImage: '/sports/basketball.jpg',
+    imageAlt: 'NBA basketball betting odds guide - basketball court action',
     category: 'Betting Guides',
     tags: ['NBA', 'betting guide', 'NBA odds', 'point spread', 'moneyline', 'player props', 'NBA betting', 'basketball betting'],
     content: `

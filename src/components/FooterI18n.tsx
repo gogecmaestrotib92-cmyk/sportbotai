@@ -229,6 +229,30 @@ export default function FooterI18n({ locale: localeProp }: FooterI18nProps) {
                   className="opacity-80 hover:opacity-100 transition-opacity"
                 />
               </a>
+              {/* Techbase Directory Badge */}
+              <a
+                href="https://techbasedirectory.com/product/sportbot-ai?utm_source=featured_embed"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src="https://techbasedirectory.com/api/featured-embed"
+                  alt="SportBot AI on Techbase Directory"
+                  width="150"
+                  height="33"
+                  className="opacity-80 hover:opacity-100 transition-opacity"
+                />
+              </a>
+              {/* NextGen Tools Badge */}
+              <a
+                href="https://nxgntools.com/tools/sportbot-ai"
+                target="_blank"
+                rel="noopener"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg opacity-80 hover:opacity-100 hover:border-accent/30 transition-all"
+              >
+                <span className="text-accent font-bold text-sm">🚀</span>
+                <span className="text-text-secondary text-xs font-medium">NextGen Tools</span>
+              </a>
               <span className="text-divider hidden sm:inline">|</span>
               <a
                 href="https://www.begambleaware.org/"

@@ -45,16 +45,16 @@ export default async function AdminPage() {
   ] = await Promise.all([
     // Total users
     prisma.user.count(),
-    
+
     // Pro subscribers
     prisma.user.count({ where: { plan: 'PRO' } }),
-    
+
     // Premium subscribers
     prisma.user.count({ where: { plan: 'PREMIUM' } }),
-    
+
     // Total analyses
     prisma.analysis.count(),
-    
+
     // Today's analyses
     prisma.analysis.count({
       where: {
@@ -63,7 +63,7 @@ export default async function AdminPage() {
         },
       },
     }),
-    
+
     // Recent users (last 10)
     prisma.user.findMany({
       take: 10,
@@ -78,7 +78,7 @@ export default async function AdminPage() {
         _count: { select: { analyses: true } },
       },
     }),
-    
+
     // Recent analyses (last 10)
     prisma.analysis.findMany({
       take: 10,
@@ -94,25 +94,25 @@ export default async function AdminPage() {
         },
       },
     }),
-    
+
     // Chat query stats
     getChatStats(),
-    
+
     // Top categories
     getTopCategoriesFromDB(),
-    
+
     // Top teams
     getTopTeamsFromDB(),
-    
+
     // Recent queries
     getRecentQueries(),
-    
+
     // Agent posts count
     getAgentPostsCount(),
-    
+
     // Feedback stats
     getFeedbackStats(),
-    
+
     // Edge Performance Tracking (new prediction stats)
     getEdgePerformanceStats(),
   ]);
@@ -163,7 +163,7 @@ async function getChatStats() {
       prisma.chatQuery.count({ where: { usedRealTimeSearch: true } }),
       prisma.chatQuery.count({ where: { hadCitations: true } }),
     ]);
-    
+
     return {
       totalQueries,
       todayQueries,
@@ -247,20 +247,20 @@ async function getFeedbackStats() {
       orderBy: { createdAt: 'desc' },
       take: 100, // Last 100 for analysis
     });
-    
+
     const total = allFeedback.length;
     const positive = allFeedback.filter(f => f.rating >= 4).length;
     const negative = allFeedback.filter(f => f.rating <= 2).length;
     const neutral = allFeedback.filter(f => f.rating === 3).length;
-    
-    const avgRating = total > 0 
+
+    const avgRating = total > 0
       ? (allFeedback.reduce((sum, f) => sum + f.rating, 0) / total)
       : 0;
-    
-    const satisfactionRate = total > 0 
+
+    const satisfactionRate = total > 0
       ? Math.round((positive / total) * 100)
       : 0;
-    
+
     // Feedback by confidence level
     const byConfidence: Record<string, { total: number; positive: number; negative: number }> = {};
     for (const f of allFeedback) {
@@ -272,7 +272,7 @@ async function getFeedbackStats() {
       if (f.rating >= 4) byConfidence[level].positive++;
       if (f.rating <= 2) byConfidence[level].negative++;
     }
-    
+
     // Recent negative feedback for review
     const recentNegative = allFeedback
       .filter(f => f.rating <= 2)
@@ -283,7 +283,7 @@ async function getFeedbackStats() {
         confidence: f.dataConfidenceLevel,
         createdAt: f.createdAt,
       }));
-    
+
     return {
       total,
       positive,
@@ -384,24 +384,37 @@ interface EdgePerformanceStats {
   evaluatedPredictions: number;
   pendingPredictions: number;
   overallWinRate: number;
-  
+
+  // Data Health (completeness metrics)
+  dataHealth: {
+    withModelProb: number;
+    withModelProbPercent: number;
+    withMarketProb: number;
+    withMarketProbPercent: number;
+    withCLV: number;
+    withCLVPercent: number;
+    withClosingOdds: number;
+    withClosingOddsPercent: number;
+    overallScore: number; // 0-100
+  };
+
   // Edge bucket performance (CORE)
   byEdgeBucket: EdgeBucketStats[];
-  
+
   // Calibration analysis
   calibration: CalibrationBand[];
   calibrationMSE: number; // Mean squared error
-  
+
   // CLV tracking
   clvStats: CLVStats;
-  
+
   // ROI simulation (internal only)
   roiSimulation: ROISimulation;
-  
+
   // Segmentation
   bySport: Array<{ sport: string; count: number; wins: number; winRate: number; avgEdge: number }>;
   byLeague: Array<{ league: string; count: number; wins: number; winRate: number; avgEdge: number }>;
-  
+
   // Recent predictions for raw data view
   recentPredictions: Array<{
     id: string;
@@ -418,7 +431,7 @@ interface EdgePerformanceStats {
     binaryOutcome: number | null;
     clvValue: number | null;
   }>;
-  
+
   // Pending predictions for manual result entry
   pendingPredictionsList: Array<{
     id: string;
@@ -435,6 +448,9 @@ interface EdgePerformanceStats {
     valueBetSide: string | null;
     valueBetOdds: number | null;
   }>;
+
+  // Stuck predictions (PENDING > 24h after kickoff)
+  stuckPredictions: number;
 }
 
 async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
@@ -473,7 +489,7 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
     const total = predictions.length;
     const evaluated = predictions.filter(p => p.binaryOutcome !== null).length;
     const pending = total - evaluated;
-    
+
     // ============================================
     // EDGE BUCKET PERFORMANCE
     // ============================================
@@ -483,10 +499,10 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
       'SMALL': { count: 0, wins: 0, totalEdge: 0, totalModelProb: 0, totalMarketProb: 0 },
       'NO_EDGE': { count: 0, wins: 0, totalEdge: 0, totalModelProb: 0, totalMarketProb: 0 },
     };
-    
+
     for (const p of predictions) {
       if (p.binaryOutcome === null) continue;
-      
+
       // Determine bucket - use stored bucket or calculate from edge
       let bucket = p.edgeBucket as keyof typeof buckets;
       if (!bucket && p.edgeValue !== null) {
@@ -503,9 +519,9 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
         else if (absEdge >= 2) bucket = 'SMALL';
         else bucket = 'NO_EDGE';
       }
-      
+
       if (!bucket) continue;
-      
+
       const b = buckets[bucket];
       b.count++;
       if (p.binaryOutcome === 1) b.wins++;
@@ -513,7 +529,7 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
       b.totalModelProb += p.modelProbability ?? 0;
       b.totalMarketProb += p.marketProbabilityFair ?? 0;
     }
-    
+
     const byEdgeBucket: EdgeBucketStats[] = Object.entries(buckets)
       .filter(([_, b]) => b.count > 0)
       .map(([bucket, b]) => ({
@@ -547,14 +563,14 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
       { band: '80-90%', min: 80, max: 90 },
       { band: '90-100%', min: 90, max: 100 },
     ];
-    
+
     for (const range of bandRanges) {
       calibrationBands[range.band] = { count: 0, wins: 0, totalProb: 0 };
     }
-    
+
     for (const p of predictions) {
       if (p.binaryOutcome === null || p.modelProbability === null) continue;
-      
+
       const prob = p.modelProbability;
       const range = bandRanges.find(r => prob >= r.min && prob < r.max);
       if (range) {
@@ -563,7 +579,7 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
         if (p.binaryOutcome === 1) calibrationBands[range.band].wins++;
       }
     }
-    
+
     let totalCalibError = 0;
     let calibCount = 0;
     const calibration: CalibrationBand[] = bandRanges
@@ -585,7 +601,7 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
           calibrationError: Math.round(error * 10) / 10,
         };
       });
-    
+
     const calibrationMSE = calibCount > 0 ? Math.round(Math.sqrt(totalCalibError / calibCount) * 10) / 10 : 0;
 
     // ============================================
@@ -596,7 +612,7 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
       ? predictionsWithCLV.reduce((sum, p) => sum + (p.clvValue ?? 0), 0) / predictionsWithCLV.length
       : 0;
     const positiveCLV = predictionsWithCLV.filter(p => (p.clvValue ?? 0) > 0);
-    
+
     // CLV by sport
     const clvBySport: Record<string, { total: number; count: number }> = {};
     for (const p of predictionsWithCLV) {
@@ -604,13 +620,13 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
       clvBySport[p.sport].total += p.clvValue ?? 0;
       clvBySport[p.sport].count++;
     }
-    
+
     const clvStats: CLVStats = {
       totalWithCLV: predictionsWithCLV.length,
       avgCLV: Math.round(avgCLV * 100) / 100,
       positiveCLVCount: positiveCLV.length,
-      positiveCLVPercent: predictionsWithCLV.length > 0 
-        ? Math.round((positiveCLV.length / predictionsWithCLV.length) * 100) 
+      positiveCLVPercent: predictionsWithCLV.length > 0
+        ? Math.round((positiveCLV.length / predictionsWithCLV.length) * 100)
         : 0,
       bySport: Object.entries(clvBySport).map(([sport, data]) => ({
         sport,
@@ -632,36 +648,36 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
     const roiSports: Record<string, { bets: number; profit: number }> = {};
     let totalBets = 0;
     let totalReturn = 0;
-    
+
     for (const p of predictions) {
       if (p.binaryOutcome === null) continue;
-      
+
       // Only stake when edge >= 2%
       const edge = p.edgeValue ?? p.valueBetEdge ?? 0;
       if (Math.abs(edge) < 2) continue;
-      
+
       const odds = p.marketOddsAtPrediction ?? p.odds ?? 0;
       if (odds <= 1) continue;
-      
+
       totalBets++;
       const profit = p.binaryOutcome === 1 ? (odds - 1) : -1; // 1 unit stake
       totalReturn += p.binaryOutcome === 1 ? odds : 0;
-      
+
       // By bucket
       let bucket: string;
       if (Math.abs(edge) >= 8) bucket = 'HIGH';
       else if (Math.abs(edge) >= 5) bucket = 'MEDIUM';
       else bucket = 'SMALL';
-      
+
       roiBuckets[bucket].bets++;
       roiBuckets[bucket].profit += profit;
-      
+
       // By sport
       if (!roiSports[p.sport]) roiSports[p.sport] = { bets: 0, profit: 0 };
       roiSports[p.sport].bets++;
       roiSports[p.sport].profit += profit;
     }
-    
+
     const netProfit = totalReturn - totalBets;
     const roiSimulation: ROISimulation = {
       totalBets,
@@ -692,23 +708,23 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
     // ============================================
     const sportStats: Record<string, { count: number; wins: number; totalEdge: number }> = {};
     const leagueStats: Record<string, { count: number; wins: number; totalEdge: number }> = {};
-    
+
     for (const p of predictions) {
       if (p.binaryOutcome === null) continue;
-      
+
       // Sport
       if (!sportStats[p.sport]) sportStats[p.sport] = { count: 0, wins: 0, totalEdge: 0 };
       sportStats[p.sport].count++;
       if (p.binaryOutcome === 1) sportStats[p.sport].wins++;
       sportStats[p.sport].totalEdge += p.edgeValue ?? p.valueBetEdge ?? 0;
-      
+
       // League
       if (!leagueStats[p.league]) leagueStats[p.league] = { count: 0, wins: 0, totalEdge: 0 };
       leagueStats[p.league].count++;
       if (p.binaryOutcome === 1) leagueStats[p.league].wins++;
       leagueStats[p.league].totalEdge += p.edgeValue ?? p.valueBetEdge ?? 0;
     }
-    
+
     const bySport = Object.entries(sportStats)
       .map(([sport, d]) => ({
         sport,
@@ -718,7 +734,7 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
         avgEdge: Math.round((d.totalEdge / d.count) * 10) / 10,
       }))
       .sort((a, b) => b.count - a.count);
-    
+
     const byLeague = Object.entries(leagueStats)
       .map(([league, d]) => ({
         league,
@@ -771,11 +787,41 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
         valueBetOdds: p.valueBetOdds,
       }));
 
+    // ============================================
+    // DATA HEALTH METRICS
+    // ============================================
+    const withModelProb = predictions.filter(p => p.modelProbability !== null).length;
+    const withMarketProb = predictions.filter(p => p.marketProbabilityFair !== null).length;
+    const withCLV = predictions.filter(p => p.clvValue !== null).length;
+    const withClosingOdds = predictions.filter(p => p.closingProbabilityFair !== null).length;
+
+    const dataHealth = {
+      withModelProb,
+      withModelProbPercent: total > 0 ? Math.round((withModelProb / total) * 100) : 0,
+      withMarketProb,
+      withMarketProbPercent: total > 0 ? Math.round((withMarketProb / total) * 100) : 0,
+      withCLV,
+      withCLVPercent: total > 0 ? Math.round((withCLV / total) * 100) : 0,
+      withClosingOdds,
+      withClosingOddsPercent: total > 0 ? Math.round((withClosingOdds / total) * 100) : 0,
+      // Overall score = average of all metrics
+      overallScore: total > 0
+        ? Math.round(((withModelProb + withMarketProb + withCLV + withClosingOdds) / (total * 4)) * 100)
+        : 0,
+    };
+
+    // Count stuck predictions (PENDING > 24h after kickoff)
+    const stuckPredictions = predictions.filter(p =>
+      p.outcome === 'PENDING' &&
+      new Date(p.kickoff).getTime() < Date.now() - 24 * 60 * 60 * 1000
+    ).length;
+
     return {
       totalPredictions: total,
       evaluatedPredictions: evaluated,
       pendingPredictions: pending,
       overallWinRate,
+      dataHealth,
       byEdgeBucket,
       calibration,
       calibrationMSE,
@@ -785,6 +831,7 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
       byLeague,
       recentPredictions,
       pendingPredictionsList,
+      stuckPredictions,
     };
   } catch (error) {
     console.error('Error fetching edge performance stats:', error);
@@ -798,6 +845,17 @@ function getDefaultEdgePerformanceStats(): EdgePerformanceStats {
     evaluatedPredictions: 0,
     pendingPredictions: 0,
     overallWinRate: 0,
+    dataHealth: {
+      withModelProb: 0,
+      withModelProbPercent: 0,
+      withMarketProb: 0,
+      withMarketProbPercent: 0,
+      withCLV: 0,
+      withCLVPercent: 0,
+      withClosingOdds: 0,
+      withClosingOddsPercent: 0,
+      overallScore: 0,
+    },
     byEdgeBucket: [],
     calibration: [],
     calibrationMSE: 0,
@@ -821,5 +879,6 @@ function getDefaultEdgePerformanceStats(): EdgePerformanceStats {
     byLeague: [],
     recentPredictions: [],
     pendingPredictionsList: [],
+    stuckPredictions: 0,
   };
 }

@@ -133,6 +133,18 @@ interface EdgePerformanceStats {
   evaluatedPredictions: number;
   pendingPredictions: number;
   overallWinRate: number;
+  dataHealth?: {
+    withModelProb: number;
+    withModelProbPercent: number;
+    withMarketProb: number;
+    withMarketProbPercent: number;
+    withCLV: number;
+    withCLVPercent: number;
+    withClosingOdds: number;
+    withClosingOddsPercent: number;
+    overallScore: number;
+  };
+  stuckPredictions?: number;
   byEdgeBucket: EdgeBucketStats[];
   calibration: CalibrationBand[];
   calibrationMSE: number;
@@ -185,9 +197,9 @@ type PredictionSubTab = 'overview' | 'calibration' | 'clv' | 'roi' | 'raw' | 'ma
 
 const ITEMS_PER_PAGE = 10;
 
-export default function AdminDashboard({ 
-  stats, 
-  recentUsers, 
+export default function AdminDashboard({
+  stats,
+  recentUsers,
   recentAnalyses,
   chatAnalytics,
   edgePerformanceStats,
@@ -195,7 +207,7 @@ export default function AdminDashboard({
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [predictionSubTab, setPredictionSubTab] = useState<PredictionSubTab>('overview');
   const [showUserManagement, setShowUserManagement] = useState(false);
-  
+
   // Pagination states
   const [usersPage, setUsersPage] = useState(1);
   const [analysesPage, setAnalysesPage] = useState(1);
@@ -205,13 +217,13 @@ export default function AdminDashboard({
   // Paginated data
   const paginatedUsers = recentUsers.slice((usersPage - 1) * ITEMS_PER_PAGE, usersPage * ITEMS_PER_PAGE);
   const totalUsersPages = Math.ceil(recentUsers.length / ITEMS_PER_PAGE);
-  
+
   const paginatedAnalyses = recentAnalyses.slice((analysesPage - 1) * ITEMS_PER_PAGE, analysesPage * ITEMS_PER_PAGE);
   const totalAnalysesPages = Math.ceil(recentAnalyses.length / ITEMS_PER_PAGE);
-  
+
   const paginatedQueries = chatAnalytics?.recentQueries.slice((chatPage - 1) * ITEMS_PER_PAGE, chatPage * ITEMS_PER_PAGE) || [];
   const totalChatPages = Math.ceil((chatAnalytics?.recentQueries.length || 0) / ITEMS_PER_PAGE);
-  
+
   const paginatedPredictions = edgePerformanceStats?.recentPredictions.slice((predictionsPage - 1) * ITEMS_PER_PAGE, predictionsPage * ITEMS_PER_PAGE) || [];
   const totalPredictionsPages = Math.ceil((edgePerformanceStats?.recentPredictions.length || 0) / ITEMS_PER_PAGE);
 
@@ -224,7 +236,7 @@ export default function AdminDashboard({
             <h1 className="text-3xl font-bold text-text-primary">Admin Dashboard</h1>
             <p className="text-text-secondary mt-1">SportBot AI analytics</p>
           </div>
-          <Link 
+          <Link
             href="/admin/blog"
             className="inline-flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/80 rounded-lg text-white font-medium transition-colors"
           >
@@ -380,7 +392,7 @@ export default function AdminDashboard({
             </div>
 
             {/* Overview Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
               <div className="card p-4 text-center border-blue-500/30 bg-blue-500/5">
                 <div className="text-3xl font-bold text-blue-400">{edgePerformanceStats.totalPredictions}</div>
                 <div className="text-xs text-text-secondary">Total</div>
@@ -403,6 +415,30 @@ export default function AdminDashboard({
                 </div>
                 <div className="text-xs text-text-secondary">Sim ROI</div>
               </div>
+              {/* Data Health Score */}
+              <div className={`card p-4 text-center ${(edgePerformanceStats.dataHealth?.overallScore ?? 0) >= 60
+                  ? 'border-green-500/30 bg-green-500/5'
+                  : (edgePerformanceStats.dataHealth?.overallScore ?? 0) >= 30
+                    ? 'border-yellow-500/30 bg-yellow-500/5'
+                    : 'border-red-500/30 bg-red-500/5'
+                }`}>
+                <div className={`text-3xl font-bold ${(edgePerformanceStats.dataHealth?.overallScore ?? 0) >= 60
+                    ? 'text-green-400'
+                    : (edgePerformanceStats.dataHealth?.overallScore ?? 0) >= 30
+                      ? 'text-yellow-400'
+                      : 'text-red-400'
+                  }`}>
+                  {edgePerformanceStats.dataHealth?.overallScore ?? 0}%
+                </div>
+                <div className="text-xs text-text-secondary">Data Health</div>
+              </div>
+              {/* Stuck Predictions */}
+              {(edgePerformanceStats.stuckPredictions ?? 0) > 0 && (
+                <div className="card p-4 text-center border-orange-500/30 bg-orange-500/5">
+                  <div className="text-3xl font-bold text-orange-400">{edgePerformanceStats.stuckPredictions}</div>
+                  <div className="text-xs text-text-secondary">⚠️ Stuck</div>
+                </div>
+              )}
             </div>
 
             {/* Sub-tabs for detailed views */}
@@ -429,7 +465,7 @@ export default function AdminDashboard({
 
             {/* ===== MANAGE PENDING PREDICTIONS ===== */}
             {predictionSubTab === 'manage' && (
-              <PendingPredictionsManager 
+              <PendingPredictionsManager
                 predictions={edgePerformanceStats.pendingPredictionsList || []}
               />
             )}
@@ -499,7 +535,7 @@ export default function AdminDashboard({
                           <div key={sport.sport} className="flex items-center gap-2">
                             <span className="text-xs text-text-primary w-24 truncate">{sport.sport}</span>
                             <div className="flex-1 h-4 bg-bg-tertiary rounded-full overflow-hidden">
-                              <div 
+                              <div
                                 className={`h-full rounded-full ${sport.winRate >= 50 ? 'bg-green-500' : 'bg-red-500'}`}
                                 style={{ width: `${Math.min(sport.winRate, 100)}%` }}
                               />
@@ -521,7 +557,7 @@ export default function AdminDashboard({
                           <div key={league.league} className="flex items-center gap-2">
                             <span className="text-xs text-text-primary w-24 truncate" title={league.league}>{league.league}</span>
                             <div className="flex-1 h-4 bg-bg-tertiary rounded-full overflow-hidden">
-                              <div 
+                              <div
                                 className={`h-full rounded-full ${league.winRate >= 50 ? 'bg-blue-500' : 'bg-red-500'}`}
                                 style={{ width: `${Math.min(league.winRate, 100)}%` }}
                               />
@@ -780,7 +816,7 @@ export default function AdminDashboard({
                   <h3 className="text-sm font-medium text-text-primary">Recent Predictions (Raw)</h3>
                   <span className="text-xs text-text-muted">{edgePerformanceStats.recentPredictions.length} shown</span>
                 </div>
-                
+
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-bg-tertiary">
@@ -820,11 +856,11 @@ export default function AdminDashboard({
                     </tbody>
                   </table>
                 </div>
-                
-                <Pagination 
-                  currentPage={predictionsPage} 
-                  totalPages={totalPredictionsPages} 
-                  onPageChange={setPredictionsPage} 
+
+                <Pagination
+                  currentPage={predictionsPage}
+                  totalPages={totalPredictionsPages}
+                  onPageChange={setPredictionsPage}
                 />
               </div>
             )}
@@ -871,7 +907,7 @@ export default function AdminDashboard({
                 <h3 className="text-sm font-medium text-text-primary">Recent Queries</h3>
                 <span className="text-xs text-text-muted">{chatAnalytics.recentQueries.length} total</span>
               </div>
-              
+
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-bg-tertiary">
@@ -908,18 +944,18 @@ export default function AdminDashboard({
                   </tbody>
                 </table>
               </div>
-              
-              <Pagination 
-                currentPage={chatPage} 
-                totalPages={totalChatPages} 
-                onPageChange={setChatPage} 
+
+              <Pagination
+                currentPage={chatPage}
+                totalPages={totalChatPages}
+                onPageChange={setChatPage}
               />
             </div>
 
             {/* User Feedback Analytics */}
             <div className="card p-5">
               <h3 className="text-sm font-medium text-text-primary mb-4">💬 User Feedback</h3>
-              
+
               {/* Feedback Overview */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                 <div className="bg-bg-tertiary rounded-lg p-3">
@@ -943,7 +979,7 @@ export default function AdminDashboard({
                   <div className="text-xs text-text-muted">Satisfaction</div>
                 </div>
               </div>
-              
+
               {/* Satisfaction by Data Confidence */}
               {chatAnalytics.feedbackStats.byConfidence.length > 0 && (
                 <div className="mb-4">
@@ -951,21 +987,19 @@ export default function AdminDashboard({
                   <div className="flex flex-wrap gap-2">
                     {chatAnalytics.feedbackStats.byConfidence.map((conf) => (
                       <div key={conf.level} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-bg-tertiary">
-                        <span className={`text-sm font-medium ${
-                          conf.level === 'FULL' ? 'text-green-400' :
+                        <span className={`text-sm font-medium ${conf.level === 'FULL' ? 'text-green-400' :
                           conf.level === 'PARTIAL' ? 'text-yellow-400' :
-                          conf.level === 'MINIMAL' ? 'text-orange-400' :
-                          conf.level === 'NONE' ? 'text-red-400' :
-                          'text-text-muted'
-                        }`}>
+                            conf.level === 'MINIMAL' ? 'text-orange-400' :
+                              conf.level === 'NONE' ? 'text-red-400' :
+                                'text-text-muted'
+                          }`}>
                           {conf.level}
                         </span>
                         <span className="text-xs text-text-muted">({conf.total})</span>
-                        <span className={`text-xs font-medium ${
-                          conf.satisfactionRate >= 80 ? 'text-green-400' :
+                        <span className={`text-xs font-medium ${conf.satisfactionRate >= 80 ? 'text-green-400' :
                           conf.satisfactionRate >= 60 ? 'text-yellow-400' :
-                          'text-red-400'
-                        }`}>
+                            'text-red-400'
+                          }`}>
                           {conf.satisfactionRate}%
                         </span>
                       </div>
@@ -973,7 +1007,7 @@ export default function AdminDashboard({
                   </div>
                 </div>
               )}
-              
+
               {/* Recent Negative Feedback */}
               {chatAnalytics.feedbackStats.recentNegative.length > 0 && (
                 <div>
@@ -1005,17 +1039,15 @@ export default function AdminDashboard({
             <div className="flex gap-2">
               <button
                 onClick={() => setShowUserManagement(false)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  !showUserManagement ? 'bg-primary text-bg-primary' : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${!showUserManagement ? 'bg-primary text-bg-primary' : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
+                  }`}
               >
                 Recent Users
               </button>
               <button
                 onClick={() => setShowUserManagement(true)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  showUserManagement ? 'bg-primary text-bg-primary' : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showUserManagement ? 'bg-primary text-bg-primary' : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
+                  }`}
               >
                 ⚙️ Manage Users
               </button>
@@ -1033,7 +1065,7 @@ export default function AdminDashboard({
                     <h3 className="text-sm font-medium text-text-primary">All Users</h3>
                     <span className="text-xs text-text-muted">{recentUsers.length} total</span>
                   </div>
-                  
+
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="bg-bg-tertiary">
@@ -1061,11 +1093,11 @@ export default function AdminDashboard({
                       </tbody>
                     </table>
                   </div>
-                  
-                  <Pagination 
-                    currentPage={usersPage} 
-                    totalPages={totalUsersPages} 
-                    onPageChange={setUsersPage} 
+
+                  <Pagination
+                    currentPage={usersPage}
+                    totalPages={totalUsersPages}
+                    onPageChange={setUsersPage}
                   />
                 </div>
 
@@ -1075,7 +1107,7 @@ export default function AdminDashboard({
                     <h3 className="text-sm font-medium text-text-primary">Recent Analyses</h3>
                     <span className="text-xs text-text-muted">{recentAnalyses.length} total</span>
                   </div>
-                  
+
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="bg-bg-tertiary">
@@ -1098,11 +1130,11 @@ export default function AdminDashboard({
                       </tbody>
                     </table>
                   </div>
-                  
-                  <Pagination 
-                    currentPage={analysesPage} 
-                    totalPages={totalAnalysesPages} 
-                    onPageChange={setAnalysesPage} 
+
+                  <Pagination
+                    currentPage={analysesPage}
+                    totalPages={totalAnalysesPages}
+                    onPageChange={setAnalysesPage}
                   />
                 </div>
               </>
@@ -1118,17 +1150,17 @@ export default function AdminDashboard({
 // Helper Components
 // ============================================
 
-function QuickStat({ label, value, highlight, color }: { 
-  label: string; 
-  value: string | number; 
+function QuickStat({ label, value, highlight, color }: {
+  label: string;
+  value: string | number;
   highlight?: boolean;
   color?: 'green' | 'blue' | 'purple';
 }) {
-  const colorClass = highlight ? 'text-accent' : 
-    color === 'green' ? 'text-green-400' : 
-    color === 'blue' ? 'text-blue-400' : 
-    color === 'purple' ? 'text-purple-400' : 'text-text-primary';
-  
+  const colorClass = highlight ? 'text-accent' :
+    color === 'green' ? 'text-green-400' :
+      color === 'blue' ? 'text-blue-400' :
+        color === 'purple' ? 'text-purple-400' : 'text-text-primary';
+
   return (
     <div className="card p-3 text-center">
       <div className={`text-xl font-bold ${colorClass}`}>{value}</div>
@@ -1145,11 +1177,10 @@ function TabButton({ active, onClick, children }: {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-        active
-          ? 'bg-accent text-bg-primary'
-          : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
-      }`}
+      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${active
+        ? 'bg-accent text-bg-primary'
+        : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
+        }`}
     >
       {children}
     </button>
@@ -1209,7 +1240,7 @@ function Pagination({ currentPage, totalPages, onPageChange }: {
   onPageChange: (page: number) => void;
 }) {
   if (totalPages <= 1) return null;
-  
+
   return (
     <div className="px-4 py-3 border-t border-border-primary flex items-center justify-between">
       <span className="text-xs text-text-muted">
@@ -1243,11 +1274,10 @@ function SubTabButton({ active, onClick, children }: {
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap ${
-        active
-          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-          : 'bg-bg-tertiary text-text-muted hover:text-text-secondary'
-      }`}
+      className={`px-3 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap ${active
+        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+        : 'bg-bg-tertiary text-text-muted hover:text-text-secondary'
+        }`}
     >
       {children}
     </button>
@@ -1287,7 +1317,7 @@ function BinaryOutcomeBadge({ outcome }: { outcome: number | null }) {
 
 function formatTimeAgo(date: Date): string {
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-  
+
   if (seconds < 60) return 'just now';
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
