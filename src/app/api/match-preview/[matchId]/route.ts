@@ -1115,14 +1115,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             };
           }
 
-          // Extract totals (O/U) odds - property is 'total' not 'totals'
-          const totalData = (firstBookmaker as { total?: { line?: number; over?: number; under?: number } }).total;
-          if (totalData && totalData.line) {
-            console.log(`[Match-Preview] O/U fetched: line=${totalData.line}, over=${totalData.over}, under=${totalData.under}`);
+          // Extract totals (O/U) odds - structure is { over: { line, odds }, under: { line, odds } }
+          const totalData = firstBookmaker.total as { over?: { line: number; odds: number }; under?: { line: number; odds: number } } | undefined;
+          if (totalData?.over?.line) {
+            console.log(`[Match-Preview] O/U fetched: line=${totalData.over.line}, overOdds=${totalData.over.odds}, underOdds=${totalData.under?.odds}`);
             overUnderData = {
-              line: totalData.line,
-              overOdds: totalData.over,
-              underOdds: totalData.under,
+              line: totalData.over.line,
+              overOdds: totalData.over.odds,
+              underOdds: totalData.under?.odds,
             };
           }
         }
