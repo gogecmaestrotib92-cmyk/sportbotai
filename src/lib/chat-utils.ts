@@ -544,47 +544,59 @@ export async function fetchMatchPreviewOrAnalysis(
     const homeSlug = slugify(homeTeam);
     const awaySlug = slugify(awayTeam);
     const sportCode = getSportCode(sport);
-    const today = new Date().toISOString().split('T')[0];
-    const matchId = `${homeSlug}-vs-${awaySlug}-${sportCode}-${today}`;
 
-    console.log(`[Chat-Utils] Trying match-preview first for: ${homeTeam} vs ${awayTeam} (${matchId})`);
-
-    // 1. TRY MATCH-PREVIEW FIRST (full Match Insights data)
-    try {
-        const previewResponse = await withTimeout(
-            fetch(`${baseUrl}/api/match-preview/${encodeURIComponent(matchId)}`, {
-                method: 'GET',
-                headers: {
-                    Cookie: cookies,
-                    Authorization: authHeader,
-                },
-            }),
-            10000,
-            'Match Preview API'
-        );
-
-        if (previewResponse?.ok) {
-            const previewData = await previewResponse.json();
-
-            // Check if this is actually good data (not a demo/fallback)
-            if (!previewData.isDemo && previewData.story?.narrative) {
-                console.log(`[Chat-Utils] ✅ Got full Match Preview data!`);
-                const context = formatMatchPreviewForChat(previewData, homeTeam, awayTeam);
-                return {
-                    success: true,
-                    context,
-                    source: 'match-preview',
-                    odds: previewData.odds,
-                };
-            } else {
-                console.log(`[Chat-Utils] Match-preview returned demo/fallback, trying analyze API...`);
-            }
-        } else {
-            console.log(`[Chat-Utils] Match-preview failed (${previewResponse?.status}), trying analyze API...`);
-        }
-    } catch (previewError) {
-        console.log(`[Chat-Utils] Match-preview error:`, previewError);
+    // Try multiple dates since matches could be today, tomorrow, or day after
+    const datesToTry: string[] = [];
+    for (let i = 0; i <= 2; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() + i);
+        datesToTry.push(date.toISOString().split('T')[0]);
     }
+
+    console.log(`[Chat-Utils] Trying match-preview for: ${homeTeam} vs ${awayTeam}, dates: ${datesToTry.join(', ')}`);
+
+    // 1. TRY MATCH-PREVIEW FIRST (full Match Insights data) - try multiple dates
+    for (const dateStr of datesToTry) {
+        const matchId = `${homeSlug}-vs-${awaySlug}-${sportCode}-${dateStr}`;
+
+        try {
+            const previewResponse = await withTimeout(
+                fetch(`${baseUrl}/api/match-preview/${encodeURIComponent(matchId)}`, {
+                    method: 'GET',
+                    headers: {
+                        Cookie: cookies,
+                        Authorization: authHeader,
+                    },
+                }),
+                8000, // Reduced timeout since we're trying multiple dates
+                `Match Preview API (${dateStr})`
+            );
+
+            if (previewResponse?.ok) {
+                const previewData = await previewResponse.json();
+
+                // Check if this is actually good data (not a demo/fallback)
+                if (!previewData.isDemo && previewData.story?.narrative) {
+                    console.log(`[Chat-Utils] ✅ Got full Match Preview data for date ${dateStr}!`);
+                    const context = formatMatchPreviewForChat(previewData, homeTeam, awayTeam);
+                    return {
+                        success: true,
+                        context,
+                        source: 'match-preview' as const,
+                        odds: previewData.odds,
+                    };
+                } else {
+                    console.log(`[Chat-Utils] Match-preview for ${dateStr} returned demo/fallback, trying next date...`);
+                }
+            } else {
+                console.log(`[Chat-Utils] Match-preview for ${dateStr} failed (${previewResponse?.status}), trying next date...`);
+            }
+        } catch (previewError) {
+            console.log(`[Chat-Utils] Match-preview error for ${dateStr}:`, previewError);
+        }
+    }
+
+    console.log(`[Chat-Utils] All date attempts failed, falling back to analyze API...`);
 
     // 2. FALLBACK TO ANALYZE API with real odds
     console.log(`[Chat-Utils] Falling back to analyze API for ${homeTeam} vs ${awayTeam}...`);
