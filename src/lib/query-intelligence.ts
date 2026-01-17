@@ -869,32 +869,81 @@ function classifyIntentByPatterns(query: string): {
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const CLASSIFICATION_PROMPT = `You are a sports query classifier for SportBot, a SPORTS-ONLY AI assistant.
+const CLASSIFICATION_PROMPT = `You are a sports query classifier and entity extractor for SportBot.
 
-IMPORTANT: SportBot ONLY handles sports-related questions. If the query is not about sports, classify as OFF_TOPIC.
+IMPORTANT: SportBot ONLY handles sports-related questions. Classify non-sports queries as OFF_TOPIC.
 
-INTENTS:
-- PLAYER_STATS: Asking for player statistics (points, goals, assists, averages)
-- TEAM_STATS: Asking about team performance, form, shots, xG, clean sheets
-- MATCH_PREDICTION: Asking who will win an upcoming match
-- MATCH_RESULT: Asking about score/result of a past match
-- STANDINGS: Asking about league table/rankings
-- LINEUP: Asking about starting XI or roster
-- INJURY_NEWS: Asking about player availability/injuries
-- FORM_CHECK: Asking how a team/player is doing recently
-- HEAD_TO_HEAD: Asking about historical matchups between teams
-- BETTING_ANALYSIS: Asking about odds, betting advice, over/under
-- SCHEDULE: Asking when a game is
-- GENERAL_INFO: General sports questions (rules, who is player X, etc.)
-- OUR_ANALYSIS: Asking specifically about SportBot's prediction
-- OFF_TOPIC: NOT about sports (politics, weather, stocks, general news, tech, entertainment, etc.)
+## INTENTS
+- PLAYER_STATS: Player statistics (points, goals, assists, averages)
+- TEAM_STATS: Team performance, form, xG, clean sheets
+- MATCH_PREDICTION: Who will win an upcoming match
+- MATCH_RESULT: Score/result of a past match
+- STANDINGS: League table/rankings
+- LINEUP: Starting XI or roster
+- INJURY_NEWS: Player availability/injuries/health status
+- FORM_CHECK: How a team/player is doing recently
+- HEAD_TO_HEAD: Historical matchups between teams
+- BETTING_ANALYSIS: Odds, betting advice, over/under
+- SCHEDULE: When a game is
+- GENERAL_INFO: General sports questions (rules, who is X)
+- OUR_ANALYSIS: Asking about SportBot's prediction
+- OFF_TOPIC: Not about sports
 - UNCLEAR: Cannot determine intent
 
+## ENTITY EXTRACTION (CRITICAL)
+For EVERY sports entity mentioned, extract with full context:
+
+PLAYER entities - include full name even from nicknames:
+- "jokic" → {"type": "PLAYER", "name": "Nikola Jokić", "sport": "basketball", "league": "NBA", "team": "Denver Nuggets"}
+- "lebron" → {"type": "PLAYER", "name": "LeBron James", "sport": "basketball", "league": "NBA", "team": "LA Lakers"}
+- "messi" → {"type": "PLAYER", "name": "Lionel Messi", "sport": "soccer", "league": "MLS", "team": "Inter Miami"}
+- "mahomes" → {"type": "PLAYER", "name": "Patrick Mahomes", "sport": "american_football", "league": "NFL", "team": "Kansas City Chiefs"}
+
+TEAM entities:
+- {"type": "TEAM", "name": "Denver Nuggets", "sport": "basketball", "league": "NBA"}
+
+MATCH entities (when two teams mentioned):
+- {"type": "MATCH", "name": "Lakers vs Celtics", "sport": "basketball", "league": "NBA"}
+
+## EXAMPLES
+
+Query: "is jokic still injured"
+{
+  "intent": "INJURY_NEWS",
+  "confidence": 0.95,
+  "entities": [{"type": "PLAYER", "name": "Nikola Jokić", "sport": "basketball", "league": "NBA", "team": "Denver Nuggets"}],
+  "timeFrame": "LIVE",
+  "reasoning": "Asking about current injury status of Jokic"
+}
+
+Query: "chiefs vs bills prediction"
+{
+  "intent": "MATCH_PREDICTION",
+  "confidence": 0.95,
+  "entities": [
+    {"type": "TEAM", "name": "Kansas City Chiefs", "sport": "american_football", "league": "NFL"},
+    {"type": "TEAM", "name": "Buffalo Bills", "sport": "american_football", "league": "NFL"},
+    {"type": "MATCH", "name": "Chiefs vs Bills", "sport": "american_football", "league": "NFL"}
+  ],
+  "timeFrame": "UPCOMING",
+  "reasoning": "Asking for prediction of upcoming NFL match"
+}
+
+Query: "how many goals has haaland scored"
+{
+  "intent": "PLAYER_STATS",
+  "confidence": 0.95,
+  "entities": [{"type": "PLAYER", "name": "Erling Haaland", "sport": "soccer", "league": "Premier League", "team": "Manchester City"}],
+  "timeFrame": "SEASON",
+  "reasoning": "Asking for goal statistics"
+}
+
+## OUTPUT FORMAT
 Return ONLY valid JSON:
 {
   "intent": "INTENT_NAME",
   "confidence": 0.0-1.0,
-  "entities": [{"type": "TEAM|PLAYER|MATCH", "name": "..."}],
+  "entities": [{"type": "PLAYER|TEAM|MATCH", "name": "full name", "sport": "sport", "league": "league", "team": "team if player"}],
   "timeFrame": "LIVE|RECENT|SEASON|CAREER|HISTORICAL|UPCOMING",
   "reasoning": "brief explanation"
 }`;
@@ -925,10 +974,12 @@ async function classifyWithLLM(query: string): Promise<{
     return {
       intent: result.intent as QueryIntent || 'UNCLEAR',
       confidence: result.confidence || 0.5,
-      entities: (result.entities || []).map((e: { type: string; name: string }) => ({
+      entities: (result.entities || []).map((e: { type: string; name: string; sport?: string; league?: string; team?: string }) => ({
         type: e.type as EntityType,
         name: e.name,
-        confidence: 0.8,
+        confidence: 0.95,  // High confidence from LLM with examples
+        sport: e.sport,
+        league: e.league,
       })),
       timeFrame: result.timeFrame as TimeFrame || 'SEASON',
     };

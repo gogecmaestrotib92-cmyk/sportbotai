@@ -54,6 +54,14 @@ import { getUpcomingMatchPrediction, formatMatchPredictionContext, checkIfMatchI
 import { trackQuery as trackQueryForLearning, detectMismatch, recordMismatch, type QueryTrackingData } from '@/lib/query-learning';
 // A/B Testing
 import { getVariantFromCookies, getTestCookieName, type Variant } from '@/lib/ab-testing';
+// Conversation Memory - multi-turn context
+import {
+  getConversationMemory,
+  addToMemory,
+  resolvePronouns,
+  formatConversationHistory,
+  extractEntitiesForMemory
+} from '@/lib/chat-memory';
 // Shared Chat Utilities (consolidated)
 import {
   withTimeout,
@@ -1606,6 +1614,25 @@ export async function POST(request: NextRequest) {
         headers: { 'Content-Type': 'application/json' }
       });
     }
+
+    // ============================================
+    // CONVERSATION MEMORY: Multi-turn context
+    // ============================================
+    // Create session ID from request (use IP + user-agent hash for anonymity)
+    const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous';
+    const userAgent = request.headers.get('user-agent') || '';
+    const sessionId = Buffer.from(`${clientIP}:${userAgent}`).toString('base64').slice(0, 32);
+
+    // Resolve pronouns using conversation memory (e.g., "And him?" → "And Jokic?")
+    const { resolvedQuery, usedMemory } = await resolvePronouns(sessionId, message);
+    if (usedMemory) {
+      console.log(`[AI-Chat-Stream] 🧠 Memory used: "${message}" → "${resolvedQuery}"`);
+      message = resolvedQuery;
+    }
+
+    // Get conversation history for LLM context
+    const conversationMemory = await getConversationMemory(sessionId);
+    const conversationHistoryContext = formatConversationHistory(conversationMemory);
 
     // ============================================
     // BULK PICKS DETECTION: Politely decline tipster-style requests
