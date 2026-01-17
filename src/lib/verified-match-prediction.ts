@@ -408,6 +408,11 @@ export async function getUpcomingMatchPrediction(message: string): Promise<Match
         edgeValue: pred.edgeValue,
         valueBetOdds: pred.valueBetOdds,
         valueBetEdge: pred.valueBetEdge,
+        // AI Chat probability fields - CRITICAL for correct display!
+        homeWin: pred.homeWin,
+        awayWin: pred.awayWin,
+        draw: pred.draw,
+        predictedScore: pred.predictedScore,
       },
       isUpcoming: true,
       hoursUntilKickoff,
