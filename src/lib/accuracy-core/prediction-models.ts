@@ -11,6 +11,7 @@
  */
 
 import { ModelInput, RawProbabilities, TeamStrength, SportType } from './types';
+export type { ModelInput }; // Re-export for use in other modules
 
 // ============================================
 // CONSTANTS & CONFIGURATION

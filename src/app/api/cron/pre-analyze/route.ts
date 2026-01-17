@@ -39,6 +39,7 @@ import {
 } from '@/lib/unified-match-service';
 import { applyConvictionCap, type BookmakerOdds } from '@/lib/accuracy-core/types';
 import { runAccuracyPipeline, type PipelineInput } from '@/lib/accuracy-core';
+import { getExpectedScores, type ModelInput } from '@/lib/accuracy-core/prediction-models';
 import OpenAI from 'openai';
 
 export const maxDuration = 300; // 5 minute timeout for batch processing
@@ -1384,6 +1385,26 @@ export async function GET(request: NextRequest) {
             draw: pipelineProbs.draw != null ? pipelineProbs.draw * 100 : undefined,
           };
 
+          // Calculate expected scores using Poisson/Elo model
+          const sportType = sport.key.includes('basketball') ? 'basketball'
+            : sport.key.includes('nfl') || sport.key.includes('american') ? 'football'
+              : sport.key.includes('nhl') || sport.key.includes('hockey') ? 'hockey'
+                : 'soccer';
+
+          const modelInputForScores: ModelInput = {
+            sport: sportType,
+            homeTeam: event.home_team,
+            awayTeam: event.away_team,
+            league: sport.league,
+            homeStats: pipelineInput.homeStats,
+            awayStats: pipelineInput.awayStats,
+            homeForm: homeFormStr,
+            awayForm: awayFormStr,
+          };
+
+          const expectedScores = getExpectedScores(modelInputForScores);
+          console.log(`[Pre-Analyze] Expected scores: ${event.home_team} ${expectedScores.home} - ${expectedScores.away} ${event.away_team}`);
+
           const cacheResponse = {
             // matchInfo wrapper - required by client!
             matchInfo: {
@@ -1453,6 +1474,8 @@ export async function GET(request: NextRequest) {
               homeStats,
               awayStats,
             },
+            // Expected scores from Poisson/Elo model
+            expectedScores,
             preAnalyzed: true,
             preAnalyzedAt: new Date().toISOString(),
           };
