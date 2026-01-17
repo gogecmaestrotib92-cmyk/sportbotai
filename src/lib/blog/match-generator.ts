@@ -15,7 +15,7 @@ import {
   type ComputedAnalysis,
 } from '@/lib/unified-match-service';
 import { translateBlogPost } from '@/lib/translate';
-import { getMatchInjuries } from '@/lib/football-api';
+import { getMatchInjuries, getMatchKeyPlayers } from '@/lib/football-api';
 import { getMatchInjuriesViaPerplexity } from '@/lib/perplexity';
 
 // Lazy initialization to avoid issues with module loading before env vars are set
@@ -753,9 +753,24 @@ async function researchMatch(match: MatchInfo): Promise<MatchResearch> {
         : match.sportKey?.includes('americanfootball') || match.league?.includes('NFL') ? 'american_football'
           : null;
 
+  // Determine if this is a soccer match
+  const isSoccer = !rosterSport && (
+    match.sportKey?.includes('soccer') ||
+    match.league?.toLowerCase().includes('serie a') ||
+    match.league?.toLowerCase().includes('la liga') ||
+    match.league?.toLowerCase().includes('bundesliga') ||
+    match.league?.toLowerCase().includes('premier league') ||
+    match.league?.toLowerCase().includes('ligue 1') ||
+    !match.sportKey?.includes('basketball') &&
+    !match.sportKey?.includes('hockey') &&
+    !match.sportKey?.includes('nfl')
+  );
+
   // Fetch roster context from DataLayer - this is the ONLY source for player data
   // No more Perplexity dependency - all data comes from DataLayer
   let rosterContext: string | null = null;
+  let keyPlayers: string[] = [];
+
   if (rosterSport) {
     try {
       rosterContext = await getMatchRostersV2(match.homeTeam, match.awayTeam, rosterSport);
@@ -764,6 +779,25 @@ async function researchMatch(match: MatchInfo): Promise<MatchResearch> {
       }
     } catch (rosterError) {
       console.warn('[Match Research] DataLayer roster lookup failed:', rosterError);
+    }
+  } else if (isSoccer) {
+    // For soccer: fetch key players from Football API
+    try {
+      console.log(`[Match Research] Fetching key players for soccer match: ${match.homeTeam} vs ${match.awayTeam}`);
+      const players = await getMatchKeyPlayers(match.homeTeam, match.awayTeam, match.league);
+
+      if (players.home || players.away) {
+        // Format players for the AI prompt
+        if (players.home) {
+          keyPlayers.push(`${match.homeTeam}: ${players.home.name} (${players.home.position || 'Forward'}) - ${players.home.goals || 0} goals, ${players.home.assists || 0} assists`);
+        }
+        if (players.away) {
+          keyPlayers.push(`${match.awayTeam}: ${players.away.name} (${players.away.position || 'Forward'}) - ${players.away.goals || 0} goals, ${players.away.assists || 0} assists`);
+        }
+        console.log(`[Match Research] Got ${keyPlayers.length} key players for ${match.homeTeam} vs ${match.awayTeam}`);
+      }
+    } catch (playerError) {
+      console.warn('[Match Research] Failed to fetch key players:', playerError);
     }
   }
 
@@ -774,7 +808,7 @@ async function researchMatch(match: MatchInfo): Promise<MatchResearch> {
     awayTeamInfo: [],
     headToHead: [],
     recentNews: [],
-    keyPlayers: [],
+    keyPlayers,
     predictions: [],
     rosterContext,
   };
