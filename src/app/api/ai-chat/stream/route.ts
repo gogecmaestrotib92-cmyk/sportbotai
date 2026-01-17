@@ -3081,17 +3081,45 @@ RESPONSE FORMAT:
 - Then add recent performance context
 - Keep it factual and concise`;
             } else {
-              userContent = `USER QUESTION: ${message}`;
+              // Check if this is a MATCH_PREDICTION query but we don't have a stored prediction
+              const isPredictionQuery = queryUnderstanding?.intent === 'MATCH_PREDICTION' ||
+                queryUnderstanding?.intent === 'BETTING_ANALYSIS' ||
+                queryUnderstanding?.intent === 'OUR_ANALYSIS';
 
-              if (dataLayerContext) {
-                userContent += `\n\nSTRUCTURED STATS (verified data):\n${dataLayerContext}`;
+              if (isPredictionQuery && !verifiedMatchPredictionContext) {
+                // NO STORED PREDICTION - Don't make up analysis!
+                userContent = `USER QUESTION: ${message}
+
+⚠️ CRITICAL: The user is asking for match analysis/prediction, but we DO NOT have a stored prediction for this match.
+
+${perplexityContext ? `REAL-TIME CONTEXT (for general info only):\n${perplexityContext}` : ''}
+${dataLayerContext ? `\nSTRUCTURED STATS:\n${dataLayerContext}` : ''}
+
+STRICT RULES - NEVER HALLUCINATE:
+1. DO NOT make up win probabilities (like "55% vs 45%") - you don't have our model's data
+2. DO NOT claim to have "our analysis" or "SportBot's prediction" - we don't have one for this match
+3. You CAN share:
+   - General information about the teams from the real-time context
+   - Recent form and stats if available
+   - Injury updates
+   - Schedule information
+4. Be HONEST: If asked for probabilities/prediction, say: "I don't have our pre-match analysis for this specific game yet. Here's what I know about the teams..."
+5. If the match has ALREADY BEEN PLAYED, check the context for results and inform the user
+
+The user deserves to know when we have verified analysis vs when we're just sharing general info.`;
+              } else {
+                userContent = `USER QUESTION: ${message}`;
+
+                if (dataLayerContext) {
+                  userContent += `\n\nSTRUCTURED STATS (verified data):\n${dataLayerContext}`;
+                }
+
+                if (perplexityContext) {
+                  userContent += `\n\nREAL-TIME NEWS & INFO:\n${perplexityContext}`;
+                }
+
+                userContent += '\n\nIMPORTANT: Use ONLY the data provided above for current season stats. Your training data may be outdated. Be sharp and specific.';
               }
-
-              if (perplexityContext) {
-                userContent += `\n\nREAL-TIME NEWS & INFO:\n${perplexityContext}`;
-              }
-
-              userContent += '\n\nIMPORTANT: Use ONLY the data provided above for current season stats. Your training data may be outdated. Be sharp and specific.';
             }
           }
           messages.push({ role: 'user', content: userContent });
