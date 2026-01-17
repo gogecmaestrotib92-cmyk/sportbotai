@@ -538,35 +538,63 @@ export function predictMatch(input: ModelInput): RawProbabilities {
  */
 export function getExpectedScores(input: ModelInput): { home: number; away: number } {
   const config = SPORT_CONFIG[input.sport as SportType] || SPORT_CONFIG.soccer;
+  const isHighScoringSport = input.sport === 'basketball' || input.sport === 'football';
 
   // Get the appropriate league average based on sport type
-  let leagueAvg: number;
+  let leagueAvgPerTeam: number;
   if (input.sport === 'basketball') {
-    leagueAvg = input.leagueAverageGoals ||
+    // leagueAvgPoints is already PER TEAM (110)
+    leagueAvgPerTeam = input.leagueAverageGoals ||
       ('leagueAvgPoints' in config ? (config as typeof SPORT_CONFIG.basketball).leagueAvgPoints : 110);
   } else if (input.sport === 'football') {
-    leagueAvg = input.leagueAverageGoals ||
+    // leagueAvgPoints is already PER TEAM (22)
+    leagueAvgPerTeam = input.leagueAverageGoals ||
       ('leagueAvgPoints' in config ? (config as typeof SPORT_CONFIG.football).leagueAvgPoints : 22);
   } else if (input.sport === 'hockey') {
-    leagueAvg = input.leagueAverageGoals ||
+    // leagueAvgGoals is TOTAL, divide by 2
+    const totalGoals = input.leagueAverageGoals ||
       ('leagueAvgGoals' in config ? (config as typeof SPORT_CONFIG.hockey).leagueAvgGoals : 2.8);
+    leagueAvgPerTeam = totalGoals / 2;
   } else {
-    // Soccer default
-    leagueAvg = input.leagueAverageGoals ||
+    // Soccer: leagueAvgGoals is TOTAL, divide by 2
+    const totalGoals = input.leagueAverageGoals ||
       ('leagueAvgGoals' in config ? (config as typeof SPORT_CONFIG.soccer).leagueAvgGoals : 2.5);
+    leagueAvgPerTeam = totalGoals / 2;
   }
 
-  const avgPerTeam = leagueAvg / 2;
+  const homeStrength = calculateTeamStrength(input.homeStats, leagueAvgPerTeam, leagueAvgPerTeam);
+  const awayStrength = calculateTeamStrength(input.awayStats, leagueAvgPerTeam, leagueAvgPerTeam);
 
-  const homeStrength = calculateTeamStrength(input.homeStats, avgPerTeam, avgPerTeam);
-  const awayStrength = calculateTeamStrength(input.awayStats, avgPerTeam, avgPerTeam);
+  let homeExpected: number;
+  let awayExpected: number;
 
-  const baseHomeExpected = homeStrength.attack * (2 - awayStrength.defense) * avgPerTeam;
-  const awayExpected = awayStrength.attack * (2 - homeStrength.defense) * avgPerTeam;
+  if (isHighScoringSport) {
+    // For basketball/NFL: Simple strength-based adjustment
+    // Attack > 1.0 means team scores above average, Defense > 1.0 means team allows below average
+    homeExpected = leagueAvgPerTeam * homeStrength.attack * (2 - awayStrength.defense);
+    awayExpected = leagueAvgPerTeam * awayStrength.attack * (2 - homeStrength.defense);
 
-  // Apply home advantage (in points for basketball, goals for soccer)
-  const homeAdv = 'homeAdvantage' in config ? config.homeAdvantage : 0.25;
-  const homeExpected = baseHomeExpected + homeAdv; // Additive for points, was multiplicative for goals
+    // Apply home advantage as additive points
+    const homeAdv = 'homeAdvantage' in config ? config.homeAdvantage : 3;
+    homeExpected += homeAdv;
+
+    // Clamp to reasonable ranges (NBA: 90-140, NFL: 10-45)
+    if (input.sport === 'basketball') {
+      homeExpected = Math.max(90, Math.min(140, homeExpected));
+      awayExpected = Math.max(90, Math.min(140, awayExpected));
+    } else {
+      homeExpected = Math.max(10, Math.min(45, homeExpected));
+      awayExpected = Math.max(10, Math.min(45, awayExpected));
+    }
+  } else {
+    // For soccer/hockey: Poisson-style calculation
+    homeExpected = homeStrength.attack * (2 - awayStrength.defense) * leagueAvgPerTeam;
+    awayExpected = awayStrength.attack * (2 - homeStrength.defense) * leagueAvgPerTeam;
+
+    // Apply home advantage as percentage boost
+    const homeAdv = 'homeAdvantage' in config ? config.homeAdvantage : 0.25;
+    homeExpected *= (1 + homeAdv);
+  }
 
   return {
     home: Math.round(homeExpected * 10) / 10,
