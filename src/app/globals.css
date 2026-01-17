@@ -1758,9 +1758,10 @@ button:focus-visible {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Prevent rubber-banding on main content */
+/* Prevent rubber-banding on main content while allowing smooth scrolling */
+/* Use 'contain' instead of 'none' to allow Android pull-to-refresh and normal scrolling */
 html, body {
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: contain;
 }
 
 /* Allow rubber-band on scrollable content */
