@@ -1850,6 +1850,13 @@ export async function GET(request: NextRequest) {
                 impliedProb: storedImpliedProb * 100,
                 source: 'PRE_ANALYZE',
                 outcome: 'PENDING',
+                // ============ CRITICAL: Probabilities for AI Chat ============
+                // Without these, AI chat makes up probabilities!
+                homeWin: pipelineProbabilitiesForUI.home,
+                awayWin: pipelineProbabilitiesForUI.away,
+                draw: pipelineProbabilitiesForUI.draw || null,
+                predictedScore: `${expectedScores.home}-${expectedScores.away}`,
+                // ============================================================
                 // Value bet IS the prediction now
                 valueBetSide,
                 valueBetOdds,
@@ -1878,6 +1885,12 @@ export async function GET(request: NextRequest) {
                 valueBetOdds,
                 valueBetEdge,
                 openingOdds: valueBetOdds,
+                // ============ CRITICAL: Probabilities for AI Chat ============
+                homeWin: pipelineProbabilitiesForUI.home,
+                awayWin: pipelineProbabilitiesForUI.away,
+                draw: pipelineProbabilitiesForUI.draw || null,
+                predictedScore: `${expectedScores.home}-${expectedScores.away}`,
+                // ============================================================
                 // Also update v2 fields on re-run
                 selection: selectionText,
                 modelProbability: valueBetProb * 100,

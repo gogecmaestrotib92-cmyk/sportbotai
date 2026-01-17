@@ -441,6 +441,15 @@ model Prediction {
   valueBetSide      String?
   modelVersion      String           @default("v2")
   
+  // === AI CHAT PROBABILITY FIELDS ===
+  // Without these, AI chat makes up fake probabilities!
+  homeWin           Float?           // Model probability for home win (0-100)
+  awayWin           Float?           // Model probability for away win (0-100)
+  draw              Float?           // Model probability for draw (0-100), null for non-draw sports
+  predictedScore    String?          // Expected score like "110-105"
+  headline          String?          // Match headline for display
+  signals           String?          // JSON signals data for detailed analysis
+  
   // === NEW EDGE PERFORMANCE TRACKING FIELDS ===
   // Core probabilities (immutable snapshot at prediction time)
   modelProbability      Float?       // P_model: model-estimated probability (0-100)
