@@ -2605,8 +2605,9 @@ If their favorite team has a match today/tonight, lead with that information.`;
           console.log(`[AI-Chat-Stream] Match Prediction Check: isPredictionIntent=${isPredictionIntent}, intent=${queryUnderstanding?.intent}, entities=${queryUnderstanding?.entities?.length || 0}, searchMessage="${searchMessage.substring(0, 50)}"`);
 
           // Skip if we already got context from clarification fast path
-          if (!verifiedMatchPredictionContext && isPredictionIntent && (queryUnderstanding?.entities?.length ?? 0) > 0) {
-            console.log(`[AI-Chat-Stream] Prediction query detected (intent: ${queryUnderstanding?.intent})...`);
+          // IMPORTANT: Don't require entities - getUpcomingMatchPrediction has its own team extraction!
+          if (!verifiedMatchPredictionContext && isPredictionIntent) {
+            console.log(`[AI-Chat-Stream] Prediction query detected (intent: ${queryUnderstanding?.intent}, entities: ${queryUnderstanding?.entities?.length || 0})...`);
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '🎯 Fetching our match analysis...' })}\n\n`));
 
             const predictionResult = await withTimeout(
