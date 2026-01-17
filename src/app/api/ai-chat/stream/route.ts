@@ -2620,152 +2620,128 @@ If their favorite team has a match today/tonight, lead with that information.`;
           console.log(`[AI-Chat-Stream] Match Prediction Check: isPredictionIntent=${isPredictionIntent}, intent=${queryUnderstanding?.intent}, entities=${queryUnderstanding?.entities?.length || 0}, searchMessage="${searchMessage.substring(0, 50)}"`);
 
           // Skip if we already got context from clarification fast path
-          // IMPORTANT: Don't require entities - getUpcomingMatchPrediction has its own team extraction!
+          // NEW APPROACH: Go directly to fetchMatchPreviewOrAnalysis (uses same data as match page)
           if (!verifiedMatchPredictionContext && isPredictionIntent) {
-            console.log(`[AI-Chat-Stream] Prediction query detected (intent: ${queryUnderstanding?.intent}, entities: ${queryUnderstanding?.entities?.length || 0})...`);
+            console.log(`[AI-Chat-Stream] Prediction query detected - using fetchMatchPreviewOrAnalysis directly...`);
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '🎯 Fetching our match analysis...' })}\n\n`));
 
-            const predictionResult = await withTimeout(
-              getUpcomingMatchPrediction(searchMessage),
-              15000,
-              'Match prediction'
+            // First check if game has ALREADY BEEN PLAYED
+            const pastMatch = await withTimeout(
+              checkIfMatchIsInPast(searchMessage),
+              5000,
+              'Past match check'
             );
-            if (predictionResult?.success && predictionResult.data) {
-              verifiedMatchPredictionContext = formatMatchPredictionContext(predictionResult);
-              console.log(`[AI-Chat-Stream] ✅ Found prediction for ${predictionResult.data.matchName}, kickoff in ${predictionResult.hoursUntilKickoff}h`);
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: `✅ Analysis found (kickoff in ${predictionResult.hoursUntilKickoff}h)` })}\n\n`));
-              // Override Perplexity - use our data
+
+            if (pastMatch?.isPast) {
+              // Game has already been played - don't generate pre-match analysis!
+              console.log(`[AI-Chat-Stream] ⚠️ Match already played ${pastMatch.hoursAgo}h ago: ${pastMatch.matchName}`);
+
+              let pastGameMessage = `⚠️ **This match has already been played!**\n\n`;
+              pastGameMessage += `**${pastMatch.matchName}** was played ${pastMatch.hoursAgo} hours ago.\n\n`;
+
+              if (pastMatch.actualResult) {
+                pastGameMessage += `**Final Result:** ${pastMatch.actualResult}\n\n`;
+              }
+
+              if (pastMatch.outcome && pastMatch.prediction) {
+                const outcomeEmoji = pastMatch.outcome === 'HIT' ? '✅' : pastMatch.outcome === 'MISS' ? '❌' : '⏳';
+                pastGameMessage += `**Our Prediction:** ${pastMatch.prediction} ${outcomeEmoji}\n\n`;
+              }
+
+              pastGameMessage += `Would you like me to analyze an **upcoming** match instead?`;
+
+              verifiedMatchPredictionContext = pastGameMessage;
+              // Don't use Perplexity - we have our answer
               perplexityContext = '';
               citations = [];
-            } else if (predictionResult?.error?.includes('hours')) {
-              // Match exists but not within 48h - let user know
-              verifiedMatchPredictionContext = `⏳ ${predictionResult.error}. Check back closer to kickoff for our full analysis.`;
-              console.log(`[AI-Chat-Stream] ℹ️ Match found but ${predictionResult.hoursUntilKickoff}h away`);
             } else {
-              // No stored prediction - first check if game has ALREADY BEEN PLAYED
-              const pastMatch = await withTimeout(
-                checkIfMatchIsInPast(searchMessage),
-                5000,
-                'Past match check'
-              );
+              // Game is upcoming or not found as past - fetch from match preview API
+              console.log('[AI-Chat-Stream] Fetching analysis from match-preview API (same data as match page)...');
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '🔬 Loading match analysis...' })}\n\n`));
 
-              if (pastMatch?.isPast) {
-                // Game has already been played - don't generate pre-match analysis!
-                console.log(`[AI-Chat-Stream] ⚠️ Match already played ${pastMatch.hoursAgo}h ago: ${pastMatch.matchName}`);
+              // Extract team names from entities OR parse from MATCH entity
+              let homeTeam: string | null = null;
+              let awayTeam: string | null = null;
 
-                let pastGameMessage = `⚠️ **This match has already been played!**\n\n`;
-                pastGameMessage += `**${pastMatch.matchName}** was played ${pastMatch.hoursAgo} hours ago.\n\n`;
+              // First, check for MATCH entity (e.g., "Real Madrid vs Barcelona")
+              const matchEntity = queryUnderstanding?.entities.find(e => e.type === 'MATCH');
+              if (matchEntity) {
+                // Parse the match entity into two teams
+                const vsMatch = matchEntity.name.match(/(.+?)\s+(?:vs?\.?|versus|@)\s+(.+)/i);
+                if (vsMatch) {
+                  homeTeam = vsMatch[1].trim();
+                  awayTeam = vsMatch[2].trim();
+                  console.log(`[AI-Chat-Stream] Parsed MATCH entity: home="${homeTeam}", away="${awayTeam}"`);
+                }
+              }
 
-                if (pastMatch.actualResult) {
-                  pastGameMessage += `**Final Result:** ${pastMatch.actualResult}\n\n`;
+              // If no MATCH entity, try extracting from TEAM/UNKNOWN entities
+              if (!homeTeam || !awayTeam) {
+                const teamEntities = queryUnderstanding?.entities.filter(e =>
+                  e.type === 'TEAM' || e.type === 'UNKNOWN'
+                ).map(e => e.name.replace(/^Will\s+/i, '')) || [];
+
+                if (teamEntities.length >= 2) {
+                  homeTeam = teamEntities[0];
+                  awayTeam = teamEntities[1];
+                }
+              }
+
+              // Last resort: try to parse directly from the search message
+              if (!homeTeam || !awayTeam) {
+                const directMatch = searchMessage.match(/(?:analy[sz]e|preview|predict|breakdown)?\s*([A-Za-z\s]+?)\s+(?:vs?\.?|versus|@|against)\s+([A-Za-z\s]+)/i);
+                if (directMatch) {
+                  homeTeam = directMatch[1].trim();
+                  awayTeam = directMatch[2].trim();
+                  console.log(`[AI-Chat-Stream] Parsed from message directly: home="${homeTeam}", away="${awayTeam}"`);
+                }
+              }
+
+              if (homeTeam && awayTeam) {
+                // Detect sport from team names if not already detected
+                let sport = queryUnderstanding?.sport || detectSportFromTeams(homeTeam, awayTeam);
+                if (!sport || sport === 'unknown') {
+                  // Fallback sport detection
+                  if (/lakers|celtics|warriors|bulls|heat|nets|knicks|76ers|bucks|nuggets|suns|mavericks|clippers|spurs|rockets|timberwolves|thunder|pelicans|grizzlies|hawks|hornets|wizards|pistons|pacers|magic|cavaliers|raptors|jazz|blazers|kings/i.test(`${homeTeam} ${awayTeam}`)) {
+                    sport = 'basketball_nba';
+                  } else if (/chiefs|eagles|49ers|cowboys|bills|bengals|ravens|dolphins|lions|packers|vikings|jets|patriots|broncos|chargers|raiders|seahawks|rams/i.test(`${homeTeam} ${awayTeam}`)) {
+                    sport = 'americanfootball_nfl';
+                  } else if (/bruins|maple leafs|rangers|penguins|oilers|avalanche|panthers|lightning|hurricanes|stars|golden knights/i.test(`${homeTeam} ${awayTeam}`)) {
+                    sport = 'icehockey_nhl';
+                  } else if (/real madrid|barcelona|atletico madrid|sevilla|valencia|villarreal|real betis|athletic bilbao|real sociedad|celta/i.test(`${homeTeam} ${awayTeam}`)) {
+                    sport = 'soccer_spain_la_liga';
+                  } else if (/liverpool|manchester (united|city)|chelsea|arsenal|tottenham|newcastle|west ham|brighton|aston villa|everton/i.test(`${homeTeam} ${awayTeam}`)) {
+                    sport = 'soccer_epl';
+                  } else if (/juventus|inter|milan|napoli|roma|lazio|fiorentina|atalanta|bologna|torino/i.test(`${homeTeam} ${awayTeam}`)) {
+                    sport = 'soccer_italy_serie_a';
+                  } else if (/bayern|dortmund|leverkusen|leipzig|frankfurt|wolfsburg|gladbach|stuttgart|freiburg|union berlin/i.test(`${homeTeam} ${awayTeam}`)) {
+                    sport = 'soccer_germany_bundesliga';
+                  } else {
+                    sport = 'soccer_epl'; // Default
+                  }
                 }
 
-                if (pastMatch.outcome && pastMatch.prediction) {
-                  const outcomeEmoji = pastMatch.outcome === 'HIT' ? '✅' : pastMatch.outcome === 'MISS' ? '❌' : '⏳';
-                  pastGameMessage += `**Our Prediction:** ${pastMatch.prediction} ${outcomeEmoji}\n\n`;
+                console.log(`[AI-Chat-Stream] Using fetchMatchPreviewOrAnalysis for: ${homeTeam} vs ${awayTeam} (${sport})`);
+
+                try {
+                  // USE MATCH-PREVIEW API: Same data source as the match page!
+                  const result = await fetchMatchPreviewOrAnalysis(homeTeam, awayTeam, sport, request);
+
+                  if (result.success) {
+                    verifiedMatchPredictionContext = result.context;
+                    console.log(`[AI-Chat-Stream] ✅ Got analysis from ${result.source}`);
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: `✅ ${result.source === 'match-preview' ? 'Match Preview' : 'Live analysis'} ready!` })}\n\n`));
+                    // Use our data, not Perplexity
+                    perplexityContext = '';
+                    citations = [];
+                  } else {
+                    console.log(`[AI-Chat-Stream] ⚠️ Could not get analysis for ${homeTeam} vs ${awayTeam}`);
+                  }
+                } catch (analyzeError) {
+                  console.error('[AI-Chat-Stream] fetchMatchPreviewOrAnalysis error:', analyzeError);
                 }
-
-                pastGameMessage += `Would you like me to analyze an **upcoming** match instead?`;
-
-                verifiedMatchPredictionContext = pastGameMessage;
-                // Don't use Perplexity - we have our answer
-                perplexityContext = '';
-                citations = [];
               } else {
-                // Game is not in the past - proceed with live analysis
-                console.log('[AI-Chat-Stream] ⚠️ No stored prediction, attempting live analysis via analyze API...');
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '🔬 Generating live analysis...' })}\n\n`));
-
-                // Extract team names from entities OR parse from MATCH entity
-                let homeTeam: string | null = null;
-                let awayTeam: string | null = null;
-
-                // First, check for MATCH entity (e.g., "Real Madrid vs Barcelona")
-                const matchEntity = queryUnderstanding?.entities.find(e => e.type === 'MATCH');
-                if (matchEntity) {
-                  // Parse the match entity into two teams
-                  const vsMatch = matchEntity.name.match(/(.+?)\s+(?:vs?\.?|versus|@)\s+(.+)/i);
-                  if (vsMatch) {
-                    homeTeam = vsMatch[1].trim();
-                    awayTeam = vsMatch[2].trim();
-                    console.log(`[AI-Chat-Stream] Parsed MATCH entity: home="${homeTeam}", away="${awayTeam}"`);
-                  }
-                }
-
-                // If no MATCH entity, try extracting from TEAM/UNKNOWN entities
-                if (!homeTeam || !awayTeam) {
-                  const teamEntities = queryUnderstanding?.entities.filter(e =>
-                    e.type === 'TEAM' || e.type === 'UNKNOWN'
-                  ).map(e => e.name.replace(/^Will\s+/i, '')) || [];
-
-                  if (teamEntities.length >= 2) {
-                    homeTeam = teamEntities[0];
-                    awayTeam = teamEntities[1];
-                  }
-                }
-
-                // Last resort: try to parse directly from the search message
-                if (!homeTeam || !awayTeam) {
-                  const directMatch = searchMessage.match(/(?:analy[sz]e|preview|predict|breakdown)?\s*([A-Za-z\s]+?)\s+(?:vs?\.?|versus|@|against)\s+([A-Za-z\s]+)/i);
-                  if (directMatch) {
-                    homeTeam = directMatch[1].trim();
-                    awayTeam = directMatch[2].trim();
-                    console.log(`[AI-Chat-Stream] Parsed from message directly: home="${homeTeam}", away="${awayTeam}"`);
-                  }
-                }
-
-                if (homeTeam && awayTeam) {
-                  // Detect sport from team names if not already detected
-                  let sport = queryUnderstanding?.sport;
-                  if (!sport || sport === 'unknown') {
-                    // La Liga teams
-                    if (/real madrid|barcelona|atletico madrid|sevilla|valencia|villarreal|real betis|athletic bilbao|real sociedad|celta/i.test(`${homeTeam} ${awayTeam}`)) {
-                      sport = 'soccer_spain_la_liga';
-                    }
-                    // Premier League teams  
-                    else if (/liverpool|manchester (united|city)|chelsea|arsenal|tottenham|newcastle|west ham|brighton|aston villa|everton/i.test(`${homeTeam} ${awayTeam}`)) {
-                      sport = 'soccer_epl';
-                    }
-                    // Serie A teams
-                    else if (/juventus|inter|milan|napoli|roma|lazio|fiorentina|atalanta|bologna|torino/i.test(`${homeTeam} ${awayTeam}`)) {
-                      sport = 'soccer_italy_serie_a';
-                    }
-                    // Bundesliga teams
-                    else if (/bayern|dortmund|leverkusen|leipzig|frankfurt|wolfsburg|gladbach|stuttgart|freiburg|union berlin/i.test(`${homeTeam} ${awayTeam}`)) {
-                      sport = 'soccer_germany_bundesliga';
-                    }
-                    // Ligue 1 teams
-                    else if (/paris saint-germain|psg|marseille|lyon|monaco|lille|nice|lens|rennes|strasbourg/i.test(`${homeTeam} ${awayTeam}`)) {
-                      sport = 'soccer_france_ligue_one';
-                    }
-                    // Default to EPL for soccer
-                    else {
-                      sport = 'soccer_epl';
-                    }
-                  }
-
-                  console.log(`[AI-Chat-Stream] Using fetchMatchPreviewOrAnalysis for: ${homeTeam} vs ${awayTeam} (${sport})`);
-
-                  try {
-                    // USE NEW HELPER: Tries match-preview first (full Match Insights data) then analyze API
-                    const result = await fetchMatchPreviewOrAnalysis(homeTeam, awayTeam, sport, request);
-
-                    if (result.success) {
-                      verifiedMatchPredictionContext = result.context;
-                      console.log(`[AI-Chat-Stream] ✅ Got analysis from ${result.source}`);
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: `✅ ${result.source === 'match-preview' ? 'Match Preview' : 'Live analysis'} ready!` })}\n\n`));
-                      // Use our data, not Perplexity
-                      perplexityContext = '';
-                      citations = [];
-                    } else {
-                      console.log(`[AI-Chat-Stream] ⚠️ Could not get analysis for ${homeTeam} vs ${awayTeam}`);
-                    }
-                  } catch (analyzeError) {
-                    console.error('[AI-Chat-Stream] fetchMatchPreviewOrAnalysis error:', analyzeError);
-                  }
-                } else {
-                  console.log(`[AI-Chat-Stream] ⚠️ Could not extract team names. home="${homeTeam}", away="${awayTeam}"`);
-                }
+                console.log(`[AI-Chat-Stream] ⚠️ Could not extract team names. home="${homeTeam}", away="${awayTeam}"`);
               }
             }
           }
