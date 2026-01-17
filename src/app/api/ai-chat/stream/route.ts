@@ -1835,7 +1835,7 @@ If their favorite team has a match today/tonight, lead with that information.`;
     try {
       // Timeout query intelligence to prevent slow LLM classification from hanging
       queryUnderstanding = await withTimeout(
-        understandQuery(message, abVariant),
+        understandQuery(message, abVariant, conversationHistoryContext),
         8000,
         'Query Intelligence'
       );

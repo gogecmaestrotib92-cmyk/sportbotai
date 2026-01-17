@@ -949,27 +949,50 @@ Return ONLY valid JSON:
 }`;
 
 /**
- * Use LLM to classify ambiguous queries
+ * Use LLM to classify queries with conversation context
  */
-async function classifyWithLLM(query: string): Promise<{
+async function classifyWithLLM(
+  query: string,
+  conversationHistory?: string  // Previous messages for context
+): Promise<{
   intent: QueryIntent;
   confidence: number;
   entities: ExtractedEntity[];
   timeFrame: TimeFrame;
 }> {
   try {
+    // Build messages array with optional conversation history
+    const messages: Array<{ role: 'system' | 'user' | 'assistant', content: string }> = [
+      { role: 'system', content: CLASSIFICATION_PROMPT },
+    ];
+
+    // If we have conversation history, add it so LLM can understand references
+    if (conversationHistory && conversationHistory.length > 0) {
+      messages.push({
+        role: 'system',
+        content: `CONVERSATION CONTEXT (use this to resolve references like "that match", "him", "their team"):
+${conversationHistory}
+
+Now classify the user's current message, resolving any references using the above context.`,
+      });
+    }
+
+    messages.push({ role: 'user', content: query });
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: CLASSIFICATION_PROMPT },
-        { role: 'user', content: query },
-      ],
-      max_tokens: 200,
+      messages,
+      max_tokens: 300,  // Slightly more for context resolution
       temperature: 0,
       response_format: { type: 'json_object' },
     });
 
     const result = JSON.parse(response.choices[0]?.message?.content || '{}');
+
+    // Log if context resolution happened
+    if (conversationHistory && result.entities?.length > 0) {
+      console.log(`[QueryIntelligence] LLM resolved with context: ${result.entities.map((e: { name: string }) => e.name).join(', ')}`);
+    }
 
     return {
       intent: result.intent as QueryIntent || 'UNCLEAR',
@@ -1011,7 +1034,11 @@ async function classifyWithLLM(query: string): Promise<{
  * - Variant A: LLM fallback when confidence < 0.6
  * - Variant B: LLM fallback when confidence < 0.7 (more aggressive)
  */
-export async function understandQuery(query: string, abVariant?: 'A' | 'B'): Promise<QueryUnderstanding> {
+export async function understandQuery(
+  query: string,
+  abVariant?: 'A' | 'B',
+  conversationHistory?: string  // Previous messages for resolving references
+): Promise<QueryUnderstanding> {
   const startTime = Date.now();
 
   // A/B test: confidence threshold for LLM fallback
@@ -1118,7 +1145,7 @@ export async function understandQuery(query: string, abVariant?: 'A' | 'B'): Pro
   usedLLM = true;
 
   try {
-    const llmResult = await classifyWithLLM(query);
+    const llmResult = await classifyWithLLM(query, conversationHistory);
 
     // LLM entities REPLACE regex entities (more reliable)
     // Clear the regex entities and use LLM's extraction
