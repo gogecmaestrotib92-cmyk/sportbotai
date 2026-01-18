@@ -21,12 +21,8 @@ export default function HeroVariantB() {
         overlayOpacity={0.55}
         disableOnMobile={true}
       />
-      
-      {/* Additional decorative elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-primary/5 rounded-full blur-[80px] sm:blur-[120px]" />
-        <div className="absolute bottom-0 left-0 w-[200px] sm:w-[400px] h-[200px] sm:h-[400px] bg-accent/5 rounded-full blur-[60px] sm:blur-[100px]" />
-      </div>
+
+      {/* Decorative accent removed - turf texture provides the background */}
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
@@ -57,8 +53,8 @@ export default function HeroVariantB() {
 
             {/* CTA Buttons - VARIANT B: Reversed order, different copy */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
-              <Link 
-                href="/matches" 
+              <Link
+                href="/matches"
                 className="inline-flex items-center justify-center gap-2 text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto bg-gradient-to-r from-accent to-accent-dark text-bg-primary font-bold rounded-lg hover:from-accent-dark hover:to-accent transition-all shadow-lg shadow-accent/30"
               >
                 Browse Matches
@@ -66,8 +62,8 @@ export default function HeroVariantB() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </Link>
-              <Link 
-                href="/ai-desk" 
+              <Link
+                href="/ai-desk"
                 className="inline-flex items-center justify-center gap-2 text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg transition-all shadow-lg shadow-accent/20"
               >
                 <span>🧠</span>
