@@ -23,9 +23,9 @@ interface PendingPredictionsManagerProps {
   onUpdate?: () => void;
 }
 
-export default function PendingPredictionsManager({ 
+export default function PendingPredictionsManager({
   predictions: initialPredictions,
-  onUpdate 
+  onUpdate
 }: PendingPredictionsManagerProps) {
   const [predictions, setPredictions] = useState(initialPredictions);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -34,6 +34,59 @@ export default function PendingPredictionsManager({
   const [loading, setLoading] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [filter, setFilter] = useState<'all' | 'past' | 'upcoming'>('past');
+  const [bulkFetching, setBulkFetching] = useState(false);
+
+  // Handle bulk fetch all results
+  const handleFetchAllResults = async () => {
+    setBulkFetching(true);
+    setMessage(null);
+
+    try {
+      // Call track-predictions API to fetch and update results
+      const response = await fetch('/api/cron/track-predictions', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch results');
+      }
+
+      const { updatedOutcomes, stuckPredictions, errors } = data;
+
+      if (updatedOutcomes > 0) {
+        // Refresh predictions list
+        onUpdate?.();
+        setMessage({
+          type: 'success',
+          text: `✅ Fetched results for ${updatedOutcomes} predictions!${stuckPredictions > 0 ? ` (${stuckPredictions} still stuck - API may not have data yet)` : ''}`
+        });
+      } else if (stuckPredictions > 0) {
+        setMessage({
+          type: 'error',
+          text: `⚠️ Could not fetch results for ${stuckPredictions} predictions. Try again later or enter manually.`
+        });
+      } else {
+        setMessage({
+          type: 'success',
+          text: '✅ All predictions already have results or no finished matches found.'
+        });
+      }
+
+      if (errors.length > 0) {
+        console.error('Bulk fetch errors:', errors);
+      }
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to fetch results'
+      });
+    } finally {
+      setBulkFetching(false);
+    }
+  };
 
   const now = new Date();
 
@@ -84,19 +137,19 @@ export default function PendingPredictionsManager({
 
       // Remove from list
       setPredictions(prev => prev.filter(p => p.id !== id));
-      setMessage({ 
-        type: 'success', 
-        text: `✅ ${data.prediction.matchName}: ${data.prediction.actualScore} → ${data.prediction.outcome}` 
+      setMessage({
+        type: 'success',
+        text: `✅ ${data.prediction.matchName}: ${data.prediction.actualScore} → ${data.prediction.outcome}`
       });
       setEditingId(null);
       setHomeScore('');
       setAwayScore('');
-      
+
       onUpdate?.();
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error instanceof Error ? error.message : 'Failed to update prediction' 
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to update prediction'
       });
     } finally {
       setLoading(null);
@@ -121,47 +174,55 @@ export default function PendingPredictionsManager({
         <div className="flex gap-2">
           <button
             onClick={() => setFilter('past')}
-            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-              filter === 'past' 
-                ? 'bg-accent text-white' 
-                : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
-            }`}
+            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${filter === 'past'
+              ? 'bg-accent text-white'
+              : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
+              }`}
           >
             ⏰ Past ({predictions.filter(p => new Date(p.kickoff) < now).length})
           </button>
           <button
             onClick={() => setFilter('upcoming')}
-            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-              filter === 'upcoming' 
-                ? 'bg-accent text-white' 
-                : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
-            }`}
+            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${filter === 'upcoming'
+              ? 'bg-accent text-white'
+              : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
+              }`}
           >
             📅 Upcoming ({predictions.filter(p => new Date(p.kickoff) >= now).length})
           </button>
           <button
             onClick={() => setFilter('all')}
-            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-              filter === 'all' 
-                ? 'bg-accent text-white' 
-                : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
-            }`}
+            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${filter === 'all'
+              ? 'bg-accent text-white'
+              : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
+              }`}
           >
             All ({predictions.length})
           </button>
         </div>
-        <span className="text-xs text-text-muted">
-          {filteredPredictions.length} predictions
-        </span>
+        <div className="flex items-center gap-3">
+          {/* Bulk Fetch Button */}
+          {filter === 'past' && filteredPredictions.length > 0 && (
+            <button
+              onClick={handleFetchAllResults}
+              disabled={bulkFetching}
+              className="px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-wait"
+            >
+              {bulkFetching ? '⏳ Fetching...' : `🔄 Fetch All Results (${filteredPredictions.length})`}
+            </button>
+          )}
+          <span className="text-xs text-text-muted">
+            {filteredPredictions.length} predictions
+          </span>
+        </div>
       </div>
 
       {/* Message */}
       {message && (
-        <div className={`p-3 rounded-lg text-sm ${
-          message.type === 'success' 
-            ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
-            : 'bg-red-500/10 text-red-400 border border-red-500/20'
-        }`}>
+        <div className={`p-3 rounded-lg text-sm ${message.type === 'success'
+          ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+          : 'bg-red-500/10 text-red-400 border border-red-500/20'
+          }`}>
           {message.text}
         </div>
       )}
@@ -187,11 +248,10 @@ export default function PendingPredictionsManager({
                   {/* Match Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs px-2 py-0.5 rounded ${
-                        isPast(pred.kickoff) 
-                          ? 'bg-yellow-500/20 text-yellow-400' 
-                          : 'bg-blue-500/20 text-blue-400'
-                      }`}>
+                      <span className={`text-xs px-2 py-0.5 rounded ${isPast(pred.kickoff)
+                        ? 'bg-yellow-500/20 text-yellow-400'
+                        : 'bg-blue-500/20 text-blue-400'
+                        }`}>
                         {isPast(pred.kickoff) ? '⏰ Finished' : '📅 Upcoming'}
                       </span>
                       <span className="text-xs text-text-muted">{pred.sport}</span>
@@ -262,11 +322,10 @@ export default function PendingPredictionsManager({
                       <button
                         onClick={() => handleEdit(pred)}
                         disabled={!isPast(pred.kickoff)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          isPast(pred.kickoff)
-                            ? 'bg-accent hover:bg-accent/80 text-white'
-                            : 'bg-bg-tertiary text-text-muted cursor-not-allowed'
-                        }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isPast(pred.kickoff)
+                          ? 'bg-accent hover:bg-accent/80 text-white'
+                          : 'bg-bg-tertiary text-text-muted cursor-not-allowed'
+                          }`}
                       >
                         {isPast(pred.kickoff) ? 'Enter Result' : 'Not Started'}
                       </button>
