@@ -51,26 +51,26 @@ export default function VideoBackground({
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     // Check for reduced motion preference
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(motionQuery.matches);
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     // Listen for motion preference changes
     const handleMotionChange = (e: MediaQueryListEvent) => {
       setPrefersReducedMotion(e.matches);
     };
     motionQuery.addEventListener('change', handleMotionChange);
-    
+
     // Defer video loading until after initial render (LCP optimization)
     // Shorter delay on desktop (500ms), longer on mobile (1500ms) to save data
     const timer = setTimeout(() => {
       setShouldLoadVideo(true);
     }, isMobile ? 1500 : 500);
-    
+
     return () => {
       window.removeEventListener('resize', checkMobile);
       motionQuery.removeEventListener('change', handleMotionChange);
@@ -93,36 +93,74 @@ export default function VideoBackground({
 
   return (
     <div className={`absolute inset-0 overflow-hidden ${className}`}>
-      {/* Mobile fallback: gradient background */}
+      {/* Mobile fallback: Premium sports-themed background (Props.Cash inspired) */}
       {!showVideo && !posterSrc && (
-        <div className="absolute inset-0">
-          {/* Subtle grid pattern */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#2A3036_1px,transparent_1px),linear-gradient(to_bottom,#2A3036_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-30" />
-          {/* Gradient orbs */}
-          <div className="absolute top-0 right-0 w-[250px] h-[250px] bg-accent/20 rounded-full blur-[80px]" />
-          <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-accent/10 rounded-full blur-[60px]" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-accent/10 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 bg-[#0a0a0b]">
+          {/* Base: Dark sports turf texture pattern (CSS-only) */}
+          <div
+            className="absolute inset-0 opacity-40"
+            style={{
+              backgroundImage: `
+                repeating-linear-gradient(
+                  90deg,
+                  transparent,
+                  transparent 2px,
+                  rgba(255,255,255,0.03) 2px,
+                  rgba(255,255,255,0.03) 4px
+                ),
+                repeating-linear-gradient(
+                  0deg,
+                  transparent,
+                  transparent 8px,
+                  rgba(255,255,255,0.02) 8px,
+                  rgba(255,255,255,0.02) 16px
+                )
+              `,
+            }}
+          />
+
+          {/* Noise texture overlay for depth */}
+          <div
+            className="absolute inset-0 opacity-[0.15]"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            }}
+          />
+
+          {/* Cyan/teal edge vignette glow (stadium lighting effect) */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(6,182,212,0.15)_70%,rgba(6,182,212,0.25)_100%)]" />
+
+          {/* Top-right accent glow (brand color) */}
+          <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-accent/20 rounded-full blur-[100px]" />
+
+          {/* Bottom-left ambient glow */}
+          <div className="absolute -bottom-20 -left-20 w-[250px] h-[250px] bg-cyan-500/15 rounded-full blur-[80px]" />
+
+          {/* Center subtle glow for content focus */}
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[400px] h-[200px] bg-accent/10 rounded-full blur-[120px]" />
+
+          {/* Subtle horizontal lines (field markings hint) */}
+          <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(0deg,transparent,transparent_60px,rgba(255,255,255,0.03)_60px,rgba(255,255,255,0.03)_61px)]" />
         </div>
       )}
-      
+
       {/* Poster image fallback (if provided) */}
       {posterSrc && (
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
-          style={{ 
+          style={{
             backgroundImage: `url(${posterSrc})`,
             opacity: showVideo && isVideoLoaded ? 0 : 1,
           }}
         />
       )}
-      
+
       {/* Video (loads on both desktop and mobile, optimized by device) */}
       {showVideo && (
         <video
           ref={videoRef}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-            isVideoLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
           autoPlay
           muted
           loop
@@ -137,13 +175,13 @@ export default function VideoBackground({
           <source src={isMobile && mobileSrc ? mobileSrc : videoSrc} type="video/mp4" />
         </video>
       )}
-      
+
       {/* Dark overlay for text readability */}
-      <div 
+      <div
         className="absolute inset-0 bg-bg-primary"
         style={{ opacity: overlayOpacity }}
       />
-      
+
       {/* Gradient fade at bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-bg-primary to-transparent" />
     </div>
