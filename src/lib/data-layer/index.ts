@@ -57,21 +57,21 @@ export class DataLayer {
   private registry: AdapterRegistry;
   private config: DataLayerConfig;
   private cache: Map<string, { data: unknown; expiry: Date }>;
-  
+
   constructor(config: DataLayerConfig = {}) {
     this.config = {
       enableCaching: config.enableCaching ?? true,
       cacheTTL: config.cacheTTL ?? 300, // 5 minutes default
       logRequests: config.logRequests ?? false,
     };
-    
+
     this.registry = new AdapterRegistry();
     this.cache = new Map();
-    
+
     // Register all adapters
     this.registerAdapters();
   }
-  
+
   /**
    * Register all sport adapters
    */
@@ -82,7 +82,7 @@ export class DataLayer {
     this.registry.register(getNFLAdapter());
     this.registry.register(getMMAAdapter());
   }
-  
+
   /**
    * Configure basketball league (NBA, Euroleague, etc.)
    * Call this before making basketball-related requests
@@ -95,14 +95,14 @@ export class DataLayer {
       console.log(`[DataLayer] Basketball league set to: ${league.toUpperCase()} (ID: ${leagueId})`);
     }
   }
-  
+
   /**
    * Get adapter for a sport
    */
   private getAdapter(sport: Sport): ISportAdapter | undefined {
     return this.registry.get(sport);
   }
-  
+
   /**
    * Log a request if enabled
    */
@@ -111,50 +111,50 @@ export class DataLayer {
       console.log(`[DataLayer] ${message}`, data || '');
     }
   }
-  
+
   /**
    * Generate cache key
    */
   private getCacheKey(method: string, params: unknown): string {
     return `${method}:${JSON.stringify(params)}`;
   }
-  
+
   /**
    * Get from cache
    */
   private getFromCache<T>(key: string): T | undefined {
     if (!this.config.enableCaching) return undefined;
-    
+
     const cached = this.cache.get(key);
     if (cached && cached.expiry > new Date()) {
       this.log(`Cache hit: ${key}`);
       return cached.data as T;
     }
-    
+
     return undefined;
   }
-  
+
   /**
    * Set cache
    */
   private setCache(key: string, data: unknown): void {
     if (!this.config.enableCaching) return;
-    
+
     const expiry = new Date(Date.now() + (this.config.cacheTTL! * 1000));
     this.cache.set(key, { data, expiry });
   }
-  
+
   // ============================================================================
   // Public API Methods
   // ============================================================================
-  
+
   /**
    * List available sports
    */
   getAvailableSports(): Sport[] {
     return this.registry.getAvailable();
   }
-  
+
   /**
    * Check if a sport is available
    */
@@ -162,7 +162,7 @@ export class DataLayer {
     const adapter = this.getAdapter(sport);
     return adapter?.isAvailable() ?? false;
   }
-  
+
   /**
    * Find a team across any sport
    */
@@ -170,9 +170,9 @@ export class DataLayer {
     const cacheKey = this.getCacheKey('findTeam', query);
     const cached = this.getFromCache<DataLayerResponse<NormalizedTeam>>(cacheKey);
     if (cached) return cached;
-    
+
     this.log('findTeam', query);
-    
+
     const adapter = this.getAdapter(query.sport);
     if (!adapter) {
       return {
@@ -188,16 +188,16 @@ export class DataLayer {
         },
       };
     }
-    
+
     const result = await adapter.findTeam(query);
-    
+
     if (result.success) {
       this.setCache(cacheKey, result);
     }
-    
+
     return result;
   }
-  
+
   /**
    * Get matches for a sport
    */
@@ -205,9 +205,9 @@ export class DataLayer {
     const cacheKey = this.getCacheKey('getMatches', query);
     const cached = this.getFromCache<DataLayerResponse<NormalizedMatch[]>>(cacheKey);
     if (cached) return cached;
-    
+
     this.log('getMatches', query);
-    
+
     const adapter = this.getAdapter(query.sport);
     if (!adapter) {
       return {
@@ -223,16 +223,16 @@ export class DataLayer {
         },
       };
     }
-    
+
     const result = await adapter.getMatches(query);
-    
+
     if (result.success) {
       this.setCache(cacheKey, result);
     }
-    
+
     return result;
   }
-  
+
   /**
    * Get team statistics
    */
@@ -240,9 +240,9 @@ export class DataLayer {
     const cacheKey = this.getCacheKey('getTeamStats', query);
     const cached = this.getFromCache<DataLayerResponse<NormalizedTeamStats>>(cacheKey);
     if (cached) return cached;
-    
+
     this.log('getTeamStats', query);
-    
+
     const adapter = this.getAdapter(query.sport);
     if (!adapter) {
       return {
@@ -258,16 +258,16 @@ export class DataLayer {
         },
       };
     }
-    
+
     const result = await adapter.getTeamStats(query);
-    
+
     if (result.success) {
       this.setCache(cacheKey, result);
     }
-    
+
     return result;
   }
-  
+
   /**
    * Get recent games for a team
    */
@@ -279,9 +279,9 @@ export class DataLayer {
     const cacheKey = this.getCacheKey('getRecentGames', { sport, teamId, limit });
     const cached = this.getFromCache<DataLayerResponse<NormalizedRecentGames>>(cacheKey);
     if (cached) return cached;
-    
+
     this.log('getRecentGames', { sport, teamId, limit });
-    
+
     const adapter = this.getAdapter(sport);
     if (!adapter) {
       return {
@@ -297,16 +297,16 @@ export class DataLayer {
         },
       };
     }
-    
+
     const result = await adapter.getRecentGames(teamId, limit);
-    
+
     if (result.success) {
       this.setCache(cacheKey, result);
     }
-    
+
     return result;
   }
-  
+
   /**
    * Get head-to-head history
    */
@@ -314,9 +314,9 @@ export class DataLayer {
     const cacheKey = this.getCacheKey('getH2H', query);
     const cached = this.getFromCache<DataLayerResponse<NormalizedH2H>>(cacheKey);
     if (cached) return cached;
-    
+
     this.log('getH2H', query);
-    
+
     const adapter = this.getAdapter(query.sport);
     if (!adapter) {
       return {
@@ -332,16 +332,16 @@ export class DataLayer {
         },
       };
     }
-    
+
     const result = await adapter.getH2H(query);
-    
+
     if (result.success) {
       this.setCache(cacheKey, result);
     }
-    
+
     return result;
   }
-  
+
   /**
    * Get injuries for a team (if supported by the sport)
    */
@@ -349,9 +349,9 @@ export class DataLayer {
     const cacheKey = this.getCacheKey('getInjuries', { sport, teamId });
     const cached = this.getFromCache<DataLayerResponse<NormalizedInjury[]>>(cacheKey);
     if (cached) return cached;
-    
+
     this.log('getInjuries', { sport, teamId });
-    
+
     const adapter = this.getAdapter(sport);
     if (!adapter) {
       return {
@@ -367,7 +367,7 @@ export class DataLayer {
         },
       };
     }
-    
+
     if (!adapter.getInjuries) {
       return {
         success: false,
@@ -382,16 +382,16 @@ export class DataLayer {
         },
       };
     }
-    
+
     const result = await adapter.getInjuries(teamId);
-    
+
     if (result.success) {
       this.setCache(cacheKey, result);
     }
-    
+
     return result;
   }
-  
+
   /**
    * Get team roster/players for current season
    * Available for basketball, hockey, and american_football
@@ -400,9 +400,9 @@ export class DataLayer {
     const cacheKey = this.getCacheKey('getTeamRoster', { sport, teamId });
     const cached = this.getFromCache<DataLayerResponse<NormalizedPlayer[]>>(cacheKey);
     if (cached) return cached;
-    
+
     this.log('getTeamRoster', { sport, teamId });
-    
+
     const adapter = this.getAdapter(sport);
     if (!adapter) {
       return {
@@ -418,7 +418,7 @@ export class DataLayer {
         },
       };
     }
-    
+
     // Check if adapter has getTeamRoster method
     if (!('getTeamRoster' in adapter) || typeof (adapter as any).getTeamRoster !== 'function') {
       return {
@@ -434,16 +434,16 @@ export class DataLayer {
         },
       };
     }
-    
+
     const result = await (adapter as any).getTeamRoster(teamId);
-    
+
     if (result.success) {
       this.setCache(cacheKey, result);
     }
-    
+
     return result;
   }
-  
+
   /**
    * Get player statistics for a season
    * Currently supported for basketball (NBA, Euroleague)
@@ -456,9 +456,9 @@ export class DataLayer {
     const cacheKey = this.getCacheKey('getPlayerStats', { sport, playerId, season });
     const cached = this.getFromCache<DataLayerResponse<NormalizedPlayerStats>>(cacheKey);
     if (cached) return cached;
-    
+
     this.log('getPlayerStats', { sport, playerId, season });
-    
+
     const adapter = this.getAdapter(sport);
     if (!adapter) {
       return {
@@ -474,7 +474,7 @@ export class DataLayer {
         },
       };
     }
-    
+
     // Check if adapter has getPlayerStats method
     if (!('getPlayerStats' in adapter) || typeof (adapter as any).getPlayerStats !== 'function') {
       return {
@@ -490,16 +490,16 @@ export class DataLayer {
         },
       };
     }
-    
+
     const result = await (adapter as any).getPlayerStats(playerId, season);
-    
+
     if (result.success) {
       this.setCache(cacheKey, result);
     }
-    
+
     return result;
   }
-  
+
   /**
    * Search for a player by name
    * Currently supported for basketball
@@ -512,9 +512,9 @@ export class DataLayer {
     const cacheKey = this.getCacheKey('searchPlayer', { sport, name, season });
     const cached = this.getFromCache<DataLayerResponse<NormalizedPlayer[]>>(cacheKey);
     if (cached) return cached;
-    
+
     this.log('searchPlayer', { sport, name });
-    
+
     const adapter = this.getAdapter(sport);
     if (!adapter) {
       return {
@@ -530,7 +530,7 @@ export class DataLayer {
         },
       };
     }
-    
+
     // Check if adapter has searchPlayer method
     if (!('searchPlayer' in adapter) || typeof (adapter as any).searchPlayer !== 'function') {
       return {
@@ -546,16 +546,16 @@ export class DataLayer {
         },
       };
     }
-    
+
     const result = await (adapter as any).searchPlayer(name, season);
-    
+
     if (result.success) {
       this.setCache(cacheKey, result);
     }
-    
+
     return result;
   }
-  
+
   /**
    * Get rosters for both teams in a match
    * Returns formatted string for AI consumption
@@ -570,36 +570,36 @@ export class DataLayer {
         this.getTeamRoster(sport, homeTeamId),
         this.getTeamRoster(sport, awayTeamId),
       ]);
-      
+
       if (!homeRoster.success && !awayRoster.success) {
         return null;
       }
-      
+
       const formatRoster = (players: NormalizedPlayer[]) => {
         return players
           .map(p => `- ${p.name} (${p.position})`)
           .join('\n');
       };
-      
+
       let result = '=== CURRENT TEAM ROSTERS ===\n\n';
-      
+
       if (homeRoster.success && homeRoster.data && homeRoster.data.length > 0) {
         result += `Home Team Roster:\n${formatRoster(homeRoster.data)}\n\n`;
       }
-      
+
       if (awayRoster.success && awayRoster.data && awayRoster.data.length > 0) {
         result += `Away Team Roster:\n${formatRoster(awayRoster.data)}\n\n`;
       }
-      
+
       result += '⚠️ Use ONLY players from the rosters above. Do NOT mention any player not listed here.';
-      
+
       return result;
     } catch (error) {
       console.error('[DataLayer] Error getting match rosters:', error);
       return null;
     }
   }
-  
+
   /**
    * Get upcoming events for a sport from The Odds API
    * This is a free endpoint (no quota usage)
@@ -627,9 +627,9 @@ export class DataLayer {
       commenceTime: string;
     }>>>(cacheKey);
     if (cached) return cached;
-    
+
     this.log('getUpcomingEvents', { sportKey });
-    
+
     // Check if API is configured
     if (!theOddsClient.isConfigured()) {
       return {
@@ -645,10 +645,10 @@ export class DataLayer {
         },
       };
     }
-    
+
     try {
       const response = await theOddsClient.getEvents(sportKey);
-      
+
       const events = response.data.map((event: { id: string; sport_title?: string; home_team: string; away_team: string; commence_time: string }) => ({
         id: event.id,
         sport: event.sport_title || sportKey,
@@ -657,7 +657,7 @@ export class DataLayer {
         awayTeam: event.away_team,
         commenceTime: event.commence_time,
       }));
-      
+
       const result: DataLayerResponse<typeof events> = {
         success: true,
         data: events,
@@ -669,10 +669,10 @@ export class DataLayer {
           quotaRemaining: response.requestsRemaining,
         },
       };
-      
+
       this.setCache(cacheKey, result);
       return result;
-      
+
     } catch (error) {
       console.error('[DataLayer] Error fetching events:', error);
       return {
@@ -689,7 +689,7 @@ export class DataLayer {
       };
     }
   }
-  
+
   /**
    * Get odds for a match from The Odds API
    * Maps sport to The Odds API sport key format
@@ -708,16 +708,16 @@ export class DataLayer {
       regions: options.regions ?? ['eu', 'us'],
       markets: options.markets ?? ['h2h', 'spreads', 'totals'],
     };
-    
+
     // Use provided sportKey or map from internal sport type
     const resolvedSportKey = options.sportKey || this.mapSportToOddsKey(sport);
-    
+
     const cacheKey = this.getCacheKey('getOdds', { sport: resolvedSportKey, homeTeam, awayTeam, ...opts });
     const cached = this.getFromCache<DataLayerResponse<NormalizedOdds[]>>(cacheKey);
     if (cached) return cached;
-    
+
     this.log('getOdds', { sport, sportKey: resolvedSportKey, homeTeam, awayTeam, options: opts });
-    
+
     // Check if odds API is configured
     if (!theOddsClient.isConfigured()) {
       return {
@@ -733,14 +733,14 @@ export class DataLayer {
         },
       };
     }
-    
+
     try {
       // Use resolved sport key for the API call
       const oddsResponse = await theOddsClient.getOddsForSport(resolvedSportKey, {
         regions: opts.regions,
         markets: opts.markets,
       });
-      
+
       if (!oddsResponse.data || oddsResponse.data.length === 0) {
         return {
           success: false,
@@ -755,12 +755,12 @@ export class DataLayer {
           },
         };
       }
-      
+
       // Find the matching event
-      const matchingEvent = oddsResponse.data.find((e: { home_team: string; away_team: string }) => 
+      const matchingEvent = oddsResponse.data.find((e: { home_team: string; away_team: string }) =>
         this.fuzzyMatchTeam(e.home_team, homeTeam) && this.fuzzyMatchTeam(e.away_team, awayTeam)
       );
-      
+
       if (!matchingEvent || !matchingEvent.bookmakers || matchingEvent.bookmakers.length === 0) {
         return {
           success: false,
@@ -775,7 +775,7 @@ export class DataLayer {
           },
         };
       }
-      
+
       // Normalize the odds data
       const normalizedOdds: NormalizedOdds[] = matchingEvent.bookmakers.map((bookmaker: {
         key: string;
@@ -789,7 +789,7 @@ export class DataLayer {
         const h2hMarket = bookmaker.markets?.find((m: { key: string }) => m.key === 'h2h');
         const spreadsMarket = bookmaker.markets?.find((m: { key: string }) => m.key === 'spreads');
         const totalsMarket = bookmaker.markets?.find((m: { key: string }) => m.key === 'totals');
-        
+
         const normalized: NormalizedOdds = {
           matchId: matchingEvent.id,
           sport,
@@ -798,19 +798,19 @@ export class DataLayer {
           provider: 'the-odds-api',
           fetchedAt: new Date(),
         };
-        
+
         // H2H (Moneyline)
         if (h2hMarket?.outcomes) {
-          const homeOutcome = h2hMarket.outcomes.find((o: { name: string; price: number }) => 
+          const homeOutcome = h2hMarket.outcomes.find((o: { name: string; price: number }) =>
             this.fuzzyMatchTeam(o.name, homeTeam)
           );
-          const awayOutcome = h2hMarket.outcomes.find((o: { name: string; price: number }) => 
+          const awayOutcome = h2hMarket.outcomes.find((o: { name: string; price: number }) =>
             this.fuzzyMatchTeam(o.name, awayTeam)
           );
-          const drawOutcome = h2hMarket.outcomes.find((o: { name: string; price: number }) => 
+          const drawOutcome = h2hMarket.outcomes.find((o: { name: string; price: number }) =>
             o.name.toLowerCase() === 'draw'
           );
-          
+
           if (homeOutcome && awayOutcome) {
             normalized.moneyline = {
               home: homeOutcome.price,
@@ -819,16 +819,16 @@ export class DataLayer {
             };
           }
         }
-        
+
         // Spreads
         if (spreadsMarket?.outcomes) {
-          const homeSpread = spreadsMarket.outcomes.find((o: { name: string }) => 
+          const homeSpread = spreadsMarket.outcomes.find((o: { name: string }) =>
             this.fuzzyMatchTeam(o.name, homeTeam)
           );
-          const awaySpread = spreadsMarket.outcomes.find((o: { name: string }) => 
+          const awaySpread = spreadsMarket.outcomes.find((o: { name: string }) =>
             this.fuzzyMatchTeam(o.name, awayTeam)
           );
-          
+
           if (homeSpread && awaySpread) {
             normalized.spread = {
               home: { line: homeSpread.point ?? 0, odds: homeSpread.price },
@@ -836,16 +836,16 @@ export class DataLayer {
             };
           }
         }
-        
+
         // Totals
         if (totalsMarket?.outcomes) {
-          const over = totalsMarket.outcomes.find((o: { name: string }) => 
+          const over = totalsMarket.outcomes.find((o: { name: string }) =>
             o.name.toLowerCase() === 'over'
           );
-          const under = totalsMarket.outcomes.find((o: { name: string }) => 
+          const under = totalsMarket.outcomes.find((o: { name: string }) =>
             o.name.toLowerCase() === 'under'
           );
-          
+
           if (over && under) {
             normalized.total = {
               over: { line: over.point ?? 0, odds: over.price },
@@ -853,10 +853,10 @@ export class DataLayer {
             };
           }
         }
-        
+
         return normalized;
       });
-      
+
       const result: DataLayerResponse<NormalizedOdds[]> = {
         success: true,
         data: normalizedOdds,
@@ -868,10 +868,10 @@ export class DataLayer {
           quotaRemaining: oddsResponse.requestsRemaining,
         },
       };
-      
+
       this.setCache(cacheKey, result);
       return result;
-      
+
     } catch (error) {
       console.error('[DataLayer] Error fetching odds:', error);
       return {
@@ -888,7 +888,7 @@ export class DataLayer {
       };
     }
   }
-  
+
   /**
    * Map internal sport type to The Odds API sport key
    */
@@ -904,7 +904,7 @@ export class DataLayer {
     };
     return mapping[sport] || sport;
   }
-  
+
   /**
    * Fuzzy match team names (handles partial matches)
    * Improved to handle teams that share common words (e.g., "Real Madrid" vs "Real Betis")
@@ -912,35 +912,35 @@ export class DataLayer {
   private fuzzyMatchTeam(oddsName: string, teamName: string): boolean {
     const n1 = oddsName.toLowerCase().trim();
     const n2 = teamName.toLowerCase().trim();
-    
+
     // Exact match
     if (n1 === n2) return true;
-    
+
     // One contains the other fully
     if (n1.includes(n2) || n2.includes(n1)) return true;
-    
+
     // Split into words and check for significant word matches
     const words1 = n1.split(/\s+/).filter(w => w.length > 2);
     const words2 = n2.split(/\s+/).filter(w => w.length > 2);
-    
+
     // Skip common prefixes like "Real", "FC", "CF", "AC", "AS", "SC"
     const commonPrefixes = ['real', 'fc', 'cf', 'ac', 'as', 'sc', 'cd', 'ud', 'rc', 'rcd', 'athletic', 'atletico'];
     const significantWords1 = words1.filter(w => !commonPrefixes.includes(w));
     const significantWords2 = words2.filter(w => !commonPrefixes.includes(w));
-    
+
     // If we have significant words, match on those
     if (significantWords1.length > 0 && significantWords2.length > 0) {
-      return significantWords1.some(w1 => 
+      return significantWords1.some(w1 =>
         significantWords2.some(w2 => w1.includes(w2) || w2.includes(w1))
       );
     }
-    
+
     // Fallback: check if any word matches (excluding very short words)
-    return words1.some(w1 => 
+    return words1.some(w1 =>
       words2.some(w2 => (w1.length >= 4 && w2.length >= 4) && (w1.includes(w2) || w2.includes(w1)))
     );
   }
-  
+
   /**
    * Get enriched match data for analysis
    * This is the main method agents should use for match analysis
@@ -968,19 +968,19 @@ export class DataLayer {
       h2hLimit: options.h2hLimit ?? 5,
       league: options.league,
     };
-    
+
     this.log('getEnrichedMatchData', { sport, homeTeam, awayTeam, options: opts });
-    
+
     // Find both teams - pass league to help resolve teams in less popular leagues
     const [homeTeamResult, awayTeamResult] = await Promise.all([
       this.findTeam({ name: homeTeam, sport, league: opts.league }),
       this.findTeam({ name: awayTeam, sport, league: opts.league }),
     ]);
-    
+
     // Log team lookup results
     console.log(`[DataLayer] Home team lookup: ${homeTeamResult.success ? homeTeamResult.data?.name : 'FAILED - ' + homeTeamResult.error?.message}`);
     console.log(`[DataLayer] Away team lookup: ${awayTeamResult.success ? awayTeamResult.data?.name : 'FAILED - ' + awayTeamResult.error?.message}`);
-    
+
     // If BOTH teams fail, return error (can't do anything without teams)
     if (!homeTeamResult.success && !awayTeamResult.success) {
       return {
@@ -996,7 +996,7 @@ export class DataLayer {
         },
       };
     }
-    
+
     // Create placeholder team if one fails (allows partial data to still work)
     const createPlaceholderTeam = (name: string): NormalizedTeam => ({
       id: `placeholder-${name.toLowerCase().replace(/\s+/g, '-')}`,
@@ -1005,33 +1005,46 @@ export class DataLayer {
       shortName: name.split(' ').pop() || name,
       sport,
     });
-    
-    const home = homeTeamResult.success && homeTeamResult.data 
-      ? homeTeamResult.data 
+
+    const home = homeTeamResult.success && homeTeamResult.data
+      ? homeTeamResult.data
       : createPlaceholderTeam(homeTeam);
-      
-    const away = awayTeamResult.success && awayTeamResult.data 
-      ? awayTeamResult.data 
+
+    const away = awayTeamResult.success && awayTeamResult.data
+      ? awayTeamResult.data
       : createPlaceholderTeam(awayTeam);
-    
+
     const homeFound = homeTeamResult.success && homeTeamResult.data;
     const awayFound = awayTeamResult.success && awayTeamResult.data;
-    
+
+    // FIX: Log why stats might not be fetched
+    console.log(`[DataLayer] Team found status: home=${homeFound}, away=${awayFound}, includeStats=${opts.includeStats}`);
+    if (!homeFound) {
+      console.log(`[DataLayer] HOME TEAM NOT FOUND - stats will be null! Error: ${homeTeamResult.error?.message}`);
+    }
+    if (!awayFound) {
+      console.log(`[DataLayer] AWAY TEAM NOT FOUND - stats will be null! Error: ${awayTeamResult.error?.message}`);
+    }
+
     // Fetch data in parallel (only for teams we found)
     const promises: Promise<unknown>[] = [];
-    
+
     // Stats - only fetch if team was found
     if (opts.includeStats && homeFound) {
+      console.log(`[DataLayer] Fetching home stats for teamId: ${home.externalId}`);
       promises.push(this.getTeamStats({ teamId: home.externalId, sport }));
     } else {
+      console.log(`[DataLayer] SKIPPING home stats fetch (homeFound=${homeFound}, includeStats=${opts.includeStats})`);
       promises.push(Promise.resolve(null));
     }
     if (opts.includeStats && awayFound) {
+      console.log(`[DataLayer] Fetching away stats for teamId: ${away.externalId}`);
       promises.push(this.getTeamStats({ teamId: away.externalId, sport }));
     } else {
+      console.log(`[DataLayer] SKIPPING away stats fetch (awayFound=${awayFound}, includeStats=${opts.includeStats})`);
       promises.push(Promise.resolve(null));
     }
-    
+
     // Recent games - only fetch if team was found
     if (opts.includeRecentGames && homeFound) {
       promises.push(this.getRecentGames(sport, home.externalId, opts.recentGamesLimit));
@@ -1043,14 +1056,14 @@ export class DataLayer {
     } else {
       promises.push(Promise.resolve(null));
     }
-    
+
     // H2H - only if both teams found
     if (opts.includeH2H && homeFound && awayFound) {
       promises.push(this.getH2H({ team1: homeTeam, team2: awayTeam, sport, limit: opts.h2hLimit }));
     } else {
       promises.push(Promise.resolve(null));
     }
-    
+
     // Injuries - only fetch if team was found
     if (opts.includeInjuries && homeFound) {
       promises.push(this.getInjuries(sport, home.externalId));
@@ -1062,7 +1075,7 @@ export class DataLayer {
     } else {
       promises.push(Promise.resolve(null));
     }
-    
+
     const [
       homeStats,
       awayStats,
@@ -1080,7 +1093,7 @@ export class DataLayer {
       DataLayerResponse<NormalizedInjury[]> | null,
       DataLayerResponse<NormalizedInjury[]> | null,
     ];
-    
+
     // Build enriched data
     const enrichedData: EnrichedMatchData = {
       match: {
@@ -1097,26 +1110,26 @@ export class DataLayer {
         provider: 'api-sports',
         fetchedAt: new Date(),
       },
-      
+
       homeTeam: {
         team: home,
         stats: homeStats?.success ? homeStats.data : undefined,
         recentGames: homeGames?.success ? homeGames.data : undefined,
         injuries: homeInjuries?.success ? homeInjuries.data : undefined,
       },
-      
+
       awayTeam: {
         team: away,
         stats: awayStats?.success ? awayStats.data : undefined,
         recentGames: awayGames?.success ? awayGames.data : undefined,
         injuries: awayInjuries?.success ? awayInjuries.data : undefined,
       },
-      
+
       h2h: h2h?.success ? h2h.data : undefined,
-      
+
       fetchedAt: new Date(),
     };
-    
+
     return {
       success: true,
       data: enrichedData,
@@ -1127,7 +1140,7 @@ export class DataLayer {
       },
     };
   }
-  
+
   /**
    * Clear the cache
    */
@@ -1135,7 +1148,7 @@ export class DataLayer {
     this.cache.clear();
     this.log('Cache cleared');
   }
-  
+
   /**
    * Get cache stats
    */

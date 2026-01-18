@@ -852,6 +852,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         awayFormGames: enrichedData.awayForm?.length || 0,
         h2hGames: enrichedData.headToHead?.length || 0,
         h2hSummary: enrichedData.h2hSummary,
+        // FIX: Log stats to diagnose why they might be missing
+        homeStatsAvailable: !!enrichedData.homeStats,
+        awayStatsAvailable: !!enrichedData.awayStats,
+        homeGoalsScored: enrichedData.homeStats?.goalsScored,
+        awayGoalsScored: enrichedData.awayStats?.goalsScored,
       });
     } catch (sportError) {
       console.error(`[Match-Preview] Sport API error for ${matchInfo.sport}:`, sportError);
