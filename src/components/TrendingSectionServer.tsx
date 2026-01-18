@@ -14,7 +14,7 @@ import { MatchData } from '@/types';
 // Fetch trending matches on server with caching
 async function fetchTrendingMatches(maxMatches: number = 6): Promise<TrendingMatch[]> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.sportbotai.com';
-  
+
   const sportsToFetch = [
     'soccer_epl',
     'soccer_spain_la_liga',
@@ -89,8 +89,24 @@ interface TrendingSectionServerProps {
 
 export default function TrendingSectionServer({ maxMatches = 6, locale = 'en' }: TrendingSectionServerProps) {
   return (
-    <section id="trending" className="py-12 sm:py-16 bg-bg-primary scroll-mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="trending" className="relative py-12 sm:py-16 scroll-mt-20 overflow-hidden">
+      {/* Props.Cash style turf background */}
+      <div className="absolute inset-0 bg-[#0a0a0b]">
+        {/* Turf texture */}
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-40"
+          style={{
+            backgroundImage: `url('/images/turf-bg.jpg')`,
+          }}
+        />
+        {/* Dark vignette overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(0,0,0,0.8)_80%)]" />
+        {/* Subtle accent glow */}
+        <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-orange-500/15 rounded-full blur-[100px]" />
+        <div className="absolute -bottom-20 -left-20 w-[250px] h-[250px] bg-accent/10 rounded-full blur-[80px]" />
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -102,7 +118,7 @@ export default function TrendingSectionServer({ maxMatches = 6, locale = 'en' }:
               <p className="text-sm text-gray-400">{locale === 'sr' ? 'Najpopularniji mečevi koji se trenutno dešavaju' : 'Top matches happening now'}</p>
             </div>
           </div>
-          <Link 
+          <Link
             href={locale === 'sr' ? '/sr/matches' : '/matches'}
             className="text-sm text-blue-400 hover:text-blue-300 font-medium hidden sm:flex items-center gap-1 transition-colors"
           >
