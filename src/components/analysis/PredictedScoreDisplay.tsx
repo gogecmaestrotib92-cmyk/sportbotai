@@ -14,8 +14,8 @@ const isHighScoringSport = (sport: string): boolean => {
     return lowerSport.includes('basketball') ||
         lowerSport.includes('nba') ||
         lowerSport.includes('nfl') ||
-        lowerSport.includes('american') ||
-        lowerSport.includes('football') && !lowerSport.includes('soccer');
+        lowerSport.includes('americanfootball') ||
+        (lowerSport.includes('football') && !lowerSport.includes('soccer'));
 };
 
 // i18n translations
@@ -207,8 +207,8 @@ export default function PredictedScoreDisplay({
                             {/* Value Indicator */}
                             {valueIndicator && (
                                 <div className={`text-center py-1.5 px-3 rounded-lg text-xs font-medium ${valueIndicator === 'over'
-                                        ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                                        : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                    ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                    : 'bg-red-500/10 text-red-400 border border-red-500/20'
                                     }`}>
                                     {valueIndicator === 'over' ? `📈 ${t.valueOver}` : `📉 ${t.valueUnder}`}
                                 </div>
@@ -300,8 +300,8 @@ export default function PredictedScoreDisplay({
                         {/* Value Indicator */}
                         {valueIndicator && (
                             <div className={`text-center py-1.5 px-3 rounded-lg text-xs font-medium ${valueIndicator === 'over'
-                                    ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                                    : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                : 'bg-red-500/10 text-red-400 border border-red-500/20'
                                 }`}>
                                 {valueIndicator === 'over' ? `📈 ${t.valueOver}` : `📉 ${t.valueUnder}`}
                             </div>

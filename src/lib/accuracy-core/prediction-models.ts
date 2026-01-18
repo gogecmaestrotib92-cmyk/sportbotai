@@ -613,16 +613,16 @@ export function getExpectedScores(
 
   // Get the appropriate league average based on sport type
   let leagueAvgPerTeam: number;
-  if (input.sport === 'basketball') {
+  if (input.sport.includes('basketball')) {
     // leagueAvgPoints is already PER TEAM (110)
     leagueAvgPerTeam = input.leagueAverageGoals ||
       ('leagueAvgPoints' in config ? (config as typeof SPORT_CONFIG.basketball).leagueAvgPoints : 110);
-  } else if (input.sport === 'football') {
-    // leagueAvgPoints is already PER TEAM (22)
+  } else if (input.sport.includes('football') && !input.sport.includes('soccer')) {
+    // leagueAvgPoints is already PER TEAM (22) - American football only
     leagueAvgPerTeam = input.leagueAverageGoals ||
       ('leagueAvgPoints' in config ? (config as typeof SPORT_CONFIG.football).leagueAvgPoints : 22);
-  } else if (input.sport === 'hockey') {
-    // leagueAvgGoals is TOTAL, divide by 2
+  } else if (input.sport.includes('hockey') || input.sport.includes('nhl')) {
+    // NHL: leagueAvgGoals is TOTAL per game, divide by 2 for per-team
     const totalGoals = input.leagueAverageGoals ||
       ('leagueAvgGoals' in config ? (config as typeof SPORT_CONFIG.hockey).leagueAvgGoals : 2.8);
     leagueAvgPerTeam = totalGoals / 2;
