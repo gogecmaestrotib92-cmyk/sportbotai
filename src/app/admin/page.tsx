@@ -338,6 +338,38 @@ async function getFeedbackStats() {
  * ================================================================
  */
 
+/**
+ * Normalize sport keys to handle fragmented/inconsistent data
+ * e.g., basketball_nba_nba → basketball_nba, soccer_italy-serie-a → soccer_italy_serie_a
+ */
+function normalizeSportKey(sport: string): string {
+  const lower = sport.toLowerCase();
+
+  // Basketball
+  if (lower.includes('nba')) return 'basketball_nba';
+  if (lower.includes('euroleague')) return 'basketball_euroleague';
+  if (lower.includes('basketball')) return 'basketball_nba';
+
+  // American Football  
+  if (lower.includes('nfl') || lower.includes('americanfootball')) return 'americanfootball_nfl';
+
+  // Ice Hockey
+  if (lower.includes('nhl') || lower.includes('hockey')) return 'icehockey_nhl';
+
+  // Soccer leagues
+  if (lower.includes('epl') || lower.includes('premier')) return 'soccer_epl';
+  if (lower.includes('la_liga') || lower.includes('spain')) return 'soccer_spain_la_liga';
+  if (lower.includes('serie_a') || lower.includes('serie-a') || lower.includes('italy')) return 'soccer_italy_serie_a';
+  if (lower.includes('bundesliga') || lower.includes('germany')) return 'soccer_germany_bundesliga';
+  if (lower.includes('ligue') || lower.includes('france')) return 'soccer_france_ligue_one';
+  if (lower.includes('eredivisie') || lower.includes('netherlands')) return 'soccer_netherlands_eredivisie';
+  if (lower.includes('belgium')) return 'soccer_belgium_first_div';
+  if (lower.includes('spl') || lower.includes('scotland')) return 'soccer_spl';
+
+  // Default: return cleaned version
+  return lower.replace(/-/g, '_').replace(/_+/g, '_');
+}
+
 interface EdgeBucketStats {
   bucket: string;
   count: number;
@@ -613,12 +645,13 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
       : 0;
     const positiveCLV = predictionsWithCLV.filter(p => (p.clvValue ?? 0) > 0);
 
-    // CLV by sport
+    // CLV by sport - use normalized key
     const clvBySport: Record<string, { total: number; count: number }> = {};
     for (const p of predictionsWithCLV) {
-      if (!clvBySport[p.sport]) clvBySport[p.sport] = { total: 0, count: 0 };
-      clvBySport[p.sport].total += p.clvValue ?? 0;
-      clvBySport[p.sport].count++;
+      const normalizedSport = normalizeSportKey(p.sport);
+      if (!clvBySport[normalizedSport]) clvBySport[normalizedSport] = { total: 0, count: 0 };
+      clvBySport[normalizedSport].total += p.clvValue ?? 0;
+      clvBySport[normalizedSport].count++;
     }
 
     const clvStats: CLVStats = {
@@ -672,10 +705,11 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
       roiBuckets[bucket].bets++;
       roiBuckets[bucket].profit += profit;
 
-      // By sport
-      if (!roiSports[p.sport]) roiSports[p.sport] = { bets: 0, profit: 0 };
-      roiSports[p.sport].bets++;
-      roiSports[p.sport].profit += profit;
+      // By sport - use normalized key
+      const normalizedSport = normalizeSportKey(p.sport);
+      if (!roiSports[normalizedSport]) roiSports[normalizedSport] = { bets: 0, profit: 0 };
+      roiSports[normalizedSport].bets++;
+      roiSports[normalizedSport].profit += profit;
     }
 
     const netProfit = totalReturn - totalBets;
@@ -712,11 +746,12 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
     for (const p of predictions) {
       if (p.binaryOutcome === null) continue;
 
-      // Sport
-      if (!sportStats[p.sport]) sportStats[p.sport] = { count: 0, wins: 0, totalEdge: 0 };
-      sportStats[p.sport].count++;
-      if (p.binaryOutcome === 1) sportStats[p.sport].wins++;
-      sportStats[p.sport].totalEdge += p.edgeValue ?? p.valueBetEdge ?? 0;
+      // Sport - use normalized key to consolidate fragmented data
+      const normalizedSport = normalizeSportKey(p.sport);
+      if (!sportStats[normalizedSport]) sportStats[normalizedSport] = { count: 0, wins: 0, totalEdge: 0 };
+      sportStats[normalizedSport].count++;
+      if (p.binaryOutcome === 1) sportStats[normalizedSport].wins++;
+      sportStats[normalizedSport].totalEdge += p.edgeValue ?? p.valueBetEdge ?? 0;
 
       // League
       if (!leagueStats[p.league]) leagueStats[p.league] = { count: 0, wins: 0, totalEdge: 0 };
