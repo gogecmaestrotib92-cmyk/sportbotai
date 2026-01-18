@@ -1725,6 +1725,49 @@ export async function GET(request: NextRequest) {
             console.log(`[Pre-Analyze] Blog skipped (low importance): ${matchRef} (score: ${blogImportance.score})`);
           }
 
+          // ============================================
+          // STORE FULL RESPONSE FOR AI CHAT (UNCONDITIONAL)
+          // ============================================
+          // This runs for ALL matches, not just value bets
+          // Ensures chat can display analysis even for non-value matches
+          try {
+            const predictionDateStr = new Date(event.commence_time).toISOString().split('T')[0];
+            const chatPredictionId = `pre_${sport.key}_${event.id}_${predictionDateStr}`;
+
+            await prisma.prediction.upsert({
+              where: { id: chatPredictionId },
+              create: {
+                id: chatPredictionId,
+                matchId: event.id,
+                matchName: matchRef,
+                sport: sport.key,
+                league: sport.league,
+                kickoff: new Date(event.commence_time),
+                type: 'MATCH_RESULT',
+                prediction: `${event.home_team} vs ${event.away_team}`,
+                reasoning: analysis.story?.narrative || 'AI-generated match analysis',
+                conviction: 5,
+                source: 'PRE_ANALYZE',
+                outcome: 'PENDING',
+                homeWin: pipelineProbabilitiesForUI.home,
+                awayWin: pipelineProbabilitiesForUI.away,
+                draw: pipelineProbabilitiesForUI.draw || null,
+                predictedScore: `${expectedScores.home}-${expectedScores.away}`,
+                fullResponse: JSON.parse(JSON.stringify(cacheResponse)),
+              },
+              update: {
+                homeWin: pipelineProbabilitiesForUI.home,
+                awayWin: pipelineProbabilitiesForUI.away,
+                draw: pipelineProbabilitiesForUI.draw || null,
+                predictedScore: `${expectedScores.home}-${expectedScores.away}`,
+                fullResponse: JSON.parse(JSON.stringify(cacheResponse)),
+              },
+            });
+            console.log(`[Pre-Analyze] ✅ Stored fullResponse for chat: ${matchRef}`);
+          } catch (fullResponseError) {
+            console.error(`[Pre-Analyze] Failed to store fullResponse:`, fullResponseError);
+          }
+
           // Create Prediction record for accuracy tracking
           try {
             // Pipeline already ran above - use pipelineProbs and pipelineEdge
