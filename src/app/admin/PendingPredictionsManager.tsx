@@ -42,9 +42,9 @@ export default function PendingPredictionsManager({
     setMessage(null);
 
     try {
-      // Call track-predictions API to fetch and update results
-      const response = await fetch('/api/cron/track-predictions', {
-        method: 'GET',
+      // Call admin API that internally triggers track-predictions with proper auth
+      const response = await fetch('/api/admin/predictions/fetch-results', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
 
