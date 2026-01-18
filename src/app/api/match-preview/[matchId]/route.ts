@@ -48,6 +48,56 @@ interface RouteParams {
 }
 
 /**
+ * Find a matching blog article for this match by team names
+ * Returns the slug if found, null otherwise
+ */
+async function findMatchingBlogArticle(homeTeam: string, awayTeam: string): Promise<string | null> {
+  try {
+    // Normalize team names for matching
+    const normalizeTeam = (name: string) =>
+      name.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+
+    const homeNorm = normalizeTeam(homeTeam);
+    const awayNorm = normalizeTeam(awayTeam);
+
+    // Find blog post where slug contains both team names or has matching homeTeam/awayTeam fields
+    const article = await prisma.blogPost.findFirst({
+      where: {
+        status: 'PUBLISHED',
+        OR: [
+          // Match by homeTeam and awayTeam fields (exact match)
+          {
+            AND: [
+              { homeTeam: { contains: homeTeam, mode: 'insensitive' } },
+              { awayTeam: { contains: awayTeam, mode: 'insensitive' } },
+            ]
+          },
+          // Match by slug containing both team name patterns
+          {
+            AND: [
+              { slug: { contains: homeTeam.toLowerCase().replace(/\s+/g, '-'), mode: 'insensitive' } },
+              { slug: { contains: awayTeam.toLowerCase().replace(/\s+/g, '-'), mode: 'insensitive' } },
+            ]
+          },
+        ]
+      },
+      select: { slug: true },
+      orderBy: { publishedAt: 'desc' },
+    });
+
+    if (article) {
+      console.log(`[Match-Preview] Found matching blog article: ${article.slug}`);
+      return article.slug;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('[Match-Preview] Error finding blog article:', error);
+    return null;
+  }
+}
+
+/**
  * Fetch injuries using hybrid approach:
  * - Perplexity as PRIMARY (real-time news, accurate team assignments)
  * - API-Sports as FALLBACK (structured but sometimes has data quality issues)
@@ -1367,12 +1417,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Get sport config for terminology
     const sportConfig = getSportConfig(matchInfo.sport);
 
+    // Look up matching blog article for this match
+    const blogSlug = await findMatchingBlogArticle(matchInfo.homeTeam, matchInfo.awayTeam);
+
     const response = {
       matchInfo: {
         id: matchId,
         homeTeam: matchInfo.homeTeam,
         awayTeam: matchInfo.awayTeam,
         league: matchInfo.league,
+        blogSlug, // Include blog slug if a matching article exists
         sport: matchInfo.sport,
         hasDraw: sportConfig.hasDraw,
         scoringUnit: sportConfig.scoringUnit,
