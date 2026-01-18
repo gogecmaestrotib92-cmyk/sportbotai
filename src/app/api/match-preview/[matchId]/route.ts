@@ -1126,6 +1126,32 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       averageConceded: awayStatsRaw?.averageConceded,
     };
 
+    // FIX: When raw stats are missing (goalsScored=0), estimate from form or use league averages
+    // This prevents the Poisson model from returning unrealistic 1:1 scores
+    const isSoccerMatch = !matchInfo.sport.includes('basketball') &&
+      !matchInfo.sport.includes('nba') &&
+      !matchInfo.sport.includes('football') &&
+      !matchInfo.sport.includes('nfl') &&
+      !matchInfo.sport.includes('hockey') &&
+      !matchInfo.sport.includes('nhl');
+
+    if (isSoccerMatch && homeStats.goalsScored === 0 && homeStats.played > 0) {
+      // No API stats - estimate goals from form (W=2 goals, D=1 goal, L=0.5 goals avg)
+      const estimatedHomeGoals = (homeFormCounts.wins * 2) + (homeFormCounts.draws * 1) + (homeFormCounts.losses * 0.5);
+      const estimatedHomeConceded = (homeFormCounts.losses * 2) + (homeFormCounts.draws * 1) + (homeFormCounts.wins * 0.5);
+      homeStats.goalsScored = Math.max(1, estimatedHomeGoals);
+      homeStats.goalsConceded = Math.max(1, estimatedHomeConceded);
+      console.log(`[Match-Preview] Estimated home goals from form: scored=${homeStats.goalsScored}, conceded=${homeStats.goalsConceded}`);
+    }
+
+    if (isSoccerMatch && awayStats.goalsScored === 0 && awayStats.played > 0) {
+      const estimatedAwayGoals = (awayFormCounts.wins * 2) + (awayFormCounts.draws * 1) + (awayFormCounts.losses * 0.5);
+      const estimatedAwayConceded = (awayFormCounts.losses * 2) + (awayFormCounts.draws * 1) + (awayFormCounts.wins * 0.5);
+      awayStats.goalsScored = Math.max(1, estimatedAwayGoals);
+      awayStats.goalsConceded = Math.max(1, estimatedAwayConceded);
+      console.log(`[Match-Preview] Estimated away goals from form: scored=${awayStats.goalsScored}, conceded=${awayStats.goalsConceded}`);
+    }
+
     // H2H summary
     const h2h = {
       totalMeetings: enrichedData.h2hSummary?.totalMatches || 0,
