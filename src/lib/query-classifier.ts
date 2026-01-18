@@ -239,7 +239,7 @@ CLASSIFICATION RULES:
    - STATS: Questions about player/team statistics, averages, totals, performance numbers
    - PLAYER_PROP: Specific over/under questions on player stats (e.g., "Jokic over 25.5 points")
    - BETTING_ADVICE: "Should I bet?", "Is this a good bet?", "Which team to bet on?"
-   - MATCH_ANALYSIS: "Analyze X vs Y", "Breakdown of match", "What do you think about X vs Y"
+   - MATCH_ANALYSIS: Match predictions/previews - "Analyze X vs Y", "X vs Y prediction", "What do you think about [team1] vs [team2]", any query asking for match analysis, preview, or prediction between two TEAMS
    - INJURY: Injury status, updates, who's out, availability
    - FIXTURE: When is the game, what time, schedule
    - RESULT: Final scores, who won, match results
@@ -249,8 +249,13 @@ CLASSIFICATION RULES:
    - FORM: Recent form, winning/losing streaks
    - LINEUP: Starting lineups, expected XI
    - TRANSFER: Transfer news, rumors, signings
-   - COMPARISON: X vs Y (player comparison), who is better
+   - COMPARISON: ONLY for PLAYER comparisons like "who is better, LeBron or Jordan?", "compare Messi and Ronaldo". This is NOT for team vs team match analysis!
    - GENERAL: Anything else sports-related
+
+CRITICAL DISTINCTION:
+- "analyze Lakers vs Celtics" = MATCH_ANALYSIS (team vs team match prediction)
+- "who is better, LeBron or Curry?" = COMPARISON (player vs player comparison)
+- If the query mentions "analyze", "prediction", "preview", or asks about an upcoming/recent MATCH between two TEAMS, use MATCH_ANALYSIS, NOT COMPARISON.
 
 2. SPORT DETECTION:
    - Look for team names, player names, league mentions
