@@ -21,18 +21,19 @@ interface HeroI18nProps {
 export default function HeroI18n({ t, locale }: HeroI18nProps) {
   const matchesHref = locale === 'sr' ? '/sr/matches' : '/matches';
   const aiDeskHref = locale === 'sr' ? '/sr/ai-desk' : '/ai-desk';
-  
+
   return (
     <section className="relative bg-bg-primary overflow-hidden">
       {/* Video Background (desktop) / Static Image (mobile) */}
       <VideoBackground
         videoSrc="/videos/hero-bg.mp4"
         overlayOpacity={0.45}
+        disableOnMobile={true}
       />
-      
+
       {/* Extra dark overlay for better text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/60 pointer-events-none" />
-      
+
       {/* Additional decorative elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 right-0 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-primary/5 rounded-full blur-[80px] sm:blur-[120px]" />
@@ -67,14 +68,14 @@ export default function HeroI18n({ t, locale }: HeroI18nProps) {
 
             {/* CTA Buttons - Stack on mobile */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
-              <Link 
-                href={matchesHref} 
+              <Link
+                href={matchesHref}
                 className="btn-primary text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto glow-accent-strong"
               >
                 {t.hero.ctaPrimary}
               </Link>
-              <Link 
-                href={aiDeskHref} 
+              <Link
+                href={aiDeskHref}
                 className="btn-secondary inline-flex items-center justify-center gap-2 text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto"
               >
                 <span>🧠</span>
