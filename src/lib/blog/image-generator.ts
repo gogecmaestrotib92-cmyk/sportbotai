@@ -23,7 +23,7 @@ async function generateImagePrompt(
   imageDescription?: string
 ): Promise<string> {
   const context = imageDescription || `blog header for article about ${keyword}`;
-  
+
   const response = await openai.chat.completions.create({
     model: 'gpt-4.1-nano',
     messages: [{
@@ -58,7 +58,7 @@ Return ONLY the prompt text, nothing else. Keep it under 200 words.`
 // Fallback prompt if GPT fails
 function createFallbackPrompt(keyword: string, category: string): string {
   const baseStyle = "modern, clean, professional digital illustration, minimalist design, tech aesthetic, blue and green color scheme, dark background";
-  
+
   const categoryPrompts: Record<string, string> = {
     "Betting Fundamentals": "abstract data visualization, flowing charts and graphs, mathematical symbols, probability waves",
     "Sports Analysis": "dynamic sports stadium silhouette, data streams overlaying athletic motion, holographic dashboard",
@@ -80,7 +80,7 @@ export async function generateFeaturedImage(
 ): Promise<ImageGenerationResult> {
   console.log('[Image Generator] Generating smart prompt with GPT-4.1 nano...');
   const prompt = await generateImagePrompt(title, keyword, category);
-  
+
   console.log('[Image Generator] Starting image generation for:', keyword);
   console.log('[Image Generator] Prompt:', prompt.substring(0, 150) + '...');
 
@@ -105,7 +105,7 @@ export async function generateFeaturedImage(
 
     console.log('[Image Generator] Image URL:', imageUrl);
     const blobUrl = await uploadToBlob(imageUrl, keyword);
-    
+
     return {
       url: blobUrl,
       alt: `${title} - SportBot AI`,
@@ -113,8 +113,138 @@ export async function generateFeaturedImage(
     };
 
   } catch (error) {
-    console.error('[Image Generator] Error:', error);
-    throw error;
+    console.error('[Image Generator] Replicate error, using SVG fallback:', error);
+
+    // FALLBACK: Generate professional SVG-based image (like match previews)
+    return await generateSVGFeaturedImage(title, keyword, category);
+  }
+}
+
+// SVG-based fallback image generator (no external API required)
+async function generateSVGFeaturedImage(
+  title: string,
+  keyword: string,
+  category: string
+): Promise<ImageGenerationResult> {
+  console.log('[Image Generator] Generating SVG fallback for:', keyword);
+
+  // Escape special characters for SVG
+  const escapeXml = (str: string) => str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+  // Truncate title for display
+  const displayTitle = title.length > 50
+    ? title.substring(0, 47) + '...'
+    : title;
+
+  // Word wrap for subtitle (max 2 lines)
+  const words = keyword.split(' ');
+  let line1 = '';
+  let line2 = '';
+  for (const word of words) {
+    if (line1.length + word.length < 40) {
+      line1 += (line1 ? ' ' : '') + word;
+    } else if (line2.length + word.length < 40) {
+      line2 += (line2 ? ' ' : '') + word;
+    }
+  }
+
+  // Category-specific styling
+  const categoryStyles: Record<string, { icon: string; accent1: string; accent2: string }> = {
+    "Betting Fundamentals": { icon: "📊", accent1: "#10b981", accent2: "#059669" },
+    "Sports Analysis": { icon: "⚽", accent1: "#3b82f6", accent2: "#1d4ed8" },
+    "Statistics & Data": { icon: "📈", accent1: "#8b5cf6", accent2: "#6d28d9" },
+    "Risk Management": { icon: "🛡️", accent1: "#f59e0b", accent2: "#d97706" },
+    "Market Insights": { icon: "💰", accent1: "#10b981", accent2: "#059669" },
+    "Educational Guides": { icon: "📚", accent1: "#06b6d4", accent2: "#0891b2" },
+  };
+
+  const style = categoryStyles[category] || categoryStyles["Educational Guides"];
+
+  const svgContent = `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="50%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:${style.accent1}"/>
+      <stop offset="100%" style="stop-color:${style.accent2}"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="20" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Decorative circles -->
+  <circle cx="100" cy="100" r="180" fill="${style.accent1}" opacity="0.1"/>
+  <circle cx="1100" cy="530" r="200" fill="${style.accent2}" opacity="0.1"/>
+  <circle cx="600" cy="315" r="300" fill="${style.accent1}" opacity="0.05"/>
+  
+  <!-- Accent line at bottom -->
+  <rect x="0" y="610" width="1200" height="20" fill="url(#accent)"/>
+  
+  <!-- Category badge -->
+  <rect x="450" y="80" width="300" height="50" rx="25" fill="#1e293b" stroke="${style.accent1}" stroke-width="2"/>
+  <text x="600" y="113" text-anchor="middle" fill="${style.accent1}" font-family="Arial, sans-serif" font-size="18" font-weight="600">${escapeXml(category)}</text>
+  
+  <!-- Icon -->
+  <text x="600" y="250" text-anchor="middle" font-size="80">${style.icon}</text>
+  
+  <!-- Title text -->
+  <text x="600" y="340" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="36" font-weight="700">${escapeXml(displayTitle)}</text>
+  
+  <!-- Subtitle lines -->
+  <text x="600" y="400" text-anchor="middle" fill="#94a3b8" font-family="Arial, sans-serif" font-size="22">${escapeXml(line1)}</text>
+  ${line2 ? `<text x="600" y="430" text-anchor="middle" fill="#94a3b8" font-family="Arial, sans-serif" font-size="22">${escapeXml(line2)}</text>` : ''}
+  
+  <!-- SportBot AI Branding -->
+  <rect x="450" y="500" width="300" height="60" rx="30" fill="#1e293b"/>
+  <text x="600" y="538" text-anchor="middle" fill="${style.accent1}" font-family="Arial, sans-serif" font-size="24" font-weight="700">SportBot AI</text>
+  <text x="600" y="590" text-anchor="middle" fill="#64748b" font-family="Arial, sans-serif" font-size="14">AI-Powered Sports Intelligence</text>
+</svg>`;
+
+  try {
+    // Upload SVG to Vercel Blob
+    const slug = keyword
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 50);
+
+    const blob = await put(
+      `blog/${slug}-${Date.now()}.svg`,
+      svgContent,
+      {
+        access: 'public',
+        contentType: 'image/svg+xml',
+      }
+    );
+
+    console.log('[Image Generator] SVG fallback uploaded:', blob.url);
+
+    return {
+      url: blob.url,
+      alt: `${title} - SportBot AI`,
+      prompt: 'SVG fallback (Replicate unavailable)',
+    };
+  } catch (uploadError) {
+    console.error('[Image Generator] SVG upload failed:', uploadError);
+    // Final fallback to placeholder
+    return {
+      url: getPlaceholderImage(keyword),
+      alt: `${title} - SportBot AI`,
+      prompt: 'placeholder fallback',
+    };
   }
 }
 
@@ -126,7 +256,7 @@ export async function generateContentImage(
   index: number
 ): Promise<ImageGenerationResult> {
   console.log(`[Image Generator] Generating content image ${index + 1}: ${imageDescription.substring(0, 50)}...`);
-  
+
   const prompt = await generateImagePrompt(
     imageDescription,
     keyword,
@@ -154,7 +284,7 @@ export async function generateContentImage(
     }
 
     const blobUrl = await uploadToBlob(imageUrl, `${keyword}-inline-${index}`);
-    
+
     return {
       url: blobUrl,
       alt: imageDescription,
@@ -193,7 +323,7 @@ async function extractImageUrl(output: unknown): Promise<string | null> {
 // Upload image from URL to Vercel Blob
 async function uploadToBlob(imageUrl: string, keyword: string): Promise<string> {
   const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-  
+
   // Check if token exists and is not a placeholder
   if (!blobToken || blobToken.includes('your_blob_token') || blobToken.length < 50) {
     console.error('[Image Generator] BLOB_READ_WRITE_TOKEN not properly configured!');
@@ -204,7 +334,7 @@ async function uploadToBlob(imageUrl: string, keyword: string): Promise<string> 
 
   try {
     console.log('[Image Generator] Downloading image from Replicate...');
-    
+
     // Fetch the image
     const response = await fetch(imageUrl);
     if (!response.ok) {
@@ -213,14 +343,14 @@ async function uploadToBlob(imageUrl: string, keyword: string): Promise<string> 
 
     const imageBuffer = await response.arrayBuffer();
     console.log(`[Image Generator] Downloaded ${imageBuffer.byteLength} bytes`);
-    
+
     // Create a slug-friendly filename
     const slug = keyword
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
       .substring(0, 50);
-    
+
     const filename = `blog/${slug}-${Date.now()}.webp`;
     console.log(`[Image Generator] Uploading to Vercel Blob: ${filename}`);
 
