@@ -10,7 +10,7 @@
 import { Metadata } from 'next';
 import HeroABTest from '@/components/HeroABTest';
 import TrendingSectionServer from '@/components/TrendingSectionServer';
-import HowItWorksStrip from '@/components/HowItWorksStrip';
+import ValueBettingExplainer from '@/components/ValueBettingExplainer';
 import PricingTeaser from '@/components/PricingTeaser';
 import FAQ from '@/components/FAQ';
 import ResponsibleGamblingBlock from '@/components/ResponsibleGamblingBlock';
@@ -39,7 +39,7 @@ export default function HomePage() {
   const aiDeskSchema = getAIDeskSchema();
   const faqSchema = getHomepageFAQSchema();
   const breadcrumbSchema = getHomeBreadcrumb();
-  
+
   return (
     <>
       {/* JSON-LD Structured Data for SEO */}
@@ -67,7 +67,7 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      
+
       {/* Hero section - A/B TEST ACTIVE */}
       <HeroABTest />
 
@@ -83,8 +83,8 @@ export default function HomePage() {
       {/* Pricing - conversion CTA */}
       <PricingTeaser />
 
-      {/* How it works - minimal 1-row strip */}
-      <HowItWorksStrip />
+      {/* Value Betting Explainer - SEO content */}
+      <ValueBettingExplainer />
 
       {/* FAQ section */}
       <FAQ />

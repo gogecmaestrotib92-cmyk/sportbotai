@@ -10,7 +10,7 @@
 import { Metadata } from 'next';
 import HeroI18n from '@/components/HeroI18n';
 import TrendingSectionServer from '@/components/TrendingSectionServer';
-import HowItWorksStrip from '@/components/HowItWorksStrip';
+import ValueBettingExplainer from '@/components/ValueBettingExplainer';
 import PricingTeaserI18n from '@/components/PricingTeaserI18n';
 import ResponsibleGamblingBlockI18n from '@/components/ResponsibleGamblingBlockI18n';
 import FAQI18n from '@/components/FAQI18n';
@@ -93,7 +93,7 @@ export default function SerbianHomePage() {
       <PricingTeaserI18n t={t} locale="sr" />
 
       {/* How it works - minimal 1-row strip */}
-      <HowItWorksStrip locale="sr" />
+      <ValueBettingExplainer locale="sr" />
 
       {/* FAQ section */}
       <FAQI18n t={t} />

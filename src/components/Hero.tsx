@@ -72,27 +72,7 @@ export default function Hero() {
               </Link>
             </div>
 
-            {/* Trust Indicators - Horizontal scroll on mobile */}
-            <div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-white/20">
-              <div className="flex flex-wrap justify-center lg:justify-start gap-3 sm:gap-5 text-xs sm:text-sm text-gray-300">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📰</span>
-                  <span>Match Headlines</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📊</span>
-                  <span>Form & H2H</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">🤖</span>
-                  <span>AI Briefings</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📤</span>
-                  <span>Share Cards</span>
-                </div>
-              </div>
-            </div>
+
           </div>
 
           {/* Right Side - Live Intel Card */}
