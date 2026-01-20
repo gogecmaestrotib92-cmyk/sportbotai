@@ -45,34 +45,34 @@ export function calculateDataConfidence(params: {
   const sources: string[] = [];
   const missingCritical: string[] = [];
   let score = 0;
-  
+
   // Add points for each data source
   if (params.hasVerifiedStats) { sources.push('Verified Stats'); score += 25; }
   if (params.hasVerifiedStandings) { sources.push('Verified Standings'); score += 20; }
   if (params.hasVerifiedLineups) { sources.push('Verified Lineups'); score += 15; }
-  if (params.hasVerifiedPrediction) { sources.push('Our Analysis'); score += 25; }
+  if (params.hasVerifiedPrediction) { sources.push('Our Analysis'); score += 40; } // Core value - sufficient alone
   if (params.hasVerifiedEvents) { sources.push('Match Events'); score += 20; }
   if (params.hasPerplexityData) { sources.push('Real-Time Search'); score += 15; }
   if (params.hasDataLayerStats) { sources.push('DataLayer'); score += 15; }
-  
+
   // Cap at 100
   score = Math.min(100, score);
-  
+
   // Determine what's critically missing based on query type
   const category = params.queryCategory.toUpperCase();
-  
+
   if (['STATS', 'COMPARISON'].includes(category)) {
     if (!params.hasVerifiedStats && !params.hasDataLayerStats) {
       missingCritical.push('player/team statistics');
     }
   }
-  
+
   if (category === 'STANDINGS') {
     if (!params.hasVerifiedStandings) {
       missingCritical.push('current standings');
     }
   }
-  
+
   if (['BETTING_ADVICE', 'PLAYER_PROP'].includes(category)) {
     if (!params.hasVerifiedStats && !params.hasDataLayerStats) {
       missingCritical.push('statistical data for analysis');
@@ -81,20 +81,20 @@ export function calculateDataConfidence(params: {
       missingCritical.push('injury/availability info');
     }
   }
-  
+
   if (category === 'OUR_PREDICTION') {
     if (!params.hasVerifiedPrediction) {
       missingCritical.push('our match analysis');
     }
   }
-  
+
   // INJURY queries critically need real-time data
   if (category === 'INJURY') {
     if (!params.hasPerplexityData) {
       missingCritical.push('real-time injury reports');
     }
   }
-  
+
   // Determine level
   let level: DataCoverageLevel;
   if (score >= 70 && missingCritical.length === 0) {
@@ -106,10 +106,10 @@ export function calculateDataConfidence(params: {
   } else {
     level = 'NONE';
   }
-  
+
   // Can we answer?
   const canAnswer = level !== 'NONE' && !(missingCritical.length > 0 && score < 30);
-  
+
   // Build disclaimer
   let disclaimer: string | undefined;
   if (level === 'PARTIAL') {
@@ -117,7 +117,7 @@ export function calculateDataConfidence(params: {
   } else if (level === 'MINIMAL') {
     disclaimer = `⚠️ Limited data available. This response is based only on: ${sources.join(', ')}.`;
   }
-  
+
   return { level, score, sources, missingCritical, canAnswer, disclaimer };
 }
 
@@ -130,7 +130,7 @@ export function buildConfidenceInstruction(confidence: DataConfidence): string {
 Sources: ${confidence.sources.join(', ')}
 You have strong data backing. Answer confidently using the provided context.`;
   }
-  
+
   if (confidence.level === 'PARTIAL') {
     return `DATA CONFIDENCE: MODERATE (${confidence.score}/100)
 Sources: ${confidence.sources.join(', ')}
@@ -138,7 +138,7 @@ ${confidence.missingCritical.length > 0 ? `Missing: ${confidence.missingCritical
 Answer using available data but acknowledge limitations when relevant.
 DO NOT fill gaps with assumptions or fabricated stats.`;
   }
-  
+
   if (confidence.level === 'MINIMAL') {
     return `DATA CONFIDENCE: LOW (${confidence.score}/100)
 Sources: ${confidence.sources.join(', ')}
@@ -150,7 +150,7 @@ Missing critical: ${confidence.missingCritical.join(', ')}
 - If asked for specific stats you don't have, say "I couldn't find verified data on that"
 - General observations are OK, specific claims without data are NOT`;
   }
-  
+
   // NONE
   return `DATA CONFIDENCE: INSUFFICIENT (${confidence.score}/100)
 No verified data sources available for this query.
@@ -167,14 +167,14 @@ Try asking about a specific match, team, or player, or check back later for upda
 // INTERNAL SIGNALS (computed per match/context)
 // ============================================
 
-export type NarrativeAngle = 
+export type NarrativeAngle =
   | 'CHAOS'              // High volatility, unpredictable
   | 'CONTROL'            // Clear favorite, stable setup
   | 'MIRROR_MATCH'       // Evenly matched, balanced
   | 'TRAP_SPOT'          // Popular team in sketchy form
   | 'BLOWOUT_POTENTIAL'; // Large power gap
 
-export type PublicExpectationMismatch = 
+export type PublicExpectationMismatch =
   | 'ALIGNED'     // Market agrees with data
   | 'SKEPTICAL'   // Data disagrees with narrative
   | 'OVERHYPED'   // Big name, bad form
@@ -224,15 +224,15 @@ export function computePublicMismatch(
 export function shouldPost(signals: MatchSignals): boolean {
   // Only post if severity is significant
   if (signals.severity < 60) return false;
-  
+
   // AND at least one notable signal
-  const hasNotableSignal = 
+  const hasNotableSignal =
     signals.volatility > 60 ||
     signals.clarityLevel < 40 ||
     signals.publicMismatch !== 'ALIGNED' ||
     signals.narrativeAngle === 'CHAOS' ||
     signals.narrativeAngle === 'TRAP_SPOT';
-    
+
   return hasNotableSignal;
 }
 
@@ -262,20 +262,20 @@ export const CONVICTION_LEVELS: Record<ConvictionLevel, ConvictionScore> = {
  */
 export function calculateConviction(signals: MatchSignals): ConvictionScore {
   let score = 1;
-  
+
   // High clarity = higher conviction
   if (signals.clarityLevel > 80) score += 2;
   else if (signals.clarityLevel > 60) score += 1;
-  
+
   // Clear narrative = higher conviction
   if (signals.narrativeAngle === 'BLOWOUT_POTENTIAL') score += 1;
   if (signals.narrativeAngle === 'TRAP_SPOT') score += 1;
   if (signals.publicMismatch === 'OVERHYPED' || signals.publicMismatch === 'SLEEPER') score += 1;
-  
+
   // Penalize chaos/uncertainty
   if (signals.volatility > 70) score -= 1;
   if (signals.narrativeAngle === 'CHAOS') score -= 1;
-  
+
   // Clamp to valid range
   const level = Math.max(1, Math.min(5, score)) as ConvictionLevel;
   return CONVICTION_LEVELS[level];
@@ -305,7 +305,7 @@ export const SIGNATURE_CATCHPHRASES = {
     "Pulling the thread on this one.",
     "Model update just dropped.",
   ],
-  
+
   // High conviction - many ways to express confidence
   highConviction: [
     "This isn't complicated. The setup is clean.",
@@ -334,7 +334,7 @@ export const SIGNATURE_CATCHPHRASES = {
     "Hard to argue with these numbers.",
     "All systems go on this one.",
   ],
-  
+
   // Contrarian takes - challenging popular opinion
   contrarian: [
     "Everyone's looking at X. They should be looking at Y.",
@@ -358,7 +358,7 @@ export const SIGNATURE_CATCHPHRASES = {
     "Sometimes the boring read is the right one.",
     "The headline doesn't match the data.",
   ],
-  
+
   // Chaos/uncertainty - acknowledging unpredictability
   chaos: [
     "Prediction graveyard. Multiple scenarios equally viable.",
@@ -382,7 +382,7 @@ export const SIGNATURE_CATCHPHRASES = {
     "Entropy is high. Prediction is hard.",
     "One of those games that could go any way.",
   ],
-  
+
   // Post-match reflections
   postMatch: [
     "The expected happened. Somehow still surprising.",
@@ -401,7 +401,7 @@ export const SIGNATURE_CATCHPHRASES = {
     "Result validates the process.",
     "Sharp read. Clean hit.",
   ],
-  
+
   // Signature sign-offs
   signoffs: [
     "— SportBot 🤖",
@@ -451,17 +451,17 @@ export const HOT_TAKE_TEMPLATES = [
   "{team} hasn't looked this {adjective} since {period}. The {stat} tells the story.",
   "Everyone's talking about {team}'s win streak. Nobody's talking about their {weakness}.",
   "{team} are {wins}W in {games}. The xG says they should be {expected}. Regression incoming.",
-  
+
   // Matchup-based  
   "This fixture has produced {stat} in the last {period}. The pattern is screaming.",
   "{home} at home vs {away} on the road. The splits couldn't be more different.",
   "On paper: close. In reality: {reality}.",
-  
+
   // Market-based
   "The line moved {direction}% in 2 hours. Smart money knows something.",
   "Public on {team}. Sharps fading. Tale as old as time.",
   "When {percent}% of action is on one side, someone's wrong. Usually the {percent}%.",
-  
+
   // Narrative-busting
   "{team} are 'in form.' Their underlying numbers disagree. Strongly.",
   "Momentum is a narrative. Data is structure. Guess which one I trust.",
@@ -526,9 +526,8 @@ export function buildContrarianTake(
     publicNarrative: narrativeClaim,
     dataReality: actualData,
     confidence,
-    takeaway: `The narrative says "${narrativeClaim}". The data says "${actualData}". ${
-      confidence >= 4 ? "Strong divergence. Worth noting." : "Minor divergence. Context matters."
-    }`,
+    takeaway: `The narrative says "${narrativeClaim}". The data says "${actualData}". ${confidence >= 4 ? "Strong divergence. Worth noting." : "Minor divergence. Context matters."
+      }`,
   };
 }
 
@@ -674,7 +673,7 @@ export const STYLE_GUIDELINES = {
     letterSpacing: '-0.01em',
     textColor: 'white/90',
   },
-  
+
   rules: [
     'No bold markdown. No ** or ## symbols.',
     'No emojis in analysis text.',
@@ -693,14 +692,14 @@ function getCurrentSeasonInfo(): string {
   const now = new Date();
   const month = now.getMonth(); // 0-11
   const year = now.getFullYear();
-  
+
   // NBA/NHL: Oct-June = current year to next year (e.g., 2025-2026)
   // NFL: Sept-Feb = current year to next year
   // Soccer: Aug-May = current year to next year
-  
+
   let nbaHockeySeason: string;
   let soccerSeason: string;
-  
+
   if (month >= 9) { // Oct-Dec
     nbaHockeySeason = `${year}-${year + 1}`;
     soccerSeason = `${year}-${String(year + 1).slice(2)}`;
@@ -708,14 +707,14 @@ function getCurrentSeasonInfo(): string {
     nbaHockeySeason = `${year - 1}-${year}`;
     soccerSeason = `${year - 1}-${String(year).slice(2)}`;
   }
-  
-  const dateStr = now.toLocaleDateString('en-US', { 
+
+  const dateStr = now.toLocaleDateString('en-US', {
     weekday: 'long',
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   });
-  
+
   return `
 CURRENT DATE: ${dateStr}
 CURRENT SEASONS:
@@ -1182,7 +1181,7 @@ export type BrainMode = 'agent' | 'data' | 'analysis' | 'post' | 'betting';
  */
 export function shouldUseDataMode(query: string): boolean {
   const q = query.toLowerCase();
-  
+
   const dataPatterns = [
     /^who (is|are|plays)/,
     /^what (is|are|was|were) the/,
@@ -1197,7 +1196,7 @@ export function shouldUseDataMode(query: string): boolean {
     /\b(injury|injured|injuries|suspension|suspended)\b/,
     /\b(fixture|schedule|when.*play)\b/,
   ];
-  
+
   return dataPatterns.some(pattern => pattern.test(q));
 }
 
@@ -1235,7 +1234,7 @@ export function detectChatMode(query: string): BrainMode {
  * Build full system prompt with signals context
  */
 export function buildSystemPrompt(
-  mode: BrainMode, 
+  mode: BrainMode,
   context?: {
     hasRealTimeData?: boolean;
     sport?: string;
@@ -1247,11 +1246,11 @@ export function buildSystemPrompt(
   }
 ): string {
   let prompt = getBrainPrompt(mode);
-  
+
   // Add data confidence instruction (NEW - overrides old real-time logic if present)
   if (context?.dataConfidence) {
     prompt += `\n\n${buildConfidenceInstruction(context.dataConfidence)}`;
-    
+
     // Add disclaimer reminder if needed
     if (context.dataConfidence.disclaimer) {
       prompt += `\n\nINCLUDE THIS NOTE IN YOUR RESPONSE: ${context.dataConfidence.disclaimer}`;
@@ -1275,7 +1274,7 @@ DO NOT invent stats, scores, or injury statuses.
 Say: "I couldn't find verified current data on this."
 NEVER assume a player is healthy just because you have no injury data.`;
   }
-  
+
   // Add match signals (the key AIXBT upgrade)
   if (context?.signals) {
     const s = context.signals;
@@ -1292,12 +1291,12 @@ Use these signals to inform your tone and observations.
 - Low clarity = acknowledge the noise
 - TRAP_SPOT = highlight the sketchy setup`;
   }
-  
+
   // Add post template structure
   if (context?.eventType && POST_TEMPLATES[context.eventType]) {
     prompt += `\n\nPOST STRUCTURE:\n${POST_TEMPLATES[context.eventType]}`;
   }
-  
+
   // Add "memory" context
   if (context?.recentContext) {
     prompt += `\n\nRECENT CONTEXT (for continuity):
@@ -1309,7 +1308,7 @@ Use this context to:
 - Refer implicitly to patterns, e.g., "Once again, this team leans heavily on late momentum"
 - Do NOT exactly quote old posts`;
   }
-  
+
   // Add sport/match context
   if (context?.sport) {
     prompt += `\n\nSPORT: ${context.sport}`;
@@ -1317,7 +1316,7 @@ Use this context to:
   if (context?.match) {
     prompt += `\nMATCH: ${context.match}`;
   }
-  
+
   return prompt;
 }
 
