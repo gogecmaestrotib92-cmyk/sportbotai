@@ -32,7 +32,8 @@ export default function HowItWorksVideo({ locale = 'en' }: HowItWorksVideoProps)
     const [isLoaded, setIsLoaded] = useState(false);
     const t = translations[locale];
 
-    const thumbnailUrl = `https://img.youtube.com/vi/${YOUTUBE_VIDEO_ID}/hqdefault.jpg`;
+    // Use local thumbnail for guaranteed display (also uploaded to YouTube)
+    const thumbnailUrl = '/SportBot_YouTube_Thumbnail.png';
 
     return (
         <section className="py-16 sm:py-20 bg-bg-primary">
