@@ -14,7 +14,7 @@ import { SITE_CONFIG } from '@/lib/seo';
 import { Locale } from '@/lib/i18n';
 
 // Hardcoded to avoid hydration mismatch - update yearly
-const CURRENT_YEAR = 2025;
+const CURRENT_YEAR = 2026;
 
 const translations = {
   en: {
