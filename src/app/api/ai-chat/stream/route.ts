@@ -2664,8 +2664,36 @@ If their favorite team has a match today/tonight, lead with that information.`;
                   if (prediction?.fullResponse) {
                     console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST HIT: Found ${prediction.matchName} with fullResponse!`);
                     const fullData = prediction.fullResponse as any;
+                    const kickoff = prediction.kickoff ? new Date(prediction.kickoff) : null;
+                    const now = new Date();
 
-                    // Build structured data and return immediately
+                    // Check if match is in the past
+                    if (kickoff && kickoff < now) {
+                      const hoursAgo = Math.floor((now.getTime() - kickoff.getTime()) / (1000 * 60 * 60));
+                      console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST: Match already played ${hoursAgo}h ago!`);
+
+                      // Build past match response
+                      let pastMessage = `⚠️ **This match has already been played!**\n\n`;
+                      pastMessage += `**${prediction.matchName}** was played ${hoursAgo} hours ago.\n\n`;
+
+                      if (prediction.actualResult) {
+                        pastMessage += `**Final Result:** ${prediction.actualResult}\n\n`;
+                      }
+
+                      if (prediction.outcome && prediction.prediction) {
+                        const outcomeEmoji = prediction.outcome === 'HIT' ? '✅' : prediction.outcome === 'MISS' ? '❌' : '⏳';
+                        pastMessage += `**Our Prediction:** ${prediction.prediction} ${outcomeEmoji}\n\n`;
+                      }
+
+                      pastMessage += `Would you like me to analyze an upcoming match instead?`;
+
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', content: pastMessage })}\n\n`));
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+                      controller.close();
+                      return; // INSTANT RETURN for past matches!
+                    }
+
+                    // Future match - build structured data and return immediately
                     const structuredData = {
                       matchInfo: {
                         id: prediction.matchName?.toLowerCase().replace(/\s+/g, '-') || '',
