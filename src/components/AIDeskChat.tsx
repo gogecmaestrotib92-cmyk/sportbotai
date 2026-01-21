@@ -18,8 +18,10 @@ import { trackChatMessage } from '@/lib/analytics';
 import {
   ChatMessage,
   AudioState,
-  VoiceState
+  VoiceState,
+  MatchAnalysisData
 } from './ai-desk/types';
+import ChatMatchAnalysis from './ai-desk/ChatMatchAnalysis';
 import {
   FALLBACK_QUESTIONS,
   PLACEHOLDER_EXAMPLES,
@@ -435,6 +437,20 @@ export default function AIDeskChat() {
                         }
                         : m
                     ));
+                  } else if (data.type === 'match-analysis') {
+                    // Structured match analysis data - render rich component instead of text
+                    const matchData = data.data as MatchAnalysisData;
+                    setMessages(prev => prev.map(m =>
+                      m.id === assistantMessageId
+                        ? {
+                          ...m,
+                          matchAnalysis: matchData,
+                          content: '', // Clear text content since we're showing structured data
+                          isStreaming: false,
+                          statusMessage: undefined,
+                        }
+                        : m
+                    ));
                   } else if (data.type === 'followUps') {
                     // Update with smart follow-ups (generated after response completes)
                     streamFollowUps = data.followUps || [];
@@ -620,27 +636,34 @@ export default function AIDeskChat() {
 
                 {/* Message content */}
                 <div className={`flex-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
-                  <div className={`inline-block px-4 py-3 rounded-2xl max-w-[85%] ${msg.role === 'user'
-                    ? 'bg-primary text-white rounded-tr-md'
-                    : 'bg-white/[0.03] text-white/90 rounded-tl-md border border-white/[0.06]'
-                    }`}>
-                    {/* Status message (e.g., "Searching real-time data...") */}
-                    {msg.role === 'assistant' && msg.statusMessage && !msg.content && (
-                      <div className="flex items-center gap-2 text-sm text-primary/80 animate-pulse">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>{msg.statusMessage}</span>
-                      </div>
-                    )}
-                    <p className={`whitespace-pre-wrap ${msg.role === 'user'
-                      ? 'text-sm'
-                      : 'text-[14px] leading-[1.7] tracking-[-0.01em] font-light'
-                      } ${msg.role === 'assistant' && msg.statusMessage && !msg.content ? 'hidden' : ''}`}>
-                      {msg.role === 'assistant' ? stripMarkdown(msg.content) : msg.content}
-                      {msg.role === 'assistant' && msg.isStreaming && !msg.statusMessage && (
-                        <span className="inline-block w-2 h-4 ml-1 bg-primary animate-pulse rounded-sm" />
+                  {/* Match Analysis - Rich structured display */}
+                  {msg.role === 'assistant' && msg.matchAnalysis ? (
+                    <div className="w-full max-w-[340px]">
+                      <ChatMatchAnalysis data={msg.matchAnalysis} />
+                    </div>
+                  ) : (
+                    <div className={`inline-block px-4 py-3 rounded-2xl max-w-[85%] ${msg.role === 'user'
+                      ? 'bg-primary text-white rounded-tr-md'
+                      : 'bg-white/[0.03] text-white/90 rounded-tl-md border border-white/[0.06]'
+                      }`}>
+                      {/* Status message (e.g., "Searching real-time data...") */}
+                      {msg.role === 'assistant' && msg.statusMessage && !msg.content && !msg.matchAnalysis && (
+                        <div className="flex items-center gap-2 text-sm text-primary/80 animate-pulse">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>{msg.statusMessage}</span>
+                        </div>
                       )}
-                    </p>
-                  </div>
+                      <p className={`whitespace-pre-wrap ${msg.role === 'user'
+                        ? 'text-sm'
+                        : 'text-[14px] leading-[1.7] tracking-[-0.01em] font-light'
+                        } ${msg.role === 'assistant' && msg.statusMessage && !msg.content ? 'hidden' : ''}`}>
+                        {msg.role === 'assistant' ? stripMarkdown(msg.content) : msg.content}
+                        {msg.role === 'assistant' && msg.isStreaming && !msg.statusMessage && (
+                          <span className="inline-block w-2 h-4 ml-1 bg-primary animate-pulse rounded-sm" />
+                        )}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Status indicators */}
                   {msg.role === 'assistant' && (

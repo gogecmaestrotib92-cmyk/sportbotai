@@ -2728,6 +2728,19 @@ If their favorite team has a match today/tonight, lead with that information.`;
                   const result = await fetchMatchPreviewOrAnalysis(homeTeam, awayTeam, sport, request);
 
                   if (result.success) {
+                    // If we have structured data, stream it for rich UI rendering
+                    if (result.structuredData) {
+                      console.log(`[AI-Chat-Stream] ✅ Streaming match-analysis structured data for rich UI`);
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                        type: 'match-analysis',
+                        data: result.structuredData
+                      })}\n\n`));
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+                      controller.close();
+                      return; // Early return - no need for AI text generation
+                    }
+
+                    // Fallback: use text context for AI generation
                     verifiedMatchPredictionContext = result.context;
                     console.log(`[AI-Chat-Stream] ✅ Got analysis from ${result.source}`);
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: `✅ ${result.source === 'match-preview' ? 'Match Preview' : 'Live analysis'} ready!` })}\n\n`));

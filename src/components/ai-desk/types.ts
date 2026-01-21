@@ -5,6 +5,47 @@
  */
 
 /**
+ * Structured match analysis data for rich display in chat
+ * This enables displaying the same data as match pages in chat responses
+ */
+export interface MatchAnalysisData {
+    matchInfo: {
+        id: string;
+        homeTeam: string;
+        awayTeam: string;
+        league: string;
+        sport: string;
+        kickoff: string;
+        venue?: string;
+    };
+    story: {
+        favored: 'home' | 'away' | 'draw';
+        confidence: 'strong' | 'moderate' | 'slight';
+        narrative?: string;
+        snapshot?: string[];
+    };
+    universalSignals?: {
+        form?: string;
+        strength_edge?: string;
+        tempo?: string;
+        efficiency_edge?: string;
+        availability_impact?: string;
+        display?: {
+            form?: { home: string; away: string; label: string };
+            edge?: { direction: string; percentage: number; label: string };
+            tempo?: { level: string; label: string };
+            efficiency?: { winner: string | null; label: string };
+            availability?: { level: string; label: string };
+        };
+    };
+    expectedScores?: {
+        home: number;
+        away: number;
+    };
+    matchUrl: string;  // Link to full analysis page
+}
+
+/**
  * Represents a single message in the chat
  */
 export interface ChatMessage {
@@ -22,6 +63,8 @@ export interface ChatMessage {
     // Data confidence for quality tracking
     dataConfidenceLevel?: string;
     dataConfidenceScore?: number;
+    // Structured match analysis for rich display (instead of text)
+    matchAnalysis?: MatchAnalysisData;
 }
 
 /**

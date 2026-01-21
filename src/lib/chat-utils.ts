@@ -9,6 +9,7 @@
 
 import { NextRequest } from 'next/server';
 import { theOddsClient, calculateAverageOdds } from '@/lib/theOdds/theOddsClient';
+import type { MatchAnalysisData } from '@/components/ai-desk/types';
 
 // ============================================
 // TYPES
@@ -23,6 +24,8 @@ export interface MatchAnalysisResult {
         draw: number | null;
         away: number;
     };
+    // Structured data for rich chat UI display
+    structuredData?: MatchAnalysisData;
 }
 
 export interface FormattedMatchData {
@@ -580,11 +583,35 @@ export async function fetchMatchPreviewOrAnalysis(
                 if (!previewData.isDemo && previewData.story?.narrative) {
                     console.log(`[Chat-Utils] ✅ Got full Match Preview data for date ${dateStr}!`);
                     const context = formatMatchPreviewForChat(previewData, homeTeam, awayTeam);
+
+                    // Build structured data for chat UI (same data as match page)
+                    const structuredData: MatchAnalysisData = {
+                        matchInfo: {
+                            id: matchId,
+                            homeTeam: previewData.matchInfo?.homeTeam || homeTeam,
+                            awayTeam: previewData.matchInfo?.awayTeam || awayTeam,
+                            league: previewData.matchInfo?.league || '',
+                            sport: previewData.matchInfo?.sport || sport,
+                            kickoff: previewData.matchInfo?.kickoff || dateStr,
+                            venue: previewData.matchInfo?.venue,
+                        },
+                        story: {
+                            favored: previewData.story?.favored || 'home',
+                            confidence: previewData.story?.confidence || 'moderate',
+                            narrative: previewData.story?.narrative,
+                            snapshot: previewData.story?.snapshot,
+                        },
+                        universalSignals: previewData.universalSignals,
+                        expectedScores: previewData.expectedScores,
+                        matchUrl: `/match/${matchId}`,
+                    };
+
                     return {
                         success: true,
                         context,
                         source: 'match-preview' as const,
                         odds: previewData.odds,
+                        structuredData,
                     };
                 } else {
                     console.log(`[Chat-Utils] Match-preview for ${dateStr} returned demo/fallback, trying next date...`);
