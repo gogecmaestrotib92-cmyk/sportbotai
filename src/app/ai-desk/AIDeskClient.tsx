@@ -20,10 +20,10 @@ export default function AIDeskClient() {
   // Show loading state with dimensions matched to actual content for CLS prevention
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[500px]">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[600px]">
+        <div className="lg:col-span-2 min-h-[500px]">
           {/* Match AIDeskHeroChat dimensions */}
-          <div className="card-glass rounded-2xl overflow-hidden min-h-[450px]">
+          <div className="card-glass rounded-2xl overflow-hidden min-h-[500px] flex flex-col">
             <div className="p-4 border-b border-white/5 animate-pulse">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-white/5 rounded-lg" />
@@ -45,9 +45,9 @@ export default function AIDeskClient() {
             </div>
           </div>
         </div>
-        <div>
+        <div className="min-h-[450px]">
           {/* Match AIDeskFeedSidebar dimensions */}
-          <div className="card-glass rounded-2xl p-4 min-h-[400px]">
+          <div className="card-glass rounded-2xl p-4 min-h-[450px]">
             <div className="h-6 bg-white/5 rounded w-1/2 mb-4 animate-pulse" />
             <div className="space-y-3">
               {[1, 2, 3, 4].map((i) => (
@@ -165,9 +165,9 @@ export default function AIDeskClient() {
 
   // Authenticated - show full AI Desk
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[500px]">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[600px]">
       {/* HERO: Chat - Takes 2/3 of the space */}
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-2 min-h-[500px]">
         <AIDeskHeroChat />
       </div>
 

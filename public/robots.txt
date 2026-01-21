@@ -8,6 +8,11 @@
 User-agent: *
 Allow: /
 
+# Allow Next.js static resources (JS, CSS, images)
+# Critical for page rendering - without these, crawlers can't render pages
+Allow: /_next/static/
+Allow: /_next/image/
+
 # Allow OG images for social sharing (must come BEFORE Disallow: /api/)
 Allow: /api/og
 

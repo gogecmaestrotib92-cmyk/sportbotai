@@ -8,6 +8,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, Share_Tech_Mono } from 'next/font/google';
 import { Suspense } from 'react';
 import { headers } from 'next/headers';
+import Script from 'next/script';
 import './globals.css';
 import HeaderI18n from '@/components/HeaderI18n';
 import FooterI18n from '@/components/FooterI18n';
@@ -25,7 +26,7 @@ import ReferralSync from '@/components/ReferralSync';
 import ActivityTracker from '@/components/ActivityTracker';
 import { SITE_CONFIG, META, OG_DEFAULTS, getOrganizationSchema, getWebsiteSchema } from '@/lib/seo';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
-import MicrosoftClarity from '@/components/MicrosoftClarity';
+// NOTE: Microsoft Clarity removed Jan 21, 2026 - redundant with GA + Semrush + Ahrefs
 import CookieConsent from '@/components/CookieConsent';
 
 // Inter font with display swap for better performance
@@ -185,32 +186,8 @@ export default async function RootLayout({
           .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
         `}} />
 
-        {/* Preconnect to Google Analytics & Tag Manager - improves script load time */}
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="preconnect" href="https://www.google-analytics.com" />
-
-        {/* Google Tag Manager - Head Script */}
-        <script dangerouslySetInnerHTML={{
-          __html: `
-          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-          })(window,document,'script','dataLayer','GTM-NL4HRCX3');
-        `}} />
-
-        {/* Google Analytics */}
-        <GoogleAnalytics />
-
-        {/* Microsoft Clarity - Heatmaps & Session Recording */}
-        <MicrosoftClarity />
-
-        {/* Ahrefs Web Analytics */}
-        <script
-          src="https://analytics.ahrefs.com/analytics.js"
-          data-key="P7J/OBKDmyZ1TF6GuRYQsQ"
-          async
-        />
+        {/* NOTE: GTM, GA, Clarity, and Ahrefs moved to body for better LCP */}
+        {/* They load via next/script with afterInteractive/lazyOnload strategies */}
 
         {/* DNS Prefetch & Preconnect for Logo CDNs - faster image loading */}
         <link rel="dns-prefetch" href="//a.espncdn.com" />
@@ -295,6 +272,33 @@ export default async function RootLayout({
 
                 {/* Scroll to Top Button */}
                 <ScrollToTop />
+
+                {/* === DEFERRED ANALYTICS SCRIPTS (Core Web Vitals Optimization) === */}
+                {/* GTM - afterInteractive: loads after hydration, before user interaction */}
+                <Script
+                  id="gtm-script"
+                  strategy="afterInteractive"
+                  dangerouslySetInnerHTML={{
+                    __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+                    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                    })(window,document,'script','dataLayer','GTM-NL4HRCX3');`
+                  }}
+                />
+
+                {/* Google Analytics - afterInteractive */}
+                <GoogleAnalytics />
+
+                {/* NOTE: Microsoft Clarity removed - redundant with GA + Semrush + Ahrefs */}
+
+                {/* Ahrefs - lazyOnload: lowest priority, loads after everything else */}
+                <Script
+                  id="ahrefs-analytics"
+                  src="https://analytics.ahrefs.com/analytics.js"
+                  data-key="P7J/OBKDmyZ1TF6GuRYQsQ"
+                  strategy="lazyOnload"
+                />
 
                 {/* Cookie Consent Banner */}
                 <CookieConsent />

@@ -21,23 +21,23 @@ interface AIDeskClientI18nProps {
 export default function AIDeskClientI18n({ locale }: AIDeskClientI18nProps) {
   const t = getTranslations(locale);
   const localePath = locale === 'sr' ? '/sr' : '';
-  
+
   const { data: session, status } = useSession();
   const isLoading = status === 'loading';
   const isAuthenticated = !!session;
 
-  // Show loading state
+  // Show loading state with dimensions matched to actual content for CLS prevention
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <div className="bg-bg-card border border-border rounded-2xl p-8 animate-pulse">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[600px]">
+        <div className="lg:col-span-2 min-h-[500px]">
+          <div className="bg-bg-card border border-border rounded-2xl p-8 min-h-[500px] animate-pulse">
             <div className="h-8 bg-white/5 rounded w-1/3 mb-4" />
             <div className="h-64 bg-white/5 rounded" />
           </div>
         </div>
-        <div>
-          <div className="bg-bg-card border border-border rounded-2xl p-4 animate-pulse">
+        <div className="min-h-[450px]">
+          <div className="bg-bg-card border border-border rounded-2xl p-4 min-h-[450px] animate-pulse">
             <div className="h-6 bg-white/5 rounded w-1/2 mb-4" />
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
@@ -155,9 +155,9 @@ export default function AIDeskClientI18n({ locale }: AIDeskClientI18nProps) {
 
   // Authenticated - show full AI Desk
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[600px]">
       {/* HERO: Chat - Takes 2/3 of the space */}
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-2 min-h-[500px]">
         <AIDeskHeroChat />
       </div>
 

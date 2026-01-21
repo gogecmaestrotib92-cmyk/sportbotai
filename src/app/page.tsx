@@ -5,20 +5,46 @@
  * Contains all sections for presenting the platform.
  * 
  * A/B TEST ACTIVE: Hero section (hero-2024-12)
+ * 
+ * PERFORMANCE: Below-fold components use dynamic imports to reduce initial bundle
  */
 
 import { Metadata } from 'next';
+import dynamic from 'next/dynamic';
+
+// Critical path - load immediately (above fold)
 import HeroABTest from '@/components/HeroABTest';
-import TrendingSectionServer from '@/components/TrendingSectionServer';
-import ValueBettingExplainer from '@/components/ValueBettingExplainer';
-import HowItWorksVideo from '@/components/HowItWorksVideo';
-import PricingTeaser from '@/components/PricingTeaser';
-import FAQ from '@/components/FAQ';
-import ResponsibleGamblingBlock from '@/components/ResponsibleGamblingBlock';
-import { TrustBadges } from '@/components/SocialProof';
 import LeagueScroll from '@/components/LeagueScroll';
-import VideoTestimonialsCarousel from '@/components/VideoTestimonialsCarousel';
+import TrendingSectionServer from '@/components/TrendingSectionServer';
+import { TrustBadges } from '@/components/SocialProof';
 import { getOrganizationSchema, getWebsiteSchema, getMatchAnalyzerSchema, getAIDeskSchema, getHomepageFAQSchema, getHomeBreadcrumb } from '@/lib/seo';
+
+// Below-fold components - dynamic imports for better TBT
+const VideoTestimonialsCarousel = dynamic(
+  () => import('@/components/VideoTestimonialsCarousel'),
+  { ssr: true }
+);
+const HowItWorksVideo = dynamic(
+  () => import('@/components/HowItWorksVideo'),
+  { ssr: true }
+);
+const PricingTeaser = dynamic(
+  () => import('@/components/PricingTeaser'),
+  { ssr: true }
+);
+const ValueBettingExplainer = dynamic(
+  () => import('@/components/ValueBettingExplainer'),
+  { ssr: true }
+);
+const FAQ = dynamic(
+  () => import('@/components/FAQ'),
+  { ssr: true }
+);
+const ResponsibleGamblingBlock = dynamic(
+  () => import('@/components/ResponsibleGamblingBlock'),
+  { ssr: true }
+);
+
 
 // Homepage metadata with canonical and hreflang
 export const metadata: Metadata = {

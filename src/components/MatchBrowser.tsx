@@ -177,11 +177,12 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
   }, [selectedSport, initialLeague, selectedLeague]);
 
   // Pre-fetch match counts for leagues - DEFERRED to not block initial render
-  // This runs 1 second after mount to prioritize LCP
+  // Mobile optimization: Increased to 2.5s deferral for better LCP/TBT on slow networks
   useEffect(() => {
     let cancelled = false;
 
     // Defer fetch to after initial render for better LCP
+    // 2500ms gives time for critical content to load on 4G mobile
     const timeoutId = setTimeout(async () => {
       if (cancelled) return;
 
@@ -190,22 +191,21 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
       // Only fetch counts for the CURRENT sport's leagues first (faster)
       const currentSportLeagues = SPORTS.find(s => s.id === selectedSport)?.leagues || [];
 
-      // Fetch current sport first (prioritized)
-      await Promise.all(
-        currentSportLeagues.map(async (league) => {
-          try {
-            const response = await fetch(`/api/match-data?sportKey=${league.key}&includeOdds=false`);
-            if (response.ok) {
-              const data = await response.json();
-              counts[league.key] = data.events?.length || 0;
-            } else {
-              counts[league.key] = 0;
-            }
-          } catch {
+      // Fetch current sport first (prioritized) - but serialize on mobile to reduce TBT
+      for (const league of currentSportLeagues) {
+        if (cancelled) break;
+        try {
+          const response = await fetch(`/api/match-data?sportKey=${league.key}&includeOdds=false`);
+          if (response.ok) {
+            const data = await response.json();
+            counts[league.key] = data.events?.length || 0;
+          } else {
             counts[league.key] = 0;
           }
-        })
-      );
+        } catch {
+          counts[league.key] = 0;
+        }
+      }
 
       if (!cancelled) {
         setLeagueMatchCounts(prev => ({ ...prev, ...counts }));
@@ -216,10 +216,17 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
         .filter(s => s.id !== selectedSport)
         .flatMap(sport => sport.leagues);
 
-      // Batch fetch other leagues with small delays to avoid blocking
-      for (let i = 0; i < otherLeagues.length; i += 4) {
+      // Batch fetch other leagues with delays to avoid blocking main thread
+      // Reduced batch size from 4 to 2 for mobile TBT improvement
+      for (let i = 0; i < otherLeagues.length; i += 2) {
         if (cancelled) break;
-        const batch = otherLeagues.slice(i, i + 4);
+
+        // Add 500ms delay between batches to allow main thread breathing room
+        if (i > 0) {
+          await new Promise(r => setTimeout(r, 500));
+        }
+
+        const batch = otherLeagues.slice(i, i + 2);
         await Promise.all(
           batch.map(async (league) => {
             try {
@@ -237,13 +244,14 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
           setLeagueMatchCounts(prev => ({ ...prev, ...counts }));
         }
       }
-    }, 1000); // Defer 1 second for LCP improvement
+    }, 2500); // Increased from 1000ms to 2500ms for mobile LCP/TBT
 
     return () => {
       cancelled = true;
       clearTimeout(timeoutId);
     };
   }, [selectedSport]); // Re-fetch when sport changes
+
 
   // Fetch AI Picks from pre-analyzed predictions (real AI data, not heuristics)
   const fetchAiPicks = useCallback(async () => {

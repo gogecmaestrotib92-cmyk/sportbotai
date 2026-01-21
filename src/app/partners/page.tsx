@@ -73,42 +73,39 @@ async function getToolReviews() {
 export default async function PartnersPage() {
   const reviews = await getToolReviews();
 
-  // JSON-LD structured data
+  // JSON-LD structured data - Using simpler Review schema to avoid SoftwareApplication validation errors
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'WebPage',
+    '@type': 'CollectionPage',
     name: pageTitle,
     description: pageDescription,
     url: pageUrl,
     mainEntity: {
       '@type': 'ItemList',
       name: 'Featured Sports Analytics Tools',
+      numberOfItems: reviews.length,
       itemListElement: reviews.map((review, index) => ({
         '@type': 'ListItem',
         position: index + 1,
-        item: {
-          '@type': 'SoftwareApplication',
-          name: review.toolName,
-          description: review.excerpt,
-          url: `${SITE_CONFIG.url}${review.reviewUrl}`,
-          applicationCategory: 'Sports Analytics',
-        },
+        url: `${SITE_CONFIG.url}${review.reviewUrl}`,
+        name: review.toolName,
       })),
     },
   };
+
 
   return (
     <div className="min-h-screen bg-bg relative overflow-hidden">
       {/* Ambient background glows */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-500/5 rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute bottom-1/3 left-0 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-[120px] pointer-events-none" />
-      
+
       {/* JSON-LD */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      
+
       {/* Header */}
       <section className="pt-16 pb-12 px-4 relative">
         <div className="max-w-5xl mx-auto text-center">
@@ -122,7 +119,7 @@ export default async function PartnersPage() {
             Featured <span className="text-gradient-accent">Tools</span>
           </h1>
           <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
-            Sports analytics platforms and tools we've reviewed. 
+            Sports analytics platforms and tools we've reviewed.
             Each has been tested for accuracy, usability, and value.
           </p>
         </div>
@@ -155,7 +152,7 @@ export default async function PartnersPage() {
                     )}
                     {/* Gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
-                    
+
                     {/* Verified badge */}
                     <div className="absolute top-3 right-3 px-2 py-1 bg-emerald-500/20 backdrop-blur-sm rounded-full border border-emerald-500/30">
                       <span className="text-emerald-400 text-xs font-medium flex items-center gap-1">
@@ -172,7 +169,7 @@ export default async function PartnersPage() {
                     <h2 className="text-lg font-bold text-white mb-2 group-hover:text-emerald-400 transition-colors line-clamp-2">
                       {review.toolName}
                     </h2>
-                    
+
                     {review.excerpt && (
                       <p className="text-sm text-zinc-400 line-clamp-2 mb-4">
                         {review.excerpt}
@@ -221,7 +218,7 @@ export default async function PartnersPage() {
             </div>
             <h2 className="text-2xl font-bold text-white mb-3">Have a Sports Analytics Tool?</h2>
             <p className="text-zinc-400 mb-6 max-w-xl mx-auto">
-              We review and feature quality sports analytics platforms. 
+              We review and feature quality sports analytics platforms.
               Get exposure to our audience and a featured badge for your site.
             </p>
             <Link
@@ -250,10 +247,10 @@ export default async function PartnersPage() {
             </p>
             <div className="flex items-center gap-4">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg">
-                <Image 
-                  src="/favicon.svg" 
-                  alt="SportBot AI" 
-                  width={24} 
+                <Image
+                  src="/favicon.svg"
+                  alt="SportBot AI"
+                  width={24}
                   height={24}
                   className="rounded"
                 />

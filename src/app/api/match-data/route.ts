@@ -13,9 +13,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { MatchData, MatchDataResponse } from '@/types';
-import { 
-  getSportConfig, 
-  SportConfig 
+import {
+  getSportConfig,
+  SportConfig
 } from '@/lib/config/sportsConfig';
 import {
   theOddsClient,
@@ -47,7 +47,7 @@ import {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    
+
     // Extract parameters
     const sport = searchParams.get('sport'); // Internal sport ID (e.g., "nba")
     const sportKey = searchParams.get('sportKey'); // Odds API key (e.g., "basketball_nba")
@@ -171,7 +171,7 @@ async function handleEventsWithOdds(
     }
   );
 
-  const events = result.data.map(event => 
+  const events = result.data.map(event =>
     buildMatchDataFromOddsApiEvent(sportConfig, event)
   );
 
@@ -211,11 +211,20 @@ async function handleEventsWithoutOdds(
     impliedProbabilities: { home: 0, draw: null, away: 0 },
   }));
 
-  return NextResponse.json<MatchDataResponse>({
-    success: true,
-    events,
-    requestsRemaining: result.requestsRemaining,
-  });
+  // Return with Cache-Control headers for browser/CDN caching
+  // This reduces repeated fetches from MatchBrowser on mobile
+  return NextResponse.json<MatchDataResponse>(
+    {
+      success: true,
+      events,
+      requestsRemaining: result.requestsRemaining,
+    },
+    {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+      },
+    }
+  );
 }
 
 // ============================================
@@ -225,7 +234,7 @@ async function handleEventsWithoutOdds(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Validate required fields
     if (!body.homeTeam || !body.awayTeam) {
       return NextResponse.json<MatchDataResponse>(
