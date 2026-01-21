@@ -2100,10 +2100,13 @@ If their favorite team has a match today/tonight, lead with that information.`;
                         ]
                       }
                     ],
-                    kickoff: { gte: new Date(new Date().getTime() - 48 * 60 * 60 * 1000) }, // Last 48h or future
-                    NOT: { fullResponse: { equals: undefined } },
+                    kickoff: { gte: new Date(new Date().getTime() - 48 * 60 * 60 * 1000) },
+                    NOT: [
+                      { fullResponse: { equals: undefined } },
+                      { matchName: { startsWith: 'Analyze', mode: 'insensitive' } }, // Exclude manually created records
+                    ],
                   },
-                  orderBy: { kickoff: 'desc' }, // Most recent first
+                  orderBy: { kickoff: 'asc' }, // Earliest match first (pre-analyzed before manual)
                 });
 
                 if (prediction?.fullResponse) {
