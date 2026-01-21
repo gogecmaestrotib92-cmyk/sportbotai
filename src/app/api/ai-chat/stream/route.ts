@@ -2623,6 +2623,84 @@ If their favorite team has a match today/tonight, lead with that information.`;
           // NEW APPROACH: Go directly to fetchMatchPreviewOrAnalysis (uses same data as match page)
           if (!verifiedMatchPredictionContext && isPredictionIntent) {
             console.log(`[AI-Chat-Stream] Prediction query detected - using fetchMatchPreviewOrAnalysis directly...`);
+
+            // =====================================================
+            // ULTRA-FAST PATH: Check Prediction table FIRST
+            // This returns instantly for pre-analyzed matches, skipping ALL slow HTTP calls
+            // =====================================================
+            try {
+              // Quick regex to extract team names for DB lookup
+              const quickTeamMatch = searchMessage.match(/(?:analyze|analyse|preview)?\s*([a-zA-Z\s]+?)\s+(?:vs\.?|versus|against|@)\s+([a-zA-Z\s]+)/i);
+              if (quickTeamMatch) {
+                const [, rawHome, rawAway] = quickTeamMatch;
+                const homeWord = rawHome.trim().split(/\s+/).pop() || '';
+                const awayWord = rawAway.trim().split(/\s+/).pop() || '';
+
+                if (homeWord && awayWord) {
+                  console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST: Checking Prediction table for ${homeWord} vs ${awayWord}...`);
+
+                  const prediction = await prisma.prediction.findFirst({
+                    where: {
+                      OR: [
+                        {
+                          AND: [
+                            { matchName: { contains: homeWord, mode: 'insensitive' } },
+                            { matchName: { contains: awayWord, mode: 'insensitive' } },
+                          ]
+                        },
+                        {
+                          AND: [
+                            { matchName: { contains: awayWord, mode: 'insensitive' } },
+                            { matchName: { contains: homeWord, mode: 'insensitive' } },
+                          ]
+                        }
+                      ],
+                      kickoff: { gte: new Date(new Date().getTime() - 24 * 60 * 60 * 1000) },
+                      NOT: { fullResponse: { equals: undefined } },
+                    },
+                    orderBy: { kickoff: 'asc' },
+                  });
+
+                  if (prediction?.fullResponse) {
+                    console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST HIT: Found ${prediction.matchName} with fullResponse!`);
+                    const fullData = prediction.fullResponse as any;
+
+                    // Build structured data and return immediately
+                    const structuredData = {
+                      matchInfo: {
+                        id: prediction.matchName?.toLowerCase().replace(/\s+/g, '-') || '',
+                        homeTeam: fullData.matchInfo?.homeTeam || rawHome.trim(),
+                        awayTeam: fullData.matchInfo?.awayTeam || rawAway.trim(),
+                        league: fullData.matchInfo?.league || '',
+                        sport: fullData.matchInfo?.sport || 'basketball_nba',
+                        kickoff: prediction.kickoff?.toISOString() || '',
+                      },
+                      story: {
+                        favored: fullData.story?.favored || 'home',
+                        confidence: fullData.story?.confidence || 'moderate',
+                        narrative: fullData.story?.narrative,
+                        snapshot: fullData.story?.snapshot,
+                      },
+                      universalSignals: fullData.universalSignals,
+                      expectedScores: fullData.expectedScores,
+                      matchUrl: `/match/${rawHome.trim().toLowerCase().replace(/\s+/g, '-')}-vs-${rawAway.trim().toLowerCase().replace(/\s+/g, '-')}-nba-${new Date().toISOString().split('T')[0]}`,
+                    };
+
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                      type: 'match-analysis',
+                      data: structuredData
+                    })}\n\n`));
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+                    controller.close();
+                    return; // INSTANT RETURN - no more processing needed!
+                  }
+                  console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST MISS: No cached prediction, continuing to slow path...`);
+                }
+              }
+            } catch (ultraFastError) {
+              console.log(`[AI-Chat-Stream] Ultra-fast path error, continuing:`, ultraFastError);
+            }
+
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '🎯 Fetching our match analysis...' })}\n\n`));
 
             // First check if game has ALREADY BEEN PLAYED
