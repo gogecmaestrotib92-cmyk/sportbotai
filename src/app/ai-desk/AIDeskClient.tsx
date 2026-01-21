@@ -17,22 +17,41 @@ export default function AIDeskClient() {
   const isLoading = status === 'loading';
   const isAuthenticated = !!session;
 
-  // Show loading state
+  // Show loading state with dimensions matched to actual content for CLS prevention
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[500px]">
         <div className="lg:col-span-2">
-          <div className="card-glass rounded-2xl p-8 animate-pulse">
-            <div className="h-8 bg-white/5 rounded w-1/3 mb-4" />
-            <div className="h-64 bg-white/5 rounded" />
+          {/* Match AIDeskHeroChat dimensions */}
+          <div className="card-glass rounded-2xl overflow-hidden min-h-[450px]">
+            <div className="p-4 border-b border-white/5 animate-pulse">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-white/5 rounded-lg" />
+                <div className="h-4 bg-white/5 rounded w-32" />
+              </div>
+            </div>
+            <div className="p-6 space-y-4 animate-pulse">
+              <div className="flex gap-3">
+                <div className="w-8 h-8 bg-white/10 rounded-full flex-shrink-0" />
+                <div className="flex-1 bg-white/5 rounded-xl p-4 h-20" />
+              </div>
+              <div className="flex gap-3">
+                <div className="w-8 h-8 bg-white/10 rounded-full flex-shrink-0" />
+                <div className="flex-1 bg-white/5 rounded-xl p-4 h-32" />
+              </div>
+            </div>
+            <div className="p-4 border-t border-white/5 animate-pulse mt-auto">
+              <div className="h-12 bg-white/5 rounded-xl" />
+            </div>
           </div>
         </div>
         <div>
-          <div className="card-glass rounded-2xl p-4 animate-pulse">
-            <div className="h-6 bg-white/5 rounded w-1/2 mb-4" />
+          {/* Match AIDeskFeedSidebar dimensions */}
+          <div className="card-glass rounded-2xl p-4 min-h-[400px]">
+            <div className="h-6 bg-white/5 rounded w-1/2 mb-4 animate-pulse" />
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 bg-white/5 rounded" />
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-20 bg-white/5 rounded animate-pulse" />
               ))}
             </div>
           </div>
@@ -146,7 +165,7 @@ export default function AIDeskClient() {
 
   // Authenticated - show full AI Desk
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[500px]">
       {/* HERO: Chat - Takes 2/3 of the space */}
       <div className="lg:col-span-2">
         <AIDeskHeroChat />
@@ -160,7 +179,7 @@ export default function AIDeskClient() {
         {/* Disclaimer */}
         <div className="card-glass border-amber-500/20 rounded-xl p-4">
           <p className="text-amber-500/80 text-xs leading-relaxed">
-            ⚠️ AI-generated content for informational purposes only. This is not betting advice. 
+            ⚠️ AI-generated content for informational purposes only. This is not betting advice.
             Please gamble responsibly.
           </p>
         </div>

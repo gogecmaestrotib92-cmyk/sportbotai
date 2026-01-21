@@ -176,15 +176,23 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
     }
   }, [selectedSport, initialLeague, selectedLeague]);
 
-  // Pre-fetch match counts for ALL leagues (for badges and trending)
+  // Pre-fetch match counts for leagues - DEFERRED to not block initial render
+  // This runs 1 second after mount to prioritize LCP
   useEffect(() => {
-    async function fetchLeagueCounts() {
-      const counts: Record<string, number> = {};
-      const allLeagues = SPORTS.flatMap(sport => sport.leagues);
+    let cancelled = false;
 
-      // Fetch counts in parallel for all leagues across all sports
+    // Defer fetch to after initial render for better LCP
+    const timeoutId = setTimeout(async () => {
+      if (cancelled) return;
+
+      const counts: Record<string, number> = {};
+
+      // Only fetch counts for the CURRENT sport's leagues first (faster)
+      const currentSportLeagues = SPORTS.find(s => s.id === selectedSport)?.leagues || [];
+
+      // Fetch current sport first (prioritized)
       await Promise.all(
-        allLeagues.map(async (league) => {
+        currentSportLeagues.map(async (league) => {
           try {
             const response = await fetch(`/api/match-data?sportKey=${league.key}&includeOdds=false`);
             if (response.ok) {
@@ -199,11 +207,43 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
         })
       );
 
-      setLeagueMatchCounts(counts);
-    }
+      if (!cancelled) {
+        setLeagueMatchCounts(prev => ({ ...prev, ...counts }));
+      }
 
-    fetchLeagueCounts();
-  }, []); // Fetch once on mount for all leagues
+      // Fetch other sports in background (lower priority)
+      const otherLeagues = SPORTS
+        .filter(s => s.id !== selectedSport)
+        .flatMap(sport => sport.leagues);
+
+      // Batch fetch other leagues with small delays to avoid blocking
+      for (let i = 0; i < otherLeagues.length; i += 4) {
+        if (cancelled) break;
+        const batch = otherLeagues.slice(i, i + 4);
+        await Promise.all(
+          batch.map(async (league) => {
+            try {
+              const response = await fetch(`/api/match-data?sportKey=${league.key}&includeOdds=false`);
+              if (response.ok) {
+                const data = await response.json();
+                counts[league.key] = data.events?.length || 0;
+              }
+            } catch {
+              counts[league.key] = 0;
+            }
+          })
+        );
+        if (!cancelled) {
+          setLeagueMatchCounts(prev => ({ ...prev, ...counts }));
+        }
+      }
+    }, 1000); // Defer 1 second for LCP improvement
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [selectedSport]); // Re-fetch when sport changes
 
   // Fetch AI Picks from pre-analyzed predictions (real AI data, not heuristics)
   const fetchAiPicks = useCallback(async () => {
@@ -420,8 +460,8 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
             <button
               onClick={() => setViewMode('ai-picks')}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === 'ai-picks'
-                  ? 'bg-accent text-bg-primary shadow-sm'
-                  : 'text-text-muted hover:text-white'
+                ? 'bg-accent text-bg-primary shadow-sm'
+                : 'text-text-muted hover:text-white'
                 }`}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -438,8 +478,8 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
             <button
               onClick={() => setViewMode('all')}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === 'all'
-                  ? 'bg-white/10 text-white shadow-sm'
-                  : 'text-text-muted hover:text-white'
+                ? 'bg-white/10 text-white shadow-sm'
+                : 'text-text-muted hover:text-white'
                 }`}
             >
               All Matches
@@ -455,8 +495,8 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
             <button
               onClick={() => setTimeFilter('today')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${timeFilter === 'today'
-                  ? 'bg-white/10 text-white'
-                  : 'text-text-muted hover:text-white'
+                ? 'bg-white/10 text-white'
+                : 'text-text-muted hover:text-white'
                 }`}
             >
               Today
@@ -468,8 +508,8 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
             <button
               onClick={() => setTimeFilter('tomorrow')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${timeFilter === 'tomorrow'
-                  ? 'bg-white/10 text-white'
-                  : 'text-text-muted hover:text-white'
+                ? 'bg-white/10 text-white'
+                : 'text-text-muted hover:text-white'
                 }`}
             >
               Tomorrow
@@ -481,8 +521,8 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
             <button
               onClick={() => setTimeFilter('later')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${timeFilter === 'later'
-                  ? 'bg-white/10 text-white'
-                  : 'text-text-muted hover:text-white'
+                ? 'bg-white/10 text-white'
+                : 'text-text-muted hover:text-white'
                 }`}
             >
               Later
