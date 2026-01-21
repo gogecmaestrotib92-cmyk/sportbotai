@@ -705,7 +705,29 @@ export async function fetchMatchPreviewOrAnalysis(
             if (analysisData.success) {
                 console.log(`[Chat-Utils] ✅ Got analysis from analyze API`);
                 const context = formatAnalysisForChat(analysisData, homeTeam, awayTeam);
-                return { success: true, context, source: 'analyze', odds: realOdds };
+
+                // Build structured data from analyze API response
+                const structuredData: MatchAnalysisData = {
+                    matchInfo: {
+                        id: `${homeTeam.toLowerCase().replace(/\s+/g, '-')}-vs-${awayTeam.toLowerCase().replace(/\s+/g, '-')}`,
+                        homeTeam,
+                        awayTeam,
+                        league: analysisData.league || '',
+                        sport: sport,
+                        kickoff: new Date().toISOString(),
+                    },
+                    story: {
+                        favored: analysisData.probabilities?.homeWin > analysisData.probabilities?.awayWin ? 'home' : 'away',
+                        confidence: analysisData.briefing?.confidenceRating >= 4 ? 'strong' :
+                            analysisData.briefing?.confidenceRating >= 2 ? 'moderate' : 'slight',
+                        narrative: analysisData.briefing?.verdict || analysisData.briefing?.headline,
+                        snapshot: analysisData.briefing?.keyPoints,
+                    },
+                    expectedScores: analysisData.expectedScores,
+                    matchUrl: `/match/${homeTeam.toLowerCase().replace(/\s+/g, '-')}-vs-${awayTeam.toLowerCase().replace(/\s+/g, '-')}-${sport.split('_')[1] || sport}-${new Date().toISOString().split('T')[0]}`,
+                };
+
+                return { success: true, context, source: 'analyze', odds: realOdds, structuredData };
             }
         }
     } catch (analyzeErr) {
