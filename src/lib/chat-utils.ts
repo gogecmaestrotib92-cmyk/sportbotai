@@ -572,7 +572,7 @@ export async function fetchMatchPreviewOrAnalysis(
                         Authorization: authHeader,
                     },
                 }),
-                8000, // Reduced timeout since we're trying multiple dates
+                3000, // Fast timeout - fall back to Prediction table quickly if not found
                 `Match Preview API (${dateStr})`
             );
 
