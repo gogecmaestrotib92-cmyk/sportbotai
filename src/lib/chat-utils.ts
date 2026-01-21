@@ -631,6 +631,7 @@ export async function fetchMatchPreviewOrAnalysis(
         const { prisma } = await import('@/lib/prisma');
 
         // Look for a prediction with fullResponse for this match
+        // Filter for fullResponse not null to avoid empty duplicates
         const prediction = await prisma.prediction.findFirst({
             where: {
                 OR: [
@@ -648,6 +649,7 @@ export async function fetchMatchPreviewOrAnalysis(
                     }
                 ],
                 kickoff: { gte: new Date(new Date().getTime() - 24 * 60 * 60 * 1000) }, // Within last 24h or future
+                NOT: { fullResponse: { equals: undefined } }, // Only get records with fullResponse populated
             },
             orderBy: { kickoff: 'asc' },
         }) as any; // Cast to any to access fullResponse (Prisma types may be stale)
