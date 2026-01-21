@@ -2067,6 +2067,101 @@ If their favorite team has a match today/tonight, lead with that information.`;
         streamController = controller;
 
         try {
+          // =====================================================
+          // ULTRA-FAST PATH: Check Prediction table IMMEDIATELY
+          // This runs FIRST, before ANY slow operations
+          // For pre-analyzed matches, returns instantly
+          // =====================================================
+          const matchQueryPattern = /(?:analyze|analyse|preview|predict|prediction)?\\s*([a-zA-Z\\s]+?)\\s+(?:vs\\.?|versus|against|@)\\s+([a-zA-Z\\s]+)/i;
+          const quickMatch = searchMessage.match(matchQueryPattern);
+
+          if (quickMatch) {
+            const [, rawHome, rawAway] = quickMatch;
+            const homeWord = rawHome.trim().split(/\\s+/).pop() || '';
+            const awayWord = rawAway.trim().split(/\\s+/).pop() || '';
+
+            if (homeWord.length > 2 && awayWord.length > 2) {
+              console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST CHECK: ${homeWord} vs ${awayWord}`);
+
+              try {
+                const prediction = await prisma.prediction.findFirst({
+                  where: {
+                    OR: [
+                      {
+                        AND: [
+                          { matchName: { contains: homeWord, mode: 'insensitive' } },
+                          { matchName: { contains: awayWord, mode: 'insensitive' } },
+                        ]
+                      },
+                      {
+                        AND: [
+                          { matchName: { contains: awayWord, mode: 'insensitive' } },
+                          { matchName: { contains: homeWord, mode: 'insensitive' } },
+                        ]
+                      }
+                    ],
+                    kickoff: { gte: new Date(new Date().getTime() - 48 * 60 * 60 * 1000) }, // Last 48h or future
+                    NOT: { fullResponse: { equals: undefined } },
+                  },
+                  orderBy: { kickoff: 'desc' }, // Most recent first
+                });
+
+                if (prediction?.fullResponse) {
+                  const fullData = prediction.fullResponse as any;
+                  const kickoff = prediction.kickoff ? new Date(prediction.kickoff) : null;
+                  const now = new Date();
+
+                  // Past match - return already played message instantly
+                  if (kickoff && kickoff < now) {
+                    const hoursAgo = Math.floor((now.getTime() - kickoff.getTime()) / (1000 * 60 * 60));
+                    console.log(`[AI-Chat-Stream] ⚡ INSTANT: Past match ${prediction.matchName} (${hoursAgo}h ago)`);
+
+                    let pastMessage = `⚠️ **This match has already been played!**\n\n`;
+                    pastMessage += `**${prediction.matchName}** was played ${hoursAgo} hours ago.\n\n`;
+                    if (prediction.actualResult) pastMessage += `**Final Result:** ${prediction.actualResult}\n\n`;
+                    if (prediction.outcome && prediction.prediction) {
+                      const emoji = prediction.outcome === 'HIT' ? '✅' : prediction.outcome === 'MISS' ? '❌' : '⏳';
+                      pastMessage += `**Our Prediction:** ${prediction.prediction} ${emoji}\n\n`;
+                    }
+                    pastMessage += `Would you like me to analyze an upcoming match instead?`;
+
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', content: pastMessage })}\n\n`));
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+                    controller.close();
+                    return;
+                  }
+
+                  // Future match - return structured data instantly
+                  console.log(`[AI-Chat-Stream] ⚡ INSTANT: Future match ${prediction.matchName}`);
+                  const structuredData = {
+                    matchInfo: {
+                      id: prediction.matchName?.toLowerCase().replace(/\s+/g, '-') || '',
+                      homeTeam: fullData.matchInfo?.homeTeam || rawHome.trim(),
+                      awayTeam: fullData.matchInfo?.awayTeam || rawAway.trim(),
+                      league: fullData.matchInfo?.league || '',
+                      sport: fullData.matchInfo?.sport || 'unknown',
+                      kickoff: kickoff?.toISOString() || '',
+                    },
+                    story: fullData.story || { favored: 'home', confidence: 'moderate' },
+                    universalSignals: fullData.universalSignals,
+                    expectedScores: fullData.expectedScores,
+                    matchUrl: `/match/${rawHome.trim().toLowerCase().replace(/\s+/g, '-')}-vs-${rawAway.trim().toLowerCase().replace(/\s+/g, '-')}`,
+                  };
+
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'match-analysis', data: structuredData })}\n\n`));
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+                  controller.close();
+                  return;
+                }
+              } catch (fastPathErr) {
+                console.log(`[AI-Chat-Stream] Fast path DB error, continuing:`, fastPathErr);
+              }
+            }
+          }
+          // =====================================================
+          // END ULTRA-FAST PATH - Continue with normal processing
+          // =====================================================
+
           // ============================================
           // SMART DATA FETCHING: Verified sources FIRST, Perplexity as fallback
           // ============================================
@@ -2090,7 +2185,7 @@ If their favorite team has a match today/tonight, lead with that information.`;
                 'BETTING_ADVICE': '📈 Gathering performance data...',
               };
               const statusMsg = statusMessages[queryCategory] || 'Searching real-time data...';
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: statusMsg })}\n\n`));
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: statusMsg })} \n\n`));
               console.log('[AI-Chat-Stream] Fetching real-time context...');
 
               // Detect query types that need different recency windows
