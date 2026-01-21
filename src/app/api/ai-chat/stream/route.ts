@@ -2072,13 +2072,13 @@ If their favorite team has a match today/tonight, lead with that information.`;
           // This runs FIRST, before ANY slow operations
           // For pre-analyzed matches, returns instantly
           // =====================================================
-          const matchQueryPattern = /(?:analyze|analyse|preview|predict|prediction)?\\s*([a-zA-Z\\s]+?)\\s+(?:vs\\.?|versus|against|@)\\s+([a-zA-Z\\s]+)/i;
+          const matchQueryPattern = /(?:analyze|analyse|preview|predict|prediction)?\s*([a-zA-Z\s]+?)\s+(?:vs\.?|versus|against|@)\s+([a-zA-Z\s]+)/i;
           const quickMatch = searchMessage.match(matchQueryPattern);
 
           if (quickMatch) {
             const [, rawHome, rawAway] = quickMatch;
-            const homeWord = rawHome.trim().split(/\\s+/).pop() || '';
-            const awayWord = rawAway.trim().split(/\\s+/).pop() || '';
+            const homeWord = rawHome.trim().split(/\s+/).pop() || '';
+            const awayWord = rawAway.trim().split(/\s+/).pop() || '';
 
             if (homeWord.length > 2 && awayWord.length > 2) {
               console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST CHECK: ${homeWord} vs ${awayWord}`);
