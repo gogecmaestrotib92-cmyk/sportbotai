@@ -557,6 +557,73 @@ export async function fetchMatchPreviewOrAnalysis(
         datesToTry.push(date.toISOString().split('T')[0]);
     }
 
+    // =====================================================
+    // FAST PATH: Check Prediction table FIRST (instant DB query)
+    // This avoids slow HTTP timeouts when we already have cached data
+    // =====================================================
+    try {
+        const { prisma } = await import('@/lib/prisma');
+
+        const prediction = await prisma.prediction.findFirst({
+            where: {
+                OR: [
+                    {
+                        AND: [
+                            { matchName: { contains: homeTeam.split(' ')[0], mode: 'insensitive' } },
+                            { matchName: { contains: awayTeam.split(' ')[0], mode: 'insensitive' } },
+                        ]
+                    },
+                    {
+                        AND: [
+                            { matchName: { contains: awayTeam.split(' ')[0], mode: 'insensitive' } },
+                            { matchName: { contains: homeTeam.split(' ')[0], mode: 'insensitive' } },
+                        ]
+                    }
+                ],
+                kickoff: { gte: new Date(new Date().getTime() - 24 * 60 * 60 * 1000) },
+                NOT: { fullResponse: { equals: undefined } },
+            },
+            orderBy: { kickoff: 'asc' },
+        }) as any;
+
+        if (prediction?.fullResponse) {
+            console.log(`[Chat-Utils] ⚡ FAST PATH: Found Prediction.fullResponse for ${prediction.matchName}!`);
+            const fullData = prediction.fullResponse as any;
+            const context = formatMatchPreviewForChat(fullData, homeTeam, awayTeam);
+
+            const structuredData: MatchAnalysisData = {
+                matchInfo: {
+                    id: prediction.matchName?.toLowerCase().replace(/\s+/g, '-') || '',
+                    homeTeam: fullData.matchInfo?.homeTeam || homeTeam,
+                    awayTeam: fullData.matchInfo?.awayTeam || awayTeam,
+                    league: fullData.matchInfo?.league || '',
+                    sport: sport,
+                    kickoff: prediction.kickoff?.toISOString() || '',
+                },
+                story: {
+                    favored: fullData.story?.favored || 'home',
+                    confidence: fullData.story?.confidence || 'moderate',
+                    narrative: fullData.story?.narrative,
+                    snapshot: fullData.story?.snapshot,
+                },
+                universalSignals: fullData.universalSignals,
+                expectedScores: fullData.expectedScores,
+                matchUrl: `/match/${homeTeam.toLowerCase().replace(/\s+/g, '-')}-vs-${awayTeam.toLowerCase().replace(/\s+/g, '-')}-${sport.split('_')[1] || sport}-${new Date().toISOString().split('T')[0]}`,
+            };
+
+            return {
+                success: true,
+                context,
+                source: 'stored-prediction' as const,
+                odds: fullData.odds,
+                structuredData,
+            };
+        }
+        console.log(`[Chat-Utils] No cached prediction found, trying match-preview API...`);
+    } catch (fastPathError) {
+        console.log(`[Chat-Utils] Fast path error, continuing to match-preview:`, fastPathError);
+    }
+
     console.log(`[Chat-Utils] Trying match-preview for: ${homeTeam} vs ${awayTeam}, dates: ${datesToTry.join(', ')}`);
 
     // 1. TRY MATCH-PREVIEW FIRST (full Match Insights data) - try multiple dates
@@ -658,11 +725,34 @@ export async function fetchMatchPreviewOrAnalysis(
             console.log(`[Chat-Utils] ✅ Found Prediction.fullResponse for ${prediction.matchName}!`);
             const fullData = prediction.fullResponse as any;
             const context = formatMatchPreviewForChat(fullData, homeTeam, awayTeam);
+
+            // Build structured data from prediction for rich chat UI
+            const structuredData: MatchAnalysisData = {
+                matchInfo: {
+                    id: prediction.matchName?.toLowerCase().replace(/\s+/g, '-') || '',
+                    homeTeam: fullData.matchInfo?.homeTeam || homeTeam,
+                    awayTeam: fullData.matchInfo?.awayTeam || awayTeam,
+                    league: fullData.matchInfo?.league || '',
+                    sport: sport,
+                    kickoff: prediction.kickoff?.toISOString() || '',
+                },
+                story: {
+                    favored: fullData.story?.favored || 'home',
+                    confidence: fullData.story?.confidence || 'moderate',
+                    narrative: fullData.story?.narrative,
+                    snapshot: fullData.story?.snapshot,
+                },
+                universalSignals: fullData.universalSignals,
+                expectedScores: fullData.expectedScores,
+                matchUrl: `/match/${homeTeam.toLowerCase().replace(/\s+/g, '-')}-vs-${awayTeam.toLowerCase().replace(/\s+/g, '-')}-${sport.split('_')[1] || sport}-${new Date().toISOString().split('T')[0]}`,
+            };
+
             return {
                 success: true,
                 context,
                 source: 'stored-prediction' as const,
                 odds: fullData.odds,
+                structuredData,
             };
         } else {
             console.log(`[Chat-Utils] No Prediction.fullResponse found, falling back to analyze API...`);
