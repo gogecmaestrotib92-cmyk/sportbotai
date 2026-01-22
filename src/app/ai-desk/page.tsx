@@ -63,7 +63,7 @@ export default function AIDeskPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       
-      <main className="min-h-screen bg-bg relative overflow-hidden">
+      <main className="min-h-screen bg-bg relative overflow-x-hidden">
         {/* Ambient Background Glows */}
         <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
         <div className="absolute top-1/2 left-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />

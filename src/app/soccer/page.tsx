@@ -99,7 +99,7 @@ export default function SoccerPage() {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
             />
 
-            <div className="min-h-screen bg-bg relative overflow-hidden">
+            <div className="min-h-screen bg-bg relative overflow-x-hidden">
                 <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet-500/5 rounded-full blur-[150px] pointer-events-none" />
                 <div className="absolute top-1/3 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
 

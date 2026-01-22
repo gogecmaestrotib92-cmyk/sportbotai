@@ -855,7 +855,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
   // Show header immediately with skeleton content while loading
   if (loading && parsedMatch) {
     return (
-      <div className="min-h-screen bg-bg relative overflow-hidden">
+      <div className="min-h-screen bg-bg relative overflow-x-hidden">
         {/* Ambient Background Glows */}
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
         <div className="absolute top-1/3 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
@@ -920,7 +920,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
   if (isTooFarAway && (parsedMatch || data?.matchInfo)) {
     const matchForHeader = data?.matchInfo || parsedMatch;
     return (
-      <div className="min-h-screen bg-bg relative overflow-hidden">
+      <div className="min-h-screen bg-bg relative overflow-x-hidden">
         {/* Ambient Background Glows */}
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
         <div className="fixed inset-0 bg-gradient-to-b from-white/[0.01] via-transparent to-transparent pointer-events-none" />
@@ -1027,7 +1027,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
   if (usageLimit) {
     const matchForHeader = usageLimit.matchInfo || parsedMatch;
     return (
-      <div className="min-h-screen bg-bg relative overflow-hidden">
+      <div className="min-h-screen bg-bg relative overflow-x-hidden">
         {/* Ambient Background Glows */}
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
         <div className="fixed inset-0 bg-gradient-to-b from-white/[0.01] via-transparent to-transparent pointer-events-none" />
@@ -1124,7 +1124,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
 
   if (error || !data || !data.matchInfo) {
     return (
-      <div className="min-h-screen bg-bg relative overflow-hidden flex items-center justify-center p-4">
+      <div className="min-h-screen bg-bg relative overflow-x-hidden flex items-center justify-center p-4">
         {/* Ambient Background Glows */}
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
 
@@ -1192,7 +1192,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
   const hasPremiumAccess = canSeeAnalysis;
 
   return (
-    <div className="min-h-screen bg-bg relative overflow-hidden">
+    <div className="min-h-screen bg-bg relative overflow-x-hidden">
       {/* Ambient Background Glows */}
       <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute top-1/3 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />

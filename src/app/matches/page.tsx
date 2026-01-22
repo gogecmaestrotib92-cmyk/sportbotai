@@ -102,7 +102,7 @@ export default async function MatchesPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="min-h-screen bg-bg relative overflow-hidden">
+      <div className="min-h-screen bg-bg relative overflow-x-hidden">
         {/* Ambient Background Glows */}
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
         <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
