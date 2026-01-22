@@ -34,8 +34,9 @@ export function usePullToRefresh({
   const currentY = useRef(0);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    // Only activate if at top of scroll
-    if (window.scrollY <= 0 && !isRefreshing) {
+    // Only activate if STRICTLY at top of scroll (=== 0)
+    // Prevents false activations on Android/Chrome
+    if (window.scrollY === 0 && !isRefreshing) {
       startY.current = e.touches[0].clientY;
       setIsPulling(true);
     }
@@ -47,16 +48,22 @@ export function usePullToRefresh({
     currentY.current = e.touches[0].clientY;
     const diff = currentY.current - startY.current;
     
-    // Only pull down, not up
-    if (diff > 0 && window.scrollY <= 0) {
+    // Only pull down when at top of page
+    // CRITICAL: Check scrollY STRICTLY at 0 to avoid blocking normal scroll
+    if (diff > 0 && window.scrollY === 0) {
       // Apply resistance to make it feel natural
       const distance = Math.min(diff / resistance, threshold * 1.5);
       setPullDistance(distance);
       
-      // Prevent default scroll when pulling
-      if (distance > 10) {
+      // Only prevent default when significantly pulling (>30px) at top
+      // This allows normal scroll to work on Android/Chrome
+      if (distance > 30) {
         e.preventDefault();
       }
+    } else if (diff < 0) {
+      // User is scrolling up (normal behavior) - reset pull state
+      setPullDistance(0);
+      setIsPulling(false);
     }
   }, [isPulling, isRefreshing, resistance, threshold]);
 

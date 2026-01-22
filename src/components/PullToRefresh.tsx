@@ -36,9 +36,10 @@ export default function PullToRefresh({
   const startY = useRef(0);
   const currentY = useRef(0);
 
-  // Check if we're at top of page
+  // Check if we're STRICTLY at top of page
+  // Using === 0 to avoid false positives on Android/Chrome
   const isAtTop = useCallback(() => {
-    return window.scrollY <= 0;
+    return window.scrollY === 0;
   }, []);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
@@ -53,9 +54,11 @@ export default function PullToRefresh({
     currentY.current = e.touches[0].clientY;
     const diff = currentY.current - startY.current;
     
-    // Only allow pulling down
-    if (diff < 0) {
+    // Only allow pulling down when STRICTLY at top
+    // CRITICAL: Use === 0 to avoid blocking scroll on Android/Chrome
+    if (diff < 0 || window.scrollY !== 0) {
       setPullDistance(0);
+      setIsPulling(false);
       return;
     }
     
@@ -65,8 +68,9 @@ export default function PullToRefresh({
     
     setPullDistance(Math.min(resistedDiff, threshold * 1.5));
     
-    // Prevent scroll if pulling
-    if (diff > 10) {
+    // Only prevent default when significantly pulling (>30px) at top
+    // This allows normal scroll to work on Android/Chrome
+    if (resistedDiff > 30) {
       e.preventDefault();
     }
   }, [isPulling, disabled, isRefreshing, threshold]);
