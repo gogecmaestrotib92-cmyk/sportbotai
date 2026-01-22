@@ -1238,9 +1238,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // FIX: When raw stats are missing (goalsScored=0), estimate from form or use league averages
     // This prevents the Poisson model from returning unrealistic 1:1 scores
     // CRITICAL: Apply to ALL sports, not just soccer!
-    const isNHL = matchInfo.sport.includes('hockey') || matchInfo.sport.includes('nhl');
-    const isNBA = matchInfo.sport.includes('basketball') || matchInfo.sport.includes('nba');
-    const isNFL = matchInfo.sport.includes('football') || matchInfo.sport.includes('nfl');
+    // Note: isNHL, isNBA, isNFL already defined above for injury fetching
     const isSoccerMatch = !isNHL && !isNBA && !isNFL;
 
     // League average scoring rates for estimation
