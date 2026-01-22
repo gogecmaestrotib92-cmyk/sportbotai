@@ -1621,11 +1621,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         hasFormData: hasRealFormData,
         hasH2H: !!(enrichedData.headToHead?.length),
         hasInjuries: !!(injuries.home.length || injuries.away.length),
-        // CRITICAL: Flag for UI to know if predicted scores are reliable
-        // For US sports (NHL/NBA/NFL), we often lack proper stats from API-Sports
-        // Only show predicted scores when we have real goal/point data
-        hasReliableStats: !!(homeStatsRaw?.goalsScored && awayStatsRaw?.goalsScored && 
-          homeStatsRaw.goalsScored > 0 && awayStatsRaw.goalsScored > 0),
+        // Now always true since we provide league-average based estimates for all sports
+        // Even without team-specific stats, we show realistic estimates adjusted by odds
+        hasReliableStats: true,
         message: !hasRealFormData
           ? `Historical data not available for ${matchInfo.sport.toUpperCase()}. Analysis based on AI estimation.`
           : undefined,
@@ -1687,16 +1685,75 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       odds: odds,
       // Predicted scores from Poisson/Elo model
       // FIX: For soccer with missing stats, use odds-based expected scores instead of 1:1
+      // FIX2: For US sports without stats, use league averages + odds-based adjustments
       expectedScores: (() => {
         const base = aiAnalysis.expectedScores;
-        const isSoccer = !matchInfo.sport.includes('basketball') &&
-          !matchInfo.sport.includes('nba') &&
-          !matchInfo.sport.includes('football') &&
-          !matchInfo.sport.includes('nfl') &&
-          !matchInfo.sport.includes('hockey') &&
-          !matchInfo.sport.includes('nhl');
+        const sportLower = matchInfo.sport.toLowerCase();
+        
+        const isNHL = sportLower.includes('hockey') || sportLower.includes('nhl');
+        const isNBA = sportLower.includes('basketball') || sportLower.includes('nba');
+        const isNFL = sportLower.includes('football') || sportLower.includes('nfl');
+        const isSoccer = !isNHL && !isNBA && !isNFL;
 
-        // Check if scores look like default 1:1 (within 0.4 of each other for soccer)
+        // League average totals (per team)
+        const leagueAverages: Record<string, { home: number; away: number; total: number }> = {
+          nhl: { home: 3.2, away: 3.0, total: 6.2 },    // NHL 2024: ~6.2 goals/game
+          nba: { home: 114, away: 112, total: 226 },    // NBA 2024: ~226 pts/game
+          nfl: { home: 23, away: 21, total: 44 },       // NFL 2024: ~44 pts/game
+          soccer: { home: 1.4, away: 1.1, total: 2.5 }, // Soccer varies by league
+        };
+        
+        const getSportKey = () => {
+          if (isNHL) return 'nhl';
+          if (isNBA) return 'nba';
+          if (isNFL) return 'nfl';
+          return 'soccer';
+        };
+        
+        const avg = leagueAverages[getSportKey()];
+        
+        // For US sports: if base scores are 0, missing, or unrealistic, use league average + odds adjustment
+        if ((isNHL || isNBA || isNFL) && (!base || base.home === 0 || base.away === 0 || 
+            (isNHL && (base.home + base.away) < 2) ||
+            (isNBA && (base.home + base.away) < 150) ||
+            (isNFL && (base.home + base.away) < 20))) {
+          
+          // If we have odds, adjust the average based on favorite
+          let homeScore = avg.home;
+          let awayScore = avg.away;
+          
+          if (odds?.homeOdds && odds?.awayOdds) {
+            const homeProb = 1 / odds.homeOdds;
+            const awayProb = 1 / odds.awayOdds;
+            const total = homeProb + awayProb;
+            const normHomeProb = homeProb / total;
+            
+            // Adjust scores based on win probability (favorite scores more)
+            // NHL: ±0.3 goals swing, NBA: ±5 pts swing, NFL: ±3 pts swing
+            const swingAmount = isNHL ? 0.3 : isNBA ? 5 : 3;
+            const homeAdj = (normHomeProb - 0.5) * swingAmount * 2;
+            
+            homeScore = Math.round((avg.home + homeAdj) * 10) / 10;
+            awayScore = Math.round((avg.away - homeAdj) * 10) / 10;
+            
+            // Ensure realistic bounds
+            if (isNHL) {
+              homeScore = Math.max(2.5, Math.min(4.0, homeScore));
+              awayScore = Math.max(2.5, Math.min(3.5, awayScore));
+            } else if (isNBA) {
+              homeScore = Math.max(105, Math.min(125, homeScore));
+              awayScore = Math.max(100, Math.min(120, awayScore));
+            } else if (isNFL) {
+              homeScore = Math.max(17, Math.min(30, homeScore));
+              awayScore = Math.max(14, Math.min(27, awayScore));
+            }
+          }
+          
+          console.log(`[Match-Preview] US sport (${getSportKey()}) using league average + odds adjustment: ${homeScore}:${awayScore}`);
+          return { home: homeScore, away: awayScore };
+        }
+
+        // Check if soccer scores look like default 1:1 (within 0.4 of each other)
         const isNearEqual = isSoccer && base && Math.abs(base.home - base.away) < 0.4 &&
           base.home >= 1.0 && base.home <= 1.6 &&
           base.away >= 1.0 && base.away <= 1.6;
