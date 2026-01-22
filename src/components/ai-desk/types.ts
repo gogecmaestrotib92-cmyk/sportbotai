@@ -35,7 +35,12 @@ export interface MatchAnalysisData {
             edge?: { direction: string; percentage: number; label: string };
             tempo?: { level: string; label: string };
             efficiency?: { winner: string | null; label: string };
-            availability?: { level: string; label: string };
+            availability?: { 
+                level: string; 
+                label: string;
+                homeInjuries?: Array<{ player: string; reason?: string; status?: string }>;
+                awayInjuries?: Array<{ player: string; reason?: string; status?: string }>;
+            };
         };
     };
     expectedScores?: {

@@ -289,27 +289,37 @@ export default function ChatMatchAnalysis({ data }: ChatMatchAnalysisProps) {
                 </div>
             )}
 
-            {/* Injuries */}
-            {injuryContext && (injuryContext.homeTeamInjuries?.length || injuryContext.awayTeamInjuries?.length) && (
+            {/* Injuries - Check both injuryContext and universalSignals.display.availability */}
+            {(
+                (injuryContext && (injuryContext.homeTeamInjuries?.length || injuryContext.awayTeamInjuries?.length)) ||
+                (universalSignals?.display?.availability?.homeInjuries?.length || universalSignals?.display?.availability?.awayInjuries?.length)
+            ) && (
                 <div className="p-4 border-b border-white/10">
                     <div className="text-xs font-medium text-red-400 mb-2">🏥 INJURIES</div>
                     <div className="space-y-2 text-sm">
-                        {injuryContext.homeTeamInjuries && injuryContext.homeTeamInjuries.length > 0 && (
+                        {/* Try injuryContext first, fallback to universalSignals */}
+                        {(injuryContext?.homeTeamInjuries?.length || universalSignals?.display?.availability?.homeInjuries?.length) ? (
                             <div>
                                 <span className="text-text-muted">{matchInfo.homeTeam}:</span>
                                 <span className="text-white ml-1">
-                                    {injuryContext.homeTeamInjuries.slice(0, 3).map(p => `${p.player} (${p.status})`).join(', ')}
+                                    {injuryContext?.homeTeamInjuries?.length 
+                                        ? injuryContext.homeTeamInjuries.slice(0, 3).map((p: any) => `${p.player} (${p.status})`).join(', ')
+                                        : universalSignals?.display?.availability?.homeInjuries?.slice(0, 3).map((p: any) => `${p.player} (${p.reason || p.status || 'Out'})`).join(', ')
+                                    }
                                 </span>
                             </div>
-                        )}
-                        {injuryContext.awayTeamInjuries && injuryContext.awayTeamInjuries.length > 0 && (
+                        ) : null}
+                        {(injuryContext?.awayTeamInjuries?.length || universalSignals?.display?.availability?.awayInjuries?.length) ? (
                             <div>
                                 <span className="text-text-muted">{matchInfo.awayTeam}:</span>
                                 <span className="text-white ml-1">
-                                    {injuryContext.awayTeamInjuries.slice(0, 3).map(p => `${p.player} (${p.status})`).join(', ')}
+                                    {injuryContext?.awayTeamInjuries?.length
+                                        ? injuryContext.awayTeamInjuries.slice(0, 3).map((p: any) => `${p.player} (${p.status})`).join(', ')
+                                        : universalSignals?.display?.availability?.awayInjuries?.slice(0, 3).map((p: any) => `${p.player} (${p.reason || p.status || 'Out'})`).join(', ')
+                                    }
                                 </span>
                             </div>
-                        )}
+                        ) : null}
                     </div>
                 </div>
             )}

@@ -1715,6 +1715,26 @@ export async function POST(request: NextRequest) {
                   ? `/match/${homeSlug}-vs-${awaySlug}-${sportCode}-${dateStr}`
                   : `/match/${homeSlug}-vs-${awaySlug}-${sportCode}`;
                 
+                // Build oddsComparison from marketIntel if not present
+                // This ensures chat shows the same edge data as the main page
+                let oddsComparison = fullData.oddsComparison;
+                if (!oddsComparison && fullData.marketIntel) {
+                  const mi = fullData.marketIntel;
+                  const modelProb = mi.modelProbability || {};
+                  const impliedProb = mi.impliedProbability || {};
+                  oddsComparison = {
+                    homeEdge: modelProb.home && impliedProb.home 
+                      ? Math.round((modelProb.home - impliedProb.home) * 10) / 10 
+                      : undefined,
+                    awayEdge: modelProb.away && impliedProb.away 
+                      ? Math.round((modelProb.away - impliedProb.away) * 10) / 10 
+                      : undefined,
+                    drawEdge: modelProb.draw && impliedProb.draw 
+                      ? Math.round((modelProb.draw - impliedProb.draw) * 10) / 10 
+                      : undefined,
+                  };
+                }
+                
                 const structuredData = {
                   matchInfo: {
                     id: prediction.matchName?.toLowerCase().replace(/\s+/g, '-') || '',
@@ -1729,7 +1749,7 @@ export async function POST(request: NextRequest) {
                   expectedScores: fullData.expectedScores,
                   matchUrl,
                   probabilities: transformedProbs,
-                  oddsComparison: fullData.oddsComparison,
+                  oddsComparison,
                   briefing: fullData.briefing,
                   momentumAndForm: fullData.momentumAndForm,
                   injuryContext: fullData.injuryContext,
@@ -1737,6 +1757,8 @@ export async function POST(request: NextRequest) {
                   tacticalAnalysis: fullData.tacticalAnalysis,
                   preMatchInsights: fullData.preMatchInsights,
                   upsetPotential: fullData.upsetPotential,
+                  // Also pass marketIntel for advanced displays
+                  marketIntel: fullData.marketIntel,
                 };
 
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'match-analysis', data: structuredData })}\n\n`));
