@@ -2084,7 +2084,8 @@ If their favorite team has a match today/tonight, lead with that information.`;
               console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST CHECK: ${homeWord} vs ${awayWord}`);
 
               try {
-                const prediction = await prisma.prediction.findFirst({
+                // First try exact match
+                let prediction = await prisma.prediction.findFirst({
                   where: {
                     OR: [
                       {
@@ -2108,6 +2109,42 @@ If their favorite team has a match today/tonight, lead with that information.`;
                   },
                   orderBy: { kickoff: 'asc' }, // Earliest match first (pre-analyzed before manual)
                 });
+
+                // FUZZY FALLBACK: If not found, try with first 4 chars of each team (handles typos)
+                if (!prediction?.fullResponse && homeWord.length >= 4 && awayWord.length >= 4) {
+                  const homePrefix = homeWord.substring(0, 4);
+                  const awayPrefix = awayWord.substring(0, 4);
+                  console.log(`[AI-Chat-Stream] ⚡ FUZZY FALLBACK: Trying ${homePrefix}... vs ${awayPrefix}...`);
+                  
+                  prediction = await prisma.prediction.findFirst({
+                    where: {
+                      OR: [
+                        {
+                          AND: [
+                            { matchName: { contains: homePrefix, mode: 'insensitive' } },
+                            { matchName: { contains: awayPrefix, mode: 'insensitive' } },
+                          ]
+                        },
+                        {
+                          AND: [
+                            { matchName: { contains: awayPrefix, mode: 'insensitive' } },
+                            { matchName: { contains: homePrefix, mode: 'insensitive' } },
+                          ]
+                        }
+                      ],
+                      kickoff: { gte: new Date(new Date().getTime() - 72 * 60 * 60 * 1000) },
+                      NOT: [
+                        { fullResponse: { equals: undefined } },
+                        { matchName: { startsWith: 'Analyze', mode: 'insensitive' } },
+                      ],
+                    },
+                    orderBy: { kickoff: 'asc' },
+                  });
+                  
+                  if (prediction?.fullResponse) {
+                    console.log(`[AI-Chat-Stream] ⚡ FUZZY MATCH FOUND: ${prediction.matchName}`);
+                  }
+                }
 
                 if (prediction?.fullResponse) {
                   const fullData = prediction.fullResponse as any;
@@ -2171,6 +2208,22 @@ If their favorite team has a match today/tonight, lead with that information.`;
                   };
 
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'match-analysis', data: structuredData })}\n\n`));
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+                  controller.close();
+                  return;
+                } else {
+                  // ULTRA-FAST didn't find match - provide helpful message immediately
+                  // Don't stall on slow HTTP calls for a match that's not in our database
+                  console.log(`[AI-Chat-Stream] ⚡ No pre-analyzed match found for "${homeWord} vs ${awayWord}" - returning helpful message`);
+                  
+                  const noMatchMessage = `I don't have pre-analyzed data for **${rawHome.trim()} vs ${rawAway.trim()}** yet.\n\n` +
+                    `**What you can do:**\n` +
+                    `• Check our [Matches](/matches) page for all available analyses\n` +
+                    `• Try a different match that's listed there\n` +
+                    `• Make sure the team names are spelled correctly\n\n` +
+                    `We pre-analyze matches daily from: Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League, NBA, NFL, and NHL.`;
+                  
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', content: noMatchMessage })}\n\n`));
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
                   controller.close();
                   return;
