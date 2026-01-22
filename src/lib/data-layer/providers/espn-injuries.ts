@@ -301,3 +301,226 @@ export function clearESPNInjuryCache(): void {
     };
     console.log('[ESPN Injuries] Cache cleared');
 }
+
+// ============================================
+// ESPN HEAD-TO-HEAD (H2H) DATA
+// ============================================
+
+const ESPN_SCHEDULE_URLS = {
+    nba: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams',
+    nhl: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams',
+    nfl: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams',
+} as const;
+
+interface ESPNH2HMatch {
+    date: string;
+    homeTeam: string;
+    awayTeam: string;
+    homeScore: number;
+    awayScore: number;
+    venue?: string;
+    winner: 'home' | 'away' | 'draw';
+}
+
+interface ESPNH2HResult {
+    success: boolean;
+    matches: ESPNH2HMatch[];
+    summary: {
+        totalMatches: number;
+        team1Wins: number;
+        team2Wins: number;
+        draws: number;
+    };
+    error?: string;
+}
+
+// Cache for team ID lookups
+const teamIdCache: Record<string, Record<string, string>> = {
+    nba: {},
+    nhl: {},
+    nfl: {},
+};
+
+/**
+ * Get ESPN team ID by searching team name
+ */
+async function getESPNTeamId(teamName: string, sport: 'nba' | 'nhl' | 'nfl'): Promise<string | null> {
+    const cacheKey = teamName.toLowerCase();
+    if (teamIdCache[sport][cacheKey]) {
+        return teamIdCache[sport][cacheKey];
+    }
+
+    try {
+        const url = ESPN_SCHEDULE_URLS[sport];
+        const response = await fetch(url);
+        if (!response.ok) return null;
+
+        const data = await response.json();
+        const teams = data.sports?.[0]?.leagues?.[0]?.teams || [];
+
+        // Search for team by name (fuzzy match)
+        const searchTerms = teamName.toLowerCase().split(/\s+/);
+        for (const t of teams) {
+            const team = t.team;
+            const displayName = team.displayName?.toLowerCase() || '';
+            const shortName = team.shortDisplayName?.toLowerCase() || '';
+            const location = team.location?.toLowerCase() || '';
+            const nickname = team.nickname?.toLowerCase() || '';
+
+            // Check if any search term matches
+            const matches = searchTerms.some(term =>
+                displayName.includes(term) ||
+                shortName.includes(term) ||
+                location.includes(term) ||
+                nickname.includes(term)
+            );
+
+            if (matches) {
+                teamIdCache[sport][cacheKey] = team.id;
+                return team.id;
+            }
+        }
+
+        return null;
+    } catch (error) {
+        console.error(`[ESPN H2H] Failed to get team ID for ${teamName}:`, error);
+        return null;
+    }
+}
+
+/**
+ * Get head-to-head history between two teams using ESPN API
+ * Fetches multiple seasons to get comprehensive H2H data
+ */
+export async function getESPNH2H(
+    team1Name: string,
+    team2Name: string,
+    sport: 'nba' | 'nhl' | 'nfl',
+    seasons: number = 3 // How many seasons to look back
+): Promise<ESPNH2HResult> {
+    console.log(`[ESPN H2H] Fetching ${team1Name} vs ${team2Name} (${sport})`);
+
+    try {
+        // Get team IDs
+        const [team1Id, team2Id] = await Promise.all([
+            getESPNTeamId(team1Name, sport),
+            getESPNTeamId(team2Name, sport),
+        ]);
+
+        if (!team1Id || !team2Id) {
+            console.log(`[ESPN H2H] Could not find team IDs: ${team1Name}=${team1Id}, ${team2Name}=${team2Id}`);
+            return {
+                success: false,
+                matches: [],
+                summary: { totalMatches: 0, team1Wins: 0, team2Wins: 0, draws: 0 },
+                error: `Could not find team: ${!team1Id ? team1Name : team2Name}`,
+            };
+        }
+
+        console.log(`[ESPN H2H] Team IDs: ${team1Name}=${team1Id}, ${team2Name}=${team2Id}`);
+
+        // Get current year and fetch multiple seasons
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1;
+
+        // Determine current season based on sport calendars
+        // ESPN uses the season START year (e.g., 2025-26 season = "2025" in ESPN)
+        let startSeason: number;
+        if (sport === 'nfl') {
+            // NFL: Sept-Feb, uses start year. Jan 2026 = 2025 season
+            startSeason = currentMonth <= 6 ? currentYear - 1 : currentYear;
+        } else if (sport === 'nhl' || sport === 'nba') {
+            // NHL/NBA: Oct-June, uses start year. Jan 2026 = 2025 season  
+            startSeason = currentMonth <= 6 ? currentYear - 1 : currentYear;
+        } else {
+            startSeason = currentYear;
+        }
+
+        // Fetch schedules for multiple seasons in parallel
+        const seasonYears = Array.from({ length: seasons }, (_, i) => startSeason - i);
+        const schedulePromises = seasonYears.map(async (season) => {
+            try {
+                const url = `${ESPN_SCHEDULE_URLS[sport]}/${team1Id}/schedule?season=${season}`;
+                const response = await fetch(url);
+                if (!response.ok) return [];
+
+                const data = await response.json();
+                return data.events || [];
+            } catch {
+                return [];
+            }
+        });
+
+        const allSeasonEvents = await Promise.all(schedulePromises);
+        const allEvents = allSeasonEvents.flat();
+
+        // Filter for games against team2 that are completed
+        const h2hMatches: ESPNH2HMatch[] = [];
+
+        for (const event of allEvents) {
+            const competition = event.competitions?.[0];
+            if (!competition) continue;
+
+            const competitors = competition.competitors || [];
+            const isVsTeam2 = competitors.some((c: any) => c.team?.id === team2Id);
+            const isCompleted = competition.status?.type?.name === 'STATUS_FINAL';
+
+            if (isVsTeam2 && isCompleted) {
+                const homeComp = competitors.find((c: any) => c.homeAway === 'home');
+                const awayComp = competitors.find((c: any) => c.homeAway === 'away');
+
+                if (homeComp && awayComp) {
+                    const homeScore = parseInt(homeComp.score?.displayValue || '0');
+                    const awayScore = parseInt(awayComp.score?.displayValue || '0');
+
+                    h2hMatches.push({
+                        date: event.date,
+                        homeTeam: homeComp.team?.displayName || 'Unknown',
+                        awayTeam: awayComp.team?.displayName || 'Unknown',
+                        homeScore,
+                        awayScore,
+                        venue: competition.venue?.fullName,
+                        winner: homeScore > awayScore ? 'home' : awayScore > homeScore ? 'away' : 'draw',
+                    });
+                }
+            }
+        }
+
+        // Sort by date descending (most recent first)
+        h2hMatches.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        // Calculate summary
+        let team1Wins = 0, team2Wins = 0, draws = 0;
+        for (const match of h2hMatches) {
+            const team1IsHome = match.homeTeam.toLowerCase().includes(team1Name.toLowerCase().split(/\s+/)[0].toLowerCase());
+            if (match.winner === 'draw') {
+                draws++;
+            } else if ((team1IsHome && match.winner === 'home') || (!team1IsHome && match.winner === 'away')) {
+                team1Wins++;
+            } else {
+                team2Wins++;
+            }
+        }
+
+        console.log(`[ESPN H2H] Found ${h2hMatches.length} matches: ${team1Wins}-${draws}-${team2Wins}`);
+
+        return {
+            success: true,
+            matches: h2hMatches,
+            summary: {
+                totalMatches: h2hMatches.length,
+                team1Wins,
+                team2Wins,
+                draws,
+            },
+        };
+    } catch (error) {
+        console.error(`[ESPN H2H] Error:`, error);
+        return {
+            success: false,
+            matches: [],
+            summary: { totalMatches: 0, team1Wins: 0, team2Wins: 0, draws: 0 },
+            error: error instanceof Error ? error.message : 'Unknown error',
+        };
+    }
+}

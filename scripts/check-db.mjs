@@ -2,40 +2,39 @@ import { PrismaClient, Prisma } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function check() {
+  // Check for Bruins vs Golden Knights
   const pred = await prisma.prediction.findFirst({
     where: {
-      matchName: { contains: 'Mavericks', mode: 'insensitive' },
+      OR: [
+        { matchName: { contains: 'Bruins', mode: 'insensitive' } },
+        { matchName: { contains: 'Golden Knights', mode: 'insensitive' } },
+      ],
       NOT: { fullResponse: { equals: Prisma.DbNull } },
     },
     orderBy: { createdAt: 'desc' }
   });
 
-  if (pred?.fullResponse) {
-    const fr = pred.fullResponse;
-    console.log('=== PREDICTION TABLE ===');
+  if (pred) {
+    console.log('=== FOUND PREDICTION ===');
     console.log('matchName:', pred.matchName);
     console.log('matchId:', pred.matchId);
     console.log('sport:', pred.sport);
     console.log('kickoff:', pred.kickoff);
-    console.log('');
-    console.log('=== PROBABILITIES IN fullResponse ===');
-    console.log('probabilities:', JSON.stringify(fr.probabilities, null, 2));
-    console.log('');
-    console.log('=== MARKET INTEL IN fullResponse ===');
-    console.log('marketIntel:', JSON.stringify(fr.marketIntel, null, 2));
-    console.log('');
-    console.log('=== UNIVERSAL SIGNALS (injuries) ===');
-    const signals = fr.universalSignals;
-    if (signals?.display?.availability) {
-      console.log('homeInjuries:', JSON.stringify(signals.display.availability.homeInjuries, null, 2));
-      console.log('awayInjuries:', JSON.stringify(signals.display.availability.awayInjuries, null, 2));
-    } else {
-      console.log('No injury data in signals');
-    }
-    console.log('');
-    console.log('=== TOP-LEVEL INJURIES ===');
-    console.log('injuries:', JSON.stringify(fr.injuries, null, 2));
+    console.log('hasFullResponse:', !!pred.fullResponse);
+  } else {
+    console.log('No Bruins/Golden Knights prediction found with fullResponse');
   }
+  
+  // List recent NHL predictions
+  const nhlPreds = await prisma.prediction.findMany({
+    where: { sport: { contains: 'nhl', mode: 'insensitive' } },
+    select: { matchName: true, sport: true, kickoff: true, source: true },
+    orderBy: { kickoff: 'desc' },
+    take: 5
+  });
+  
+  console.log('\n=== RECENT NHL PREDICTIONS ===');
+  nhlPreds.forEach(p => console.log('-', p.matchName, '|', p.kickoff?.toISOString().split('T')[0]));
 
   await prisma.$disconnect();
 }

@@ -29,7 +29,7 @@ import { cacheSet, cacheGet, CACHE_TTL, CACHE_KEYS } from '@/lib/cache';
 import { analyzeMarket, type MarketIntel, type OddsData, oddsToImpliedProb } from '@/lib/value-detection';
 import { normalizeSport, getMatchRostersV2 } from '@/lib/data-layer/bridge';
 import { getMatchInjuriesViaPerplexity } from '@/lib/perplexity';
-import { getESPNInjuriesForTeam } from '@/lib/data-layer/providers/espn-injuries';
+import { getESPNInjuriesForTeam, getESPNH2H } from '@/lib/data-layer/providers/espn-injuries';
 import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee, getMatchFixtureInfo } from '@/lib/football-api';
 import { normalizeToUniversalSignals, formatSignalsForAI, getSignalSummary, type RawMatchInput } from '@/lib/universal-signals';
 import { ANALYSIS_PERSONALITY } from '@/lib/sportbot-brain';
@@ -852,11 +852,47 @@ async function runQuickAnalysis(
         })).filter(i => i.player !== 'Unknown Player') || []),
     };
 
-    console.log(`[Pre-Analyze] Injuries fetched - home: ${finalInjuries.home.length}, away: ${finalInjuries.away.length} (source: ${isSoccerMatch ? 'API-Sports' : 'Perplexity'})`);
+    console.log(`[Pre-Analyze] Injuries fetched - home: ${finalInjuries.home.length}, away: ${finalInjuries.away.length} (source: ${isSoccerMatch ? 'API-Sports' : 'ESPN'})`);
 
 
     // Use enriched data from unified service for cross-sport compatibility
     const enrichedData = unifiedData.enrichedData as any;
+
+    // ESPN H2H PRIMARY: For US sports, ESPN is more reliable than API-Sports for H2H
+    if (isUSAorBasketball) {
+      console.log(`[Pre-Analyze] Fetching H2H from ESPN for ${homeTeam} vs ${awayTeam}`);
+      try {
+        const espnSport = sport.includes('basketball') || sport.includes('nba') ? 'nba' :
+          sport.includes('hockey') || sport.includes('nhl') ? 'nhl' :
+            sport.includes('football') || sport.includes('nfl') ? 'nfl' : null;
+
+        if (espnSport) {
+          const espnH2H = await getESPNH2H(homeTeam, awayTeam, espnSport, 3);
+          if (espnH2H.success && espnH2H.summary.totalMatches > 0) {
+            console.log(`[Pre-Analyze] ESPN H2H: ${espnH2H.summary.totalMatches} matches (${espnH2H.summary.team1Wins}-${espnH2H.summary.draws}-${espnH2H.summary.team2Wins})`);
+            enrichedData.h2hSummary = {
+              totalMatches: espnH2H.summary.totalMatches,
+              homeWins: espnH2H.summary.team1Wins,
+              awayWins: espnH2H.summary.team2Wins,
+              draws: espnH2H.summary.draws,
+            };
+            enrichedData.headToHead = espnH2H.matches.map(m => ({
+              date: m.date,
+              homeTeam: m.homeTeam,
+              awayTeam: m.awayTeam,
+              homeScore: m.homeScore,
+              awayScore: m.awayScore,
+            }));
+            enrichedData.h2hSource = 'ESPN';
+          } else {
+            console.log(`[Pre-Analyze] ESPN H2H: No matches found for this matchup`);
+          }
+        }
+      } catch (espnErr) {
+        console.error(`[Pre-Analyze] ESPN H2H failed:`, espnErr);
+        // API-Sports H2H will be used as fallback (already in enrichedData)
+      }
+    }
 
     // Build form strings
     const homeFormStr = enrichedData.homeForm?.map((m: any) => m.result).join('') || '-----';

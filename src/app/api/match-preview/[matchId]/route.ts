@@ -221,6 +221,70 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
     }
 
+    // ==========================================
+    // ⚡ INSTANT PATH: Check for pre-analyzed match data
+    // If we have fullResponse from cron pre-analyze, return it instantly
+    // Works for BOTH anonymous and logged-in users (zero API cost)
+    // ==========================================
+    try {
+      const preAnalyzedStart = Date.now();
+      console.log(`[Match-Preview] ⚡ Checking for pre-analyzed data: ${matchInfo.homeTeam} vs ${matchInfo.awayTeam}`);
+      
+      // Build search terms from team names (first word is most reliable)
+      const homeWord = matchInfo.homeTeam.split(/\s+/)[0];
+      const awayWord = matchInfo.awayTeam.split(/\s+/)[0];
+      
+      const preAnalyzed = await prisma.prediction.findFirst({
+        where: {
+          AND: [
+            { matchName: { contains: homeWord, mode: 'insensitive' } },
+            { matchName: { contains: awayWord, mode: 'insensitive' } },
+          ],
+          kickoff: { gte: new Date() }, // Future matches only
+          NOT: { fullResponse: { equals: null } }, // Must have fullResponse
+        },
+        orderBy: { kickoff: 'asc' },
+      });
+      
+      if (preAnalyzed?.fullResponse) {
+        const fullData = preAnalyzed.fullResponse as any;
+        console.log(`[Match-Preview] ⚡ INSTANT PATH: Found pre-analyzed data for ${preAnalyzed.matchName} in ${Date.now() - preAnalyzedStart}ms`);
+        
+        // Build complete response from pre-analyzed data
+        const response = {
+          // Core match info
+          matchInfo: fullData.matchInfo || {
+            id: matchId,
+            homeTeam: matchInfo.homeTeam,
+            awayTeam: matchInfo.awayTeam,
+            league: matchInfo.league,
+            sport: matchInfo.sport,
+            kickoff: matchInfo.kickoff || preAnalyzed.kickoff?.toISOString(),
+          },
+          // All pre-analyzed data
+          ...fullData,
+          // Metadata
+          preAnalyzed: true,
+          creditUsed: false,
+          responseTime: Date.now() - startTime,
+        };
+        
+        console.log(`[Match-Preview] ⚡ Returning pre-analyzed response in ${Date.now() - startTime}ms`);
+        
+        return NextResponse.json(response, {
+          headers: {
+            'Cache-Control': 'public, max-age=300', // Cache for 5 min
+            'X-SportBot-Instant': 'true',
+          },
+        });
+      } else {
+        console.log(`[Match-Preview] ⚡ No pre-analyzed data found - continuing with normal flow`);
+      }
+    } catch (preAnalyzedErr) {
+      console.error(`[Match-Preview] ⚡ Pre-analyzed check failed:`, preAnalyzedErr);
+      // Continue with normal flow on error
+    }
+
     if (isAnonymous) {
       const demoStartTime = Date.now();
       console.log(`[Match-Preview] Anonymous user - checking for demo match`);
