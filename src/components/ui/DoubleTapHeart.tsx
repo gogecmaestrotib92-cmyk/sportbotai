@@ -68,7 +68,7 @@ export function DoubleTapHeart({
       {...handlers}
       onTouchStart={(e) => {
         handleTouchStart(e);
-        handlers.onTouchEnd?.(e);
+        handlers.onTouchEnd?.();
       }}
       className={`relative ${className}`}
     >
