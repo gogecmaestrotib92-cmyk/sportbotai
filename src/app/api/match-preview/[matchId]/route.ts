@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions, canUserAnalyze, incrementAnalysisCount } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { applyConvictionCap, type ModelInput } from '@/lib/accuracy-core/types';
 import { getExpectedScores } from '@/lib/accuracy-core/prediction-models';
 import { isBase64, parseMatchSlug, decodeBase64MatchId } from '@/lib/match-utils';
@@ -241,7 +242,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             { matchName: { contains: awayWord, mode: 'insensitive' } },
           ],
           kickoff: { gte: new Date() }, // Future matches only
-          NOT: { fullResponse: { equals: null } }, // Must have fullResponse
+          NOT: { fullResponse: { equals: Prisma.DbNull } }, // Must have fullResponse
         },
         orderBy: { kickoff: 'asc' },
       });
