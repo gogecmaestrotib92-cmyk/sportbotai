@@ -1623,16 +1623,25 @@ export async function POST(request: NextRequest) {
     // This runs BEFORE any slow operations (memory, LLM, cache, etc.)
     // Returns in <100ms for pre-analyzed matches
     // =====================================================
-    const instantMatchPattern = /^([a-zA-Z\s]+?)\s+(?:vs\.?|versus|against|@)\s+([a-zA-Z\s]+)$/i;
-    const instantMatch = message.trim().match(instantMatchPattern);
+    const instantMatchPattern = /^([a-zA-Z\s]+?)\s+(?:vs\.?|versus|against|@|-)\s+([a-zA-Z\s]+)$/i;
+    // Also match "Team1 Team2" pattern (without vs)
+    const simpleMatchPattern = /^([a-zA-Z]{3,})\s+([a-zA-Z]{3,})$/i;
+    let instantMatch = message.trim().match(instantMatchPattern);
+    
+    // Try simple pattern if vs-pattern didn't match
+    if (!instantMatch) {
+      instantMatch = message.trim().match(simpleMatchPattern);
+    }
     
     if (instantMatch) {
       const [, rawHome, rawAway] = instantMatch;
       const homeWord = rawHome.trim().split(/\s+/).pop() || '';
       const awayWord = rawAway.trim().split(/\s+/).pop() || '';
       
+      console.log(`[AI-Chat-Stream] ⚡ INSTANT PATH: Detected match query "${homeWord} vs ${awayWord}"`);
+      
       if (homeWord.length > 2 && awayWord.length > 2) {
-        console.log(`[AI-Chat-Stream] ⚡ INSTANT PATH: Checking "${homeWord} vs ${awayWord}" FIRST`);
+        console.log(`[AI-Chat-Stream] ⚡ INSTANT PATH: Querying DB for "${homeWord}" + "${awayWord}"`);
         
         try {
           // Check Prediction table directly - no slow operations
@@ -1653,12 +1662,12 @@ export async function POST(request: NextRequest) {
                 }
               ],
               kickoff: { gte: new Date(Date.now() - 72 * 60 * 60 * 1000) },
-              NOT: [
-                { fullResponse: { equals: undefined } },
-              ],
+              // fullResponse being non-null is checked after the query
             },
             orderBy: { kickoff: 'asc' },
           });
+          
+          console.log(`[AI-Chat-Stream] ⚡ INSTANT PATH: DB result = ${prediction ? prediction.matchName : 'NULL'}`);
 
           if (prediction?.fullResponse) {
             const fullData = prediction.fullResponse as any;
