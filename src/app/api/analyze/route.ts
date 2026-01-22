@@ -1379,6 +1379,13 @@ export async function POST(request: NextRequest) {
           odds: null,
           impliedProb,
           outcome: 'PENDING',
+          source: 'MANUAL',
+          fullResponse: analysis as any, // Save full analysis for AI chat
+          // Also save probabilities for chat
+          homeWin: analysis.probabilities.homeWin,
+          awayWin: analysis.probabilities.awayWin,
+          draw: analysis.probabilities.draw,
+          headline: analysis.briefing?.headline,
         },
       });
       console.log('[Prediction] Prediction saved for tracking:', predictionText, `(conviction: ${rawConviction} -> ${conviction} after ${sportInput} cap)`);
