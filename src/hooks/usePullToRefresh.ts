@@ -4,13 +4,18 @@
  * Native-like pull-to-refresh for mobile devices.
  * Shows a loading indicator when user pulls down at top of page.
  * 
- * ANDROID/CHROME FIX: Uses dynamic listener switching to avoid scroll blocking.
- * - Starts with passive listeners (allows normal scroll)
- * - When pull gesture detected at top, adds non-passive listener to block scroll
- * - Removes blocking listener when gesture ends
+ * ANDROID CHROME: Disabled to avoid scroll blocking issues.
+ * Android Chrome users get native browser pull-to-refresh instead.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+
+// Detect Android Chrome - these users get native PTR
+const isAndroidChrome = (): boolean => {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent.toLowerCase();
+  return ua.includes('android') && ua.includes('chrome');
+};
 
 interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void>;
@@ -159,6 +164,13 @@ export function usePullToRefresh({
   }, [isPulling, pullDistance, threshold, isRefreshing, onRefresh, detachBlockingListener]);
 
   useEffect(() => {
+    // SKIP on Android Chrome - let native browser handle pull-to-refresh
+    // This fixes the scroll blocking issue on Android Chrome
+    if (isAndroidChrome()) {
+      console.log('[usePullToRefresh] Android Chrome detected - using native PTR');
+      return;
+    }
+    
     const container = containerRef.current || document;
     
     if ('ontouchstart' in window) {

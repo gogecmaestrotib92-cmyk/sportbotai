@@ -4,16 +4,21 @@
  * Native-feeling pull-to-refresh with custom animation.
  * Shows SportBot logo spinning during refresh.
  * 
- * ANDROID/CHROME FIX: Uses dynamic listener switching to avoid scroll blocking.
- * - Starts with passive listeners (allows normal scroll)
- * - When pull gesture detected at top, adds non-passive listener to block scroll
- * - Removes blocking listener when gesture ends
+ * ANDROID CHROME: Disabled to avoid scroll blocking issues.
+ * Android Chrome users get native browser pull-to-refresh instead.
  */
 
 'use client';
 
 import { ReactNode, useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+
+// Detect Android Chrome - these users get native PTR
+const isAndroidChrome = (): boolean => {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent.toLowerCase();
+  return ua.includes('android') && ua.includes('chrome');
+};
 
 interface PullToRefreshProps {
   children: ReactNode;
@@ -161,6 +166,13 @@ export default function PullToRefresh({
   }, [isPulling, pullDistance, threshold, isRefreshing, onRefresh, router, detachBlockingListener]);
 
   useEffect(() => {
+    // SKIP on Android Chrome - let native browser handle pull-to-refresh
+    // This fixes the scroll blocking issue on Android Chrome
+    if (isAndroidChrome()) {
+      console.log('[PullToRefresh] Android Chrome detected - using native PTR');
+      return;
+    }
+    
     const container = containerRef.current;
     if (!container) return;
 
