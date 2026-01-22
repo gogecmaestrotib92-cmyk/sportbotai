@@ -435,19 +435,18 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
     fetchMatches();
   }, [fetchMatches]);
 
-  // Pull-to-refresh
-  const { isRefreshing, pullDistance } = usePullToRefresh({
-    onRefresh: fetchMatches,
-    threshold: 80,
-  });
+  // Pull-to-refresh DISABLED - causing scroll issues on Android Chrome
+  // Users can use browser's native pull-to-refresh or the refresh button
+  const isRefreshing = false;
+  const pullDistance = 0;
 
   return (
     <section className="py-8 sm:py-12">
-      {/* Pull to Refresh Indicator */}
-      <PullToRefreshIndicator
+      {/* Pull to Refresh Indicator - DISABLED */}
+      {/* <PullToRefreshIndicator
         pullDistance={pullDistance}
         isRefreshing={isRefreshing}
-      />
+      /> */}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 

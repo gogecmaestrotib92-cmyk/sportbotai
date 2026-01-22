@@ -121,11 +121,10 @@ export default function HistoryPage() {
     }
   }, [status, router, fetchHistory]);
 
-  // Pull-to-refresh
-  const { isRefreshing, pullDistance } = usePullToRefresh({
-    onRefresh: () => fetchHistory(0),
-    threshold: 80,
-  });
+  // Pull-to-refresh DISABLED - causing scroll issues on Android Chrome
+  // Users can use browser's native pull-to-refresh or the refresh button
+  const isRefreshing = false;
+  const pullDistance = 0;
 
   const deleteAnalysis = async (id: string) => {
     if (!confirm('Delete this analysis? This cannot be undone.')) return;
