@@ -2094,19 +2094,38 @@ function detectSportFromLeague(league: string): string | null {
  * Get sport configuration
  */
 function getSportConfig(sport: string) {
+  const hockeyConfig = { hasDraw: false, scoringUnit: 'goals', matchTerm: 'game', analystType: 'hockey analyst' };
+  const basketballConfig = { hasDraw: false, scoringUnit: 'points', matchTerm: 'game', analystType: 'basketball analyst' };
+  const nflConfig = { hasDraw: false, scoringUnit: 'points', matchTerm: 'game', analystType: 'NFL analyst' };
+  
   const configs: Record<string, { hasDraw: boolean; scoringUnit: string; matchTerm: string; analystType: string }> = {
     'soccer': { hasDraw: true, scoringUnit: 'goals', matchTerm: 'match', analystType: 'football analyst' },
-    'basketball': { hasDraw: false, scoringUnit: 'points', matchTerm: 'game', analystType: 'basketball analyst' },
-    'basketball_nba': { hasDraw: false, scoringUnit: 'points', matchTerm: 'game', analystType: 'NBA analyst' },
-    'basketball_euroleague': { hasDraw: false, scoringUnit: 'points', matchTerm: 'game', analystType: 'basketball analyst' },
-    'americanfootball': { hasDraw: false, scoringUnit: 'points', matchTerm: 'game', analystType: 'NFL analyst' },
-    'americanfootball_nfl': { hasDraw: false, scoringUnit: 'points', matchTerm: 'game', analystType: 'NFL analyst' },
-    'icehockey': { hasDraw: false, scoringUnit: 'goals', matchTerm: 'game', analystType: 'hockey analyst' },
+    'basketball': basketballConfig,
+    'basketball_nba': { ...basketballConfig, analystType: 'NBA analyst' },
+    'basketball_euroleague': basketballConfig,
+    'nba': { ...basketballConfig, analystType: 'NBA analyst' },
+    'americanfootball': nflConfig,
+    'americanfootball_nfl': nflConfig,
+    'nfl': nflConfig,
+    'icehockey': hockeyConfig,
+    'icehockey_nhl': hockeyConfig,
+    'nhl': hockeyConfig,
+    'hockey': hockeyConfig,
     'baseball': { hasDraw: false, scoringUnit: 'runs', matchTerm: 'game', analystType: 'baseball analyst' },
+    'mlb': { hasDraw: false, scoringUnit: 'runs', matchTerm: 'game', analystType: 'MLB analyst' },
     'tennis': { hasDraw: false, scoringUnit: 'sets', matchTerm: 'match', analystType: 'tennis analyst' },
   };
 
-  return configs[sport] || configs['soccer'];
+  // Normalize sport key - check for partial matches
+  const sportLower = sport.toLowerCase();
+  if (configs[sportLower]) return configs[sportLower];
+  
+  // Fallback checks for partial matches
+  if (sportLower.includes('hockey') || sportLower.includes('nhl')) return hockeyConfig;
+  if (sportLower.includes('basket') || sportLower.includes('nba')) return basketballConfig;
+  if (sportLower.includes('football') || sportLower.includes('nfl')) return nflConfig;
+  
+  return configs['soccer'];
 }
 
 function parseMatchId(matchId: string) {
