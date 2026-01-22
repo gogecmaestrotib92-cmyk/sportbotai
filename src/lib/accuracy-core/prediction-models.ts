@@ -665,6 +665,12 @@ export function getExpectedScores(
     // Apply home advantage as percentage boost
     const homeAdv = 'homeAdvantage' in config ? config.homeAdvantage : 0.25;
     homeExpected *= (1 + homeAdv);
+
+    // Hockey-specific: Clamp to realistic NHL ranges (2-5 goals typical)
+    if (input.sport.includes('hockey') || input.sport.includes('nhl')) {
+      homeExpected = Math.max(2.0, Math.min(5.5, homeExpected));
+      awayExpected = Math.max(2.0, Math.min(5.0, awayExpected));
+    }
   }
 
   return {

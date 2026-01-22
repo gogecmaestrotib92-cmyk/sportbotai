@@ -1290,6 +1290,24 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       console.log(`[Match-Preview] Estimated away stats from form: scored=${awayStats.goalsScored}, conceded=${awayStats.goalsConceded} (league avg: ${leagueAvg.scored})`);
     }
 
+    // HOCKEY/NHL SPECIAL: If stats are still too low (API returned minimal data), use league averages
+    // NHL teams score ~3.1 goals/game, so for 5 games played, expect ~15+ total goals
+    if (isNHL) {
+      const minExpectedTotal = homeStats.played * 2.5; // At least 2.5 goals per game for NHL
+      if (homeStats.goalsScored < minExpectedTotal) {
+        console.log(`[Match-Preview] NHL home stats too low (${homeStats.goalsScored} < ${minExpectedTotal}), using league avg`);
+        homeStats.goalsScored = Math.round(homeStats.played * 3.1 * 10) / 10;
+        homeStats.goalsConceded = Math.round(homeStats.played * 3.0 * 10) / 10;
+      }
+      if (awayStats.goalsScored < minExpectedTotal) {
+        console.log(`[Match-Preview] NHL away stats too low (${awayStats.goalsScored} < ${minExpectedTotal}), using league avg`);
+        awayStats.goalsScored = Math.round(awayStats.played * 3.1 * 10) / 10;
+        awayStats.goalsConceded = Math.round(awayStats.played * 3.0 * 10) / 10;
+      }
+    }
+
+    console.log(`[Match-Preview] Final stats for model - Home: ${homeStats.goalsScored}/${homeStats.played} (${(homeStats.goalsScored/Math.max(1,homeStats.played)).toFixed(1)}/game), Away: ${awayStats.goalsScored}/${awayStats.played} (${(awayStats.goalsScored/Math.max(1,awayStats.played)).toFixed(1)}/game)`);
+
     // H2H summary
     const h2h = {
       totalMeetings: enrichedData.h2hSummary?.totalMatches || 0,
