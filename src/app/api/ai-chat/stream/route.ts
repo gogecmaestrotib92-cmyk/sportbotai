@@ -1695,6 +1695,18 @@ export async function POST(request: NextRequest) {
                 const homeSlug = actualHome.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
                 const awaySlug = actualAway.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
                 
+                // Extract sport code for URL (e.g., "basketball_nba" -> "nba")
+                const sportParts = actualSport.split('_');
+                const sportCode = sportParts.length >= 2 ? sportParts.slice(1).join('-') : actualSport;
+                
+                // Format date for URL (YYYY-MM-DD)
+                const dateStr = kickoff ? kickoff.toISOString().split('T')[0] : '';
+                
+                // Build proper match URL: home-vs-away-sport-date
+                const matchUrl = dateStr 
+                  ? `/match/${homeSlug}-vs-${awaySlug}-${sportCode}-${dateStr}`
+                  : `/match/${homeSlug}-vs-${awaySlug}-${sportCode}`;
+                
                 const structuredData = {
                   matchInfo: {
                     id: prediction.matchName?.toLowerCase().replace(/\s+/g, '-') || '',
@@ -1707,7 +1719,7 @@ export async function POST(request: NextRequest) {
                   story: fullData.story || { favored: 'home', confidence: 'moderate' },
                   universalSignals: fullData.universalSignals,
                   expectedScores: fullData.expectedScores,
-                  matchUrl: `/match/${homeSlug}-vs-${awaySlug}`,
+                  matchUrl,
                   probabilities: transformedProbs,
                   oddsComparison: fullData.oddsComparison,
                   briefing: fullData.briefing,
