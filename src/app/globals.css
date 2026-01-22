@@ -1328,7 +1328,7 @@ button:focus-visible {
 /* Touch manipulation for smooth scrolling */
 .touch-scroll {
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  touch-action: manipulation;
 }
 .touch-pan-x {
   touch-action: pan-x;
@@ -1760,9 +1760,15 @@ button:focus-visible {
 
 /* Prevent rubber-banding on main content while allowing smooth scrolling */
 /* REMOVED overscroll-behavior-y: contain to restore native scroll on Android Chrome */
-/* html, body {
-  overscroll-behavior-y: contain;
-} */
+html, body {
+  /* Ensure scroll is always possible everywhere */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* manipulation: Enable pan/zoom but disable double-tap to zoom (faster clicks) */
+  touch-action: manipulation;
+  /* Removed overscroll-behavior-y: contain to fix Android stuck scroll */
+  /* overscroll-behavior-y: contain; */
+} 
 
 /* Allow rubber-band on scrollable content */
 .scroll-bounce {
