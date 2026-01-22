@@ -2383,21 +2383,10 @@ If their favorite team has a match today/tonight, lead with that information.`;
                   controller.close();
                   return;
                 } else {
-                  // ULTRA-FAST didn't find match - provide helpful message immediately
-                  // Don't stall on slow HTTP calls for a match that's not in our database
-                  console.log(`[AI-Chat-Stream] ⚡ No pre-analyzed match found for "${homeWord} vs ${awayWord}" - returning helpful message`);
-                  
-                  const noMatchMessage = `I don't have pre-analyzed data for **${rawHome.trim()} vs ${rawAway.trim()}** yet.\n\n` +
-                    `**What you can do:**\n` +
-                    `• Check our [Matches](/matches) page for all available analyses\n` +
-                    `• Try a different match that's listed there\n` +
-                    `• Make sure the team names are spelled correctly\n\n` +
-                    `We pre-analyze matches daily from: Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League, NBA, NFL, and NHL.`;
-                  
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', content: noMatchMessage })}\n\n`));
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
-                  controller.close();
-                  return;
+                  // No pre-analyzed match found - FALL THROUGH to do fresh analysis
+                  // Don't return static message - let the normal processing path handle it
+                  console.log(`[AI-Chat-Stream] ⚡ No pre-analyzed match found for "${homeWord} vs ${awayWord}" - falling through to FRESH ANALYSIS`);
+                  // Continue to normal processing below
                 }
               } catch (fastPathErr) {
                 console.log(`[AI-Chat-Stream] Fast path DB error, continuing:`, fastPathErr);
