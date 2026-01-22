@@ -356,6 +356,7 @@ interface MatchPreviewData {
     hasFormData: boolean;
     hasH2H: boolean;
     hasInjuries: boolean;
+    hasReliableStats?: boolean; // False for US sports (NHL/NBA/NFL) when we lack real stats data
     message?: string;
   };
   story: {
