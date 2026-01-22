@@ -1236,12 +1236,27 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
         )}
 
         {/* Predicted Score Section - Shows expected score from Poisson/Elo model */}
-        {data.expectedScores && (
+        {/* Only show when we have reliable stats data (not for NHL/NBA/NFL with missing stats) */}
+        {data.expectedScores && data.dataAvailability?.hasReliableStats !== false && (
           <div className="mt-6">
             <PredictedScoreDisplay
               homeTeam={data.matchInfo.homeTeam}
               awayTeam={data.matchInfo.awayTeam}
               expectedScores={data.expectedScores}
+              overUnder={data.overUnder}
+              sport={data.matchInfo.sport}
+              locale={locale}
+            />
+          </div>
+        )}
+
+        {/* Show O/U from market even when predicted score is hidden (for NHL/NBA/NFL) */}
+        {data.expectedScores && data.dataAvailability?.hasReliableStats === false && data.overUnder && (
+          <div className="mt-6">
+            <PredictedScoreDisplay
+              homeTeam={data.matchInfo.homeTeam}
+              awayTeam={data.matchInfo.awayTeam}
+              expectedScores={{ home: 0, away: 0 }} // Don't show fake prediction
               overUnder={data.overUnder}
               sport={data.matchInfo.sport}
               locale={locale}

@@ -1621,6 +1621,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         hasFormData: hasRealFormData,
         hasH2H: !!(enrichedData.headToHead?.length),
         hasInjuries: !!(injuries.home.length || injuries.away.length),
+        // CRITICAL: Flag for UI to know if predicted scores are reliable
+        // For US sports (NHL/NBA/NFL), we often lack proper stats from API-Sports
+        // Only show predicted scores when we have real goal/point data
+        hasReliableStats: !!(homeStatsRaw?.goalsScored && awayStatsRaw?.goalsScored && 
+          homeStatsRaw.goalsScored > 0 && awayStatsRaw.goalsScored > 0),
         message: !hasRealFormData
           ? `Historical data not available for ${matchInfo.sport.toUpperCase()}. Analysis based on AI estimation.`
           : undefined,

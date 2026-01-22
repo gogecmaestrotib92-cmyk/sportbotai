@@ -223,8 +223,9 @@ export default function PredictedScoreDisplay({
     }
 
     // ===== LOW-SCORING SPORTS (Soccer/Hockey) =====
-    const homeGoals = expectedScores?.home ? Math.round(expectedScores.home) : 1;
-    const awayGoals = expectedScores?.away ? Math.round(expectedScores.away) : 1;
+    const homeGoals = expectedScores?.home ? Math.round(expectedScores.home) : 0;
+    const awayGoals = expectedScores?.away ? Math.round(expectedScores.away) : 0;
+    const hasValidScore = homeGoals > 0 || awayGoals > 0;
 
     return (
         <div className="p-5 rounded-2xl bg-gradient-to-br from-violet-500/10 to-transparent border border-violet-500/20">
@@ -232,28 +233,30 @@ export default function PredictedScoreDisplay({
             <div className="flex items-center gap-2 mb-4">
                 <span className="text-xl">🎯</span>
                 <div>
-                    <h3 className="text-sm font-semibold text-white">{t.predictedScore}</h3>
-                    <p className="text-[10px] text-zinc-500">{t.basedOnModel}</p>
+                    <h3 className="text-sm font-semibold text-white">{hasValidScore ? t.predictedScore : t.gameOutlook}</h3>
+                    <p className="text-[10px] text-zinc-500">{hasValidScore ? t.basedOnModel : t.bettingInsight}</p>
                 </div>
             </div>
 
-            {/* Score Display */}
-            <div className="flex items-center justify-center gap-6 py-4">
-                {/* Home Team */}
-                <div className="text-center">
-                    <p className="text-xs text-zinc-400 mb-1 truncate max-w-[80px]">{homeTeam}</p>
-                    <span className="text-4xl font-bold text-white">{homeGoals}</span>
-                </div>
+            {/* Score Display - Only show when we have valid predicted scores */}
+            {hasValidScore && (
+                <div className="flex items-center justify-center gap-6 py-4">
+                    {/* Home Team */}
+                    <div className="text-center">
+                        <p className="text-xs text-zinc-400 mb-1 truncate max-w-[80px]">{homeTeam}</p>
+                        <span className="text-4xl font-bold text-white">{homeGoals}</span>
+                    </div>
 
-                {/* Separator */}
-                <span className="text-2xl text-zinc-600">-</span>
+                    {/* Separator */}
+                    <span className="text-2xl text-zinc-600">-</span>
 
-                {/* Away Team */}
-                <div className="text-center">
-                    <p className="text-xs text-zinc-400 mb-1 truncate max-w-[80px]">{awayTeam}</p>
-                    <span className="text-4xl font-bold text-white">{awayGoals}</span>
+                    {/* Away Team */}
+                    <div className="text-center">
+                        <p className="text-xs text-zinc-400 mb-1 truncate max-w-[80px]">{awayTeam}</p>
+                        <span className="text-4xl font-bold text-white">{awayGoals}</span>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* O/U Section */}
             <div className="pt-3 border-t border-white/5">
