@@ -29,6 +29,7 @@ import { cacheSet, cacheGet, CACHE_TTL, CACHE_KEYS } from '@/lib/cache';
 import { analyzeMarket, type MarketIntel, type OddsData, oddsToImpliedProb } from '@/lib/value-detection';
 import { normalizeSport, getMatchRostersV2 } from '@/lib/data-layer/bridge';
 import { getMatchInjuriesViaPerplexity } from '@/lib/perplexity';
+import { getESPNInjuriesForTeam } from '@/lib/data-layer/providers/espn-injuries';
 import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee, getMatchFixtureInfo } from '@/lib/football-api';
 import { normalizeToUniversalSignals, formatSignalsForAI, getSignalSummary, type RawMatchInput } from '@/lib/universal-signals';
 import { ANALYSIS_PERSONALITY } from '@/lib/sportbot-brain';
@@ -436,49 +437,106 @@ async function getInjuryInfo(
       return parts.length > 0 ? parts.join(' | ') : null;
     }
 
-    // Basketball/NHL/NFL: Use Perplexity (real-time web search)
+    // Basketball/NHL/NFL: Use ESPN's hidden API (same as fresh analysis)
     if (sport.includes('basketball') || sport.includes('hockey') || sport.includes('nhl') ||
       sport.includes('football') || sport.includes('nfl')) {
-      console.log(`[Pre-Analyze] Fetching injuries via Perplexity for ${homeTeam} vs ${awayTeam} (${sport})`);
-
-      const result = await getMatchInjuriesViaPerplexity(homeTeam, awayTeam, sport);
-
-      if (!result.success || (result.home.length === 0 && result.away.length === 0)) {
-        console.log(`[Pre-Analyze] No injuries found via Perplexity for ${homeTeam} vs ${awayTeam}`);
-        return null;
+      
+      // Determine sport key for ESPN
+      let espnSport: 'nba' | 'nhl' | 'nfl';
+      if (sport.includes('basketball') || sport.includes('nba')) {
+        espnSport = 'nba';
+      } else if (sport.includes('hockey') || sport.includes('nhl')) {
+        espnSport = 'nhl';
+      } else {
+        espnSport = 'nfl';
       }
+      
+      console.log(`[Pre-Analyze] Fetching injuries via ESPN for ${homeTeam} vs ${awayTeam} (${espnSport})`);
 
-      const formatInjuries = (team: string, list: typeof result.home): string => {
-        if (list.length === 0) return '';
-        const top = list.slice(0, 4); // Show up to 4 injuries for US sports (rosters are bigger)
-        // Safeguard against undefined values
-        const names = top
-          .filter(inj => inj.playerName) // Skip entries without player name
-          .map(inj => {
-            const name = inj.playerName || 'Unknown';
-            const injury = inj.injury || 'Injury';
-            const status = inj.status || 'Unknown';
-            return `${name} (${injury} - ${status})`;
-          })
-          .join(', ');
-        if (!names) return '';
-        return `${team}: ${names}${list.length > 4 ? ` +${list.length - 4} more` : ''}`;
-      };
+      try {
+        // Fetch injuries for both teams from ESPN
+        const [homeInjuries, awayInjuries] = await Promise.all([
+          getESPNInjuriesForTeam(homeTeam, espnSport),
+          getESPNInjuriesForTeam(awayTeam, espnSport),
+        ]);
 
-      const parts: string[] = [];
-      const homeStr = formatInjuries(homeTeam, result.home);
-      const awayStr = formatInjuries(awayTeam, result.away);
+        if (homeInjuries.length === 0 && awayInjuries.length === 0) {
+          console.log(`[Pre-Analyze] No injuries found via ESPN for ${homeTeam} vs ${awayTeam}`);
+          return null;
+        }
 
-      if (homeStr) parts.push(homeStr);
-      if (awayStr) parts.push(awayStr);
+        const formatInjuries = (team: string, list: typeof homeInjuries): string => {
+          if (list.length === 0) return '';
+          const top = list.slice(0, 4); // Show up to 4 injuries for US sports
+          const names = top
+            .filter(inj => inj.playerName)
+            .map(inj => {
+              const name = inj.playerName || 'Unknown';
+              const injury = inj.type || 'Injury';
+              const status = inj.status || 'Unknown';
+              return `${name} (${injury} - ${status})`;
+            })
+            .join(', ');
+          if (!names) return '';
+          return `${team}: ${names}${list.length > 4 ? ` +${list.length - 4} more` : ''}`;
+        };
 
-      const injuryContext = parts.length > 0 ? parts.join(' | ') : null;
+        const parts: string[] = [];
+        const homeStr = formatInjuries(homeTeam, homeInjuries);
+        const awayStr = formatInjuries(awayTeam, awayInjuries);
 
-      if (injuryContext) {
-        console.log(`[Pre-Analyze] Perplexity injuries: ${injuryContext}`);
+        if (homeStr) parts.push(homeStr);
+        if (awayStr) parts.push(awayStr);
+
+        const injuryContext = parts.length > 0 ? parts.join(' | ') : null;
+
+        if (injuryContext) {
+          console.log(`[Pre-Analyze] ESPN injuries: ${injuryContext}`);
+        }
+
+        return injuryContext;
+      } catch (espnError) {
+        console.warn(`[Pre-Analyze] ESPN failed for ${homeTeam} vs ${awayTeam}, falling back to Perplexity:`, espnError);
+        
+        // Fallback to Perplexity if ESPN fails
+        const result = await getMatchInjuriesViaPerplexity(homeTeam, awayTeam, sport);
+
+        if (!result.success || (result.home.length === 0 && result.away.length === 0)) {
+          console.log(`[Pre-Analyze] No injuries found via Perplexity fallback for ${homeTeam} vs ${awayTeam}`);
+          return null;
+        }
+
+        const formatInjuries = (team: string, list: typeof result.home): string => {
+          if (list.length === 0) return '';
+          const top = list.slice(0, 4);
+          const names = top
+            .filter(inj => inj.playerName)
+            .map(inj => {
+              const name = inj.playerName || 'Unknown';
+              const injury = inj.injury || 'Injury';
+              const status = inj.status || 'Unknown';
+              return `${name} (${injury} - ${status})`;
+            })
+            .join(', ');
+          if (!names) return '';
+          return `${team}: ${names}${list.length > 4 ? ` +${list.length - 4} more` : ''}`;
+        };
+
+        const parts: string[] = [];
+        const homeStr = formatInjuries(homeTeam, result.home);
+        const awayStr = formatInjuries(awayTeam, result.away);
+
+        if (homeStr) parts.push(homeStr);
+        if (awayStr) parts.push(awayStr);
+
+        const injuryContext = parts.length > 0 ? parts.join(' | ') : null;
+
+        if (injuryContext) {
+          console.log(`[Pre-Analyze] Perplexity fallback injuries: ${injuryContext}`);
+        }
+
+        return injuryContext;
       }
-
-      return injuryContext;
     }
 
     return null;

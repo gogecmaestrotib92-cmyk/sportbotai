@@ -1,23 +1,41 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function check() {
-  // Test: searching for "mavericks" + "state" WITH fullResponse filter
-  const result = await prisma.prediction.findFirst({
+  const pred = await prisma.prediction.findFirst({
     where: {
-      AND: [
-        { matchName: { contains: 'mavericks', mode: 'insensitive' } },
-        { matchName: { contains: 'state', mode: 'insensitive' } },
-      ],
-      kickoff: { gte: new Date(Date.now() - 72 * 60 * 60 * 1000) },
-      fullResponse: { not: null }, // This is what was missing!
+      matchName: { contains: 'Mavericks', mode: 'insensitive' },
+      NOT: { fullResponse: { equals: Prisma.DbNull } },
     },
-    select: { matchName: true, fullResponse: true },
-    orderBy: { kickoff: 'asc' }
+    orderBy: { createdAt: 'desc' }
   });
 
-  console.log('Result with fullResponse filter:', result ? result.matchName : 'NONE');
-  console.log('Has fullResponse:', result ? !!result.fullResponse : 'N/A');
+  if (pred?.fullResponse) {
+    const fr = pred.fullResponse;
+    console.log('=== PREDICTION TABLE ===');
+    console.log('matchName:', pred.matchName);
+    console.log('matchId:', pred.matchId);
+    console.log('sport:', pred.sport);
+    console.log('kickoff:', pred.kickoff);
+    console.log('');
+    console.log('=== PROBABILITIES IN fullResponse ===');
+    console.log('probabilities:', JSON.stringify(fr.probabilities, null, 2));
+    console.log('');
+    console.log('=== MARKET INTEL IN fullResponse ===');
+    console.log('marketIntel:', JSON.stringify(fr.marketIntel, null, 2));
+    console.log('');
+    console.log('=== UNIVERSAL SIGNALS (injuries) ===');
+    const signals = fr.universalSignals;
+    if (signals?.display?.availability) {
+      console.log('homeInjuries:', JSON.stringify(signals.display.availability.homeInjuries, null, 2));
+      console.log('awayInjuries:', JSON.stringify(signals.display.availability.awayInjuries, null, 2));
+    } else {
+      console.log('No injury data in signals');
+    }
+    console.log('');
+    console.log('=== TOP-LEVEL INJURIES ===');
+    console.log('injuries:', JSON.stringify(fr.injuries, null, 2));
+  }
 
   await prisma.$disconnect();
 }
