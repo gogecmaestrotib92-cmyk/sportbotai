@@ -3,6 +3,11 @@
  * 
  * Native-feeling pull-to-refresh with custom animation.
  * Shows SportBot logo spinning during refresh.
+ * 
+ * ANDROID/CHROME FIX: Uses dynamic listener switching to avoid scroll blocking.
+ * - Starts with passive listeners (allows normal scroll)
+ * - When pull gesture detected at top, adds non-passive listener to block scroll
+ * - Removes blocking listener when gesture ends
  */
 
 'use client';
@@ -35,67 +40,91 @@ export default function PullToRefresh({
   const [isPulling, setIsPulling] = useState(false);
   const startY = useRef(0);
   const currentY = useRef(0);
-  // Track if we've confirmed this is a pull-down gesture (not scroll)
   const isPullConfirmed = useRef(false);
+  // Track if blocking listener is attached
+  const blockingListenerAttached = useRef(false);
+
+  // This is the blocking touchmove handler - only added when pulling
+  const blockingTouchMove = useCallback((e: TouchEvent) => {
+    e.preventDefault();
+  }, []);
+
+  // Attach the blocking listener
+  const attachBlockingListener = useCallback(() => {
+    if (!blockingListenerAttached.current) {
+      document.addEventListener('touchmove', blockingTouchMove, { passive: false });
+      blockingListenerAttached.current = true;
+    }
+  }, [blockingTouchMove]);
+
+  // Detach the blocking listener
+  const detachBlockingListener = useCallback(() => {
+    if (blockingListenerAttached.current) {
+      document.removeEventListener('touchmove', blockingTouchMove);
+      blockingListenerAttached.current = false;
+    }
+  }, [blockingTouchMove]);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    // Record start position but DON'T activate pulling yet
-    // We'll decide in touchmove if this is a pull or scroll
-    if (disabled || isRefreshing || window.scrollY !== 0) return;
+    if (disabled || isRefreshing || window.scrollY !== 0) {
+      startY.current = 0;
+      return;
+    }
     startY.current = e.touches[0].clientY;
     isPullConfirmed.current = false;
-    // Don't set isPulling here - let touchmove decide
   }, [disabled, isRefreshing]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (disabled || isRefreshing) return;
     
-    // Not at top? Let browser handle scroll normally
+    // Not at top? Reset and let browser scroll
     if (window.scrollY !== 0) {
       if (isPulling) {
         setPullDistance(0);
         setIsPulling(false);
         isPullConfirmed.current = false;
+        detachBlockingListener();
       }
+      startY.current = 0;
       return;
     }
     
-    // No start position recorded? Ignore
     if (startY.current === 0) return;
     
     currentY.current = e.touches[0].clientY;
     const diff = currentY.current - startY.current;
     
-    // User is scrolling UP (negative diff) - let browser handle it
+    // Scrolling UP - reset
     if (diff < 0) {
       if (isPulling) {
         setPullDistance(0);
         setIsPulling(false);
         isPullConfirmed.current = false;
+        detachBlockingListener();
       }
       return;
     }
     
-    // User is pulling DOWN at top of page
+    // Pulling DOWN at top
     if (diff > 0) {
-      // Only confirm as pull gesture after 15px of downward movement
-      if (!isPullConfirmed.current && diff > 15) {
+      if (!isPullConfirmed.current && diff > 10) {
         isPullConfirmed.current = true;
         setIsPulling(true);
+        // NOW attach blocking listener
+        attachBlockingListener();
       }
       
       if (isPullConfirmed.current) {
         const resistance = 0.4;
         const resistedDiff = diff * resistance;
         setPullDistance(Math.min(resistedDiff, threshold * 1.5));
-        // Note: Removed preventDefault() - using passive listeners now
-        // Pull animation happens via CSS transforms
       }
     }
-  }, [isPulling, disabled, isRefreshing, threshold]);
+  }, [isPulling, disabled, isRefreshing, threshold, attachBlockingListener, detachBlockingListener]);
 
   const handleTouchEnd = useCallback(async () => {
-    // Reset start position
+    // Always detach blocking listener
+    detachBlockingListener();
     startY.current = 0;
     
     if (!isPulling) {
@@ -108,13 +137,12 @@ export default function PullToRefresh({
 
     if (pullDistance >= threshold && !isRefreshing) {
       setIsRefreshing(true);
-      setPullDistance(threshold * 0.6); // Hold at indicator position
+      setPullDistance(threshold * 0.6);
       
       try {
         if (onRefresh) {
           await onRefresh();
         } else {
-          // Default: refresh the router
           router.refresh();
           await new Promise(resolve => setTimeout(resolve, 500));
         }
@@ -125,14 +153,14 @@ export default function PullToRefresh({
     } else {
       setPullDistance(0);
     }
-  }, [isPulling, pullDistance, threshold, isRefreshing, onRefresh, router]);
+  }, [isPulling, pullDistance, threshold, isRefreshing, onRefresh, router, detachBlockingListener]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // IMPORTANT: All listeners are passive to avoid scroll blocking on Android/Chrome
-    // We use CSS transforms for pull animation, not preventDefault
+    // These are PASSIVE - they don't block scroll
+    // The blocking listener is added dynamically only when pulling
     document.addEventListener('touchstart', handleTouchStart, { passive: true });
     document.addEventListener('touchmove', handleTouchMove, { passive: true });
     document.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -141,8 +169,9 @@ export default function PullToRefresh({
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
+      detachBlockingListener();
     };
-  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd, detachBlockingListener]);
 
   const progress = Math.min(pullDistance / threshold, 1);
   const showIndicator = pullDistance > 10 || isRefreshing;

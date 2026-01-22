@@ -3,6 +3,11 @@
  * 
  * Native-like pull-to-refresh for mobile devices.
  * Shows a loading indicator when user pulls down at top of page.
+ * 
+ * ANDROID/CHROME FIX: Uses dynamic listener switching to avoid scroll blocking.
+ * - Starts with passive listeners (allows normal scroll)
+ * - When pull gesture detected at top, adds non-passive listener to block scroll
+ * - Removes blocking listener when gesture ends
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -32,67 +37,96 @@ export function usePullToRefresh({
   
   const startY = useRef(0);
   const currentY = useRef(0);
-  // Track if we've confirmed this is a pull-down gesture (not scroll)
   const isPullConfirmed = useRef(false);
+  // Track if blocking listener is attached
+  const blockingListenerAttached = useRef(false);
+
+  // This is the blocking touchmove handler - only added when pulling
+  const blockingTouchMove = useCallback((e: TouchEvent) => {
+    // Always prevent default when this listener is active
+    // (we only attach it when we're sure user is pulling at top)
+    e.preventDefault();
+  }, []);
+
+  // Attach the blocking listener
+  const attachBlockingListener = useCallback(() => {
+    if (!blockingListenerAttached.current) {
+      document.addEventListener('touchmove', blockingTouchMove, { passive: false });
+      blockingListenerAttached.current = true;
+    }
+  }, [blockingTouchMove]);
+
+  // Detach the blocking listener
+  const detachBlockingListener = useCallback(() => {
+    if (blockingListenerAttached.current) {
+      document.removeEventListener('touchmove', blockingTouchMove);
+      blockingListenerAttached.current = false;
+    }
+  }, [blockingTouchMove]);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    // Record start position but DON'T activate pulling yet
-    // We'll decide in touchmove if this is a pull or scroll
+    // Only track if at top of page
     if (window.scrollY === 0 && !isRefreshing) {
       startY.current = e.touches[0].clientY;
       isPullConfirmed.current = false;
-      // Don't set isPulling here - let touchmove decide
+    } else {
+      startY.current = 0;
     }
   }, [isRefreshing]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (isRefreshing) return;
     
-    // Not at top? Let browser handle scroll normally
+    // Not at top? Reset everything and let browser scroll
     if (window.scrollY !== 0) {
       if (isPulling) {
         setPullDistance(0);
         setIsPulling(false);
         isPullConfirmed.current = false;
+        detachBlockingListener();
       }
+      startY.current = 0;
       return;
     }
     
-    // No start position recorded? Ignore
+    // No start position? Ignore
     if (startY.current === 0) return;
     
     currentY.current = e.touches[0].clientY;
     const diff = currentY.current - startY.current;
     
-    // User is scrolling UP (negative diff) - let browser handle it
+    // Scrolling UP - reset and let browser handle
     if (diff < 0) {
       if (isPulling) {
         setPullDistance(0);
         setIsPulling(false);
         isPullConfirmed.current = false;
+        detachBlockingListener();
       }
       return;
     }
     
-    // User is pulling DOWN at top of page
+    // Pulling DOWN at top of page
     if (diff > 0) {
-      // Only confirm as pull gesture after 15px of downward movement
-      // This prevents accidental triggers during horizontal swipes
-      if (!isPullConfirmed.current && diff > 15) {
+      // Confirm pull gesture after 10px of downward movement
+      if (!isPullConfirmed.current && diff > 10) {
         isPullConfirmed.current = true;
         setIsPulling(true);
+        // NOW attach the blocking listener since we're definitely pulling
+        attachBlockingListener();
       }
       
       if (isPullConfirmed.current) {
         const distance = Math.min(diff / resistance, threshold * 1.5);
         setPullDistance(distance);
-        // Note: We removed preventDefault() - using passive listeners now
-        // The pull animation happens via CSS, scroll is controlled by browser
       }
     }
-  }, [isPulling, isRefreshing, resistance, threshold]);
+  }, [isPulling, isRefreshing, resistance, threshold, attachBlockingListener, detachBlockingListener]);
 
   const handleTouchEnd = useCallback(async () => {
+    // Always detach blocking listener on touch end
+    detachBlockingListener();
+    
     // Reset start position
     startY.current = 0;
     
@@ -106,7 +140,7 @@ export function usePullToRefresh({
     
     if (pullDistance >= threshold && !isRefreshing) {
       setIsRefreshing(true);
-      setPullDistance(threshold); // Lock at threshold during refresh
+      setPullDistance(threshold);
       
       try {
         await onRefresh();
@@ -117,18 +151,16 @@ export function usePullToRefresh({
         setPullDistance(0);
       }
     } else {
-      // Animate back to 0
       setPullDistance(0);
     }
-  }, [isPulling, pullDistance, threshold, isRefreshing, onRefresh]);
+  }, [isPulling, pullDistance, threshold, isRefreshing, onRefresh, detachBlockingListener]);
 
   useEffect(() => {
     const container = containerRef.current || document;
     
-    // Only add listeners on touch devices
     if ('ontouchstart' in window) {
-      // IMPORTANT: All listeners are passive to avoid scroll blocking on Android/Chrome
-      // We use CSS touch-action instead of preventDefault for pull-to-refresh
+      // These are PASSIVE - they don't block scroll
+      // The blocking listener is added dynamically only when needed
       container.addEventListener('touchstart', handleTouchStart as EventListener, { passive: true });
       container.addEventListener('touchmove', handleTouchMove as EventListener, { passive: true });
       container.addEventListener('touchend', handleTouchEnd as EventListener, { passive: true });
@@ -137,9 +169,11 @@ export function usePullToRefresh({
         container.removeEventListener('touchstart', handleTouchStart as EventListener);
         container.removeEventListener('touchmove', handleTouchMove as EventListener);
         container.removeEventListener('touchend', handleTouchEnd as EventListener);
+        // Make sure to clean up blocking listener too
+        detachBlockingListener();
       };
     }
-  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd, detachBlockingListener]);
 
   return {
     isRefreshing,
