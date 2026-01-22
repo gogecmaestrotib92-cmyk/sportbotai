@@ -1675,6 +1675,13 @@ export async function POST(request: NextRequest) {
             
             console.log(`[AI-Chat-Stream] ⚡ INSTANT HIT: ${prediction.matchName}`);
             
+            // Transform probabilities to expected format (home→homeWin, away→awayWin)
+            const transformedProbs = fullData.probabilities ? {
+              homeWin: fullData.probabilities.home || fullData.probabilities.homeWin,
+              awayWin: fullData.probabilities.away || fullData.probabilities.awayWin,
+              draw: fullData.probabilities.draw,
+            } : undefined;
+            
             // Return streaming response immediately
             const encoder = new TextEncoder();
             const readable = new ReadableStream({
@@ -1692,7 +1699,7 @@ export async function POST(request: NextRequest) {
                   universalSignals: fullData.universalSignals,
                   expectedScores: fullData.expectedScores,
                   matchUrl: `/match/${rawHome.trim().toLowerCase().replace(/\s+/g, '-')}-vs-${rawAway.trim().toLowerCase().replace(/\s+/g, '-')}`,
-                  probabilities: fullData.probabilities,
+                  probabilities: transformedProbs,
                   oddsComparison: fullData.oddsComparison,
                   briefing: fullData.briefing,
                   momentumAndForm: fullData.momentumAndForm,
