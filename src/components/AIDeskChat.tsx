@@ -399,6 +399,7 @@ export default function AIDeskChat() {
               if (line.startsWith('data: ')) {
                 try {
                   const data = JSON.parse(line.slice(6));
+                  console.log('[Chat] Received event type:', data.type);
 
                   if (data.type === 'status') {
                     // Update status message (e.g., "Searching real-time data...")
@@ -439,6 +440,7 @@ export default function AIDeskChat() {
                     ));
                   } else if (data.type === 'match-analysis') {
                     // Structured match analysis data - render rich component instead of text
+                    console.log('[Chat] ⚡ MATCH-ANALYSIS received!', data.data?.matchInfo?.homeTeam);
                     const matchData = data.data as MatchAnalysisData;
                     setMessages(prev => prev.map(m =>
                       m.id === assistantMessageId
@@ -451,6 +453,7 @@ export default function AIDeskChat() {
                         }
                         : m
                     ));
+                    console.log('[Chat] ⚡ Message state updated with matchAnalysis');
                   } else if (data.type === 'followUps') {
                     // Update with smart follow-ups (generated after response completes)
                     streamFollowUps = data.followUps || [];
