@@ -18,6 +18,8 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Send, Bot, User, Loader2, Sparkles, Trash2, Volume2, VolumeX, Square, ThumbsUp, ThumbsDown, Mic, MicOff } from 'lucide-react';
 import { trackChatMessage } from '@/lib/analytics';
+import ChatMatchAnalysis from './ai-desk/ChatMatchAnalysis';
+import type { MatchAnalysisData } from './ai-desk/types';
 
 // ============================================
 // TYPES
@@ -28,6 +30,7 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   citations?: string[];
+  matchAnalysis?: MatchAnalysisData;  // Rich match analysis data
   usedRealTimeSearch?: boolean;
   followUps?: string[];
   fromCache?: boolean;
@@ -521,6 +524,21 @@ export default function AIDeskHeroChat() {
                         }
                         : m
                     ));
+                  } else if (data.type === 'match-analysis') {
+                    // Structured match analysis data - render rich component
+                    console.log('[HeroChat] ⚡ MATCH-ANALYSIS received!', data.data?.matchInfo?.homeTeam);
+                    const matchData = data.data as MatchAnalysisData;
+                    setMessages(prev => prev.map(m =>
+                      m.id === assistantMessageId
+                        ? {
+                          ...m,
+                          matchAnalysis: matchData,
+                          content: '', // Clear text since we're showing structured data
+                          isStreaming: false,
+                          statusMessage: undefined,
+                        }
+                        : m
+                    ));
                   } else if (data.type === 'followUps') {
                     // Update with smart follow-ups (generated after response completes)
                     streamFollowUps = data.followUps || [];
@@ -651,12 +669,18 @@ export default function AIDeskHeroChat() {
 
                 {/* Message content */}
                 <div className={`flex-1 max-w-[90%] sm:max-w-[85%] ${msg.role === 'user' ? 'text-right' : ''}`}>
+                  {/* Match Analysis - Rich structured display */}
+                  {msg.role === 'assistant' && msg.matchAnalysis ? (
+                    <div className="w-full max-w-[340px]">
+                      <ChatMatchAnalysis data={msg.matchAnalysis} />
+                    </div>
+                  ) : (
                   <div className={`inline-block px-4 sm:px-5 py-3 sm:py-4 rounded-xl sm:rounded-2xl ${msg.role === 'user'
                     ? 'bg-primary text-white rounded-tr-md'
                     : 'bg-white/[0.03] text-white/90 rounded-tl-md border border-white/[0.06]'
                     }`}>
                     {/* Status message while loading */}
-                    {msg.role === 'assistant' && msg.statusMessage && !msg.content && (
+                    {msg.role === 'assistant' && msg.statusMessage && !msg.content && !msg.matchAnalysis && (
                       <div className="flex items-center gap-2 text-sm text-primary/80 animate-pulse">
                         <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -675,6 +699,7 @@ export default function AIDeskHeroChat() {
                       )}
                     </p>
                   </div>
+                  )}
 
                   {/* Status indicators */}
                   {msg.role === 'assistant' && (
