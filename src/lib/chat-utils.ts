@@ -580,7 +580,7 @@ export async function fetchMatchPreviewOrAnalysis(
                         ]
                     }
                 ],
-                kickoff: { gte: new Date(new Date().getTime() - 24 * 60 * 60 * 1000) },
+                kickoff: { gte: new Date(new Date().getTime() - 72 * 60 * 60 * 1000) }, // 72h lookback to cover recently finished matches
                 NOT: { fullResponse: { equals: undefined } },
             },
             orderBy: { kickoff: 'asc' },
@@ -639,7 +639,7 @@ export async function fetchMatchPreviewOrAnalysis(
                         Authorization: authHeader,
                     },
                 }),
-                3000, // Fast timeout - fall back to Prediction table quickly if not found
+                15000, // 15s timeout - match-preview can take time for new analyses
                 `Match Preview API (${dateStr})`
             );
 
@@ -715,7 +715,7 @@ export async function fetchMatchPreviewOrAnalysis(
                         ]
                     }
                 ],
-                kickoff: { gte: new Date(new Date().getTime() - 24 * 60 * 60 * 1000) }, // Within last 24h or future
+                kickoff: { gte: new Date(new Date().getTime() - 72 * 60 * 60 * 1000) }, // 72h lookback to cover recently finished matches
                 NOT: { fullResponse: { equals: undefined } }, // Only get records with fullResponse populated
             },
             orderBy: { kickoff: 'asc' },
@@ -761,71 +761,13 @@ export async function fetchMatchPreviewOrAnalysis(
         console.log(`[Chat-Utils] Prediction lookup error:`, predictionError);
     }
 
-    // 3. FALLBACK TO ANALYZE API with real odds
-    console.log(`[Chat-Utils] Falling back to analyze API for ${homeTeam} vs ${awayTeam}...`);
-
-    // Fetch real odds
-    const realOdds = await fetchRealOdds(homeTeam, awayTeam, sport);
-
-    // Call analyze API
-    try {
-        const analyzeResponse = await withTimeout(
-            fetch(`${baseUrl}/api/analyze`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Cookie: cookies,
-                },
-                body: JSON.stringify({
-                    matchData: {
-                        sport,
-                        league: 'Auto-detected',
-                        homeTeam,
-                        awayTeam,
-                        matchDate: new Date().toISOString(),
-                        sourceType: 'chat-utils',
-                        odds: realOdds,
-                    },
-                }),
-            }),
-            30000,
-            'Analyze API'
-        );
-
-        if (analyzeResponse?.ok) {
-            const analysisData = await analyzeResponse.json();
-            if (analysisData.success) {
-                console.log(`[Chat-Utils] ✅ Got analysis from analyze API`);
-                const context = formatAnalysisForChat(analysisData, homeTeam, awayTeam);
-
-                // Build structured data from analyze API response
-                const structuredData: MatchAnalysisData = {
-                    matchInfo: {
-                        id: `${homeTeam.toLowerCase().replace(/\s+/g, '-')}-vs-${awayTeam.toLowerCase().replace(/\s+/g, '-')}`,
-                        homeTeam,
-                        awayTeam,
-                        league: analysisData.league || '',
-                        sport: sport,
-                        kickoff: new Date().toISOString(),
-                    },
-                    story: {
-                        favored: analysisData.probabilities?.homeWin > analysisData.probabilities?.awayWin ? 'home' : 'away',
-                        confidence: analysisData.briefing?.confidenceRating >= 4 ? 'strong' :
-                            analysisData.briefing?.confidenceRating >= 2 ? 'moderate' : 'slight',
-                        narrative: analysisData.briefing?.verdict || analysisData.briefing?.headline,
-                        snapshot: analysisData.briefing?.keyPoints,
-                    },
-                    expectedScores: analysisData.expectedScores,
-                    matchUrl: `/match/${homeTeam.toLowerCase().replace(/\s+/g, '-')}-vs-${awayTeam.toLowerCase().replace(/\s+/g, '-')}-${sport.split('_')[1] || sport}-${new Date().toISOString().split('T')[0]}`,
-                };
-
-                return { success: true, context, source: 'analyze', odds: realOdds, structuredData };
-            }
-        }
-    } catch (analyzeErr) {
-        console.log(`[Chat-Utils] Analyze API error:`, analyzeErr);
-    }
-
+    // 3. SKIP ANALYZE API FALLBACK IN CHAT CONTEXT
+    // The analyze API takes 30+ seconds which causes timeout issues.
+    // Instead, return a helpful message directing users to the match page
+    // where the full analysis can be generated properly.
+    console.log(`[Chat-Utils] ⚠️ No cached analysis found for ${homeTeam} vs ${awayTeam} - skipping slow analyze API`);
+    
+    // Return failure so the chat can provide a helpful response
     return { success: false, context: '', source: 'analyze' };
 }
 

@@ -2100,7 +2100,7 @@ If their favorite team has a match today/tonight, lead with that information.`;
                         ]
                       }
                     ],
-                    kickoff: { gte: new Date(new Date().getTime() - 48 * 60 * 60 * 1000) },
+                    kickoff: { gte: new Date(new Date().getTime() - 72 * 60 * 60 * 1000) }, // 72h lookback
                     NOT: [
                       { fullResponse: { equals: undefined } },
                       { matchName: { startsWith: 'Analyze', mode: 'insensitive' } }, // Exclude manually created records
@@ -2143,8 +2143,8 @@ If their favorite team has a match today/tonight, lead with that information.`;
                     }
                   }
 
-                  // Future match - return structured data instantly
-                  console.log(`[AI-Chat-Stream] ⚡ INSTANT: Future match ${prediction.matchName}`);
+                  // Future match - return structured data instantly WITH FULL ANALYSIS
+                  console.log(`[AI-Chat-Stream] ⚡ INSTANT: Future match ${prediction.matchName} with FULL analysis data`);
                   const structuredData = {
                     matchInfo: {
                       id: prediction.matchName?.toLowerCase().replace(/\s+/g, '-') || '',
@@ -2158,6 +2158,16 @@ If their favorite team has a match today/tonight, lead with that information.`;
                     universalSignals: fullData.universalSignals,
                     expectedScores: fullData.expectedScores,
                     matchUrl: `/match/${rawHome.trim().toLowerCase().replace(/\s+/g, '-')}-vs-${rawAway.trim().toLowerCase().replace(/\s+/g, '-')}`,
+                    // FULL ANALYSIS DATA - the good stuff!
+                    probabilities: fullData.probabilities,
+                    oddsComparison: fullData.oddsComparison,
+                    briefing: fullData.briefing,
+                    momentumAndForm: fullData.momentumAndForm,
+                    injuryContext: fullData.injuryContext,
+                    riskAnalysis: fullData.riskAnalysis,
+                    tacticalAnalysis: fullData.tacticalAnalysis,
+                    preMatchInsights: fullData.preMatchInsights,
+                    upsetPotential: fullData.upsetPotential,
                   };
 
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'match-analysis', data: structuredData })}\n\n`));
@@ -2762,7 +2772,7 @@ If their favorite team has a match today/tonight, lead with that information.`;
                           ]
                         }
                       ],
-                      kickoff: { gte: new Date(new Date().getTime() - 24 * 60 * 60 * 1000) },
+                      kickoff: { gte: new Date(new Date().getTime() - 72 * 60 * 60 * 1000) }, // 72h lookback
                       NOT: { fullResponse: { equals: undefined } },
                     },
                     orderBy: { kickoff: 'asc' },
@@ -2961,7 +2971,35 @@ If their favorite team has a match today/tonight, lead with that information.`;
                     perplexityContext = '';
                     citations = [];
                   } else {
-                    console.log(`[AI-Chat-Stream] ⚠️ Could not get analysis for ${homeTeam} vs ${awayTeam}`);
+                    // NO CACHED ANALYSIS - Direct user to the match page
+                    console.log(`[AI-Chat-Stream] ⚠️ No cached analysis for ${homeTeam} vs ${awayTeam} - directing to match page`);
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '⚠️ Analysis not pre-generated yet...' })}\n\n`));
+                    
+                    // Build a match URL slug
+                    const slugify = (text: string) => text.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+                    const getSportCode = (sportKey: string) => {
+                      const parts = sportKey.split('_');
+                      return parts.length >= 2 ? parts[1] : sportKey;
+                    };
+                    const matchSlug = `${slugify(homeTeam)}-vs-${slugify(awayTeam)}-${getSportCode(sport)}-${new Date().toISOString().split('T')[0]}`;
+                    const matchUrl = `/match/${matchSlug}`;
+                    
+                    const noAnalysisMessage = `I don't have a pre-generated analysis for **${homeTeam} vs ${awayTeam}** yet.
+
+🔗 **[Click here to generate the full analysis](${matchUrl})**
+
+The match page will create a comprehensive breakdown including:
+• Win probability estimates
+• Form & momentum analysis  
+• Key injury impacts
+• Value detection vs market odds
+
+The analysis takes about 20-30 seconds to generate on the match page, but once it's created, I'll be able to discuss it with you instantly here! 🎯`;
+
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', content: noAnalysisMessage })}\n\n`));
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+                    controller.close();
+                    return; // Early return
                   }
                 } catch (analyzeError) {
                   console.error('[AI-Chat-Stream] fetchMatchPreviewOrAnalysis error:', analyzeError);

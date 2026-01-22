@@ -43,6 +43,56 @@ export interface MatchAnalysisData {
         away: number;
     };
     matchUrl: string;  // Link to full analysis page
+    
+    // Extended analysis data (the good stuff!)
+    probabilities?: {
+        homeWin: number;
+        draw?: number;
+        awayWin: number;
+    };
+    oddsComparison?: {
+        homeOdds?: number;
+        drawOdds?: number;
+        awayOdds?: number;
+        homeEdge?: number;
+        drawEdge?: number;
+        awayEdge?: number;
+    };
+    briefing?: {
+        headline?: string;
+        verdict?: string;
+        confidenceRating?: number;
+        keyPoints?: string[];
+    };
+    momentumAndForm?: {
+        homeForm?: Array<{ result: string; opponent?: string; score?: string }>;
+        awayForm?: Array<{ result: string; opponent?: string; score?: string }>;
+        homeFormScore?: number;
+        awayFormScore?: number;
+        momentumShift?: string;
+    };
+    injuryContext?: {
+        homeTeamInjuries?: Array<{ player: string; status: string; impact?: string }>;
+        awayTeamInjuries?: Array<{ player: string; status: string; impact?: string }>;
+        overallImpact?: string;
+    };
+    riskAnalysis?: {
+        riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
+        trapMatchWarning?: boolean;
+        factors?: string[];
+    };
+    tacticalAnalysis?: {
+        keyBattles?: string[];
+        expertConclusionOneLiner?: string;
+    };
+    preMatchInsights?: {
+        viralStats?: string[];
+    };
+    upsetPotential?: {
+        upsetLikely?: boolean;
+        probability?: number;
+        reason?: string;
+    };
 }
 
 /**
