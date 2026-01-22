@@ -61,10 +61,11 @@ export function useDoubleTap({
   }, [threshold, onDoubleTap, onSingleTap, haptic, success]);
 
   // Touch handler props
+  // Note: We DON'T call preventDefault on touchEnd to avoid blocking scroll on Android
+  // The double-tap detection works fine without it
   const handlers = {
     onClick: handleTap,
-    onTouchEnd: (e: React.TouchEvent) => {
-      e.preventDefault();
+    onTouchEnd: () => {
       handleTap();
     },
   };

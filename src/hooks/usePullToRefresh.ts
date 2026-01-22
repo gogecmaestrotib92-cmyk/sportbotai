@@ -86,12 +86,8 @@ export function usePullToRefresh({
       if (isPullConfirmed.current) {
         const distance = Math.min(diff / resistance, threshold * 1.5);
         setPullDistance(distance);
-        
-        // Only prevent scroll after significant pull (>40px visual distance)
-        // This is the key: we let small movements scroll normally
-        if (distance > 40) {
-          e.preventDefault();
-        }
+        // Note: We removed preventDefault() - using passive listeners now
+        // The pull animation happens via CSS, scroll is controlled by browser
       }
     }
   }, [isPulling, isRefreshing, resistance, threshold]);
@@ -131,9 +127,11 @@ export function usePullToRefresh({
     
     // Only add listeners on touch devices
     if ('ontouchstart' in window) {
+      // IMPORTANT: All listeners are passive to avoid scroll blocking on Android/Chrome
+      // We use CSS touch-action instead of preventDefault for pull-to-refresh
       container.addEventListener('touchstart', handleTouchStart as EventListener, { passive: true });
-      container.addEventListener('touchmove', handleTouchMove as EventListener, { passive: false });
-      container.addEventListener('touchend', handleTouchEnd as EventListener);
+      container.addEventListener('touchmove', handleTouchMove as EventListener, { passive: true });
+      container.addEventListener('touchend', handleTouchEnd as EventListener, { passive: true });
       
       return () => {
         container.removeEventListener('touchstart', handleTouchStart as EventListener);
