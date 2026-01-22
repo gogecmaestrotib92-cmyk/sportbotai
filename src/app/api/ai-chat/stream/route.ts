@@ -28,6 +28,7 @@ import { saveKnowledge, buildLearnedContext, getTerminologyForSport } from '@/li
 import { cacheGet, cacheSet, CACHE_KEYS, hashChatQuery, getChatTTL } from '@/lib/cache';
 import { checkChatRateLimit, getClientIp, CHAT_RATE_LIMITS } from '@/lib/rateLimit';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { normalizeSport } from '@/lib/data-layer/bridge';
 import { getUnifiedMatchData, type MatchIdentifier } from '@/lib/unified-match-service';
 // Query Intelligence - smarter query understanding
@@ -1623,14 +1624,20 @@ export async function POST(request: NextRequest) {
     // This runs BEFORE any slow operations (memory, LLM, cache, etc.)
     // Returns in <100ms for pre-analyzed matches
     // =====================================================
+    
+    // First, strip common prefixes like "analyze", "prediction for", etc.
+    const cleanedMessage = message.trim()
+      .replace(/^(analyze|predict|show|get|give me|what about|how about|tell me about|prediction for|analysis of|who wins|who will win|what's the|whats the)\s+/i, '')
+      .trim();
+    
     const instantMatchPattern = /^([a-zA-Z\s]+?)\s+(?:vs\.?|versus|against|@|-)\s+([a-zA-Z\s]+)$/i;
     // Also match "Team1 Team2" pattern (without vs)
     const simpleMatchPattern = /^([a-zA-Z]{3,})\s+([a-zA-Z]{3,})$/i;
-    let instantMatch = message.trim().match(instantMatchPattern);
+    let instantMatch = cleanedMessage.match(instantMatchPattern);
     
     // Try simple pattern if vs-pattern didn't match
     if (!instantMatch) {
-      instantMatch = message.trim().match(simpleMatchPattern);
+      instantMatch = cleanedMessage.match(simpleMatchPattern);
     }
     
     if (instantMatch) {
@@ -1638,13 +1645,14 @@ export async function POST(request: NextRequest) {
       const homeWord = rawHome.trim().split(/\s+/).pop() || '';
       const awayWord = rawAway.trim().split(/\s+/).pop() || '';
       
-      console.log(`[AI-Chat-Stream] ⚡ INSTANT PATH: Detected match query "${homeWord} vs ${awayWord}"`);
+      console.log(`[AI-Chat-Stream] ⚡ INSTANT PATH: Detected match query "${homeWord} vs ${awayWord}" (cleaned from: "${message.trim()}")`);
       
       if (homeWord.length > 2 && awayWord.length > 2) {
         console.log(`[AI-Chat-Stream] ⚡ INSTANT PATH: Querying DB for "${homeWord}" + "${awayWord}"`);
         
         try {
           // Check Prediction table directly - no slow operations
+          // IMPORTANT: Filter for fullResponse in query to avoid bad partial entries
           const prediction = await prisma.prediction.findFirst({
             where: {
               OR: [
@@ -1662,7 +1670,7 @@ export async function POST(request: NextRequest) {
                 }
               ],
               kickoff: { gte: new Date(Date.now() - 72 * 60 * 60 * 1000) },
-              // fullResponse being non-null is checked after the query
+              NOT: { fullResponse: { equals: Prisma.DbNull } }, // MUST have fullResponse to be useful
             },
             orderBy: { kickoff: 'asc' },
           });
