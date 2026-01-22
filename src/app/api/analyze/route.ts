@@ -1379,7 +1379,7 @@ export async function POST(request: NextRequest) {
           odds: null,
           impliedProb,
           outcome: 'PENDING',
-          source: 'MANUAL',
+          source: 'MATCH_ANALYSIS',
           fullResponse: analysis as any, // Save full analysis for AI chat
           // Also save probabilities for chat
           homeWin: analysis.probabilities.homeWin,
