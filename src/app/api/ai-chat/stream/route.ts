@@ -2114,24 +2114,33 @@ If their favorite team has a match today/tonight, lead with that information.`;
                   const kickoff = prediction.kickoff ? new Date(prediction.kickoff) : null;
                   const now = new Date();
 
-                  // Past match - return already played message instantly
+                  // Past match handling
                   if (kickoff && kickoff < now) {
                     const hoursAgo = Math.floor((now.getTime() - kickoff.getTime()) / (1000 * 60 * 60));
-                    console.log(`[AI-Chat-Stream] ⚡ INSTANT: Past match ${prediction.matchName} (${hoursAgo}h ago)`);
 
-                    let pastMessage = `⚠️ **This match has already been played!**\n\n`;
-                    pastMessage += `**${prediction.matchName}** was played ${hoursAgo} hours ago.\n\n`;
-                    if (prediction.actualResult) pastMessage += `**Final Result:** ${prediction.actualResult}\n\n`;
-                    if (prediction.outcome && prediction.prediction) {
-                      const emoji = prediction.outcome === 'HIT' ? '✅' : prediction.outcome === 'MISS' ? '❌' : '⏳';
-                      pastMessage += `**Our Prediction:** ${prediction.prediction} ${emoji}\n\n`;
+                    // Only return instantly if we have the actual score
+                    if (prediction.actualScore || prediction.actualResult) {
+                      console.log(`[AI-Chat-Stream] ⚡ INSTANT: Past match ${prediction.matchName} (${hoursAgo}h ago) with score`);
+
+                      let pastMessage = `⚠️ **This match has already been played!**\n\n`;
+                      pastMessage += `**${prediction.matchName}** was played ${hoursAgo} hours ago.\n\n`;
+                      if (prediction.actualScore) pastMessage += `**Final Score:** ${prediction.actualScore}\n\n`;
+                      if (prediction.actualResult) pastMessage += `**Result:** ${prediction.actualResult}\n\n`;
+                      if (prediction.outcome && prediction.prediction) {
+                        const emoji = prediction.outcome === 'HIT' ? '✅' : prediction.outcome === 'MISS' ? '❌' : '⏳';
+                        pastMessage += `**Our Prediction:** ${prediction.prediction} ${emoji}\n\n`;
+                      }
+                      pastMessage += `Would you like me to analyze an upcoming match instead?`;
+
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', content: pastMessage })}\n\n`));
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+                      controller.close();
+                      return;
+                    } else {
+                      // Past match but no score - skip fast path, let Perplexity find the result
+                      console.log(`[AI-Chat-Stream] Past match ${prediction.matchName} without score - falling back to search`);
+                      // Continue to normal processing
                     }
-                    pastMessage += `Would you like me to analyze an upcoming match instead?`;
-
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', content: pastMessage })}\n\n`));
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
-                    controller.close();
-                    return;
                   }
 
                   // Future match - return structured data instantly
