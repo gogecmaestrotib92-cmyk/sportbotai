@@ -560,15 +560,48 @@ export function getExpectedScores(
   input: ModelInput,
   odds?: { homeOdds?: number; awayOdds?: number; drawOdds?: number }
 ): { home: number; away: number } {
-  const config = SPORT_CONFIG[input.sport as SportType] || SPORT_CONFIG.soccer;
+  // Normalize sport key for config lookup
+  const sportKey = input.sport.includes('hockey') || input.sport.includes('nhl') ? 'hockey' :
+                   input.sport.includes('basketball') ? 'basketball' :
+                   input.sport.includes('football') && !input.sport.includes('soccer') ? 'football' :
+                   'soccer';
+  const config = SPORT_CONFIG[sportKey as SportType] || SPORT_CONFIG.soccer;
+  
   // FIX: Use includes() to handle 'basketball_nba' and 'americanfootball_nfl'
-  const isHighScoringSport = input.sport.includes('basketball') || input.sport.includes('football');
-  const isSoccer = !isHighScoringSport && !input.sport.includes('hockey');
+  const isHockey = input.sport.includes('hockey') || input.sport.includes('nhl');
+  const isHighScoringSport = input.sport.includes('basketball') || (input.sport.includes('football') && !input.sport.includes('soccer'));
+  const isSoccer = !isHighScoringSport && !isHockey;
 
   // Check if we have meaningful stats
   const hasHomeStats = input.homeStats.played > 0 && input.homeStats.scored > 0;
   const hasAwayStats = input.awayStats.played > 0 && input.awayStats.scored > 0;
   const hasStats = hasHomeStats && hasAwayStats;
+
+  // For hockey/NHL with missing stats: Use league average + odds adjustment
+  if (isHockey && !hasStats) {
+    console.log(`[getExpectedScores] Using league average for hockey (no stats)`);
+    const avgTotal = 6.2; // NHL league average
+    let homeGoals = 3.2;
+    let awayGoals = 3.0;
+    
+    // If we have odds, adjust based on favorite
+    if (odds?.homeOdds && odds?.awayOdds) {
+      const homeProb = 1 / odds.homeOdds;
+      const awayProb = 1 / odds.awayOdds;
+      const total = homeProb + awayProb;
+      const normHomeProb = homeProb / total;
+      
+      // Swing ±0.3 goals based on favorite
+      const homeAdj = (normHomeProb - 0.5) * 0.6;
+      homeGoals = Math.max(2.5, Math.min(4.0, 3.2 + homeAdj));
+      awayGoals = Math.max(2.5, Math.min(3.5, 3.0 - homeAdj));
+    }
+    
+    return {
+      home: Math.round(homeGoals * 10) / 10,
+      away: Math.round(awayGoals * 10) / 10,
+    };
+  }
 
   // For soccer with missing stats: Use odds-based expected goals
   if (isSoccer && !hasStats && odds?.homeOdds && odds?.awayOdds) {
@@ -621,10 +654,10 @@ export function getExpectedScores(
     // leagueAvgPoints is already PER TEAM (22) - American football only
     leagueAvgPerTeam = input.leagueAverageGoals ||
       ('leagueAvgPoints' in config ? (config as typeof SPORT_CONFIG.football).leagueAvgPoints : 22);
-  } else if (input.sport.includes('hockey') || input.sport.includes('nhl')) {
-    // NHL: leagueAvgGoals is TOTAL per game, divide by 2 for per-team
+  } else if (isHockey) {
+    // NHL: leagueAvgGoals is TOTAL per game (6.2), divide by 2 for per-team (3.1)
     const totalGoals = input.leagueAverageGoals ||
-      ('leagueAvgGoals' in config ? (config as typeof SPORT_CONFIG.hockey).leagueAvgGoals : 2.8);
+      ('leagueAvgGoals' in config ? (config as typeof SPORT_CONFIG.hockey).leagueAvgGoals : 6.2);
     leagueAvgPerTeam = totalGoals / 2;
   } else {
     // Soccer: leagueAvgGoals is TOTAL, divide by 2
