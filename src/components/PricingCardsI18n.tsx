@@ -24,6 +24,8 @@ interface PricingPlan {
   name: string;
   monthlyPrice: string;
   yearlyPrice: string;
+  dailyPriceMonthly: string;
+  dailyPriceYearly: string;
   monthlyPriceId: string;
   yearlyPriceId: string;
   description: string;
@@ -56,6 +58,7 @@ const cardTranslations = {
     loading: 'Loading...',
     perYear: '/year',
     perMonth: '/month',
+    perDay: '/day',
     manageSubscription: 'Manage Subscription',
     freeFeatures: [
       '1 match analysis',
@@ -105,6 +108,7 @@ const cardTranslations = {
     loading: 'Učitavanje...',
     perYear: '/godišnje',
     perMonth: '/mesečno',
+    perDay: '/dnevno',
     manageSubscription: 'Upravljaj Pretplatom',
     freeFeatures: [
       '1 analiza meča',
@@ -160,6 +164,8 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
       name: 'Pro',
       monthlyPrice: '$19.99',
       yearlyPrice: '$149',
+      dailyPriceMonthly: '$0.66',
+      dailyPriceYearly: '$0.40',
       monthlyPriceId: 'pro',
       yearlyPriceId: 'pro-yearly',
       description: t.proDescription,
@@ -173,6 +179,8 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
       name: 'Premium',
       monthlyPrice: '$49.99',
       yearlyPrice: '$290',
+      dailyPriceMonthly: '$1.66',
+      dailyPriceYearly: '$0.79',
       monthlyPriceId: 'premium',
       yearlyPriceId: 'premium-yearly',
       description: t.premiumDescription,
@@ -388,17 +396,20 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
                   {plan.name}
                 </h3>
 
-                {/* Price */}
-                <div className="mb-2">
-                  <span className={`text-4xl font-extrabold ${plan.highlighted ? 'text-white' : isPremium ? 'text-slate-400' : 'text-white'
-                    }`}>
-                    {yearly ? plan.yearlyPrice : plan.monthlyPrice}
-                  </span>
-                  <span className="text-sm text-gray-400">
-                    {yearly ? t.perYear : t.perMonth}
-                  </span>
+                {/* Price - Per Day Dominant */}
+                <div className="mb-2 flex flex-col items-center">
+                  <div className="flex items-baseline gap-1">
+                    <span className={`text-4xl font-extrabold ${plan.highlighted ? 'text-white' : isPremium ? 'text-slate-400' : 'text-white'
+                      }`}>
+                      {yearly ? plan.dailyPriceYearly : plan.dailyPriceMonthly}
+                    </span>
+                    <span className="text-lg text-gray-400 font-medium">{t.perDay}</span>
+                  </div>
+                  <div className="text-sm text-gray-400 mt-1">
+                    {yearly ? plan.yearlyPrice : plan.monthlyPrice} {yearly ? t.perYear : t.perMonth}
+                  </div>
                 </div>
-                <p className={`text-sm font-semibold ${yearly ? 'text-gray-400' : 'text-gradient-gold'}`}>
+                <p className={`text-sm font-semibold mb-2 ${yearly ? 'text-gray-400' : 'text-gradient-gold'}`}>
                   {yearly ? plan.yearlyDescription : plan.description}
                 </p>
               </div>

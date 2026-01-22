@@ -18,6 +18,8 @@ interface PricingPlan {
   name: string;
   monthlyPrice: string;
   yearlyPrice: string;
+  dailyPriceMonthly: string;
+  dailyPriceYearly: string;
   monthlyPriceId: string;
   yearlyPriceId: string;
   description: string;
@@ -34,6 +36,8 @@ const plans: PricingPlan[] = [
     name: 'Pro',
     monthlyPrice: '$19.99',
     yearlyPrice: '$149',
+    dailyPriceMonthly: '$0.66',
+    dailyPriceYearly: '$0.40',
     monthlyPriceId: 'pro',
     yearlyPriceId: 'pro-yearly',
     description: 'Analysis + Edge Detection',
@@ -56,6 +60,8 @@ const plans: PricingPlan[] = [
     name: 'Premium',
     monthlyPrice: '$49.99',
     yearlyPrice: '$290',
+    dailyPriceMonthly: '$1.66',
+    dailyPriceYearly: '$0.79',
     monthlyPriceId: 'premium',
     yearlyPriceId: 'premium-yearly',
     description: 'Unlimited Analysis + Edge Alerts',
@@ -333,14 +339,17 @@ export default function PricingCards() {
                   {plan.name}
                 </h3>
 
-                {/* Price */}
-                <div className="mb-2">
-                  <span className="text-4xl font-extrabold text-white">
-                    {yearly ? plan.yearlyPrice : plan.monthlyPrice}
-                  </span>
-                  <span className="text-sm text-gray-400">
-                    {yearly ? '/year' : '/month'}
-                  </span>
+                {/* Price - Per Day Dominant */}
+                <div className="mb-2 flex flex-col items-center">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold text-white">
+                      {yearly ? plan.dailyPriceYearly : plan.dailyPriceMonthly}
+                    </span>
+                    <span className="text-lg text-gray-400 font-medium">/day</span>
+                  </div>
+                  <div className="text-sm text-gray-400 mt-1">
+                    {yearly ? plan.yearlyPrice : plan.monthlyPrice} {yearly ? '/year' : '/month'}
+                  </div>
                 </div>
                 <p className={`text-sm font-semibold ${yearly ? 'text-gray-400' : 'text-gradient-gold'}`}>
                   {yearly ? plan.yearlyDescription : plan.description}

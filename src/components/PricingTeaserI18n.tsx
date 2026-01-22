@@ -103,14 +103,22 @@ export default function PricingTeaserI18n({ t, locale }: PricingTeaserI18nProps)
 
           <div className="text-center mb-4 pt-2">
             <h3 className="text-xl font-bold mb-3 text-white">{t.pricing.pro.name}</h3>
-            <div className="mb-2">
-              <span className="text-4xl font-extrabold text-white">
-                {isYearlyBilling ? '$149' : '$19.99'}
-              </span>
-              <span className="text-sm text-gray-400">
-                {isYearlyBilling ? (locale === 'sr' ? '/godišnje' : '/year') : t.pricing.perMonth}
-              </span>
+            
+            {/* Price - Per Day Dominant */}
+            <div className="mb-2 flex flex-col items-center">
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold text-white">
+                  {isYearlyBilling ? '$0.40' : '$0.66'}
+                </span>
+                <span className="text-lg text-gray-400 font-medium">
+                  {locale === 'sr' ? '/dnevno' : '/day'}
+                </span>
+              </div>
+              <div className="text-sm text-gray-400 mt-1">
+                {isYearlyBilling ? '$149' : '$19.99'} {isYearlyBilling ? (locale === 'sr' ? '/godišnje' : '/year') : (locale === 'sr' ? '/mesečno' : '/month')}
+              </div>
             </div>
+
             <p className={`text-sm font-semibold ${isYearlyBilling ? 'text-gray-400' : 'text-gradient-gold'}`}>
               {isYearlyBilling ? t.pricing.pro.yearlyDescription : t.pricing.pro.description}
             </p>
@@ -143,14 +151,22 @@ export default function PricingTeaserI18n({ t, locale }: PricingTeaserI18nProps)
 
           <div className="text-center mb-4 pt-2">
             <h3 className="text-xl font-bold mb-3 text-white">{t.pricing.premium.name}</h3>
-            <div className="mb-2">
-              <span className="text-4xl font-extrabold text-white">
-                {isYearlyBilling ? '$290' : '$49.99'}
-              </span>
-              <span className="text-sm text-gray-400">
-                {isYearlyBilling ? (locale === 'sr' ? '/godišnje' : '/year') : t.pricing.perMonth}
-              </span>
+            
+            {/* Price - Per Day Dominant */}
+            <div className="mb-2 flex flex-col items-center">
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold text-white">
+                  {isYearlyBilling ? '$0.79' : '$1.66'}
+                </span>
+                <span className="text-lg text-gray-400 font-medium">
+                  {locale === 'sr' ? '/dnevno' : '/day'}
+                </span>
+              </div>
+              <div className="text-sm text-gray-400 mt-1">
+                {isYearlyBilling ? '$290' : '$49.99'} {isYearlyBilling ? (locale === 'sr' ? '/godišnje' : '/year') : (locale === 'sr' ? '/mesečno' : '/month')}
+              </div>
             </div>
+
             <p className={`text-sm font-semibold ${isYearlyBilling ? 'text-gray-400' : 'text-gradient-gold'}`}>
               {isYearlyBilling ? t.pricing.premium.yearlyDescription : t.pricing.premium.description}
             </p>
