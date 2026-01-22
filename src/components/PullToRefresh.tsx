@@ -35,49 +35,79 @@ export default function PullToRefresh({
   const [isPulling, setIsPulling] = useState(false);
   const startY = useRef(0);
   const currentY = useRef(0);
-
-  // Check if we're STRICTLY at top of page
-  // Using === 0 to avoid false positives on Android/Chrome
-  const isAtTop = useCallback(() => {
-    return window.scrollY === 0;
-  }, []);
+  // Track if we've confirmed this is a pull-down gesture (not scroll)
+  const isPullConfirmed = useRef(false);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (disabled || isRefreshing || !isAtTop()) return;
+    // Record start position but DON'T activate pulling yet
+    // We'll decide in touchmove if this is a pull or scroll
+    if (disabled || isRefreshing || window.scrollY !== 0) return;
     startY.current = e.touches[0].clientY;
-    setIsPulling(true);
-  }, [disabled, isRefreshing, isAtTop]);
+    isPullConfirmed.current = false;
+    // Don't set isPulling here - let touchmove decide
+  }, [disabled, isRefreshing]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!isPulling || disabled || isRefreshing) return;
+    if (disabled || isRefreshing) return;
+    
+    // Not at top? Let browser handle scroll normally
+    if (window.scrollY !== 0) {
+      if (isPulling) {
+        setPullDistance(0);
+        setIsPulling(false);
+        isPullConfirmed.current = false;
+      }
+      return;
+    }
+    
+    // No start position recorded? Ignore
+    if (startY.current === 0) return;
     
     currentY.current = e.touches[0].clientY;
     const diff = currentY.current - startY.current;
     
-    // Only allow pulling down when STRICTLY at top
-    // CRITICAL: Use === 0 to avoid blocking scroll on Android/Chrome
-    if (diff < 0 || window.scrollY !== 0) {
-      setPullDistance(0);
-      setIsPulling(false);
+    // User is scrolling UP (negative diff) - let browser handle it
+    if (diff < 0) {
+      if (isPulling) {
+        setPullDistance(0);
+        setIsPulling(false);
+        isPullConfirmed.current = false;
+      }
       return;
     }
     
-    // Add resistance
-    const resistance = 0.4;
-    const resistedDiff = diff * resistance;
-    
-    setPullDistance(Math.min(resistedDiff, threshold * 1.5));
-    
-    // Only prevent default when significantly pulling (>30px) at top
-    // This allows normal scroll to work on Android/Chrome
-    if (resistedDiff > 30) {
-      e.preventDefault();
+    // User is pulling DOWN at top of page
+    if (diff > 0) {
+      // Only confirm as pull gesture after 15px of downward movement
+      if (!isPullConfirmed.current && diff > 15) {
+        isPullConfirmed.current = true;
+        setIsPulling(true);
+      }
+      
+      if (isPullConfirmed.current) {
+        const resistance = 0.4;
+        const resistedDiff = diff * resistance;
+        setPullDistance(Math.min(resistedDiff, threshold * 1.5));
+        
+        // Only prevent scroll after significant pull (>40px visual distance)
+        if (resistedDiff > 40) {
+          e.preventDefault();
+        }
+      }
     }
   }, [isPulling, disabled, isRefreshing, threshold]);
 
   const handleTouchEnd = useCallback(async () => {
-    if (!isPulling) return;
+    // Reset start position
+    startY.current = 0;
+    
+    if (!isPulling) {
+      isPullConfirmed.current = false;
+      return;
+    }
+    
     setIsPulling(false);
+    isPullConfirmed.current = false;
 
     if (pullDistance >= threshold && !isRefreshing) {
       setIsRefreshing(true);
