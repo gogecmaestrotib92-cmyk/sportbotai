@@ -160,12 +160,22 @@ export default function ChatMatchAnalysis({ data }: ChatMatchAnalysisProps) {
                         </div>
                     </div>
 
-                    {/* Expected Score */}
-                    {expectedScores && (
+                    {/* Expected Score - hide for basketball (show totals instead) */}
+                    {expectedScores && !matchInfo.sport?.includes('basketball') && !matchInfo.sport?.includes('nba') && (
                         <div className="text-right">
                             <div className="text-xs text-text-muted mb-1">Predicted Score</div>
                             <div className="text-white font-bold text-lg">
                                 {Math.round(expectedScores.home)} - {Math.round(expectedScores.away)}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* For basketball - show total points if available */}
+                    {expectedScores && (matchInfo.sport?.includes('basketball') || matchInfo.sport?.includes('nba')) && (
+                        <div className="text-right">
+                            <div className="text-xs text-text-muted mb-1">Expected Total</div>
+                            <div className="text-white font-bold text-lg">
+                                {Math.round(expectedScores.home + expectedScores.away)} pts
                             </div>
                         </div>
                     )}
