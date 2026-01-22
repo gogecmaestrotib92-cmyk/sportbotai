@@ -43,24 +43,49 @@ interface MatchResult {
 
 /**
  * Helper to find match by team names from API response
+ * Improved matching: handles variations like "Athletic Club" vs "Athletic Bilbao"
  */
 function findMatchByTeams(
-  matches: any[], 
-  homeTeam: string, 
+  matches: any[],
+  homeTeam: string,
   awayTeam: string,
   sportType: 'soccer' | 'basketball' | 'hockey'
 ): any | null {
+  // Normalize and extract significant words (>= 4 chars, no common suffixes)
+  const normalizeTeam = (name: string): string[] => {
+    const commonSuffixes = ['fc', 'sc', 'cf', 'ac', 'bc', 'club', 'united', 'city'];
+    return name
+      .toLowerCase()
+      .replace(/[^a-z\s]/g, '')
+      .split(/\s+/)
+      .filter(word => word.length >= 4 && !commonSuffixes.includes(word));
+  };
+
+  const homeWords = normalizeTeam(homeTeam);
+  const awayWords = normalizeTeam(awayTeam);
   const homeNormalized = homeTeam.toLowerCase().replace(/[^a-z]/g, '');
   const awayNormalized = awayTeam.toLowerCase().replace(/[^a-z]/g, '');
-  
+
   return matches.find((m: any) => {
     const apiHome = (m.teams?.home?.name || '').toLowerCase().replace(/[^a-z]/g, '');
     const apiAway = (m.teams?.away?.name || '').toLowerCase().replace(/[^a-z]/g, '');
-    
-    // Fuzzy match - partial matching in both directions
-    const homeMatch = apiHome.includes(homeNormalized) || homeNormalized.includes(apiHome);
-    const awayMatch = apiAway.includes(awayNormalized) || awayNormalized.includes(apiAway);
-    
+    const apiHomeWords = normalizeTeam(m.teams?.home?.name || '');
+    const apiAwayWords = normalizeTeam(m.teams?.away?.name || '');
+
+    // Method 1: Full string contains (original method)
+    const homeMatch1 = apiHome.includes(homeNormalized) || homeNormalized.includes(apiHome);
+    const awayMatch1 = apiAway.includes(awayNormalized) || awayNormalized.includes(apiAway);
+
+    // Method 2: Word-based matching - any significant word matches
+    const homeMatch2 = homeWords.some(w => apiHomeWords.includes(w)) ||
+      apiHomeWords.some(w => homeWords.includes(w));
+    const awayMatch2 = awayWords.some(w => apiAwayWords.includes(w)) ||
+      apiAwayWords.some(w => awayWords.includes(w));
+
+    // Match if either method works
+    const homeMatch = homeMatch1 || homeMatch2;
+    const awayMatch = awayMatch1 || awayMatch2;
+
     return homeMatch && awayMatch;
   }) || null;
 }
@@ -78,15 +103,15 @@ async function getMatchResult(matchId: string, sport: string, matchName?: string
     // Check if matchId is numeric (API-Football ID), UUID (The Odds API), or slug
     const isNumericId = /^\d+$/.test(matchId);
     const isUUID = /^[a-f0-9]{32}$/.test(matchId);
-    
+
     // Determine sport type and API
     const isBasketball = sport.includes('basketball') || sport.includes('nba') || sport.includes('euroleague');
     const isHockey = sport.includes('hockey') || sport.includes('nhl');
     const sportType: 'soccer' | 'basketball' | 'hockey' = isHockey ? 'hockey' : isBasketball ? 'basketball' : 'soccer';
-    
+
     let baseUrl: string;
     let endpoint: string;
-    
+
     if (isHockey) {
       baseUrl = HOCKEY_API_URL;
       endpoint = '/games';
@@ -97,15 +122,15 @@ async function getMatchResult(matchId: string, sport: string, matchName?: string
       baseUrl = FOOTBALL_API_URL;
       endpoint = '/fixtures';
     }
-    
+
     let match: any = null;
-    
+
     // Strategy 1: Direct ID lookup (only for numeric API-Football IDs)
     if (isNumericId) {
       const response = await fetch(`${baseUrl}${endpoint}?id=${matchId}`, {
         headers: { 'x-apisports-key': API_KEY },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         match = data.response?.[0];
@@ -114,43 +139,43 @@ async function getMatchResult(matchId: string, sport: string, matchName?: string
         }
       }
     }
-    
+
     // Strategy 2: Search by team names
     // For UUIDs (from The Odds API) and slugs, we need to search by team names
     // Also search multiple days since kickoff might be wrong for AGENT_POST predictions
     if (!match && matchName) {
       const [homeTeam, awayTeam] = matchName.split(' vs ').map(t => t.trim());
-      
+
       if (homeTeam && awayTeam) {
         // Generate dates to search: stored date, plus/minus 2 days
         const baseDate = kickoff || new Date();
         const datesToSearch: string[] = [];
-        
+
         for (let dayOffset = -2; dayOffset <= 2; dayOffset++) {
           const searchDate = new Date(baseDate);
           searchDate.setDate(searchDate.getDate() + dayOffset);
           datesToSearch.push(searchDate.toISOString().split('T')[0]);
         }
-        
+
         // Remove duplicates and search each date
         const uniqueDates = Array.from(new Set(datesToSearch));
-        
+
         for (const dateStr of uniqueDates) {
           const response = await fetch(`${baseUrl}${endpoint}?date=${dateStr}`, {
             headers: { 'x-apisports-key': API_KEY },
           });
-          
+
           if (response.ok) {
             const data = await response.json();
             const matches = data.response || [];
-            
+
             match = findMatchByTeams(matches, homeTeam, awayTeam, sportType);
-            
+
             if (match) {
               // Check if match is finished
               const status = sportType === 'soccer' ? match.fixture?.status?.short : match.status?.short;
               const finishedStatuses = ['FT', 'AET', 'PEN', 'AOT', 'AP', 'POST']; // Full time, After Extra Time, Penalties, After Over Time, Post-game
-              
+
               if (finishedStatuses.includes(status)) {
                 console.log(`[Validation] Found FINISHED match on ${dateStr}: ${homeTeam} vs ${awayTeam} (status: ${status})`);
                 break;
@@ -164,9 +189,9 @@ async function getMatchResult(matchId: string, sport: string, matchName?: string
         }
       }
     }
-    
+
     if (!match) return null;
-    
+
     if (sportType === 'basketball') {
       const homeScore = match.scores?.home?.total || 0;
       const awayScore = match.scores?.away?.total || 0;
@@ -216,13 +241,13 @@ function validatePrediction(
   const pred = prediction.prediction.toLowerCase();
   const { homeScore, awayScore, winner } = result;
   const totalGoals = homeScore + awayScore;
-  
+
   switch (prediction.type) {
     case 'MATCH_RESULT':
       // CRITICAL FIX: Check "home win" OR "home" FIRST before generic "win"
       // Otherwise "Away Win" gets misclassified as home prediction!
       if (pred.includes('home win') || (pred.includes('home') && !pred.includes('away'))) {
-        return winner === 'home' 
+        return winner === 'home'
           ? { outcome: 'HIT', reason: 'Home team won as predicted' }
           : { outcome: 'MISS', reason: `Predicted home win, got ${winner}` };
       }
@@ -237,11 +262,11 @@ function validatePrediction(
           : { outcome: 'MISS', reason: `Predicted draw, got ${winner} win` };
       }
       break;
-      
+
     case 'OVER_UNDER':
       const overMatch = pred.match(/over\s*(\d+\.?\d*)/i);
       const underMatch = pred.match(/under\s*(\d+\.?\d*)/i);
-      
+
       if (overMatch) {
         const line = parseFloat(overMatch[1]);
         if (totalGoals > line) return { outcome: 'HIT', reason: `Over ${line} hit (${totalGoals} total)` };
@@ -255,7 +280,7 @@ function validatePrediction(
         return { outcome: 'PUSH', reason: `Landed exactly on ${line}` };
       }
       break;
-      
+
     case 'BTTS':
       const bothScored = homeScore > 0 && awayScore > 0;
       if (pred.includes('yes') || pred.includes('btts')) {
@@ -269,7 +294,7 @@ function validatePrediction(
           : { outcome: 'MISS', reason: 'BTTS No missed' };
       }
       break;
-      
+
     case 'CLEAN_SHEET':
       if (pred.includes('home')) {
         return awayScore === 0
@@ -282,7 +307,7 @@ function validatePrediction(
           : { outcome: 'MISS', reason: 'Away clean sheet missed' };
       }
       break;
-      
+
     case 'DOUBLE_CHANCE':
       if (pred.includes('1x') || pred.includes('home or draw')) {
         return winner !== 'away'
@@ -301,7 +326,7 @@ function validatePrediction(
       }
       break;
   }
-  
+
   // Default: can't auto-validate
   return { outcome: 'PENDING', reason: 'Could not auto-validate' };
 }
@@ -319,7 +344,7 @@ function generateValidationTweet(
   actualResult: string
 ): string {
   const conviction = '🔥'.repeat(prediction.conviction);
-  
+
   if (outcome === 'HIT') {
     const phrases = [
       'Called it ✅',
@@ -328,7 +353,7 @@ function generateValidationTweet(
       'Numbers delivered ✅',
     ];
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-    
+
     return formatForTwitter(
       `${phrase}\n\n${prediction.matchName}\n📊 Prediction: ${prediction.prediction}\n⚽ Result: ${actualResult}\n\nConviction: ${conviction}`,
       { hashtags: ['SportBot', 'CalledIt'] }
@@ -340,7 +365,7 @@ function generateValidationTweet(
       'Variance strikes 📉',
     ];
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-    
+
     return formatForTwitter(
       `${phrase}\n\n${prediction.matchName}\n📊 Prediction: ${prediction.prediction}\n⚽ Result: ${actualResult}\n\nTransparency > ego. On to the next.`,
       { hashtags: ['SportBot', 'Accountability'] }
@@ -358,18 +383,18 @@ export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   const isVercelCron = request.headers.get('x-vercel-cron') === '1';
   const isAuthorized = authHeader === `Bearer ${CRON_SECRET}`;
-  
+
   if (CRON_SECRET && !isVercelCron && !isAuthorized) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  
+
   console.log('[Cron] Starting match validation...');
-  
+
   try {
     // Get pending predictions where match should be finished
     // (kickoff was more than 2 hours ago for football, 3 hours for basketball)
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-    
+
     const pendingPredictions = await prisma.prediction.findMany({
       where: {
         outcome: 'PENDING',
@@ -378,9 +403,9 @@ export async function GET(request: NextRequest) {
       orderBy: { kickoff: 'asc' },
       take: 20, // Process in batches
     });
-    
+
     console.log(`[Cron] Found ${pendingPredictions.length} predictions to validate`);
-    
+
     const results = {
       processed: 0,
       hits: 0,
@@ -389,50 +414,50 @@ export async function GET(request: NextRequest) {
       errors: 0,
       tweeted: 0,
     };
-    
+
     const twitter = getTwitterClient();
-    
+
     for (const prediction of pendingPredictions) {
       try {
         // Fetch match result - pass matchName and kickoff for team name lookup
         const result = await getMatchResult(
-          prediction.matchId, 
-          prediction.sport, 
+          prediction.matchId,
+          prediction.sport,
           prediction.matchName,
           prediction.kickoff
         );
-        
+
         if (!result) {
           console.log(`[Cron] No result for ${prediction.matchId} (${prediction.matchName})`);
           continue;
         }
-        
+
         // Check if match is actually finished
         const finishedStatuses = ['FT', 'AET', 'PEN', 'AOT', 'AP', 'POST'];
         if (!finishedStatuses.includes(result.status)) {
           console.log(`[Cron] Match ${prediction.matchId} not finished: ${result.status}`);
           continue;
         }
-        
+
         // Validate the prediction
         const validation = validatePrediction(
           { type: prediction.type, prediction: prediction.prediction },
           result
         );
-        
+
         if (validation.outcome === 'PENDING') {
           console.log(`[Cron] Could not auto-validate ${prediction.id}`);
           continue;
         }
-        
+
         const actualScore = `${result.homeScore}-${result.awayScore}`;
         const actualResult = result.winner === 'home' ? 'HOME_WIN' : result.winner === 'away' ? 'AWAY_WIN' : 'DRAW';
         const binaryOutcome = validation.outcome === 'HIT' ? 1 : 0;
-        
+
         // Evaluate value bet if present
         let valueBetOutcome: 'HIT' | 'MISS' | null = null;
         let valueBetProfit: number | null = null;
-        
+
         if (prediction.valueBetSide && prediction.valueBetOdds) {
           const actualWinner = result.winner === 'home' ? 'HOME' : result.winner === 'away' ? 'AWAY' : 'DRAW';
           const valueBetWon = prediction.valueBetSide === actualWinner;
@@ -440,7 +465,7 @@ export async function GET(request: NextRequest) {
           valueBetProfit = valueBetWon ? (prediction.valueBetOdds - 1) : -1;
           console.log(`[Cron] Value bet: ${prediction.valueBetSide} @ ${prediction.valueBetOdds.toFixed(2)} -> ${valueBetOutcome}`);
         }
-        
+
         // Update prediction in database with all fields
         await prisma.prediction.update({
           where: { id: prediction.id },
@@ -455,14 +480,14 @@ export async function GET(request: NextRequest) {
             ...(valueBetProfit !== null && { valueBetProfit }),
           },
         });
-        
+
         console.log(`[Cron] ✅ Updated ${prediction.matchName}: ${actualScore} -> ${validation.outcome}`);
-        
+
         results.processed++;
         if (validation.outcome === 'HIT') results.hits++;
         if (validation.outcome === 'MISS') results.misses++;
         if (validation.outcome === 'PUSH') results.pushes++;
-        
+
         // Post validation tweet (only for HIT/MISS, skip PUSHes)
         // Disabled via TWITTER_VALIDATION_ENABLED env var
         if (TWITTER_POSTING_ENABLED && twitter.isConfigured() && validation.outcome !== 'PUSH') {
@@ -475,15 +500,15 @@ export async function GET(request: NextRequest) {
             validation.outcome,
             actualScore
           );
-          
+
           const tweetResult = await twitter.postTweet(tweetContent);
-          
+
           if (tweetResult.success && tweetResult.tweet) {
             await prisma.prediction.update({
               where: { id: prediction.id },
               data: { validationTweetId: tweetResult.tweet.id },
             });
-            
+
             await prisma.twitterPost.create({
               data: {
                 tweetId: tweetResult.tweet.id,
@@ -491,24 +516,24 @@ export async function GET(request: NextRequest) {
                 category: 'CALL_VALIDATION',
               },
             });
-            
+
             results.tweeted++;
           }
         }
-        
+
         // Small delay between API calls
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
       } catch (err) {
         console.error(`[Cron] Error validating ${prediction.id}:`, err);
         results.errors++;
       }
     }
-    
+
     // Update daily stats
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     await prisma.dailyStats.upsert({
       where: { date: today },
       create: {
@@ -517,8 +542,8 @@ export async function GET(request: NextRequest) {
         misses: results.misses,
         pushes: results.pushes,
         totalPredictions: results.processed,
-        hitRate: results.processed > 0 
-          ? (results.hits / (results.hits + results.misses)) * 100 
+        hitRate: results.processed > 0
+          ? (results.hits / (results.hits + results.misses)) * 100
           : 0,
       },
       update: {
@@ -528,14 +553,14 @@ export async function GET(request: NextRequest) {
         totalPredictions: { increment: results.processed },
       },
     });
-    
+
     console.log('[Cron] Match validation complete:', results);
-    
+
     return NextResponse.json({
       success: true,
       ...results,
     });
-    
+
   } catch (error) {
     console.error('[Cron] Match validation error:', error);
     return NextResponse.json({
