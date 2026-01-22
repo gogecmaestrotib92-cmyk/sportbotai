@@ -41,28 +41,31 @@ export function usePullToRefresh({
   // Track if blocking listener is attached
   const blockingListenerAttached = useRef(false);
 
-  // This is the blocking touchmove handler - only added when pulling
-  const blockingTouchMove = useCallback((e: TouchEvent) => {
-    // Always prevent default when this listener is active
-    // (we only attach it when we're sure user is pulling at top)
-    e.preventDefault();
-  }, []);
+  // Use ref for blocking function so we always remove the SAME function we added
+  const blockingTouchMoveRef = useRef<((e: TouchEvent) => void) | null>(null);
+  
+  // Initialize the blocking function once
+  if (!blockingTouchMoveRef.current) {
+    blockingTouchMoveRef.current = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+  }
 
   // Attach the blocking listener
   const attachBlockingListener = useCallback(() => {
-    if (!blockingListenerAttached.current) {
-      document.addEventListener('touchmove', blockingTouchMove, { passive: false });
+    if (!blockingListenerAttached.current && blockingTouchMoveRef.current) {
+      document.addEventListener('touchmove', blockingTouchMoveRef.current, { passive: false });
       blockingListenerAttached.current = true;
     }
-  }, [blockingTouchMove]);
+  }, []);
 
   // Detach the blocking listener
   const detachBlockingListener = useCallback(() => {
-    if (blockingListenerAttached.current) {
-      document.removeEventListener('touchmove', blockingTouchMove);
+    if (blockingListenerAttached.current && blockingTouchMoveRef.current) {
+      document.removeEventListener('touchmove', blockingTouchMoveRef.current);
       blockingListenerAttached.current = false;
     }
-  }, [blockingTouchMove]);
+  }, []);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     // Only track if at top of page
