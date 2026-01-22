@@ -1618,6 +1618,107 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // =====================================================
+    // INSTANT PATH: Check for match prediction IMMEDIATELY
+    // This runs BEFORE any slow operations (memory, LLM, cache, etc.)
+    // Returns in <100ms for pre-analyzed matches
+    // =====================================================
+    const instantMatchPattern = /^([a-zA-Z\s]+?)\s+(?:vs\.?|versus|against|@)\s+([a-zA-Z\s]+)$/i;
+    const instantMatch = message.trim().match(instantMatchPattern);
+    
+    if (instantMatch) {
+      const [, rawHome, rawAway] = instantMatch;
+      const homeWord = rawHome.trim().split(/\s+/).pop() || '';
+      const awayWord = rawAway.trim().split(/\s+/).pop() || '';
+      
+      if (homeWord.length > 2 && awayWord.length > 2) {
+        console.log(`[AI-Chat-Stream] ⚡ INSTANT PATH: Checking "${homeWord} vs ${awayWord}" FIRST`);
+        
+        try {
+          // Check Prediction table directly - no slow operations
+          const prediction = await prisma.prediction.findFirst({
+            where: {
+              OR: [
+                {
+                  AND: [
+                    { matchName: { contains: homeWord, mode: 'insensitive' } },
+                    { matchName: { contains: awayWord, mode: 'insensitive' } },
+                  ]
+                },
+                {
+                  AND: [
+                    { matchName: { contains: awayWord, mode: 'insensitive' } },
+                    { matchName: { contains: homeWord, mode: 'insensitive' } },
+                  ]
+                }
+              ],
+              kickoff: { gte: new Date(Date.now() - 72 * 60 * 60 * 1000) },
+              NOT: [
+                { fullResponse: { equals: undefined } },
+              ],
+            },
+            orderBy: { kickoff: 'asc' },
+          });
+
+          if (prediction?.fullResponse) {
+            const fullData = prediction.fullResponse as any;
+            const kickoff = prediction.kickoff ? new Date(prediction.kickoff) : null;
+            
+            console.log(`[AI-Chat-Stream] ⚡ INSTANT HIT: ${prediction.matchName}`);
+            
+            // Return streaming response immediately
+            const encoder = new TextEncoder();
+            const readable = new ReadableStream({
+              start(controller) {
+                const structuredData = {
+                  matchInfo: {
+                    id: prediction.matchName?.toLowerCase().replace(/\s+/g, '-') || '',
+                    homeTeam: fullData.matchInfo?.homeTeam || rawHome.trim(),
+                    awayTeam: fullData.matchInfo?.awayTeam || rawAway.trim(),
+                    league: fullData.matchInfo?.league || '',
+                    sport: fullData.matchInfo?.sport || 'unknown',
+                    kickoff: kickoff?.toISOString() || '',
+                  },
+                  story: fullData.story || { favored: 'home', confidence: 'moderate' },
+                  universalSignals: fullData.universalSignals,
+                  expectedScores: fullData.expectedScores,
+                  matchUrl: `/match/${rawHome.trim().toLowerCase().replace(/\s+/g, '-')}-vs-${rawAway.trim().toLowerCase().replace(/\s+/g, '-')}`,
+                  probabilities: fullData.probabilities,
+                  oddsComparison: fullData.oddsComparison,
+                  briefing: fullData.briefing,
+                  momentumAndForm: fullData.momentumAndForm,
+                  injuryContext: fullData.injuryContext,
+                  riskAnalysis: fullData.riskAnalysis,
+                  tacticalAnalysis: fullData.tacticalAnalysis,
+                  preMatchInsights: fullData.preMatchInsights,
+                  upsetPotential: fullData.upsetPotential,
+                };
+
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'match-analysis', data: structuredData })}\n\n`));
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+                controller.close();
+              },
+            });
+
+            return new Response(readable, {
+              headers: {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+              },
+            });
+          } else {
+            console.log(`[AI-Chat-Stream] ⚡ INSTANT PATH: No pre-analyzed data for "${homeWord} vs ${awayWord}"`);
+          }
+        } catch (instantErr) {
+          console.log(`[AI-Chat-Stream] INSTANT PATH error:`, instantErr);
+        }
+      }
+    }
+    // =====================================================
+    // END INSTANT PATH - Continue with normal processing
+    // =====================================================
+
     // ============================================
     // CONVERSATION MEMORY: Multi-turn context
     // ============================================
