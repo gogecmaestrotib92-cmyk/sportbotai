@@ -1708,7 +1708,28 @@ export async function POST(request: NextRequest) {
               },
             });
           } else {
-            console.log(`[AI-Chat-Stream] ⚡ INSTANT PATH: No pre-analyzed data for "${homeWord} vs ${awayWord}"`);
+            // No pre-analyzed match - return helpful message INSTANTLY instead of slow path
+            console.log(`[AI-Chat-Stream] ⚡ INSTANT PATH: No data for "${homeWord} vs ${awayWord}" - returning quick response`);
+            
+            const encoder = new TextEncoder();
+            const readable = new ReadableStream({
+              start(controller) {
+                const noMatchMsg = `I don't have pre-analyzed data for **${rawHome.trim()} vs ${rawAway.trim()}** yet.\n\n` +
+                  `Check our [Matches](/matches) page for all available analyses, or try a different match!`;
+                
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', content: noMatchMsg })}\n\n`));
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+                controller.close();
+              },
+            });
+
+            return new Response(readable, {
+              headers: {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+              },
+            });
           }
         } catch (instantErr) {
           console.log(`[AI-Chat-Stream] INSTANT PATH error:`, instantErr);
