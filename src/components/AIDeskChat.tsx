@@ -351,6 +351,7 @@ export default function AIDeskChat() {
 
     try {
       // Try streaming endpoint first
+      console.log('[Chat] 🚀 Starting fetch to /api/ai-chat/stream');
       const response = await fetch('/api/ai-chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -362,13 +363,16 @@ export default function AIDeskChat() {
           })),
         }),
       });
+      console.log('[Chat] 📥 Response received:', response.status, response.headers.get('Content-Type'));
 
       // Check if response is OK and has a body we can stream
       const contentType = response.headers.get('Content-Type') || '';
       const isStreamable = contentType.includes('text/event-stream') || response.body !== null;
       let isFromCache = false;
+      console.log('[Chat] 📊 isStreamable:', isStreamable, 'response.ok:', response.ok, 'hasBody:', !!response.body);
 
       if (response.ok && isStreamable && response.body) {
+        console.log('[Chat] ✅ Entering stream reader block');
         // Add assistant message with initial "Thinking..." status
         setMessages(prev => [...prev, {
           id: assistantMessageId,
@@ -383,23 +387,27 @@ export default function AIDeskChat() {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = ''; // Buffer for incomplete lines
+        console.log('[Chat] 📖 Reader created, starting read loop');
 
         try {
           while (true) {
             const { done, value } = await reader.read();
+            console.log('[Chat] 📦 Read chunk:', done ? 'DONE' : `${value?.length} bytes`);
             if (done) break;
 
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split('\n');
+            console.log('[Chat] 📝 Lines count:', lines.length, 'Buffer preview:', buffer.substring(0, 100));
 
             // Keep the last incomplete line in buffer
             buffer = lines.pop() || '';
 
             for (const line of lines) {
+              console.log('[Chat] 📄 Processing line:', line.substring(0, 50));
               if (line.startsWith('data: ')) {
                 try {
                   const data = JSON.parse(line.slice(6));
-                  console.log('[Chat] Received event type:', data.type);
+                  console.log('[Chat] ⚡ Received event type:', data.type);
 
                   if (data.type === 'status') {
                     // Update status message (e.g., "Searching real-time data...")
