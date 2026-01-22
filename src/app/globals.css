@@ -1367,7 +1367,7 @@ button:focus-visible {
 .momentum-scroll {
   -webkit-overflow-scrolling: touch;
   overflow-y: auto;
-  overscroll-behavior-y: contain;
+  /* overscroll-behavior-y: contain; */
 }
 
 /* Snap scrolling for carousels */
@@ -1759,10 +1759,10 @@ button:focus-visible {
 }
 
 /* Prevent rubber-banding on main content while allowing smooth scrolling */
-/* Use 'contain' instead of 'none' to allow Android pull-to-refresh and normal scrolling */
-html, body {
+/* REMOVED overscroll-behavior-y: contain to restore native scroll on Android Chrome */
+/* html, body {
   overscroll-behavior-y: contain;
-}
+} */
 
 /* Allow rubber-band on scrollable content */
 .scroll-bounce {
@@ -1812,7 +1812,7 @@ html, body, main, section, article, div {
 /* === PULL TO REFRESH INTEGRATION === */
 .ptr-container {
   position: relative;
-  overscroll-behavior-y: contain;
+  /* overscroll-behavior-y: contain; */
 }
 
 .ptr-indicator {
