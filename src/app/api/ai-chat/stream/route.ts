@@ -1686,19 +1686,28 @@ export async function POST(request: NextRequest) {
             const encoder = new TextEncoder();
             const readable = new ReadableStream({
               start(controller) {
+                // Use actual team names from stored data, not user input
+                const actualHome = fullData.matchInfo?.homeTeam || rawHome.trim();
+                const actualAway = fullData.matchInfo?.awayTeam || rawAway.trim();
+                const actualSport = fullData.matchInfo?.sport || 'unknown';
+                
+                // Generate proper match URL slug from actual team names
+                const homeSlug = actualHome.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                const awaySlug = actualAway.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                
                 const structuredData = {
                   matchInfo: {
                     id: prediction.matchName?.toLowerCase().replace(/\s+/g, '-') || '',
-                    homeTeam: fullData.matchInfo?.homeTeam || rawHome.trim(),
-                    awayTeam: fullData.matchInfo?.awayTeam || rawAway.trim(),
+                    homeTeam: actualHome,
+                    awayTeam: actualAway,
                     league: fullData.matchInfo?.league || '',
-                    sport: fullData.matchInfo?.sport || 'unknown',
+                    sport: actualSport,
                     kickoff: kickoff?.toISOString() || '',
                   },
                   story: fullData.story || { favored: 'home', confidence: 'moderate' },
                   universalSignals: fullData.universalSignals,
                   expectedScores: fullData.expectedScores,
-                  matchUrl: `/match/${rawHome.trim().toLowerCase().replace(/\s+/g, '-')}-vs-${rawAway.trim().toLowerCase().replace(/\s+/g, '-')}`,
+                  matchUrl: `/match/${homeSlug}-vs-${awaySlug}`,
                   probabilities: transformedProbs,
                   oddsComparison: fullData.oddsComparison,
                   briefing: fullData.briefing,
