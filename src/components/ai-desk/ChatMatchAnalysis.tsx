@@ -183,24 +183,24 @@ export default function ChatMatchAnalysis({ data }: ChatMatchAnalysisProps) {
 
                 {/* Probabilities */}
                 {probabilities && (
-                    <div className="grid grid-cols-3 gap-2 mt-3">
+                    <div className={`grid ${probabilities.draw !== undefined && probabilities.draw !== null ? 'grid-cols-3' : 'grid-cols-2'} gap-2 mt-3`}>
                         <div className="text-center p-2 bg-white/5 rounded-lg">
                             <div className="text-lg font-bold text-white">
-                                {Math.round(probabilities.homeWin > 1 ? probabilities.homeWin : (probabilities.homeWin || 0) * 100)}%
+                                {Math.round(probabilities.homeWin || 0)}%
                             </div>
                             <div className="text-xs text-text-muted">{matchInfo.homeTeam.split(' ').pop()}</div>
                         </div>
                         {probabilities.draw !== undefined && probabilities.draw !== null && (
                             <div className="text-center p-2 bg-white/5 rounded-lg">
                                 <div className="text-lg font-bold text-white">
-                                    {Math.round(probabilities.draw > 1 ? probabilities.draw : (probabilities.draw || 0) * 100)}%
+                                    {Math.round(probabilities.draw || 0)}%
                                 </div>
                                 <div className="text-xs text-text-muted">Draw</div>
                             </div>
                         )}
                         <div className="text-center p-2 bg-white/5 rounded-lg">
                             <div className="text-lg font-bold text-white">
-                                {Math.round(probabilities.awayWin > 1 ? probabilities.awayWin : (probabilities.awayWin || 0) * 100)}%
+                                {Math.round(probabilities.awayWin || 0)}%
                             </div>
                             <div className="text-xs text-text-muted">{matchInfo.awayTeam.split(' ').pop()}</div>
                         </div>
