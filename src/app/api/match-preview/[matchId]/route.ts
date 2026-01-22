@@ -27,6 +27,7 @@ export const dynamic = 'force-dynamic';
 import { getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee, getMatchFixtureInfo } from '@/lib/football-api';
 import { getNFLMatchInjuries } from '@/lib/sports-api';
 import { getMatchInjuriesViaPerplexity } from '@/lib/perplexity';
+import { getESPNH2H } from '@/lib/data-layer/providers/espn-injuries';
 import { normalizeSport } from '@/lib/data-layer/bridge';
 import { getUnifiedMatchData, type MatchIdentifier } from '@/lib/unified-match-service';
 import { normalizeToUniversalSignals, formatSignalsForAI, getSignalSummary, type RawMatchInput } from '@/lib/universal-signals';
@@ -923,6 +924,44 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         homeGoalsScored: enrichedData.homeStats?.goalsScored,
         awayGoalsScored: enrichedData.awayStats?.goalsScored,
       });
+
+      // ESPN H2H PRIMARY: For US sports, ESPN is more reliable than API-Sports
+      const isUSASport = matchInfo.sport.includes('basketball') || matchInfo.sport.includes('nba') ||
+        matchInfo.sport.includes('hockey') || matchInfo.sport.includes('nhl') ||
+        matchInfo.sport.includes('football') || matchInfo.sport.includes('nfl');
+
+      if (isUSASport && (!enrichedData.h2hSummary || enrichedData.h2hSummary.totalMatches === 0)) {
+        console.log(`[Match-Preview] Fetching H2H from ESPN for ${matchInfo.homeTeam} vs ${matchInfo.awayTeam}`);
+        try {
+          const espnSport = matchInfo.sport.includes('basketball') || matchInfo.sport.includes('nba') ? 'nba' :
+            matchInfo.sport.includes('hockey') || matchInfo.sport.includes('nhl') ? 'nhl' :
+              matchInfo.sport.includes('football') || matchInfo.sport.includes('nfl') ? 'nfl' : null;
+
+          if (espnSport) {
+            const espnH2H = await getESPNH2H(matchInfo.homeTeam, matchInfo.awayTeam, espnSport, 3);
+            if (espnH2H.success && espnH2H.summary.totalMatches > 0) {
+              console.log(`[Match-Preview] ESPN H2H: ${espnH2H.summary.totalMatches} matches (${espnH2H.summary.team1Wins}-${espnH2H.summary.draws}-${espnH2H.summary.team2Wins})`);
+              enrichedData.h2hSummary = {
+                totalMatches: espnH2H.summary.totalMatches,
+                homeWins: espnH2H.summary.team1Wins,
+                awayWins: espnH2H.summary.team2Wins,
+                draws: espnH2H.summary.draws,
+              };
+              enrichedData.headToHead = espnH2H.matches.map(m => ({
+                date: m.date,
+                homeTeam: m.homeTeam,
+                awayTeam: m.awayTeam,
+                homeScore: m.homeScore,
+                awayScore: m.awayScore,
+              }));
+            } else {
+              console.log(`[Match-Preview] ESPN H2H: No matches found for this matchup`);
+            }
+          }
+        } catch (espnErr) {
+          console.error(`[Match-Preview] ESPN H2H failed:`, espnErr);
+        }
+      }
     } catch (sportError) {
       console.error(`[Match-Preview] Sport API error for ${matchInfo.sport}:`, sportError);
       enrichedData = {
@@ -1198,28 +1237,59 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // FIX: When raw stats are missing (goalsScored=0), estimate from form or use league averages
     // This prevents the Poisson model from returning unrealistic 1:1 scores
-    const isSoccerMatch = !matchInfo.sport.includes('basketball') &&
-      !matchInfo.sport.includes('nba') &&
-      !matchInfo.sport.includes('football') &&
-      !matchInfo.sport.includes('nfl') &&
-      !matchInfo.sport.includes('hockey') &&
-      !matchInfo.sport.includes('nhl');
+    // CRITICAL: Apply to ALL sports, not just soccer!
+    const isNHL = matchInfo.sport.includes('hockey') || matchInfo.sport.includes('nhl');
+    const isNBA = matchInfo.sport.includes('basketball') || matchInfo.sport.includes('nba');
+    const isNFL = matchInfo.sport.includes('football') || matchInfo.sport.includes('nfl');
+    const isSoccerMatch = !isNHL && !isNBA && !isNFL;
 
-    if (isSoccerMatch && homeStats.goalsScored === 0 && homeStats.played > 0) {
-      // No API stats - estimate goals from form (W=2 goals, D=1 goal, L=0.5 goals avg)
-      const estimatedHomeGoals = (homeFormCounts.wins * 2) + (homeFormCounts.draws * 1) + (homeFormCounts.losses * 0.5);
-      const estimatedHomeConceded = (homeFormCounts.losses * 2) + (homeFormCounts.draws * 1) + (homeFormCounts.wins * 0.5);
-      homeStats.goalsScored = Math.max(1, estimatedHomeGoals);
-      homeStats.goalsConceded = Math.max(1, estimatedHomeConceded);
-      console.log(`[Match-Preview] Estimated home goals from form: scored=${homeStats.goalsScored}, conceded=${homeStats.goalsConceded}`);
+    // League average scoring rates for estimation
+    // NHL: ~3.1 goals per team per game (2023-24 season)
+    // NBA: ~115 points per team per game
+    // NFL: ~22 points per team per game
+    // Soccer: ~1.3 goals per team per game
+    const getLeagueAverage = () => {
+      if (isNHL) return { scored: 3.1, conceded: 3.1 };
+      if (isNBA) return { scored: 115, conceded: 115 };
+      if (isNFL) return { scored: 22, conceded: 22 };
+      return { scored: 1.3, conceded: 1.3 }; // Soccer
+    };
+
+    const leagueAvg = getLeagueAverage();
+
+    // Estimate scored/conceded from form when raw stats are missing
+    const estimateFromForm = (formCounts: { wins: number; draws: number; losses: number; played: number }) => {
+      if (formCounts.played === 0) {
+        return { scored: leagueAvg.scored, conceded: leagueAvg.conceded };
+      }
+
+      // Win/loss ratio affects scoring
+      const winRate = formCounts.wins / Math.max(1, formCounts.played);
+      const lossRate = formCounts.losses / Math.max(1, formCounts.played);
+
+      // Better teams score more, concede less
+      // Win = +10% above average, Loss = -10% below average
+      const scoredMultiplier = 1 + (winRate * 0.2) - (lossRate * 0.1);
+      const concededMultiplier = 1 - (winRate * 0.1) + (lossRate * 0.2);
+
+      return {
+        scored: leagueAvg.scored * scoredMultiplier * formCounts.played,
+        conceded: leagueAvg.conceded * concededMultiplier * formCounts.played,
+      };
+    };
+
+    if (homeStats.goalsScored === 0 && homeStats.played > 0) {
+      const estimated = estimateFromForm(homeFormCounts);
+      homeStats.goalsScored = Math.max(1, Math.round(estimated.scored * 10) / 10);
+      homeStats.goalsConceded = Math.max(1, Math.round(estimated.conceded * 10) / 10);
+      console.log(`[Match-Preview] Estimated home stats from form: scored=${homeStats.goalsScored}, conceded=${homeStats.goalsConceded} (league avg: ${leagueAvg.scored})`);
     }
 
-    if (isSoccerMatch && awayStats.goalsScored === 0 && awayStats.played > 0) {
-      const estimatedAwayGoals = (awayFormCounts.wins * 2) + (awayFormCounts.draws * 1) + (awayFormCounts.losses * 0.5);
-      const estimatedAwayConceded = (awayFormCounts.losses * 2) + (awayFormCounts.draws * 1) + (awayFormCounts.wins * 0.5);
-      awayStats.goalsScored = Math.max(1, estimatedAwayGoals);
-      awayStats.goalsConceded = Math.max(1, estimatedAwayConceded);
-      console.log(`[Match-Preview] Estimated away goals from form: scored=${awayStats.goalsScored}, conceded=${awayStats.goalsConceded}`);
+    if (awayStats.goalsScored === 0 && awayStats.played > 0) {
+      const estimated = estimateFromForm(awayFormCounts);
+      awayStats.goalsScored = Math.max(1, Math.round(estimated.scored * 10) / 10);
+      awayStats.goalsConceded = Math.max(1, Math.round(estimated.conceded * 10) / 10);
+      console.log(`[Match-Preview] Estimated away stats from form: scored=${awayStats.goalsScored}, conceded=${awayStats.goalsConceded} (league avg: ${leagueAvg.scored})`);
     }
 
     // H2H summary
