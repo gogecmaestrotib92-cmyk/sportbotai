@@ -580,7 +580,6 @@ export function getExpectedScores(
   // For hockey/NHL with missing stats: Use league average + odds adjustment
   if (isHockey && !hasStats) {
     console.log(`[getExpectedScores] Using league average for hockey (no stats)`);
-    const avgTotal = 6.2; // NHL league average
     let homeGoals = 3.2;
     let awayGoals = 3.0;
     
@@ -600,6 +599,56 @@ export function getExpectedScores(
     return {
       home: Math.round(homeGoals * 10) / 10,
       away: Math.round(awayGoals * 10) / 10,
+    };
+  }
+
+  // For NBA with missing stats: Use league average + odds adjustment
+  if (input.sport.includes('basketball') && !hasStats) {
+    console.log(`[getExpectedScores] Using league average for NBA (no stats)`);
+    let homePoints = 114;  // NBA 2024 avg ~226 total
+    let awayPoints = 112;
+    
+    // If we have odds, adjust based on favorite
+    if (odds?.homeOdds && odds?.awayOdds) {
+      const homeProb = 1 / odds.homeOdds;
+      const awayProb = 1 / odds.awayOdds;
+      const total = homeProb + awayProb;
+      const normHomeProb = homeProb / total;
+      
+      // Swing ±5 points based on favorite
+      const homeAdj = (normHomeProb - 0.5) * 10;
+      homePoints = Math.max(105, Math.min(125, 114 + homeAdj));
+      awayPoints = Math.max(100, Math.min(120, 112 - homeAdj));
+    }
+    
+    return {
+      home: Math.round(homePoints),
+      away: Math.round(awayPoints),
+    };
+  }
+
+  // For NFL with missing stats: Use league average + odds adjustment
+  if ((input.sport.includes('football') && !input.sport.includes('soccer')) && !hasStats) {
+    console.log(`[getExpectedScores] Using league average for NFL (no stats)`);
+    let homePoints = 23;  // NFL 2024 avg ~44-46 total
+    let awayPoints = 21;
+    
+    // If we have odds, adjust based on favorite
+    if (odds?.homeOdds && odds?.awayOdds) {
+      const homeProb = 1 / odds.homeOdds;
+      const awayProb = 1 / odds.awayOdds;
+      const total = homeProb + awayProb;
+      const normHomeProb = homeProb / total;
+      
+      // Swing ±3 points based on favorite
+      const homeAdj = (normHomeProb - 0.5) * 6;
+      homePoints = Math.max(17, Math.min(30, 23 + homeAdj));
+      awayPoints = Math.max(14, Math.min(27, 21 - homeAdj));
+    }
+    
+    return {
+      home: Math.round(homePoints),
+      away: Math.round(awayPoints),
     };
   }
 
