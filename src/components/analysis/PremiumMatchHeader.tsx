@@ -248,7 +248,7 @@ export default function PremiumMatchHeader({
           {/* Home Team */}
           <div className="flex flex-col items-center text-center flex-1 max-w-[140px] sm:max-w-[180px]">
             <div className="w-20 h-20 sm:w-24 sm:h-24 mb-4 relative">
-              <TeamLogo teamName={homeTeam} sport={sport} league={league} size="xl" className="object-contain" />
+              <TeamLogo teamName={homeTeam} sport={sport} league={league} size="xl" className="object-contain" priority={true} />
             </div>
             <h2 className="text-lg sm:text-xl font-bold text-white leading-tight">
               {homeTeam}
@@ -289,7 +289,7 @@ export default function PremiumMatchHeader({
           {/* Away Team */}
           <div className="flex flex-col items-center text-center flex-1 max-w-[140px] sm:max-w-[180px]">
             <div className="w-20 h-20 sm:w-24 sm:h-24 mb-4 relative">
-              <TeamLogo teamName={awayTeam} sport={sport} league={league} size="xl" className="object-contain" />
+              <TeamLogo teamName={awayTeam} sport={sport} league={league} size="xl" className="object-contain" priority={true} />
             </div>
             <h2 className="text-lg sm:text-xl font-bold text-white leading-tight">
               {awayTeam}

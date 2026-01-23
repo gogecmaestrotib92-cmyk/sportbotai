@@ -331,6 +331,7 @@ function parseMatchIdClient(matchId: string): { homeTeam: string; awayTeam: stri
 interface MatchPreviewClientProps {
   matchId: string;
   locale?: 'en' | 'sr';
+  initialData?: MatchPreviewData | null;
 }
 
 interface MatchPreviewData {
@@ -694,14 +695,14 @@ function getBackNavigationLeague(league: string, sport: string): string | null {
   return null;
 }
 
-export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPreviewClientProps) {
+export default function MatchPreviewClient({ matchId, locale = 'en', initialData }: MatchPreviewClientProps) {
   const t = translations[locale];
   const localePath = locale === 'sr' ? '/sr' : '';
   const { data: session } = useSession();
   const { showToast } = useToast();
-  const [data, setData] = useState<MatchPreviewData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadingMessage, setLoadingMessage] = useState(t.analyzing);
+  const [data, setData] = useState<MatchPreviewData | null>(initialData || null);
+  const [loading, setLoading] = useState(!initialData);
+  const [loadingMessage, setLoadingMessage] = useState(initialData ? '' : t.analyzing);
   const [error, setError] = useState<string | null>(null);
   const [usageLimit, setUsageLimit] = useState<UsageLimitData | null>(null);
   const [showStickyCTA, setShowStickyCTA] = useState(false);
@@ -760,6 +761,8 @@ export default function MatchPreviewClient({ matchId, locale = 'en' }: MatchPrev
   }, []);
 
   useEffect(() => {
+    if (initialData) return;
+
     const fetchMatchPreview = async () => {
       try {
         setLoading(true);

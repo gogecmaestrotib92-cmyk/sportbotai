@@ -10,7 +10,10 @@
 
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import MatchPreviewClientV3 from './MatchPreviewClientV3';
+import { getFastMatchData } from '@/lib/match-preview-server';
 
 interface PageProps {
   params: Promise<{ matchId: string }>;
@@ -46,5 +49,11 @@ export default async function MatchPreviewPage({ params }: PageProps) {
     notFound();
   }
 
-  return <MatchPreviewClientV3 matchId={matchId} />;
+  const session = await getServerSession(authOptions);
+  const isAnonymous = !session?.user;
+  
+  // Try to get fast data on server to improve LCP
+  const initialData = await getFastMatchData(matchId, isAnonymous);
+
+  return <MatchPreviewClientV3 matchId={matchId} initialData={initialData} />;
 }
