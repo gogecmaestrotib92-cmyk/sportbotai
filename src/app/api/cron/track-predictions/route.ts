@@ -940,6 +940,28 @@ export async function GET(request: NextRequest) {
       results.voidedPredictions = veryOldPredictions.length;
     }
 
+    // ============================================
+    // STEP 6: Delete malformed predictions (garbage from chat)
+    // ============================================
+    console.log('[Track-Predictions] Step 6: Cleaning up malformed predictions...');
+
+    const deletedMalformed = await prisma.prediction.deleteMany({
+      where: {
+        OR: [
+          { matchName: { contains: 'Analyze' } },
+          { sport: { contains: 'basketball_basketball' } },
+          { sport: { contains: 'soccer_soccer' } },
+          // Prediction field should be short (home/away/draw) not a match name
+          { prediction: { contains: ' vs ' } },
+        ],
+      },
+    });
+
+    if (deletedMalformed.count > 0) {
+      console.log(`[Track-Predictions] Deleted ${deletedMalformed.count} malformed predictions`);
+      (results as any).deletedMalformed = deletedMalformed.count;
+    }
+
     console.log(`[Track-Predictions] Completed in ${Date.now() - startTime}ms`);
 
     return NextResponse.json({
