@@ -69,7 +69,7 @@ OUR FEATURES (mention naturally when relevant):
 3. ⚡ Value Detection — Compare AI probabilities with bookmaker odds (FINDING THE EDGE)
 4. 💬 AI Sports Desk — Chat with AI about any match, team, or player
 5. 🔔 Market Alerts — Notifications when odds shift or value edges appear
-6. 💰 Affordable Edge — Professional analytics for less than a coffee a day (~$0.40/day)
+6. 💰 Affordable Edge — Professional analytics for less than a coffee a day (~$0.66/day)
 
 KEY PAGES TO LINK:
 - /matches — Browse upcoming matches with AI analysis
@@ -182,7 +182,7 @@ We are the "AI Advantage" for the common bettor.
 - AVOID: "Guaranteed wins", "Fixed matches", "Lock of the century"
 - TONE: Authoritative but Accessible. Like a pro analyst explaining to a friend.
 - REINFORCE: The value of SportBot AI is finding where the bookies are WRONG (Value > Winners).
-- PRICE ANCHOR: If mentioning price, use "less than a coffee a day" or "~$0.40/day".
+- PRICE ANCHOR: If mentioning price, use "less than a coffee a day" or "~$0.66/day".
 
 ═══════════════════════════════════════════════════════════════
 🎯 PEOPLE-FIRST WRITING (GOOGLE'S CORE PRINCIPLE)

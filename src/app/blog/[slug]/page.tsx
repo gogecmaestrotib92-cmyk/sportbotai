@@ -507,6 +507,37 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   reviewUrl={`${SITE_CONFIG.url}/blog/${post.slug}`}
                 />
               )}
+
+              {/* MAIN CTA - High Visibility */}
+              <div className="mt-12 mb-8 p-8 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-xl border border-slate-700 text-center relative overflow-hidden group">
+                {/* Background glow effect */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-400 opacity-70"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-400 opacity-0 group-hover:opacity-10 transition duration-1000 blur-lg"></div>
+                
+                <h3 className="text-2xl font-bold text-white mb-3 relative z-10">
+                  Stop Guessing. Start Winning.
+                </h3>
+                <p className="text-slate-300 mb-6 max-w-lg mx-auto relative z-10">
+                  Get AI-powered picks, probability models, and market edge detection for <span className="text-emerald-400 font-bold">~$0.66/day</span>.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+                  <Link
+                    href="/pricing"
+                    className="inline-flex items-center justify-center px-8 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-400 hover:scale-105 transition-all shadow-lg hover:shadow-emerald-500/25"
+                  >
+                    Get Your Edge Now
+                  </Link>
+                  <Link
+                    href="/matches"
+                    className="inline-flex items-center justify-center px-8 py-3 bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-600 transition-all border border-slate-600"
+                  >
+                    View Free Analysis
+                  </Link>
+                </div>
+                
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent pointer-events-none"></div>
+              </div>
             </div>
           </div>
         </section>
@@ -556,26 +587,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </section>
         )}
 
-        {/* CTA */}
-        <section className="py-16 relative z-10">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">
-              Put This Knowledge to Use
-            </h2>
-            <p className="text-slate-600 mb-8 max-w-xl mx-auto">
-              Use our AI-powered analyzer to apply these concepts to real matches.
-            </p>
-            <Link
-              href="/matches"
-              className="inline-flex items-center px-6 py-3 bg-emerald-500 text-white font-semibold rounded-lg hover:bg-emerald-600 transition-colors"
-            >
-              Browse Matches
-              <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-        </section>
+        {/* Old CTA Removed - moved up */}
       </article>
     </>
   );
