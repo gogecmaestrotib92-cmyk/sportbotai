@@ -36,11 +36,13 @@ export const META = {
     description: 'Free AI-powered sports match analysis. Get probability estimates, value detection, and risk assessment for any match in 60 seconds. Soccer, NBA, NFL, Tennis & more.',
     keywords: [
       // 1. The Power Keywords (High Volume, High Intent)
+      'ai sports betting',            // #1 Keyword (3.6k Vol)
       'ai sports picks',
       'ai sports predictions',
       'ai betting predictions',
-      'free ai sports predictions',
+      'ai betting bot',               // Matches "SportBot" brand
       'ai predictor',
+      'free ai sports predictions',
       
       // 2. The "Bridge" Keywords (Accessible)
       'ai picks',
@@ -53,10 +55,10 @@ export const META = {
       'tennis match predictor',
       
       // 4. Brand & Tech Authority
-      'sports probability model',
-      'match analysis tool',
+      'most accurate prediction site', // Bold claim, high traffic
       'AI market edge',
-      'predictive sports engine'
+      'predictive sports engine',
+      'sports probability model'
     ],
   },
   
