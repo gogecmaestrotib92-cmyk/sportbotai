@@ -1442,24 +1442,24 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         let overUnderData: { line: number; overOdds?: number; underOdds?: number } | null = null;
 
         if (oddsResult.success && oddsResult.data && oddsResult.data.length > 0) {
-          const firstBookmaker = oddsResult.data[0];
-
-          // Extract moneyline odds
-          if (firstBookmaker.moneyline) {
-            console.log(`[Match-Preview] Odds fetched: home=${firstBookmaker.moneyline.home}, away=${firstBookmaker.moneyline.away}`);
+          // Find first bookmaker with moneyline for main odds
+          const bookmakerWithMoneyline = oddsResult.data.find(bm => bm.moneyline);
+          if (bookmakerWithMoneyline?.moneyline) {
+            console.log(`[Match-Preview] Odds fetched from ${bookmakerWithMoneyline.bookmaker}: home=${bookmakerWithMoneyline.moneyline.home}, away=${bookmakerWithMoneyline.moneyline.away}`);
             oddsData = {
-              homeOdds: firstBookmaker.moneyline.home,
-              awayOdds: firstBookmaker.moneyline.away,
-              drawOdds: firstBookmaker.moneyline.draw,
-              bookmaker: firstBookmaker.bookmaker,
-              lastUpdate: firstBookmaker.lastUpdate?.toISOString(),
+              homeOdds: bookmakerWithMoneyline.moneyline.home,
+              awayOdds: bookmakerWithMoneyline.moneyline.away,
+              drawOdds: bookmakerWithMoneyline.moneyline.draw,
+              bookmaker: bookmakerWithMoneyline.bookmaker,
+              lastUpdate: bookmakerWithMoneyline.lastUpdate?.toISOString(),
             };
           }
 
-          // Extract totals (O/U) odds - structure is { over: { line, odds }, under: { line, odds } }
-          const totalData = firstBookmaker.total as { over?: { line: number; odds: number }; under?: { line: number; odds: number } } | undefined;
-          if (totalData?.over?.line) {
-            console.log(`[Match-Preview] O/U fetched: line=${totalData.over.line}, overOdds=${totalData.over.odds}, underOdds=${totalData.under?.odds}`);
+          // Find first bookmaker with totals for O/U - may be different from moneyline bookmaker
+          const bookmakerWithTotals = oddsResult.data.find(bm => bm.total?.over?.line);
+          if (bookmakerWithTotals?.total) {
+            const totalData = bookmakerWithTotals.total as { over: { line: number; odds: number }; under: { line: number; odds: number } };
+            console.log(`[Match-Preview] O/U fetched from ${bookmakerWithTotals.bookmaker}: line=${totalData.over.line}, overOdds=${totalData.over.odds}, underOdds=${totalData.under?.odds}`);
             overUnderData = {
               line: totalData.over.line,
               overOdds: totalData.over.odds,
