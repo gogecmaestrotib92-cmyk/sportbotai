@@ -8,6 +8,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface HowItWorksVideoProps {
     locale?: 'en' | 'sr';
@@ -58,11 +59,12 @@ export default function HowItWorksVideo({ locale = 'en' }: HowItWorksVideoProps)
                             aria-label={t.watchButton}
                         >
                             {/* Thumbnail */}
-                            <img
+                            <Image
                                 src={thumbnailUrl}
                                 alt="SportBot AI Demo"
-                                className="w-full h-full object-cover"
-                                loading="lazy"
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 896px"
                             />
 
                             {/* Dark overlay */}

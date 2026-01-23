@@ -7,6 +7,7 @@
 
 import { Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { TrendingMatch, getTrendingMatches } from '@/components/match-selector/trending';
 import TrendingGrid from './TrendingGrid';
 import { MatchData } from '@/types';
@@ -93,12 +94,17 @@ export default function TrendingSectionServer({ maxMatches = 6, locale = 'en' }:
       {/* Props.Cash style turf background */}
       <div className="absolute inset-0 bg-[#0a0a0b]">
         {/* Turf texture */}
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-40"
-          style={{
-            backgroundImage: `url('/images/turf-bg.jpg')`,
-          }}
-        />
+        <div className="absolute inset-0 opacity-40">
+          <Image
+            src="/images/turf-bg.jpg"
+            alt="Turf Background"
+            fill
+            priority
+            quality={60}
+            className="object-cover"
+            sizes="100vw"
+          />
+        </div>
         {/* Dark vignette overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(0,0,0,0.8)_80%)]" />
         {/* Subtle accent glow */}
