@@ -10,6 +10,9 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
+  // Enable gzip compression
+  compress: true,
+
   // Optimize for modern browsers only and CSS
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns'],

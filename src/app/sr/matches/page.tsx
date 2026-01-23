@@ -20,13 +20,16 @@ export async function generateMetadata({
   searchParams: { league?: string };
 }): Promise<Metadata> {
   const leagueParam = searchParams.league ? `?league=${searchParams.league}` : '';
+  const leagueTitle = searchParams.league 
+    ? ` - ${searchParams.league.toUpperCase()} Mečevi` 
+    : '';
 
   return {
-    title: 'Pregledaj Mečeve | SportBot AI - Analiza Sportskih Mečeva',
+    title: `Pregledaj Mečeve${leagueTitle} | SportBot AI`,
     description: 'Pregledaj sve predstojeće sportske mečeve sa AI analizom. Fudbal, NBA, NFL, NHL i UFC - sve na jednom mestu sa podacima uživo.',
     keywords: ['sportski mečevi', 'fudbal uživo', 'kvote', 'analiza mečeva', 'AI predikcije', 'sportsko klađenje'],
     openGraph: {
-      title: 'Pregledaj Mečeve | SportBot AI',
+      title: `Pregledaj Mečeve${leagueTitle} | SportBot AI`,
       description: 'Pregledaj sve predstojeće sportske mečeve sa AI analizom.',
       url: `${SITE_CONFIG.url}/sr/matches${leagueParam}`,
       siteName: SITE_CONFIG.name,

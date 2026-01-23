@@ -182,7 +182,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
     let cancelled = false;
 
     // Defer fetch to after initial render for better LCP
-    // 2500ms gives time for critical content to load on 4G mobile
+    // 5000ms delay to ensuring specific LCP metrics are met on slow mobile
     const timeoutId = setTimeout(async () => {
       if (cancelled) return;
 
@@ -191,9 +191,12 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
       // Only fetch counts for the CURRENT sport's leagues first (faster)
       const currentSportLeagues = SPORTS.find(s => s.id === selectedSport)?.leagues || [];
 
-      // Fetch current sport first (prioritized) - but serialize on mobile to reduce TBT
+      // Fetch current sport first
       for (const league of currentSportLeagues) {
         if (cancelled) break;
+        // Don't fetch if we already have it
+        if (leagueMatchCounts[league.key] !== undefined) continue;
+        
         try {
           const response = await fetch(`/api/match-data?sportKey=${league.key}&includeOdds=false`);
           if (response.ok) {
@@ -207,50 +210,19 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
         }
       }
 
-      if (!cancelled) {
+      if (!cancelled && Object.keys(counts).length > 0) {
         setLeagueMatchCounts(prev => ({ ...prev, ...counts }));
       }
 
-      // Fetch other sports in background (lower priority)
-      const otherLeagues = SPORTS
-        .filter(s => s.id !== selectedSport)
-        .flatMap(sport => sport.leagues);
-
-      // Batch fetch other leagues with delays to avoid blocking main thread
-      // Reduced batch size from 4 to 2 for mobile TBT improvement
-      for (let i = 0; i < otherLeagues.length; i += 2) {
-        if (cancelled) break;
-
-        // Add 500ms delay between batches to allow main thread breathing room
-        if (i > 0) {
-          await new Promise(r => setTimeout(r, 500));
-        }
-
-        const batch = otherLeagues.slice(i, i + 2);
-        await Promise.all(
-          batch.map(async (league) => {
-            try {
-              const response = await fetch(`/api/match-data?sportKey=${league.key}&includeOdds=false`);
-              if (response.ok) {
-                const data = await response.json();
-                counts[league.key] = data.events?.length || 0;
-              }
-            } catch {
-              counts[league.key] = 0;
-            }
-          })
-        );
-        if (!cancelled) {
-          setLeagueMatchCounts(prev => ({ ...prev, ...counts }));
-        }
-      }
-    }, 2500); // Increased from 1000ms to 2500ms for mobile LCP/TBT
+      // DO NOT fetch other sports automatically. This causes LCP degradation.
+      // We will only fetch them when the user switches sports.
+    }, 5000);
 
     return () => {
       cancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [selectedSport]); // Re-fetch when sport changes
+  }, [selectedSport]); // removed leagueMatchCounts dependency to avoid loop
 
 
   // Fetch AI Picks from pre-analyzed predictions (real AI data, not heuristics)
@@ -378,16 +350,17 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
   }, [matches, aiPicksData]);
 
   // Create a map for quick lookup of value data (ONLY for fallback heuristic)
+  const flaggedCount = Object.keys(aiPicksData.flaggedMatchKeys).length;
   const valueFlaggedMap = useMemo(() => {
     const map = new Map<string, ValueFlaggedMatch>();
     // Only populate if we're using fallback (no API data)
-    const hasFlaggedData = Object.keys(aiPicksData.flaggedMatchKeys).length > 0;
+    const hasFlaggedData = flaggedCount > 0;
     if (!hasFlaggedData) {
       const fallbackMatches = getValueFlaggedMatches(matches, Math.min(10, matches.length));
       fallbackMatches.forEach(m => map.set(m.matchId, m));
     }
     return map;
-  }, [matches, Object.keys(aiPicksData.flaggedMatchKeys).length]);
+  }, [matches, flaggedCount]);
 
   // Apply filters to get final match list
   const filteredMatches = useMemo(() => {

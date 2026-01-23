@@ -118,13 +118,13 @@ export default function AIDeskFeedSidebar({ limit = 8 }: { limit?: number }) {
 
   if (loading) {
     return (
-      <div className="bg-bg-secondary border border-emerald-500/30 ring-1 ring-emerald-500/10 rounded-xl p-4">
+      <div className="bg-bg-secondary border border-emerald-500/30 ring-1 ring-emerald-500/10 rounded-xl p-4 min-h-[450px] flex flex-col">
         <div className="flex items-center gap-2 mb-4">
           <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
           <span className="text-sm font-medium text-white">Loading feed...</span>
         </div>
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
+        <div className="space-y-4 flex-1">
+          {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className="animate-pulse">
               <div className="h-3 bg-white/10 rounded w-3/4 mb-2" />
               <div className="h-3 bg-white/10 rounded w-1/2" />
@@ -136,7 +136,7 @@ export default function AIDeskFeedSidebar({ limit = 8 }: { limit?: number }) {
   }
 
   return (
-    <div className="bg-bg-secondary border border-emerald-500/30 ring-1 ring-emerald-500/10 rounded-xl overflow-hidden">
+    <div className="bg-bg-secondary border border-emerald-500/30 ring-1 ring-emerald-500/10 rounded-xl overflow-hidden min-h-[450px] flex flex-col">
       {/* Header - Collapsible */}
       <button
         onClick={() => setExpanded(!expanded)}

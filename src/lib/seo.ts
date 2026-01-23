@@ -214,10 +214,10 @@ export function getOrganizationSchema() {
     },
     aggregateRating: {
       '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      ratingCount: '150',
-      bestRating: '5',
-      worstRating: '1',
+      ratingValue: 4.8,
+      ratingCount: 150,
+      bestRating: 5,
+      worstRating: 1,
     },
     featureList: [
       'AI Probability Models',
@@ -308,6 +308,8 @@ export function getAIDeskSchema() {
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'EUR',
+      description: 'Free access to live sports intelligence feed',
+      availability: 'https://schema.org/InStock',
     },
     featureList: [
       'Real-time sports intelligence feed',
@@ -448,8 +450,8 @@ export function getPricingSchema() {
     ],
     aggregateRating: {
       '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      reviewCount: '150',
+      ratingValue: 4.8,
+      reviewCount: 150,
     },
   };
 }

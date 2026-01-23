@@ -47,8 +47,6 @@ const SERBIAN_STATIC_PAGES = [
   { path: '/sr/pricing', priority: 0.75, changeFreq: 'monthly' as const },
   { path: '/sr/analyzer', priority: 0.8, changeFreq: 'weekly' as const },
   { path: '/sr/market-alerts', priority: 0.75, changeFreq: 'daily' as const },
-  { path: '/sr/login', priority: 0.5, changeFreq: 'monthly' as const },
-  { path: '/sr/register', priority: 0.5, changeFreq: 'monthly' as const },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

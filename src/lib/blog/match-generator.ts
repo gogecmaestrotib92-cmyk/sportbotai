@@ -769,7 +769,7 @@ async function researchMatch(match: MatchInfo): Promise<MatchResearch> {
   // Fetch roster context from DataLayer - this is the ONLY source for player data
   // No more Perplexity dependency - all data comes from DataLayer
   let rosterContext: string | null = null;
-  let keyPlayers: string[] = [];
+  const keyPlayers: string[] = [];
 
   if (rosterSport) {
     try {

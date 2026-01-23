@@ -10,14 +10,16 @@ export async function generateMetadata({
   searchParams: { league?: string };
 }): Promise<Metadata> {
   const leagueParam = searchParams.league ? `?league=${searchParams.league}` : '';
+  const leagueTitle = searchParams.league 
+    ? ` - ${searchParams.league.toUpperCase()} Matches` 
+    : '';
 
   return {
-    title: META.matches.title,
+    title: `${META.matches.title}${leagueTitle}`,
     description: META.matches.description,
     keywords: META.matches.keywords,
     openGraph: {
-      title: META.matches.title,
-      description: META.matches.description,
+      title: `${META.matches.title}${leagueTitle}`,
       url: `${SITE_CONFIG.url}/matches${leagueParam}`,
       siteName: SITE_CONFIG.name,
       type: 'website',

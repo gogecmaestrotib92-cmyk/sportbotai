@@ -23,7 +23,7 @@ export default function AIDeskClient() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[600px]">
         <div className="lg:col-span-2 min-h-[500px]">
           {/* Match AIDeskHeroChat dimensions */}
-          <div className="card-glass rounded-2xl overflow-hidden min-h-[500px] flex flex-col">
+          <div className="card-glass rounded-2xl overflow-hidden h-[calc(100vh-180px)] min-h-[500px] max-h-[900px] flex flex-col">
             <div className="p-4 border-b border-white/5 animate-pulse">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-white/5 rounded-lg" />

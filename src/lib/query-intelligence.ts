@@ -1056,7 +1056,7 @@ export async function understandQuery(
   // Extract entities
   const entities = extractEntities(query);
   const sport = detectSport(query);
-  let timeFrame = detectTimeFrame(query);
+  const timeFrame = detectTimeFrame(query);
 
   // SMART FEATURE 1: Check for short match query first
   const shortMatchCheck = isShortMatchQuery(query);

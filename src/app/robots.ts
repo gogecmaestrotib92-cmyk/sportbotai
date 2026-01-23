@@ -72,8 +72,6 @@ export default function robots(): MetadataRoute.Robots {
           '/register',
           '/match/', // Dynamic match analysis pages (require auth)
           '/market-alerts/',
-          '/_next/',
-          '/static/',
         ],
       },
       // Googlebot - allow faster crawling for main content
