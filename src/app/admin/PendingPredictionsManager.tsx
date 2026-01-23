@@ -115,10 +115,31 @@ export default function PendingPredictionsManager({
 
   const now = new Date();
 
+  // Helper to determine match status more accurately
+  // A match needs ~3 hours after kickoff to be considered "finished"
+  const isFinished = (kickoff: Date) => {
+    const kickoffTime = new Date(kickoff);
+    const threeHoursAfter = new Date(kickoffTime.getTime() + 3 * 60 * 60 * 1000);
+    return now > threeHoursAfter;
+  };
+
+  const isInProgress = (kickoff: Date) => {
+    const kickoffTime = new Date(kickoff);
+    const threeHoursAfter = new Date(kickoffTime.getTime() + 3 * 60 * 60 * 1000);
+    return now > kickoffTime && now <= threeHoursAfter;
+  };
+
+  const isPast = (date: Date) => new Date(date) < now;
+
+  // Count predictions by status
+  const finishedCount = predictions.filter(p => isFinished(p.kickoff)).length;
+  const inProgressCount = predictions.filter(p => isInProgress(p.kickoff)).length;
+  const upcomingCount = predictions.filter(p => new Date(p.kickoff) >= now).length;
+
   const filteredPredictions = predictions.filter(p => {
     const kickoff = new Date(p.kickoff);
-    if (filter === 'past') return kickoff < now;
-    if (filter === 'upcoming') return kickoff >= now;
+    if (filter === 'past') return isFinished(kickoff); // Only show matches 3h+ after kickoff
+    if (filter === 'upcoming') return kickoff >= now || isInProgress(kickoff); // Include in-progress
     return true;
   });
 
@@ -204,7 +225,7 @@ export default function PendingPredictionsManager({
               : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
               }`}
           >
-            ⏰ Past ({predictions.filter(p => new Date(p.kickoff) < now).length})
+            ✅ Finished ({finishedCount})
           </button>
           <button
             onClick={() => setFilter('upcoming')}
@@ -213,7 +234,8 @@ export default function PendingPredictionsManager({
               : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
               }`}
           >
-            📅 Upcoming ({predictions.filter(p => new Date(p.kickoff) >= now).length})
+            📅 Upcoming ({upcomingCount + inProgressCount})
+            {inProgressCount > 0 && <span className="ml-1 text-yellow-400">({inProgressCount} live)</span>}
           </button>
           <button
             onClick={() => setFilter('all')}
@@ -267,17 +289,24 @@ export default function PendingPredictionsManager({
           </div>
         ) : (
           <div className="divide-y divide-border-primary">
-            {filteredPredictions.map((pred) => (
+            {filteredPredictions.map((pred) => {
+              const matchFinished = isFinished(pred.kickoff);
+              const matchInProgress = isInProgress(pred.kickoff);
+              
+              return (
               <div key={pred.id} className="p-4 hover:bg-bg-tertiary/30">
                 <div className="flex items-start justify-between gap-4">
                   {/* Match Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs px-2 py-0.5 rounded ${isPast(pred.kickoff)
-                        ? 'bg-yellow-500/20 text-yellow-400'
-                        : 'bg-blue-500/20 text-blue-400'
+                      <span className={`text-xs px-2 py-0.5 rounded ${
+                        matchFinished
+                          ? 'bg-green-500/20 text-green-400'
+                          : matchInProgress
+                            ? 'bg-yellow-500/20 text-yellow-400 animate-pulse'
+                            : 'bg-blue-500/20 text-blue-400'
                         }`}>
-                        {isPast(pred.kickoff) ? '⏰ Finished' : '📅 Upcoming'}
+                        {matchFinished ? '✅ Finished' : matchInProgress ? '🔴 LIVE' : '📅 Upcoming'}
                       </span>
                       <span className="text-xs text-text-muted">{pred.sport}</span>
                     </div>
@@ -347,13 +376,16 @@ export default function PendingPredictionsManager({
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleEdit(pred)}
-                          disabled={!isPast(pred.kickoff) || loading === pred.id}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isPast(pred.kickoff)
-                            ? 'bg-accent hover:bg-accent/80 text-white'
-                            : 'bg-bg-tertiary text-text-muted cursor-not-allowed'
+                          disabled={!matchFinished || loading === pred.id}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            matchFinished
+                              ? 'bg-accent hover:bg-accent/80 text-white'
+                              : matchInProgress
+                                ? 'bg-yellow-500/20 text-yellow-400 cursor-not-allowed'
+                                : 'bg-bg-tertiary text-text-muted cursor-not-allowed'
                             }`}
                         >
-                          {isPast(pred.kickoff) ? 'Enter Result' : 'Not Started'}
+                          {matchFinished ? 'Enter Result' : matchInProgress ? 'Live...' : 'Not Started'}
                         </button>
                         <button
                           onClick={() => handleDelete(pred.id)}
@@ -368,10 +400,7 @@ export default function PendingPredictionsManager({
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+            );
+            })}
   );
 }
