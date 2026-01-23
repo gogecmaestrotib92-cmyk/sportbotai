@@ -35,20 +35,28 @@ export const META = {
     title: 'SportBot AI – AI Sports Analysis in 60 Seconds',
     description: 'Free AI-powered sports match analysis. Get probability estimates, value detection, and risk assessment for any match in 60 seconds. Soccer, NBA, NFL, Tennis & more.',
     keywords: [
-      'sports analytics',
-      'AI sports analysis',
-      'match analysis tool',
+      // 1. The Power Keywords (High Volume, High Intent)
+      'ai sports picks',
+      'ai sports predictions',
+      'ai betting predictions',
+      'free ai sports predictions',
+      'ai predictor',
+      
+      // 2. The "Bridge" Keywords (Accessible)
+      'ai picks',
+      'sports ai',
+      'betting edge',
+      
+      // 3. Sport Specific (Long Tail)
+      'nba ai predictions',
+      'football ai analysis',
+      'tennis match predictor',
+      
+      // 4. Brand & Tech Authority
       'sports probability model',
-      'odds analysis',
-      'sports intelligence platform',
-      'football analytics',
-      'NBA analysis',
-      'NFL analysis',
-      'tennis analytics',
-      'sports data platform',
-      'match intelligence',
-      'free sports analysis',
-      'AI match prediction',
+      'match analysis tool',
+      'AI market edge',
+      'predictive sports engine'
     ],
   },
   
@@ -67,6 +75,11 @@ export const META = {
       'premier league analysis',
       'la liga analysis',
       'champions league analysis',
+      // AI/Edge Keywords
+      'AI match forecasts',
+      'value detection tool',
+      'sports market trends',
+      'algorithmic odds comparison',
     ],
   },
   
@@ -85,6 +98,11 @@ export const META = {
       'sports data feed',
       'match intelligence',
       'sports AI assistant',
+      // AI Assistant Keywords
+      'ChatGPT for sports',
+      'AI sports research bot',
+      'automated sports researcher',
+      'real-time match insights',
     ],
   },
   
@@ -100,6 +118,12 @@ export const META = {
       'live sports analysis',
       'match prediction model',
       'sports probability calculator',
+      // Tech/Model Keywords
+      'AI prediction software',
+      'machine learning odds',
+      'neural network sports model',
+      'market value finder',
+      'advanced sports statistics',
     ],
   },
   
