@@ -18,6 +18,7 @@ import { prisma } from '@/lib/prisma';
 import OpenAI from 'openai';
 import { applyConvictionCap } from '@/lib/accuracy-core/types';
 import { normalizeTeamName, teamsMatch } from '@/lib/team-aliases';
+import perplexityModule, { getPerplexityClient } from '@/lib/perplexity';
 
 export const maxDuration = 120;
 
@@ -148,6 +149,11 @@ async function getMatchResult(homeTeam: string, awayTeam: string, matchDate: Dat
   const isNFL = sportLower.includes('americanfootball') || sportLower.includes('nfl') || leagueLower.includes('nfl') ||
     ['chiefs', 'bills', 'ravens', 'bengals', 'dolphins', 'patriots', 'jets', 'steelers', 'browns', 'titans', 'colts', 'jaguars', 'texans', 'broncos', 'raiders', 'chargers', 'eagles', 'cowboys', 'giants', 'commanders', 'lions', 'packers', 'vikings', 'bears', 'buccaneers', 'saints', 'falcons', 'panthers', 'seahawks', '49ers', 'cardinals', 'rams'].some(t => searchHome.includes(t) || searchAway.includes(t));
 
+  // Detect specific soccer competitions for league-specific API queries
+  const isUCL = sportLower.includes('uefa_champs_league') || leagueLower.includes('champions league') || leagueLower.includes('ucl');
+  const isUEL = sportLower.includes('uefa_europa_league') || leagueLower.includes('europa league') || leagueLower.includes('uel');
+  const isNCAAF = sportLower.includes('ncaaf') || leagueLower.includes('ncaa') || leagueLower.includes('college football');
+
   // Try both the match date and next day
   for (const tryDate of [dateStr, nextDayStr]) {
     try {
@@ -155,6 +161,10 @@ async function getMatchResult(homeTeam: string, awayTeam: string, matchDate: Dat
       if (isEuroLeague) {
         const euroResult = await fetchSportResult('basketball', 120, tryDate, searchHome, searchAway, apiKey);
         if (euroResult) return euroResult;
+        
+        // Fallback: web search for EuroLeague results
+        const webResult = await fetchEuroLeagueResultViaWeb(homeTeam, awayTeam, matchDate);
+        if (webResult) return webResult;
       }
 
       // Try NBA API (league 12)
@@ -175,10 +185,66 @@ async function getMatchResult(homeTeam: string, awayTeam: string, matchDate: Dat
         if (nflResult) return nflResult;
       }
 
-      // Try Football API (default for soccer)
-      if (!isNBA && !isEuroLeague && !isNHL && !isNFL) {
+      // Try Football API for soccer (with league-specific queries first)
+      if (!isNBA && !isEuroLeague && !isNHL && !isNFL && !isNCAAF) {
+        // League IDs for API-Football (v3): UCL=2, UEL=3, Turkey Super=203, Portugal Primeira=94
+        const leagueIds: number[] = [];
+        if (isUCL) leagueIds.push(2);  // UEFA Champions League
+        if (isUEL) leagueIds.push(3);  // UEFA Europa League
+        if (sportLower.includes('turkey')) leagueIds.push(203);  // Turkish Super League
+        if (sportLower.includes('portugal')) leagueIds.push(94);  // Portuguese Primeira Liga
+        
+        // Get season year for API-Football (uses start year of season)
+        // Jan-Jun uses previous year (e.g., Jan 2026 → 2025 for 2025/26 season)
+        // Jul-Dec uses current year (e.g., Sep 2025 → 2025 for 2025/26 season)
+        const seasonYear = new Date(tryDate).getMonth() >= 6 
+          ? new Date(tryDate).getFullYear() 
+          : new Date(tryDate).getFullYear() - 1;
+        
+        console.log(`[Track-Predictions] Soccer season year for ${tryDate}: ${seasonYear} (2025/26 format)`);
+        
+        // Try league-specific queries first if we have league IDs
+        for (const leagueId of leagueIds) {
+          try {
+            console.log(`[Track-Predictions] Querying league ${leagueId} for season ${seasonYear}...`);
+            const leagueResponse = await fetch(
+              `https://v3.football.api-sports.io/fixtures?date=${tryDate}&league=${leagueId}&season=${seasonYear}&status=FT-AET-PEN`,
+              {
+                headers: {
+                  'x-rapidapi-key': apiKey,
+                  'x-rapidapi-host': 'v3.football.api-sports.io',
+                },
+              }
+            );
+
+            if (leagueResponse.ok) {
+              const leagueData = await leagueResponse.json();
+              const leagueFixtures = leagueData.response || [];
+              console.log(`[Track-Predictions] Found ${leagueFixtures.length} finished matches for league ${leagueId} on ${tryDate}`);
+
+              for (const fixture of leagueFixtures) {
+                const home = fixture.teams?.home?.name?.toLowerCase() || '';
+                const away = fixture.teams?.away?.name?.toLowerCase() || '';
+
+                if (teamsMatch(searchHome, home, sportKey) && teamsMatch(searchAway, away, sportKey)) {
+                  return {
+                    homeTeam: fixture.teams.home.name,
+                    awayTeam: fixture.teams.away.name,
+                    homeScore: fixture.goals?.home ?? 0,
+                    awayScore: fixture.goals?.away ?? 0,
+                    completed: true,
+                  };
+                }
+              }
+            }
+          } catch (leagueError) {
+            console.error(`[Track-Predictions] League ${leagueId} query failed:`, leagueError);
+          }
+        }
+
+        // Fallback: query all finished matches for the date
         const response = await fetch(
-          `https://v3.football.api-sports.io/fixtures?date=${tryDate}&status=FT`,
+          `https://v3.football.api-sports.io/fixtures?date=${tryDate}&status=FT-AET-PEN`,
           {
             headers: {
               'x-rapidapi-key': apiKey,
@@ -196,11 +262,8 @@ async function getMatchResult(homeTeam: string, awayTeam: string, matchDate: Dat
             const home = fixture.teams?.home?.name?.toLowerCase() || '';
             const away = fixture.teams?.away?.name?.toLowerCase() || '';
 
-            // Check for match (fuzzy matching)
-            if (
-              (home.includes(searchHome) || searchHome.includes(home)) &&
-              (away.includes(searchAway) || searchAway.includes(away))
-            ) {
+            // Check for match using improved team matching
+            if (teamsMatch(searchHome, home, sportKey) && teamsMatch(searchAway, away, sportKey)) {
               return {
                 homeTeam: fixture.teams.home.name,
                 awayTeam: fixture.teams.away.name,
@@ -270,9 +333,10 @@ async function fetchSportResult(
       ? 'https://v1.basketball.api-sports.io'
       : 'https://v1.hockey.api-sports.io';
 
+    // EuroLeague (120) uses same season format as NBA
     const seasonType = sport === 'basketball' ? 'nba' : 'nhl';
     const season = getSeasonForDate(dateStr, seasonType);
-    console.log(`[Track-Predictions] Fetching ${sport} games for ${dateStr}, season ${season}`);
+    console.log(`[Track-Predictions] Fetching ${sport} league ${leagueId} games for ${dateStr}, season ${season}`);
 
     const response = await fetch(
       `${baseUrl}/games?date=${dateStr}&league=${leagueId}&season=${season}`,
@@ -284,7 +348,10 @@ async function fetchSportResult(
       }
     );
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.log(`[Track-Predictions] ${sport} API returned ${response.status}`);
+      return null;
+    }
 
     const data = await response.json();
     const games = data.response || [];
@@ -325,6 +392,82 @@ async function fetchSportResult(
     return null;
   } catch (error) {
     console.error(`[Track-Predictions] Failed to fetch ${sport} result:`, error);
+    return null;
+  }
+}
+
+/**
+ * Fetch EuroLeague result via web search (Perplexity)
+ * Fallback when API-Sports doesn't have the data
+ */
+async function fetchEuroLeagueResultViaWeb(
+  homeTeam: string,
+  awayTeam: string,
+  matchDate: Date
+): Promise<MatchResult | null> {
+  const client = getPerplexityClient();
+  if (!client.isConfigured()) {
+    console.log('[Track-Predictions] Perplexity not configured, skipping web search');
+    return null;
+  }
+
+  try {
+    const dateStr = matchDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const searchQuery = `${homeTeam} vs ${awayTeam} EuroLeague basketball final score result ${dateStr}`;
+    
+    console.log(`[Track-Predictions] Web search for EuroLeague: ${searchQuery}`);
+    
+    const result = await client.search(searchQuery, {
+      recency: 'week',
+      model: 'sonar',
+      maxTokens: 200,
+    });
+
+    if (!result.success || !result.content) {
+      return null;
+    }
+
+    // Parse the result using AI to extract score
+    const parseResponse = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0,
+      messages: [
+        {
+          role: 'system',
+          content: `Extract the final score from this text about a basketball match between "${homeTeam}" and "${awayTeam}".
+Return ONLY a JSON object: {"homeScore": number, "awayScore": number, "completed": boolean}
+If you cannot find a clear final score, return {"completed": false}
+Only return valid JSON, no markdown.`,
+        },
+        {
+          role: 'user',
+          content: result.content,
+        },
+      ],
+    });
+
+    const parseResult = parseResponse.choices[0]?.message?.content;
+    if (!parseResult) return null;
+
+    try {
+      const parsed = JSON.parse(parseResult);
+      if (parsed.completed && typeof parsed.homeScore === 'number' && typeof parsed.awayScore === 'number') {
+        console.log(`[Track-Predictions] Web search found EuroLeague result: ${homeTeam} ${parsed.homeScore} - ${parsed.awayScore} ${awayTeam}`);
+        return {
+          homeTeam,
+          awayTeam,
+          homeScore: parsed.homeScore,
+          awayScore: parsed.awayScore,
+          completed: true,
+        };
+      }
+    } catch {
+      // JSON parse failed
+    }
+
+    return null;
+  } catch (error) {
+    console.error('[Track-Predictions] Web search for EuroLeague failed:', error);
     return null;
   }
 }
@@ -450,6 +593,7 @@ export async function GET(request: NextRequest) {
       newAnalysisPredictions: 0,
       updatedOutcomes: 0,
       stuckPredictions: 0,
+      voidedPredictions: 0,
       errors: [] as string[],
     };
 
@@ -760,6 +904,40 @@ export async function GET(request: NextRequest) {
       if (stuckPredictions.length > 10) {
         console.warn(`  ... and ${stuckPredictions.length - 10} more`);
       }
+    }
+
+    // ============================================
+    // STEP 5: Mark very old stuck predictions as VOID (7+ days)
+    // ============================================
+    console.log('[Track-Predictions] Step 5: Voiding old stuck predictions...');
+
+    const veryOldPredictions = await prisma.prediction.findMany({
+      where: {
+        outcome: 'PENDING',
+        kickoff: {
+          lte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7+ days ago
+        },
+      },
+      select: {
+        id: true,
+        matchName: true,
+        sport: true,
+      },
+    });
+
+    if (veryOldPredictions.length > 0) {
+      const voidedIds = veryOldPredictions.map(p => p.id);
+      await prisma.prediction.updateMany({
+        where: { id: { in: voidedIds } },
+        data: { 
+          outcome: 'VOID',
+          actualResult: 'Result not available - prediction expired',
+          validatedAt: new Date(),
+        },
+      });
+      console.log(`[Track-Predictions] Voided ${veryOldPredictions.length} old stuck predictions (7+ days):`);
+      veryOldPredictions.forEach(p => console.log(`  - ${p.matchName} (${p.sport})`));
+      results.voidedPredictions = veryOldPredictions.length;
     }
 
     console.log(`[Track-Predictions] Completed in ${Date.now() - startTime}ms`);

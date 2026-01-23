@@ -188,11 +188,35 @@ export function normalizeTeamName(name: string, sport: string): string {
 }
 
 /**
+ * Normalize special characters (accents, umlauts, etc.) to ASCII
+ */
+function normalizeChars(str: string): string {
+    return str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+        .replace(/ø/g, 'o')
+        .replace(/Ø/g, 'O')
+        .replace(/æ/g, 'ae')
+        .replace(/Æ/g, 'AE')
+        .replace(/ß/g, 'ss')
+        .replace(/ñ/g, 'n')
+        .replace(/ç/g, 'c')
+        .replace(/đ/g, 'd')
+        .replace(/ğ/g, 'g')
+        .replace(/ı/g, 'i')
+        .replace(/ş/g, 's')
+        .replace(/ü/g, 'u')
+        .replace(/ö/g, 'o')
+        .replace(/ä/g, 'a');
+}
+
+/**
  * Check if two team names match (with alias normalization)
  */
 export function teamsMatch(name1: string, name2: string, sport: string): boolean {
-    const n1 = normalizeTeamName(name1, sport).toLowerCase();
-    const n2 = normalizeTeamName(name2, sport).toLowerCase();
+    // Normalize special characters first
+    const n1 = normalizeChars(normalizeTeamName(name1, sport)).toLowerCase().trim();
+    const n2 = normalizeChars(normalizeTeamName(name2, sport)).toLowerCase().trim();
 
     // Exact match after normalization
     if (n1 === n2) return true;
@@ -204,6 +228,17 @@ export function teamsMatch(name1: string, name2: string, sport: string): boolean
     const city1 = n1.split(' ')[0];
     const city2 = n2.split(' ')[0];
     if (city1.length >= 4 && city2.length >= 4 && city1 === city2) return true;
+    
+    // Common suffixes to ignore for matching
+    const suffixes = [' fc', ' sk', ' bc', ' sc', ' ac', ' cf', ' fk', ' nis', ' jk'];
+    let clean1 = n1;
+    let clean2 = n2;
+    for (const suffix of suffixes) {
+        clean1 = clean1.replace(suffix, '');
+        clean2 = clean2.replace(suffix, '');
+    }
+    if (clean1.trim() === clean2.trim()) return true;
+    if (clean1.includes(clean2) || clean2.includes(clean1)) return true;
 
     return false;
 }
