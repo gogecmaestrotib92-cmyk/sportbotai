@@ -1268,8 +1268,8 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
           </div>
         )}
 
-        {/* Data Availability Notice - Show when limited data */}
-        {data.dataAvailability && !data.dataAvailability.hasFormData && (
+        {/* Data Availability Notice - Only show for truly unavailable data, not for AI analysis */}
+        {data.dataAvailability && !data.dataAvailability.hasFormData && data.dataAvailability.status === 'UNAVAILABLE' && (
           <div className="mt-4 mb-2 p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
             <div className="flex items-center gap-2">
               <span className="text-blue-400 text-sm">ℹ️</span>
