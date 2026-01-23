@@ -129,8 +129,6 @@ export default function PendingPredictionsManager({
     return now > kickoffTime && now <= threeHoursAfter;
   };
 
-  const isPast = (date: Date) => new Date(date) < now;
-
   // Count predictions by status
   const finishedCount = predictions.filter(p => isFinished(p.kickoff)).length;
   const inProgressCount = predictions.filter(p => isInProgress(p.kickoff)).length;
@@ -402,5 +400,9 @@ export default function PendingPredictionsManager({
               </div>
             );
             })}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
