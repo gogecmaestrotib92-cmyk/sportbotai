@@ -30,6 +30,12 @@ export default function Features() {
       badge: 'AI Powered',
     },
     {
+      title: 'Smart AI Picks',
+      description: 'Data-driven AI picks and insights based on statistical models and market inefficiencies.',
+      icon: '🎯',
+      badge: 'Best Value',
+    },
+    {
       title: 'AI Sports Desk',
       description: 'Chat with our AI assistant about any match, team, or player. Get instant insights.',
       icon: '💬',
@@ -58,7 +64,7 @@ export default function Features() {
         <div className="text-center mb-14 relative">
           <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Features</p>
           <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">
-            Everything you need for <span className="text-gradient-accent">smarter analysis</span>
+            The world&apos;s most advanced <span className="text-gradient-accent">AI prediction engine</span>
           </h2>
           <p className="text-lg text-gray-400 max-w-2xl mx-auto">
             Professional-grade analytics tools designed for informed decision-making.
