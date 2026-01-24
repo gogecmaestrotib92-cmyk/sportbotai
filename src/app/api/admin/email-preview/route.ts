@@ -55,8 +55,8 @@ function generatePreviewHtml(templateId: string, params: Record<string, any>): s
     <html>
     <head>
       <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">      <!-- Make all links open in new tab (for iframe preview) -->
+      <base target="_blank">    </head>
     <body style="margin: 0; padding: 0; background: #020617;">
       <div style="${baseStyles}">
         <!-- Logo -->
