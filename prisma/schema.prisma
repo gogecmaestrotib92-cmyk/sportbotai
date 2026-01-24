@@ -877,3 +877,27 @@ enum BacklinkStatus {
   REMOVED       // They removed the link
 }
 
+// Twitter engagement tracking (replies, mentions)
+model TwitterEngagement {
+  id                   String          @id @default(cuid())
+  type                 EngagementType
+  targetTweetId        String          // Tweet we're replying to
+  targetAuthorId       String          // Author of the tweet we replied to
+  targetAuthorUsername String?         // Username for logging
+  targetText           String?         // Original tweet text (truncated)
+  replyTweetId         String?         // Our reply tweet ID
+  replyText            String?         // Our reply text
+  createdAt            DateTime        @default(now())
+
+  @@index([targetAuthorId])
+  @@index([targetTweetId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum EngagementType {
+  MENTION_REPLY    // Reply to someone who mentioned us
+  ACCOUNT_REPLY    // Reply to monitored account post
+  QUOTE_TWEET      // Quote tweet of someone else's post
+}
+

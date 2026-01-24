@@ -66,6 +66,10 @@
     {
       "path": "/api/cron/backlink-scout?action=outreach",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/twitter-engage",
+      "schedule": "*/30 * * * *"
     }
   ]
 }
