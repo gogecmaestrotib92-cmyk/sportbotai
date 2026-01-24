@@ -65,15 +65,11 @@ export const POST_CATEGORIES: Record<PostCategory, PostCategoryConfig> = {
     name: 'Market Movement',
     icon: '📊',
     description: 'Unusual odds movement or market uncertainty',
-    promptTemplate: `Generate a short market movement observation. Focus on:
-- What moved and by how much (conceptually)
-- Possible reasons (lineup, news, sharp action)
-- What it means for match uncertainty
-Never recommend action. Just observe.`,
+    promptTemplate: `Unusual line movement. Point out what moved and what it might mean.`,
     examplePosts: [
-      'Unusual odds movement detected in today\'s Serie A fixture. Market uncertainty increased after lineup confirmation.',
-      'Sharp movement across multiple books. Someone knows something, or thinks they do.',
-      'Market settling into a clear favorite narrative. The question is whether reality agrees.',
+      'Line moved 12% in an hour. Someone knows something. Or thinks they do. 👀',
+      'Sharp money hitting one side hard. Public loading the other. Classic.',
+      'Market can\'t make up its mind. Moved twice in opposite directions. Volatility brewing.',
     ],
   },
 
@@ -82,15 +78,11 @@ Never recommend action. Just observe.`,
     name: 'Lineup Intelligence',
     icon: '📋',
     description: 'Lineup changes, injuries, tactical shifts',
-    promptTemplate: `Generate a lineup intelligence post. Focus on:
-- Key player availability/absence
-- Impact on team dynamics
-- Model volatility adjustment
-Pure analytics, not advice.`,
+    promptTemplate: `Key lineup news. What changed and why it matters.`,
     examplePosts: [
-      'Late lineup change removed a key defensive anchor. Model volatility increased accordingly.',
-      'Starting XI confirms the aggressive approach. High-risk, high-reward territory.',
-      'Rotation heavy. Manager clearly prioritizing the midweek fixture.',
+      'Star player out. Market adjusted 8%. Should have been 12%. Gap.',
+      'Full strength for the first time in 6 weeks. Line hasn\'t caught up.',
+      'Rotation heavy. Manager clearly saving legs for the bigger match.',
     ],
   },
 
@@ -99,15 +91,11 @@ Pure analytics, not advice.`,
     name: 'Momentum & Form',
     icon: '📈',
     description: 'Form changes, momentum swings, trend breaks',
-    promptTemplate: `Generate a momentum/form observation. Focus on:
-- Recent results pattern
-- Trend direction (rising/falling/volatile)
-- Historical context for this team
-Sports analysis only.`,
+    promptTemplate: `Form trend worth noting. Recent results pattern.`,
     examplePosts: [
-      'Team momentum flipped sharply after three consecutive away wins. Long-term form remains unstable.',
-      'Five-match unbeaten run masks underlying xG concerns. Sustainability questionable.',
-      'Form says yes. History says proceed with caution.',
+      '7-2-1 in the last 10. Form says one thing. Reputation says another. Market picked reputation.',
+      'Unbeaten run looks good until you check the opponents. Schedule strength matters.',
+      '5 clean sheets in 6. Defense was the problem. Now it\'s the foundation.',
     ],
   },
 
@@ -116,15 +104,11 @@ Sports analysis only.`,
     name: 'Match Complexity',
     icon: '🎯',
     description: 'High-complexity or unpredictable match alerts',
-    promptTemplate: `Generate a match complexity alert. Focus on:
-- Why this match is hard to predict
-- Conflicting signals or balanced metrics
-- Elevated uncertainty factors
-Great for analysts seeking interesting fixtures.`,
+    promptTemplate: `This match is genuinely hard to call. Explain why.`,
     examplePosts: [
-      'High-complexity match detected: similar power ratings, inconsistent form, elevated volatility.',
-      'Model confidence unusually low. Too many variables in flux.',
-      'On paper, straightforward. In reality, chaos waiting to happen.',
+      'Model shrugs. Too many variables. Anyone claiming confidence is guessing.',
+      'On paper: coin flip. In context: chaos. Variance heaven.',
+      'Both teams trending opposite directions. Something has to give. No idea what.',
     ],
   },
 
@@ -133,15 +117,11 @@ Great for analysts seeking interesting fixtures.`,
     name: 'AI Insight',
     icon: '🧠',
     description: 'Interesting patterns, anomalies, curiosities',
-    promptTemplate: `Generate an AI insight/curiosity post. Focus on:
-- Interesting statistical pattern
-- Historical anomaly or trend
-- Something worth noting for analysts
-Educational and engaging.`,
+    promptTemplate: `Interesting pattern or stat. Make it punchy.`,
     examplePosts: [
-      'Interesting note: teams with similar profiles have produced lower-than-expected scoring recently.',
-      'Pattern recognition: home underdogs in this league outperforming models this season.',
-      'The data suggests one thing. The narrative suggests another. Classic.',
+      '17-4 at home. 6-12 on the road. Same team, different animal. Location matters here.',
+      'Outperforming xG by 31%. Math says regression. Eye test says elite finishing. Pick one.',
+      '0-7 as underdogs this year. Market keeps pricing them wrong. Pattern recognition.',
     ],
   },
 
@@ -480,64 +460,42 @@ export function buildAgentPostPromptWithAnalysis(
   
   const convictionInfo = CONVICTION_LEVELS[conviction];
   
-  // Get angle-specific guidance
-  const angleGuidance = getAngleGuidanceForPost(analysis.narrativeAngle);
-  
   return `${POST_PERSONALITY}
 
-TASK: Generate a SportBot Agent post for category: ${config.name}
+MATCH: ${homeTeam} vs ${awayTeam}
+CATEGORY: ${config.name}
 
-=== COMPUTED ANALYSIS (READ-ONLY) ===
-These values are FINAL. Do NOT contradict them.
+=== THE DATA (use this) ===
+${analysis.favored === 'home' ? `Favored: ${homeTeam}` :
+  analysis.favored === 'away' ? `Favored: ${awayTeam}` :
+  `Even matchup`}
+${homeTeam}: ${(analysis.probabilities.home * 100).toFixed(0)}%
+${awayTeam}: ${(analysis.probabilities.away * 100).toFixed(0)}%
+${analysis.probabilities.draw !== undefined ? `Draw: ${(analysis.probabilities.draw * 100).toFixed(0)}%` : ''}
+Volatility: ${analysis.volatility}
+Conviction: ${convictionInfo.display}
 
-${analysis.favored === 'home' ? `VERDICT: ${homeTeam} is favored` :
-  analysis.favored === 'away' ? `VERDICT: ${awayTeam} is favored` :
-  analysis.favored === 'draw' ? `VERDICT: Draw is most likely` :
-  `VERDICT: Match is evenly balanced`}
+=== NARRATIVE: ${analysis.narrativeAngle} ===
+${analysis.narrativeAngle === 'CHAOS' ? 'High variance. Acknowledge the chaos.' :
+  analysis.narrativeAngle === 'TRAP_SPOT' ? 'Popular pick might be wrong. Be contrarian.' :
+  analysis.narrativeAngle === 'BLOWOUT_POTENTIAL' ? 'Big gap. Be confident.' :
+  analysis.narrativeAngle === 'CONTROL' ? 'Clean read. Be direct.' :
+  'Close matchup. Acknowledge it.'}
 
-MARKET PROBABILITIES (vig removed):
-- ${homeTeam}: ${(analysis.probabilities.home * 100).toFixed(1)}%
-- ${awayTeam}: ${(analysis.probabilities.away * 100).toFixed(1)}%
-${analysis.probabilities.draw !== undefined ? `- Draw: ${(analysis.probabilities.draw * 100).toFixed(1)}%` : ''}
+${additionalContext ? `CONTEXT: ${additionalContext}` : ''}
 
-DATA QUALITY: ${analysis.dataQuality}
-VOLATILITY: ${analysis.volatility}
-CONFIDENCE: ${analysis.confidence.toUpperCase()}
+EXAMPLES FOR ${config.name.toUpperCase()}:
+${config.examplePosts.map(p => `"${p}"`).join('\n')}
 
-=== NARRATIVE ANGLE: ${analysis.narrativeAngle} ===
-${angleGuidance}
+REMEMBER:
+- 1-3 sentences MAX
+- Sound human, not robotic
+- Lead with the spicy part
+- Use the data above but make it interesting
+- NO betting advice, just observations
+- Occasional emoji OK (👀 📊 🔥) but don't overdo it
 
-TONE INSPIRATION (do NOT copy verbatim - use the VIBE, not the words): "${analysis.catchphrase}"
-STYLE MOTIF: "${analysis.motif}"
-
-CONVICTION: ${convictionInfo.display} (${convictionInfo.descriptor})
-
-CATEGORY GUIDELINES:
-${config.promptTemplate}
-
-EXAMPLE POSTS FOR THIS CATEGORY:
-${config.examplePosts.map(p => `- "${p}"`).join('\n')}
-
-MATCH CONTEXT:
-${matchContext}
-
-${additionalContext ? `ADDITIONAL CONTEXT:\n${additionalContext}` : ''}
-
-RULES:
-1. Keep it to 1-3 sentences MAX
-2. Lead with the insight - don't start with the same phrase every time
-3. Use the computed analysis - never contradict it
-4. Draw INSPIRATION from the tone hook - but NEVER copy it word-for-word
-5. BE CREATIVE - vary your sentence structure and opening each time
-6. NO betting advice, recommendations, or implied actions
-7. Pure observation and analysis
-8. No emojis. No markdown formatting.
-9. Be quotable and sharp - but original
-
-VARIETY IS KEY: If you've said "Pattern recognition says" before, find a different way to express conviction. The same insight can be delivered many ways.
-
-Return ONLY the post text. No quotes, no formatting, no explanation.
-If there's nothing interesting to post, return exactly: NO_POST`;
+Write ONE punchy post. No quotes around it. If nothing interesting, return: NO_POST`;
 }
 
 /**
