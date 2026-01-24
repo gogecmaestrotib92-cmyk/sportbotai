@@ -32,55 +32,13 @@ import { sendEmail, sendToolReviewOutreach } from '../src/lib/email';
 // Image generation disabled for now - uses placeholder
 // import { generateFeaturedImage } from '../src/lib/blog/image-generator';
 
-// Generate personalized outreach email
-function generateOutreachEmail(toolName: string, toolUrl: string, review: string): string {
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-    .highlight { background: #f0fdf4; padding: 15px; border-left: 4px solid #22c55e; margin: 20px 0; }
-    .cta { display: inline-block; background: #22c55e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 15px 0; }
-    .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px; }
-  </style>
-</head>
-<body>
-  <p>Hi there! 👋</p>
-  
-  <p>I'm Goran, founder of <a href="https://sportbotai.com">SportBot AI</a> – an AI-powered sports analytics platform.</p>
-  
-  <p>I've been building a <strong>Sports Betting Tools Directory</strong> to help our users discover quality tools, and I wanted to let you know that <strong>${toolName}</strong> is featured!</p>
-  
-  <div class="highlight">
-    <strong>Your listing:</strong><br>
-    <a href="https://sportbotai.com/tools">${toolName}</a> - Featured in our curated directory
-  </div>
-  
-  <p>Here's what we wrote about ${toolName}:</p>
-  <blockquote style="border-left: 3px solid #ddd; padding-left: 15px; color: #555; margin: 15px 0;">
-    ${review.substring(0, 300)}...
-  </blockquote>
-  
-  <p><strong>Quick ask:</strong> Would you consider adding SportBot AI to your resources or partners page? We'd be happy to upgrade your listing to a "Featured Tool" status with a dofollow backlink in return. 🤝</p>
-  
-  <p>Either way, thanks for building a great product!</p>
-  
-  <p>
-    Cheers,<br>
-    <strong>Goran</strong><br>
-    Founder, SportBot AI
-  </p>
-  
-  <div class="footer">
-    <p>P.S. Check out your listing at <a href="https://sportbotai.com/tools">sportbotai.com/tools</a></p>
-    <p style="font-size: 12px;">Don't want these emails? Just reply and let me know.</p>
-  </div>
-</body>
-</html>
-  `.trim();
-}
+// ============================================
+// ⚠️  OUTREACH EMAIL STANDARD - DO NOT CHANGE
+// ============================================
+// ALL outreach emails MUST use sendToolReviewOutreach() from src/lib/email.ts
+// This is the approved template with good response rate.
+// DO NOT create custom email templates in scripts!
+// ============================================
 
 async function main() {
   const args = process.argv.slice(2);
@@ -333,26 +291,23 @@ async function main() {
     });
 
     for (const tool of tools) {
+      const reviewSlug = tool.blogSlug || `tools/${tool.toolName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      const reviewUrl = `https://www.sportbotai.com/${reviewSlug}`;
+      
       console.log('═'.repeat(70));
       console.log(`📝 TOOL: ${tool.toolName}`);
       console.log(`🔗 URL: ${tool.toolUrl}`);
       console.log(`📧 EMAIL: ${tool.contactEmail}`);
+      console.log(`📄 REVIEW: ${reviewUrl}`);
       console.log('─'.repeat(70));
       console.log(`REVIEW TITLE: ${tool.reviewTitle}`);
       console.log('─'.repeat(70));
-      console.log('REVIEW CONTENT:');
-      console.log(tool.reviewContent);
+      console.log('REVIEW CONTENT (first 500 chars):');
+      console.log(tool.reviewContent?.substring(0, 500) || 'No content');
       console.log('─'.repeat(70));
-      console.log('OUTREACH EMAIL PREVIEW:');
-      console.log('─'.repeat(70));
-      const emailHtml = generateOutreachEmail(tool.toolName, tool.toolUrl, tool.reviewContent || '');
-      // Strip HTML for preview
-      const emailText = emailHtml
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-        .replace(/<[^>]+>/g, '\n')
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
-      console.log(emailText);
+      console.log('OUTREACH EMAIL: Uses standard template from src/lib/email.ts');
+      console.log('Subject: Wrote a review of ' + tool.toolName);
+      console.log('Template: sendToolReviewOutreach()');
       console.log('\n');
     }
 

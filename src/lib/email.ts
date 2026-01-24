@@ -471,9 +471,25 @@ export async function sendAdminPurchaseNotification(
 // ============================================
 // TOOL REVIEW OUTREACH EMAILS
 // ============================================
+// ⚠️  THIS IS THE STANDARD OUTREACH TEMPLATE
+// ============================================
+// ALL tool review outreach MUST use this function.
+// DO NOT create alternative email templates elsewhere!
+// 
+// Why this template works:
+// - Casual, human tone ("Hey!" not "Dear Sir/Madam")
+// - Gets to the point fast (review link upfront)
+// - Simple ask (badge for dofollow, no pressure)
+// - Signed by "Stefan" (consistent brand voice)
+// - No salesy language or emoji spam
+// ============================================
 
 /**
  * Send friendly outreach email when a tool review is published
+ * 
+ * @param email - Contact email address
+ * @param toolName - Name of the tool (e.g. "Metabet")
+ * @param reviewUrl - Full URL to the review (e.g. "https://www.sportbotai.com/tools/metabet-review")
  */
 export async function sendToolReviewOutreach(
   email: string,
