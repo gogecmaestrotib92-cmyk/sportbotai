@@ -1,4 +1,4 @@
-// Serbian individual blog post page - /sr/blog/[slug]
+// Serbian individual blog post page - /sr/blog/[...slug] (catch-all for tools/xyz paths)
 // Displays Serbian translation if available, falls back to English
 
 import { Metadata } from 'next';
@@ -15,7 +15,7 @@ export const dynamicParams = true;
 export const revalidate = 60;
 
 interface BlogPostPageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string[] }>;
 }
 
 // Author info
@@ -38,6 +38,7 @@ const CATEGORY_TRANSLATIONS: Record<string, string> = {
   'Odds & Probability': 'Kvote i Verovatnoća',
   'Platform Tutorials': 'Uputstva za Platformu',
   'Match Preview': 'Najave Utakmica',
+  'Tools & Resources': 'Alati i Resursi',
 };
 
 interface RelatedPost {
@@ -89,7 +90,8 @@ async function getBlogPost(slug: string) {
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug: slugArray } = await params;
+  const slug = slugArray.join('/');
   const data = await getBlogPost(slug);
 
   if (!data) {
@@ -148,8 +150,21 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   };
 }
 
+export async function generateStaticParams() {
+  const posts = await prisma.blogPost.findMany({
+    where: { status: 'PUBLISHED' },
+    select: { slug: true },
+    take: 100,
+  });
+
+  return posts.map((post: { slug: string }) => ({
+    slug: post.slug.split('/'),
+  }));
+}
+
 export default async function SerbianBlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = await params;
+  const { slug: slugArray } = await params;
+  const slug = slugArray.join('/');
   const data = await getBlogPost(slug);
 
   if (!data) {
@@ -221,9 +236,15 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
         name: 'Blog',
         item: `${baseUrl}/sr/blog`,
       },
-      {
+      ...(slug.includes('/') ? [{
         '@type': 'ListItem',
         position: 3,
+        name: 'Alati',
+        item: `${baseUrl}/sr/blog?category=Tools+%26+Resources`,
+      }] : []),
+      {
+        '@type': 'ListItem',
+        position: slug.includes('/') ? 4 : 3,
         name: articleTitle,
         item: `${baseUrl}/sr/blog/${post.slug}`,
       },
@@ -269,6 +290,14 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
                 <li>
                   <Link href="/sr/blog" className="hover:text-slate-900">Blog</Link>
                 </li>
+                {slug.includes('/') && (
+                  <>
+                    <li>/</li>
+                    <li>
+                      <Link href="/sr/blog?category=Tools+%26+Resources" className="hover:text-slate-900">Alati</Link>
+                    </li>
+                  </>
+                )}
                 <li>/</li>
                 <li className="text-slate-900 truncate max-w-[200px] font-medium">{articleTitle}</li>
               </ol>

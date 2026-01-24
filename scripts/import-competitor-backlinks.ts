@@ -34,6 +34,11 @@ const prisma = new PrismaClient();
 // → Use existing tool review system: scripts/test-backlink-scout.ts
 // → Write review, publish, email them about the review
 const TOOLS_FOR_REVIEW = [
+    // NEW: Competitor AI betting tools (Jan 2026 batch - keyword overlap analysis)
+    { domain: 'playerprops.ai', dr: 50, note: 'AI player props analytics - 63 keyword overlap' },
+    { domain: 'aipredictions.ai', dr: 35, note: 'AI sports predictions - 10 keyword overlap' },
+    { domain: 'gambly.com', dr: 45, note: 'Betting analysis platform - 18 keyword overlap' },
+    { domain: 'juicereel.com', dr: 40, note: 'Sports betting tool - competitor overlap' },
     // Betting/Analytics tools (can be genuinely reviewed)
     { domain: 'fantasypros.com', dr: 70, note: 'Fantasy sports analytics' },
     { domain: 'oddsshark.com', dr: 67, note: 'Odds comparison' },
@@ -340,7 +345,14 @@ async function main() {
 
     // Default: import BLOGS for guest post outreach
     // (Tools should be imported via test-backlink-scout.ts instead)
-    await importFromList(BLOGS_FOR_GUEST_POSTS, isLive, findEmails);
+    // NEW: --tools flag imports the TOOLS_FOR_REVIEW list for tool review path
+    const importTools = args.includes('--tools');
+    if (importTools) {
+        console.log('📦 Importing TOOLS for review path...\n');
+        await importFromList(TOOLS_FOR_REVIEW, isLive, findEmails);
+    } else {
+        await importFromList(BLOGS_FOR_GUEST_POSTS, isLive, findEmails);
+    }
 
     if (isLive) {
         await showStats();

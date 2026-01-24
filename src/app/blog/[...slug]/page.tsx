@@ -1,4 +1,4 @@
-// Individual blog post page - /blog/[slug]
+// Individual blog post page - /blog/[...slug] (catch-all for tools/xyz paths)
 
 import { Metadata } from 'next';
 import Image from 'next/image';
@@ -17,7 +17,7 @@ export const dynamicParams = true;
 export const revalidate = 60;
 
 interface BlogPostPageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string[] }>;
 }
 
 // Author info for E-E-A-T
@@ -77,7 +77,8 @@ async function getPost(slug: string) {
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug: slugArray } = await params;
+  const slug = slugArray.join('/');
   const data = await getPost(slug);
 
   if (!data) {
@@ -167,12 +168,13 @@ export async function generateStaticParams() {
   });
 
   return posts.map((post: { slug: string }) => ({
-    slug: post.slug,
+    slug: post.slug.split('/'),
   }));
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = await params;
+  const { slug: slugArray } = await params;
+  const slug = slugArray.join('/');
   const data = await getPost(slug);
 
   if (!data) {
@@ -357,6 +359,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 <li>
                   <Link href="/blog" className="hover:text-slate-900">Blog</Link>
                 </li>
+                {slug.includes('/') && (
+                  <>
+                    <li>/</li>
+                    <li>
+                      <Link href="/blog?category=Tools+%26+Resources" className="hover:text-slate-900">Tools</Link>
+                    </li>
+                  </>
+                )}
                 <li>/</li>
                 <li className="text-slate-900 truncate max-w-[200px] font-medium">{post.title}</li>
               </ol>
@@ -513,14 +523,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 {/* Background glow effect */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-400 opacity-70"></div>
                 <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-400 opacity-0 group-hover:opacity-10 transition duration-1000 blur-lg"></div>
-                
+
                 <h3 className="text-2xl font-bold text-white mb-3 relative z-10">
                   Stop Guessing. Start Winning.
                 </h3>
                 <p className="text-slate-300 mb-6 max-w-lg mx-auto relative z-10">
                   Get AI-powered picks, probability models, and market edge detection for <span className="text-emerald-400 font-bold">~$0.66/day</span>.
                 </p>
-                
+
                 <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
                   <Link
                     href="/pricing"
@@ -535,7 +545,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                     View Free Analysis
                   </Link>
                 </div>
-                
+
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent pointer-events-none"></div>
               </div>
             </div>
