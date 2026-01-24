@@ -1194,18 +1194,19 @@ export async function GET(request: NextRequest) {
   const currentHour = new Date().getUTCHours();
 
   // Auto-detect batch based on hour if not specified
-  // 6 AM = batch 0, 7 AM = batch 1, 8 AM = batch 2, 9 AM = batch 3
+  // Morning: 6 AM = batch 0, 7 AM = batch 1, 8 AM = batch 2, 9 AM = batch 3
+  // Evening: 18 PM = batch 0, 19 PM = batch 1, 20 PM = batch 2, 21 PM = batch 3
   let batchIndex: number | null = null;
   if (batchParam === 'all') {
     batchIndex = null; // Process all
   } else if (batchParam !== null) {
     batchIndex = parseInt(batchParam, 10);
   } else {
-    // Auto-detect from hour (6-9 AM UTC)
-    if (currentHour === 6) batchIndex = 0;
-    else if (currentHour === 7) batchIndex = 1;
-    else if (currentHour === 8) batchIndex = 2;
-    else if (currentHour === 9) batchIndex = 3;
+    // Auto-detect from hour (morning 6-9 AM UTC, evening 18-21 PM UTC)
+    if (currentHour === 6 || currentHour === 18) batchIndex = 0;
+    else if (currentHour === 7 || currentHour === 19) batchIndex = 1;
+    else if (currentHour === 8 || currentHour === 20) batchIndex = 2;
+    else if (currentHour === 9 || currentHour === 21) batchIndex = 3;
     else batchIndex = null; // Outside scheduled hours, run all
   }
 

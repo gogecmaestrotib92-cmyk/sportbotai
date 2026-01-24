@@ -698,7 +698,7 @@ export async function GET(request: NextRequest) {
               type: 'MATCH_RESULT',
               prediction: prediction.predictedScenario,
               reasoning: prediction.narrativeAngle,
-              conviction: Math.round(prediction.confidenceLevel / 10), // Convert 0-100 to 1-10
+              conviction: Math.round(prediction.confidenceLevel), // Already 1-10 scale from LLM
               source: 'AGENT_POST',
               outcome: 'PENDING',
             },
@@ -769,8 +769,13 @@ export async function GET(request: NextRequest) {
         try {
           // Calculate conviction with sport-specific cap
           const sportKey = analysis.sport || 'soccer';
-          const rawConviction = Math.round(prediction.confidenceLevel / 10);
+          const rawConviction = Math.round(prediction.confidenceLevel); // Already 1-10 scale from marketEdgeToPrediction
           const cappedConviction = applyConvictionCap(rawConviction, sportKey);
+
+          // Get the probability for the best value side to include in prediction
+          const bestValueProb = analysis.bestValueSide === 'HOME' ? analysis.homeWinProb :
+            analysis.bestValueSide === 'AWAY' ? analysis.awayWinProb :
+            analysis.bestValueSide === 'DRAW' ? analysis.drawProb : null;
 
           await prisma.prediction.create({
             data: {
@@ -785,10 +790,18 @@ export async function GET(request: NextRequest) {
               conviction: cappedConviction,
               source: 'MATCH_ANALYSIS',
               outcome: 'PENDING',
+              // Include probabilities for AI chat consistency
+              homeWin: analysis.homeWinProb,
+              awayWin: analysis.awayWinProb,
+              draw: analysis.drawProb,
+              // Model probability for the selected side
+              modelProbability: bestValueProb,
+              // Store full response if available
+              fullResponse: analysis.fullResponse ? JSON.parse(JSON.stringify(analysis.fullResponse)) : undefined,
             },
           });
           results.newAnalysisPredictions++;
-          console.log(`[Track-Predictions] Created analysis prediction for ${matchRef} (conviction: ${rawConviction} -> ${cappedConviction})`);
+          console.log(`[Track-Predictions] Created analysis prediction for ${matchRef} (conviction: ${rawConviction} -> ${cappedConviction}, modelProb: ${bestValueProb?.toFixed(1)}%)`);
         } catch (error) {
           console.error(`[Track-Predictions] Error creating analysis prediction:`, error);
           results.errors.push(`Failed to create analysis prediction for ${matchRef}: ${error instanceof Error ? error.message : 'Unknown'}`);
