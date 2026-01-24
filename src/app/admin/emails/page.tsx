@@ -97,6 +97,21 @@ export default function EmailPreviewPage() {
   const [outreachEmails, setOutreachEmails] = useState<OutreachEmail[]>([]);
   const [outreachStats, setOutreachStats] = useState<OutreachStats | null>(null);
   const [loadingOutreach, setLoadingOutreach] = useState(false);
+  
+  // Email preview modal state
+  const [previewModal, setPreviewModal] = useState<{
+    isOpen: boolean;
+    toolName: string;
+    email: string;
+    html: string | null;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    toolName: '',
+    email: '',
+    html: null,
+    loading: false,
+  });
 
   // Load outreach emails on mount
   useEffect(() => {
@@ -118,6 +133,58 @@ export default function EmailPreviewPage() {
       console.error('Failed to load outreach emails:', err);
     }
     setLoadingOutreach(false);
+  };
+
+  // Load email preview for a specific tool
+  const loadEmailPreview = async (toolName: string, email: string, blogSlug: string | null) => {
+    setPreviewModal({
+      isOpen: true,
+      toolName,
+      email,
+      html: null,
+      loading: true,
+    });
+    
+    try {
+      // Strip 'tools/' prefix if it exists (legacy bug in database)
+      const cleanSlug = blogSlug?.replace(/^tools\//, '') || '';
+      const reviewUrl = cleanSlug 
+        ? `https://sportbotai.com/tools/${cleanSlug}`
+        : 'https://sportbotai.com/tools';
+        
+      const res = await fetch('/api/admin/email-preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          templateId: 'tool-review-outreach',
+          params: { toolName, reviewUrl },
+        }),
+      });
+      const data = await res.json();
+      
+      setPreviewModal(prev => ({
+        ...prev,
+        html: data.html || null,
+        loading: false,
+      }));
+    } catch (err) {
+      console.error('Failed to load email preview:', err);
+      setPreviewModal(prev => ({
+        ...prev,
+        html: null,
+        loading: false,
+      }));
+    }
+  };
+
+  const closePreviewModal = () => {
+    setPreviewModal({
+      isOpen: false,
+      toolName: '',
+      email: '',
+      html: null,
+      loading: false,
+    });
   };
 
   // Auth check
@@ -188,6 +255,49 @@ export default function EmailPreviewPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
+      {/* Email Preview Modal */}
+      {previewModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-slate-900 rounded-2xl border border-slate-700 w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-700">
+              <div>
+                <h3 className="font-semibold text-lg">Email Sent to {previewModal.toolName}</h3>
+                <p className="text-sm text-slate-400">{previewModal.email}</p>
+              </div>
+              <button
+                onClick={closePreviewModal}
+                className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="overflow-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+              {previewModal.loading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
+                </div>
+              ) : previewModal.html ? (
+                <iframe
+                  srcDoc={previewModal.html}
+                  className="w-full h-[600px] border-0 bg-white"
+                  title="Email Preview"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+                  <p className="text-4xl mb-4">❌</p>
+                  <p>Failed to load email preview</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="border-b border-slate-800 bg-slate-900/50">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -394,6 +504,16 @@ export default function EmailPreviewPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
+                            {/* View Email Button */}
+                            {email.outreachStatus === 'SENT' && (
+                              <button
+                                onClick={() => loadEmailPreview(email.toolName, email.contactEmail || '', email.blogSlug)}
+                                className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 rounded transition-colors"
+                                title="View Sent Email"
+                              >
+                                📧 View
+                              </button>
+                            )}
                             {email.blogSlug && (
                               <a
                                 href={`https://www.sportbotai.com/blog/${email.blogSlug}`}

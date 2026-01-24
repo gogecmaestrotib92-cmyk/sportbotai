@@ -8,6 +8,27 @@
    ======================================== */
 
 /* ========================================
+   PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/* Content-visibility for below-fold sections - improves LCP */
+section:not(:first-of-type) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ========================================
    ACCESSIBILITY
    ======================================== */
 

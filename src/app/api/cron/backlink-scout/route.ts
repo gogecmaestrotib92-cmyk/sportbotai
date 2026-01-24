@@ -143,12 +143,14 @@ export async function GET(request: NextRequest) {
             });
             
             // Update tool review with blog post link
+            // Note: blogSlug should be just the slug, WITHOUT 'tools/' prefix
+            // because the URL is constructed as /tools/{blogSlug}
             await prisma.toolReview.update({
               where: { id: tool.id },
               data: {
                 reviewStatus: 'GENERATED',
                 blogPostId: blogPost.id,
-                blogSlug: blogPost.slug,
+                blogSlug: review.slug, // Use review.slug directly, NOT blogPost.slug which has 'tools/' prefix
                 reviewTitle: review.title,
                 reviewContent: review.content,
                 reviewGeneratedAt: new Date(),

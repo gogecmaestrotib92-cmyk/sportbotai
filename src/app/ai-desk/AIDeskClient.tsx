@@ -17,41 +17,39 @@ export default function AIDeskClient() {
   const isLoading = status === 'loading';
   const isAuthenticated = !!session;
 
-  // Show loading state with dimensions matched to actual content for CLS prevention
+  // Show loading state with FIXED dimensions to prevent CLS
+  // Critical: dimensions must match actual content exactly
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[600px]">
-        <div className="lg:col-span-2 min-h-[500px]">
-          {/* Match AIDeskHeroChat dimensions */}
-          <div className="card-glass rounded-2xl overflow-hidden h-[calc(100vh-180px)] min-h-[500px] max-h-[900px] flex flex-col">
-            <div className="p-4 border-b border-white/5 animate-pulse">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ minHeight: '600px' }}>
+        {/* Main chat skeleton - matches AIDeskHeroChat exactly */}
+        <div className="lg:col-span-2" style={{ minHeight: '500px' }}>
+          <div 
+            className="bg-white/[0.02] rounded-2xl overflow-hidden flex flex-col border border-white/5"
+            style={{ height: 'calc(100vh - 180px)', minHeight: '500px', maxHeight: '900px' }}
+          >
+            {/* Header skeleton */}
+            <div className="p-4 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-white/5 rounded-lg" />
                 <div className="h-4 bg-white/5 rounded w-32" />
               </div>
             </div>
-            <div className="p-6 space-y-4 animate-pulse">
-              <div className="flex gap-3">
-                <div className="w-8 h-8 bg-white/10 rounded-full flex-shrink-0" />
-                <div className="flex-1 bg-white/5 rounded-xl p-4 h-20" />
-              </div>
-              <div className="flex gap-3">
-                <div className="w-8 h-8 bg-white/10 rounded-full flex-shrink-0" />
-                <div className="flex-1 bg-white/5 rounded-xl p-4 h-32" />
-              </div>
-            </div>
-            <div className="p-4 border-t border-white/5 animate-pulse mt-auto">
+            {/* Messages area - just empty space, no animations */}
+            <div className="flex-1 p-6" />
+            {/* Input skeleton */}
+            <div className="p-4 border-t border-white/5">
               <div className="h-12 bg-white/5 rounded-xl" />
             </div>
           </div>
         </div>
-        <div className="min-h-[450px]">
-          {/* Match AIDeskFeedSidebar dimensions */}
-          <div className="card-glass rounded-2xl p-4 min-h-[450px]">
-            <div className="h-6 bg-white/5 rounded w-1/2 mb-4 animate-pulse" />
+        {/* Sidebar skeleton - matches AIDeskFeedSidebar */}
+        <div style={{ minHeight: '450px' }}>
+          <div className="bg-white/[0.02] rounded-2xl p-4 border border-white/5" style={{ minHeight: '450px' }}>
+            <div className="h-6 bg-white/5 rounded w-1/2 mb-4" />
             <div className="space-y-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-20 bg-white/5 rounded animate-pulse" />
+                <div key={i} className="h-20 bg-white/5 rounded" />
               ))}
             </div>
           </div>

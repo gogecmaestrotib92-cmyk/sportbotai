@@ -254,9 +254,13 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
     }
   }, []);
 
-  // Fetch AI picks once on mount
+  // Fetch AI picks DEFERRED - not critical for initial LCP
+  // Wait 3s after initial render to reduce main thread blocking
   useEffect(() => {
-    fetchAiPicks();
+    const timeoutId = setTimeout(() => {
+      fetchAiPicks();
+    }, 3000);
+    return () => clearTimeout(timeoutId);
   }, [fetchAiPicks]);
 
   // Fetch matches for selected league
@@ -599,32 +603,30 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
         {/* Loading State with Skeletons - min-height prevents CLS */}
         {isLoading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[500px]">
+            {/* Simplified skeleton - no animations for faster LCP */}
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="card-glass rounded-xl p-4">
-                {/* League & Time Skeleton */}
+              <div key={i} className="bg-white/[0.02] rounded-xl p-4 border border-white/5">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded bg-white/5 relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
-                    <div className="w-20 h-3 rounded bg-white/5 relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                    <div className="w-4 h-4 rounded bg-white/5" />
+                    <div className="w-20 h-3 rounded bg-white/5" />
                   </div>
-                  <div className="w-10 h-5 rounded-full bg-white/5 relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                  <div className="w-10 h-5 rounded-full bg-white/5" />
                 </div>
-                {/* Teams Skeleton */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 flex-1">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
-                    <div className="w-24 h-4 rounded bg-white/5 relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                    <div className="w-8 h-8 rounded-lg bg-white/5" />
+                    <div className="w-24 h-4 rounded bg-white/5" />
                   </div>
                   <div className="w-6 h-4 rounded bg-white/5 mx-2" />
                   <div className="flex items-center gap-2 flex-1 justify-end">
-                    <div className="w-24 h-4 rounded bg-white/5 relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
-                    <div className="w-8 h-8 rounded-lg bg-white/5 relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                    <div className="w-24 h-4 rounded bg-white/5" />
+                    <div className="w-8 h-8 rounded-lg bg-white/5" />
                   </div>
                 </div>
-                {/* Footer Skeleton */}
-                <div className="mt-3 pt-3 border-t border-divider flex items-center justify-between">
-                  <div className="w-16 h-3 rounded bg-white/5 relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
-                  <div className="w-20 h-7 rounded-full bg-white/5 relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
+                  <div className="w-16 h-3 rounded bg-white/5" />
+                  <div className="w-20 h-7 rounded-full bg-white/5" />
                 </div>
               </div>
             ))}

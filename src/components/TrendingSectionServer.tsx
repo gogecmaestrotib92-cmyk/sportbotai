@@ -13,16 +13,15 @@ import TrendingGrid from './TrendingGrid';
 import { MatchData } from '@/types';
 
 // Fetch trending matches on server with caching
+// PERF: Reduced from 6 to 3 sports for faster server response
 async function fetchTrendingMatches(maxMatches: number = 6): Promise<TrendingMatch[]> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.sportbotai.com';
 
+  // Only fetch top 3 most popular leagues to reduce server-side latency
   const sportsToFetch = [
     'soccer_epl',
-    'soccer_spain_la_liga',
-    'soccer_uefa_champs_league',
     'basketball_nba',
     'americanfootball_nfl',
-    'icehockey_nhl',
   ];
 
   const allMatches: TrendingMatch[] = [];
@@ -54,12 +53,12 @@ async function fetchTrendingMatches(maxMatches: number = 6): Promise<TrendingMat
   }
 }
 
-// Loading skeleton
+// Loading skeleton - simplified for better LCP (no animations)
 function TrendingSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {[...Array(6)].map((_, i) => (
-        <div key={i} className="h-[140px] rounded-xl bg-bg-card animate-pulse border border-divider" />
+        <div key={i} className="h-[140px] rounded-xl bg-white/[0.02] border border-white/5" />
       ))}
     </div>
   );
@@ -93,14 +92,14 @@ export default function TrendingSectionServer({ maxMatches = 6, locale = 'en' }:
     <section id="trending" className="relative py-12 sm:py-16 scroll-mt-20 overflow-hidden">
       {/* Props.Cash style turf background */}
       <div className="absolute inset-0 bg-[#0a0a0b]">
-        {/* Turf texture */}
+        {/* Turf texture - LAZY LOAD for better LCP (below fold) */}
         <div className="absolute inset-0 opacity-40">
           <Image
             src="/images/turf-bg.jpg"
-            alt="Turf Background"
+            alt=""
             fill
-            priority
-            quality={60}
+            loading="lazy"
+            quality={50}
             className="object-cover"
             sizes="100vw"
           />
