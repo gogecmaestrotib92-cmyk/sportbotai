@@ -9,6 +9,7 @@
  */
 
 import { FormMatch, HeadToHeadMatch, TeamStats } from '@/types';
+import { cacheGet, cacheSet } from '@/lib/cache';
 
 const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
 
@@ -72,20 +73,59 @@ export interface EnrichedMatchData {
   dataSource: 'API_FOOTBALL' | 'CACHE' | 'UNAVAILABLE';
 }
 
-// Simple in-memory cache (consider Redis for production)
-const cache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+// Redis cache keys prefix and TTLs for API-Football data
+const FOOTBALL_CACHE_PREFIX = 'apifootball:';
+const TEAM_ID_TTL = 7 * 24 * 60 * 60; // 7 days - team IDs rarely change
+const FORM_TTL = 60 * 60; // 1 hour - form data
+const INJURY_TTL = 30 * 60; // 30 minutes - injuries can update
 
-function getCached<T>(key: string): T | null {
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+// In-memory fallback for same-request deduplication only
+const requestCache = new Map<string, { data: any; timestamp: number }>();
+const REQUEST_CACHE_TTL = 5 * 60 * 1000; // 5 minutes for same-request dedup
+
+// Sync cache for immediate same-request lookups (falls back to Redis for cross-request)
+function getCachedSync<T>(key: string): T | null {
+  const cached = requestCache.get(key);
+  if (cached && Date.now() - cached.timestamp < REQUEST_CACHE_TTL) {
     return cached.data as T;
   }
   return null;
 }
 
+function setCacheSync(key: string, data: any): void {
+  requestCache.set(key, { data, timestamp: Date.now() });
+}
+
+// Async Redis-backed cache for team IDs (most important to persist)
+async function getCachedTeamId(teamName: string, league?: string): Promise<number | null> {
+  const key = `${FOOTBALL_CACHE_PREFIX}team:${teamName}:${league || ''}`;
+  
+  // Check in-memory first (same request)
+  const syncCached = getCachedSync<number>(key);
+  if (syncCached !== null) return syncCached;
+  
+  // Check Redis
+  const redisCached = await cacheGet<number>(key);
+  if (redisCached !== null) {
+    setCacheSync(key, redisCached); // Populate in-memory for this request
+    return redisCached;
+  }
+  return null;
+}
+
+async function setCachedTeamId(teamName: string, league: string | undefined, teamId: number): Promise<void> {
+  const key = `${FOOTBALL_CACHE_PREFIX}team:${teamName}:${league || ''}`;
+  setCacheSync(key, teamId); // In-memory for this request
+  await cacheSet(key, teamId, TEAM_ID_TTL); // Redis for persistence
+}
+
+// Legacy sync functions for non-critical data (form, injuries use their own caching)
+function getCached<T>(key: string): T | null {
+  return getCachedSync<T>(key);
+}
+
 function setCache(key: string, data: any): void {
-  cache.set(key, { data, timestamp: Date.now() });
+  setCacheSync(key, data);
 }
 
 /**
@@ -689,28 +729,29 @@ function normalizeTeamName(name: string): string {
 }
 /**
  * Search for team by name with improved matching
+ * Uses Redis cache for team IDs to persist across serverless invocations
  */
 async function findTeam(teamName: string, league?: string): Promise<number | null> {
-  const cacheKey = `team:${teamName}:${league || ''}`;
-  const cached = getCached<number>(cacheKey);
-  if (cached) {
-    console.log(`[Football-API] findTeam cache HIT for "${teamName}": ${cached}`);
-    return cached;
+  // Check Redis cache first (persists across requests)
+  const cachedId = await getCachedTeamId(teamName, league);
+  if (cachedId !== null) {
+    console.log(`[Football-API] findTeam REDIS cache HIT for "${teamName}": ${cachedId}`);
+    return cachedId;
   }
 
-  // Check direct mapping first
+  // Check direct mapping first (no API call needed)
   const mapping = TEAM_NAME_MAPPINGS[teamName];
   if (mapping?.id) {
     console.log(`[Football-API] findTeam mapping HIT for "${teamName}": ${mapping.id}`);
-    setCache(cacheKey, mapping.id);
+    await setCachedTeamId(teamName, league, mapping.id);
     return mapping.id;
   }
 
-  // Try normalized name lookup
+  // Try normalized name lookup (no API call needed)
   const normalized = normalizeTeamName(teamName);
   for (const [key, value] of Object.entries(TEAM_NAME_MAPPINGS)) {
     if (normalizeTeamName(key) === normalized && value.id) {
-      setCache(cacheKey, value.id);
+      await setCachedTeamId(teamName, league, value.id);
       return value.id;
     }
   }
@@ -749,14 +790,14 @@ async function findTeam(teamName: string, league?: string): Promise<number | nul
     );
     
     if (exactMatch) {
-      setCache(cacheKey, exactMatch.team.id);
+      await setCachedTeamId(teamName, league, exactMatch.team.id);
       return exactMatch.team.id;
     }
     
     // Otherwise take first result
     const teamId = response.response[0].team.id;
     console.log(`[Football-API] findTeam API search for "${teamName}" found: ${teamId}`);
-    setCache(cacheKey, teamId);
+    await setCachedTeamId(teamName, league, teamId);
     return teamId;
   }
   

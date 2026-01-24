@@ -1220,6 +1220,7 @@ export async function GET(request: NextRequest) {
     sportsProcessed: 0,
     matchesFound: 0,
     matchesAnalyzed: 0,
+    skippedCached: 0, // Matches already in cache (saves API calls)
     cacheWrites: 0,
     oddsSnapshotUpdates: 0,
     predictionsCreated: 0,
@@ -1298,6 +1299,14 @@ export async function GET(request: NextRequest) {
             sport.key,
             matchDateStr
           );
+
+          // OPTIMIZATION: Check if already cached to avoid redundant API-Football calls
+          const existingCache = await cacheGet<any>(cacheKey);
+          if (existingCache?.analysis?.probabilities) {
+            console.log(`[Pre-Analyze] SKIP - already cached: ${matchRef}`);
+            stats.skippedCached = (stats.skippedCached || 0) + 1;
+            continue;
+          }
 
           console.log(`[Pre-Analyze] Analyzing: ${matchRef} | Cache key: ${cacheKey}`);
 

@@ -17,7 +17,7 @@
     },
     {
       "path": "/api/cron/match-validation",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/weekly-stats",

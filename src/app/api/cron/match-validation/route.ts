@@ -147,11 +147,12 @@ async function getMatchResult(matchId: string, sport: string, matchName?: string
       const [homeTeam, awayTeam] = matchName.split(' vs ').map(t => t.trim());
 
       if (homeTeam && awayTeam) {
-        // Generate dates to search: stored date, plus/minus 2 days
+        // Generate dates to search: yesterday and today only (reduced from 5 days to save API quota)
         const baseDate = kickoff || new Date();
         const datesToSearch: string[] = [];
 
-        for (let dayOffset = -2; dayOffset <= 2; dayOffset++) {
+        // Only search -1 to 0 (yesterday and today) to minimize API calls
+        for (let dayOffset = -1; dayOffset <= 0; dayOffset++) {
           const searchDate = new Date(baseDate);
           searchDate.setDate(searchDate.getDate() + dayOffset);
           datesToSearch.push(searchDate.toISOString().split('T')[0]);
@@ -391,17 +392,37 @@ export async function GET(request: NextRequest) {
   console.log('[Cron] Starting match validation...');
 
   try {
-    // Get pending predictions where match should be finished
+    // STEP 1: Mark very old predictions as EXPIRED (>3 days old) to stop endless API searches
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    const expiredResult = await prisma.prediction.updateMany({
+      where: {
+        outcome: 'PENDING',
+        kickoff: { lt: threeDaysAgo },
+      },
+      data: {
+        outcome: 'EXPIRED',
+        validatedAt: new Date(),
+      },
+    });
+    if (expiredResult.count > 0) {
+      console.log(`[Cron] Marked ${expiredResult.count} old predictions as EXPIRED`);
+    }
+
+    // STEP 2: Get pending predictions where match should be finished
     // (kickoff was more than 2 hours ago for football, 3 hours for basketball)
+    // Only process predictions that have a kickoff date set
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
 
     const pendingPredictions = await prisma.prediction.findMany({
       where: {
         outcome: 'PENDING',
-        kickoff: { lt: twoHoursAgo },
+        kickoff: { 
+          lt: twoHoursAgo,
+          not: { equals: undefined }, // Prisma way to check kickoff is not null
+        },
       },
       orderBy: { kickoff: 'asc' },
-      take: 20, // Process in batches
+      take: 15, // Reduced batch size to save API quota (was 20)
     });
 
     console.log(`[Cron] Found ${pendingPredictions.length} predictions to validate`);
