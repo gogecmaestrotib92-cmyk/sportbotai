@@ -28,7 +28,7 @@ import {
   runBacklinkScout,
   generateToolReview,
 } from '../src/lib/backlink-scout';
-import { sendEmail } from '../src/lib/email';
+import { sendEmail, sendToolReviewOutreach } from '../src/lib/email';
 // Image generation disabled for now - uses placeholder
 // import { generateFeaturedImage } from '../src/lib/blog/image-generator';
 
@@ -402,18 +402,21 @@ async function main() {
     console.log(`Found ${tools.length} tools ready for outreach\n`);
 
     for (const tool of tools) {
+      // Build review URL from blogSlug or generate from tool name
+      const reviewSlug = tool.blogSlug || `tools/${tool.toolName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      const reviewUrl = `https://www.sportbotai.com/${reviewSlug}`;
+      
       console.log(`[Outreach] ${tool.toolName} → ${tool.contactEmail}`);
-
-      const subject = `Featured ${tool.toolName} on SportBot AI's Tools Directory`;
-      const html = generateOutreachEmail(tool.toolName, tool.toolUrl, tool.reviewContent || '');
+      console.log(`[Outreach] Review URL: ${reviewUrl}`);
 
       if (isLive) {
         try {
-          const sent = await sendEmail({
-            to: tool.contactEmail!,
-            subject,
-            html,
-          });
+          // Use the proper email template with correct review link
+          const sent = await sendToolReviewOutreach(
+            tool.contactEmail!,
+            tool.toolName,
+            reviewUrl
+          );
 
           if (sent) {
             await prisma.toolReview.update({
@@ -435,7 +438,6 @@ async function main() {
         await new Promise(r => setTimeout(r, 2000));
       } else {
         console.log(`[Outreach] Would send email (dry run)`);
-        console.log(`[Outreach] Subject: ${subject}`);
       }
     }
 
