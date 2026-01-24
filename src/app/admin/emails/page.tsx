@@ -149,8 +149,8 @@ export default function EmailPreviewPage() {
       // Strip 'tools/' prefix if it exists (legacy bug in database)
       const cleanSlug = blogSlug?.replace(/^tools\//, '') || '';
       const reviewUrl = cleanSlug 
-        ? `https://sportbotai.com/tools/${cleanSlug}`
-        : 'https://sportbotai.com/tools';
+        ? `https://sportbotai.com/blog/tools/${cleanSlug}`
+        : 'https://sportbotai.com/blog';
         
       const res = await fetch('/api/admin/email-preview', {
         method: 'POST',

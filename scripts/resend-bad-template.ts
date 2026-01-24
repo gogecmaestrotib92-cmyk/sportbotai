@@ -38,7 +38,7 @@ async function main() {
       
       // Strip 'tools/' prefix if it exists (legacy bug)
       const cleanSlug = tool.blogSlug?.replace(/^tools\//, '') || '';
-      const reviewUrl = `https://sportbotai.com/tools/${cleanSlug}`;
+      const reviewUrl = `https://sportbotai.com/blog/tools/${cleanSlug}`;
       
       console.log(`📧 Resending to ${tool.toolName} (${tool.contactEmail})...`);
       

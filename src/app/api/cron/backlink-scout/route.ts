@@ -199,7 +199,8 @@ export async function GET(request: NextRequest) {
             }
             
             // Build the review URL from blogSlug
-            const reviewUrl = `https://www.sportbotai.com/${tool.blogSlug}`;
+            // Reviews are at /blog/tools/{slug}
+            const reviewUrl = `https://www.sportbotai.com/blog/tools/${tool.blogSlug}`;
             
             // Send the outreach email
             const emailSent = await sendToolReviewOutreach(

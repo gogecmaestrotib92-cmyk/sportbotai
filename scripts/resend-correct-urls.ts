@@ -34,7 +34,7 @@ async function main() {
     
     // Clean slug (should already be clean now, but safeguard)
     const cleanSlug = tool.blogSlug.replace(/^tools\//, '');
-    const reviewUrl = `https://sportbotai.com/tools/${cleanSlug}`;
+    const reviewUrl = `https://sportbotai.com/blog/tools/${cleanSlug}`;
     
     console.log(`📧 ${tool.toolName} -> ${reviewUrl}`);
     

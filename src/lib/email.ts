@@ -489,7 +489,7 @@ export async function sendAdminPurchaseNotification(
  * 
  * @param email - Contact email address
  * @param toolName - Name of the tool (e.g. "Metabet")
- * @param reviewUrl - Full URL to the review (e.g. "https://www.sportbotai.com/tools/metabet-review")
+ * @param reviewUrl - Full URL to the review (e.g. "https://www.sportbotai.com/blog/tools/metabet-review")
  */
 export async function sendToolReviewOutreach(
   email: string,
