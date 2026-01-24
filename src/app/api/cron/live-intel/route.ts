@@ -41,7 +41,7 @@ const MIN_CONVICTION_TO_POST = 3;
 
 // TWITTER AUTO-POST: Set to false to pause automatic Twitter posting
 // (for when account is in restricted mode - manual posts only)
-const TWITTER_AUTO_POST_ENABLED = false;
+const TWITTER_AUTO_POST_ENABLED = true;
 
 // Categories to rotate through
 const AUTO_POST_CATEGORIES: PostCategory[] = [
