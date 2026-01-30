@@ -105,9 +105,9 @@ export default async function MatchesPage({
       />
 
       <div className="min-h-screen bg-bg relative overflow-x-hidden" style={{ contain: 'layout' }}>
-        {/* Ambient Background Glows - fixed position to prevent CLS */}
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" aria-hidden="true" style={{ contain: 'strict' }} />
-        <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" aria-hidden="true" style={{ contain: 'strict' }} />
+        {/* Ambient Background Glows - hidden on mobile to prevent CLS */}
+        <div className="hidden md:block absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" aria-hidden="true" />
+        <div className="hidden md:block absolute top-1/3 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" aria-hidden="true" />
 
         {/* Header */}
         <section className="relative border-b border-white/5">
