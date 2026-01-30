@@ -224,7 +224,7 @@ export function TestimonialsSection() {
   return (
     <section className="py-16 px-4 bg-bg relative overflow-hidden">
       {/* Ambient glow */}
-      <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="hidden md:block absolute top-0 left-1/4 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px] pointer-events-none" aria-hidden="true" />
       
       <div className="max-w-6xl mx-auto relative">
         <div className="text-center mb-10">

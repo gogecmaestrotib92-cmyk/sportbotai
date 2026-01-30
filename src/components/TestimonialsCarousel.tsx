@@ -80,7 +80,7 @@ export default function TestimonialsCarousel() {
   return (
     <section className="py-16 bg-bg-primary relative overflow-hidden">
       {/* Ambient glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-accent/5 rounded-full blur-[100px] pointer-events-none" aria-hidden="true" />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Section Header */}

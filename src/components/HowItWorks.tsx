@@ -56,7 +56,7 @@ export default function HowItWorks() {
   return (
     <section className="bg-bg section-container relative overflow-hidden">
       {/* Ambient glow */}
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="hidden md:block absolute bottom-0 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[80px] pointer-events-none" aria-hidden="true" />
       
       <ScrollReveal animation="fade-up">
         <div className="text-center mb-14 relative">

@@ -58,7 +58,7 @@ export default function Features() {
   return (
     <section className="bg-bg-primary section-container relative overflow-hidden">
       {/* Ambient background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[100px] pointer-events-none" aria-hidden="true" />
       
       <ScrollReveal animation="fade-up">
         <div className="text-center mb-14 relative">

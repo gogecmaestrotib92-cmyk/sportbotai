@@ -107,7 +107,7 @@ export default function TrendingSection({ maxMatches = 6 }: TrendingSectionProps
   return (
     <section id="trending" className="py-12 sm:py-16 bg-bg-primary scroll-mt-20 relative overflow-hidden">
       {/* Subtle ambient glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-accent/3 rounded-full blur-[150px] pointer-events-none" />
+      <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-accent/3 rounded-full blur-[100px] pointer-events-none" aria-hidden="true" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Section Header */}

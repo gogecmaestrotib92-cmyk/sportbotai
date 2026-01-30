@@ -34,10 +34,10 @@ export default function HeroI18n({ t, locale }: HeroI18nProps) {
       {/* Extra dark overlay for better text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/60 pointer-events-none" />
 
-      {/* Additional decorative elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-primary/5 rounded-full blur-[80px] sm:blur-[120px]" />
-        <div className="absolute bottom-0 left-0 w-[200px] sm:w-[400px] h-[200px] sm:h-[400px] bg-accent/5 rounded-full blur-[60px] sm:blur-[100px]" />
+      {/* Additional decorative elements - HIDDEN ON MOBILE (blur is expensive) */}
+      <div className="hidden md:block absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[80px]" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[60px]" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-28">
