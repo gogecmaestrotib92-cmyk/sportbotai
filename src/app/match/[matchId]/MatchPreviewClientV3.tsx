@@ -1240,22 +1240,49 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
         )}
 
         {/* Predicted Score Section - Shows expected score from Poisson/Elo model */}
-        {/* Only show when we have reliable stats data (not for NHL/NBA/NFL with missing stats) */}
+        {/* PRO ONLY - This is premium data */}
         {data.expectedScores && data.dataAvailability?.hasReliableStats !== false && (
           <div className="mt-6">
-            <PredictedScoreDisplay
-              homeTeam={data.matchInfo.homeTeam}
-              awayTeam={data.matchInfo.awayTeam}
-              expectedScores={data.expectedScores}
-              overUnder={data.overUnder}
-              sport={data.matchInfo.sport}
-              locale={locale}
-            />
+            {canSeeExactNumbers ? (
+              <PredictedScoreDisplay
+                homeTeam={data.matchInfo.homeTeam}
+                awayTeam={data.matchInfo.awayTeam}
+                expectedScores={data.expectedScores}
+                overUnder={data.overUnder}
+                sport={data.matchInfo.sport}
+                locale={locale}
+              />
+            ) : (
+              /* Locked Predicted Score for FREE users */
+              <div className="card-glass p-4 sm:p-5 relative overflow-hidden">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🎯</span>
+                    <h3 className="text-sm font-semibold text-white">{locale === 'sr' ? 'Predviđeni Rezultat' : 'Predicted Score'}</h3>
+                  </div>
+                  <span className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-violet to-violet-light text-white rounded-full">PRO</span>
+                </div>
+                <div className="flex items-center justify-center gap-4 py-6 blur-sm select-none pointer-events-none">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-white/30">?.?</div>
+                    <div className="text-xs text-zinc-500 mt-1">{data.matchInfo.homeTeam.substring(0, 10)}</div>
+                  </div>
+                  <div className="text-xl text-zinc-600">-</div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-white/30">?.?</div>
+                    <div className="text-xs text-zinc-500 mt-1">{data.matchInfo.awayTeam.substring(0, 10)}</div>
+                  </div>
+                </div>
+                <p className="text-center text-xs text-zinc-500 mt-2">
+                  {locale === 'sr' ? 'Nadogradi na Pro za AI predviđeni rezultat' : 'Upgrade to Pro for AI predicted score'}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Show O/U from market even when predicted score is hidden (for NHL/NBA/NFL) */}
-        {data.expectedScores && data.dataAvailability?.hasReliableStats === false && data.overUnder && (
+        {/* Show O/U from market even when predicted score is hidden (for NHL/NBA/NFL) - PRO ONLY */}
+        {data.expectedScores && data.dataAvailability?.hasReliableStats === false && data.overUnder && canSeeExactNumbers && (
           <div className="mt-6">
             <PredictedScoreDisplay
               homeTeam={data.matchInfo.homeTeam}
