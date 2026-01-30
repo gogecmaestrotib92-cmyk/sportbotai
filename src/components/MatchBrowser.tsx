@@ -177,12 +177,12 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
   }, [selectedSport, initialLeague, selectedLeague]);
 
   // Pre-fetch match counts for leagues - DEFERRED to not block initial render
-  // Mobile optimization: Increased to 2.5s deferral for better LCP/TBT on slow networks
+  // Reduced to 1000ms - balance between LCP protection and UX
   useEffect(() => {
     let cancelled = false;
 
     // Defer fetch to after initial render for better LCP
-    // 5000ms delay to ensuring specific LCP metrics are met on slow mobile
+    // 1000ms delay - enough for LCP to complete, but not too long for UX
     const timeoutId = setTimeout(async () => {
       if (cancelled) return;
 
@@ -191,24 +191,24 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
       // Only fetch counts for the CURRENT sport's leagues first (faster)
       const currentSportLeagues = SPORTS.find(s => s.id === selectedSport)?.leagues || [];
 
-      // Fetch current sport first
-      for (const league of currentSportLeagues) {
-        if (cancelled) break;
-        // Don't fetch if we already have it
-        if (leagueMatchCounts[league.key] !== undefined) continue;
-        
-        try {
-          const response = await fetch(`/api/match-data?sportKey=${league.key}&includeOdds=false`);
-          if (response.ok) {
-            const data = await response.json();
-            counts[league.key] = data.events?.length || 0;
-          } else {
-            counts[league.key] = 0;
+      // Fetch current sport first - use Promise.all for parallel fetching
+      const fetchPromises = currentSportLeagues
+        .filter(league => leagueMatchCounts[league.key] === undefined)
+        .map(async (league) => {
+          try {
+            const response = await fetch(`/api/match-data?sportKey=${league.key}&includeOdds=false`);
+            if (response.ok) {
+              const data = await response.json();
+              return { key: league.key, count: data.events?.length || 0 };
+            }
+            return { key: league.key, count: 0 };
+          } catch {
+            return { key: league.key, count: 0 };
           }
-        } catch {
-          counts[league.key] = 0;
-        }
-      }
+        });
+
+      const results = await Promise.all(fetchPromises);
+      results.forEach(r => { counts[r.key] = r.count; });
 
       if (!cancelled && Object.keys(counts).length > 0) {
         setLeagueMatchCounts(prev => ({ ...prev, ...counts }));
@@ -216,7 +216,7 @@ export default function MatchBrowser({ initialSport = 'soccer', initialLeague, m
 
       // DO NOT fetch other sports automatically. This causes LCP degradation.
       // We will only fetch them when the user switches sports.
-    }, 5000);
+    }, 1000);
 
     return () => {
       cancelled = true;
