@@ -113,6 +113,15 @@ SECTION FLOW:
 7. Responsible Gambling
 8. Conclusion with actionable takeaways
 
+═══════════════════════════════════════════════════════════════
+🔑 SEO KEYWORD TARGETS (from NeuronWriter)
+═══════════════════════════════════════════════════════════════
+
+Plan headings and content to naturally include these terms:
+- "prediction(s)", "AI", "match(es)", "football", "bet/betting", "tip(s)"
+- "football prediction", "soccer", "ai-powered", "accuracy", "data-driven"
+- Major leagues: Bundesliga, La Liga, Ligue 1, Premier League, Serie A
+
 Return JSON:
 {
   "title": "SEO-optimized title (natural, not keyword-stuffed)",
@@ -297,7 +306,34 @@ Placement:
 Each description should be specific and visual.
 
 ═══════════════════════════════════════════════════════════════
-🔗 HTML & INTERNAL LINKING
+� SEO KEYWORD TARGETS (Based on NeuronWriter Analysis)
+═══════════════════════════════════════════════════════════════
+
+Naturally incorporate these terms throughout the article (don't force them):
+
+HIGH PRIORITY (use multiple times where natural):
+- "prediction" / "predictions" - use 4-15+ times naturally
+- "ai" / "AI" - use 4-20+ times naturally  
+- "match" / "matches" - use 4-20+ times naturally
+- "football" - use 1-10+ times where relevant
+- "bet" / "betting" - use 1-15+ times naturally
+- "tip" / "tips" - use 1-12+ times naturally
+
+SUPPORTING TERMS (use 1-6 times each where natural):
+- "football prediction" / "football predictions"
+- "soccer" (especially for US audience)
+- "ai-powered" / "AI-powered"
+- "accuracy" / "accurate"
+- "data-driven"
+
+LEAGUE MENTIONS (use 1-3 times when discussing specific leagues):
+- "Bundesliga", "La Liga", "Ligue 1", "Premier League", "Serie A"
+- "Champions League", "Europa League"
+
+DO NOT keyword-stuff. These should flow naturally in context.
+
+═══════════════════════════════════════════════════════════════
+�🔗 HTML & INTERNAL LINKING
 ═══════════════════════════════════════════════════════════════
 
 HTML Tags: <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>, <blockquote>, <table>

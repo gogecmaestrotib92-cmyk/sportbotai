@@ -7,9 +7,11 @@
  * - Consistent look across all devices
  * - Reduced bandwidth usage
  * - Works on all browsers
+ * 
+ * PERFORMANCE: Uses Next.js Image with priority for fast LCP
  */
 
-'use client';
+import Image from 'next/image';
 
 interface VideoBackgroundProps {
   /** Video source (MP4) - DEPRECATED, turf texture is now used */
@@ -26,22 +28,30 @@ interface VideoBackgroundProps {
   disableOnMobile?: boolean;
   /** Additional CSS classes */
   className?: string;
+  /** Is this the LCP element? If true, loads with priority */
+  isLCP?: boolean;
 }
 
 export default function VideoBackground({
   overlayOpacity = 0.6,
   className = '',
+  isLCP = true,
 }: VideoBackgroundProps) {
   return (
     <div className={`absolute inset-0 overflow-hidden ${className}`}>
       {/* Base: Real dark sports turf texture (Props.Cash style) */}
       <div className="absolute inset-0 bg-[#0a0a0b]">
-        {/* Turf texture image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('/images/turf-bg.jpg')`,
-          }}
+        {/* Turf texture image - Using Next.js Image for LCP optimization */}
+        <Image
+          src="/images/turf-bg.webp"
+          alt=""
+          fill
+          priority={isLCP}
+          fetchPriority={isLCP ? "high" : "auto"}
+          quality={75}
+          sizes="100vw"
+          className="object-cover"
+          placeholder="empty"
         />
 
         {/* Dark vignette overlay for depth */}

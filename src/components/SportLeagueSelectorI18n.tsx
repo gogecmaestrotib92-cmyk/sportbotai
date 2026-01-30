@@ -7,6 +7,7 @@
 
 'use client';
 
+import Image from 'next/image';
 import LeagueLogo from '@/components/ui/LeagueLogo';
 import CountryFlag, { getCountryForLeague } from '@/components/ui/CountryFlag';
 import { Locale, getTranslations } from '@/lib/i18n/translations';
@@ -23,12 +24,12 @@ interface Sport {
   leagues: League[];
 }
 
-// Local sport background images (stored in /public/sports/)
+// Local sport background images (stored in /public/sports/) - WebP for performance
 const SPORT_BACKGROUNDS: Record<string, string> = {
-  soccer: '/sports/soccer.jpg',
-  basketball: '/sports/basketball.jpg',
-  americanfootball: '/sports/football.jpg',
-  hockey: '/sports/hockey.jpg',
+  soccer: '/sports/soccer.webp',
+  basketball: '/sports/basketball.webp',
+  americanfootball: '/sports/football.webp',
+  hockey: '/sports/hockey.webp',
 };
 
 interface SportLeagueSelectorI18nProps {
@@ -94,10 +95,14 @@ export default function SportLeagueSelectorI18n({
                 }`}
                 style={{ transform: 'translateZ(0)' }}
               >
-                {/* Background Image */}
-                <div 
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
-                  style={{ backgroundImage: `url(${bgImage})` }}
+                {/* Background Image - Next.js Image for LCP optimization */}
+                <Image
+                  src={bgImage}
+                  alt={sport.name}
+                  fill
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                  className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                  priority={sport.id === 'soccer'}
                 />
                 {/* Dark Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30" />

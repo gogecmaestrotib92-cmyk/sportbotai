@@ -108,7 +108,7 @@ export default function MatchCountdown({
         inline-flex items-center gap-1.5 rounded-full font-medium
         ${sizeClasses[size]}
         ${style.bg} ${style.border} ${style.text}
-        border transition-all duration-300
+        border
         ${style.glow ? `shadow-lg ${style.glow}` : ''}
         ${className}
       `}

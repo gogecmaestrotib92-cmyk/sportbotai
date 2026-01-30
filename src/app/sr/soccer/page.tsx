@@ -7,12 +7,12 @@ import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Fudbal Kvote Danas - Linije za Klađenje na Fudbal',
-    description: 'Pogledajte današnje fudbalske kvote za sve lige. Live kvote za klađenje sa AI analizom za Premier Ligu, La Ligu, Seriju A i još.',
-    keywords: ['fudbal kvote', 'fudbal kladjenje', 'premier liga kvote', 'la liga kvote', 'fudbalske opklade'],
+    title: 'AI Fudbalske Prognoze i Kvote Danas - Tipovi i Linije za Klađenje',
+    description: 'AI fudbalske prognoze i live kvote za Premier Ligu, La Ligu, Bundesligu, Ligu Šampiona. Tipovi zasnovani na podacima sa linijama za klađenje.',
+    keywords: ['ai fudbalske prognoze', 'fudbal kvote', 'fudbal tipovi', 'prognoze fudbal', 'premier liga kvote', 'premier liga prognoze', 'la liga kvote', 'liga sampiona prognoze', 'fudbalske opklade', 'ai analiza fudbala'],
     openGraph: {
-        title: 'Fudbal Kvote Danas | SportBot AI',
-        description: 'Današnje fudbalske kvote za klađenje sa AI analizom.',
+        title: 'AI Fudbalske Prognoze i Kvote Danas | SportBot AI',
+        description: 'AI prognoze za fudbal i live kvote. Tipovi za Premier Ligu, La Ligu, Ligu Šampiona.',
         url: 'https://sportbotai.com/sr/soccer',
     },
     alternates: {

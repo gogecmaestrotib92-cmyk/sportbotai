@@ -74,6 +74,8 @@ model User {
   favoriteTeams          FavoriteTeam[]
   sessions               Session[]
   chatQueries            ChatQuery[]
+  chatSessions           ChatSession[]
+  preference             UserPreference?
 }
 
 model VerificationToken {
@@ -899,5 +901,95 @@ enum EngagementType {
   MENTION_REPLY    // Reply to someone who mentioned us
   ACCOUNT_REPLY    // Reply to monitored account post
   QUOTE_TWEET      // Quote tweet of someone else's post
+}
+
+// ============================================
+// AI CHAT LEARNING SYSTEM
+// ============================================
+
+// Persistent chat sessions per user (survives browser close)
+model ChatSession {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String?       // Auto-generated from first message
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  lastMessageAt DateTime      @default(now())
+  messageCount  Int           @default(0)
+  messages      ChatMessage[]
+
+  @@index([userId])
+  @@index([lastMessageAt])
+}
+
+// Individual messages within a chat session
+model ChatMessage {
+  id            String      @id @default(cuid())
+  sessionId     String
+  session       ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role          String      // 'user' or 'assistant'
+  content       String
+  createdAt     DateTime    @default(now())
+  
+  // Extracted context (for learning)
+  teams         String[]    // Teams mentioned
+  players       String[]    // Players mentioned
+  sport         String?     // Detected sport
+  intent        String?     // MATCH_PREDICTION, PLAYER_STATS, etc.
+  
+  // Feedback (for assistant messages)
+  feedback      Int?        // 1 = thumbs down, 5 = thumbs up
+  feedbackAt    DateTime?
+
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+// User preferences learned over time
+model UserPreference {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Learned preferences
+  preferredSports     String[]  // Sports they ask about most
+  preferredLeagues    String[]  // Leagues they follow
+  analysisStyle       String?   // 'detailed', 'quick', 'stats-heavy'
+  bettingStyle        String?   // 'value', 'favorites', 'underdogs'
+  
+  // Interaction stats
+  totalQueries        Int       @default(0)
+  avgFeedbackScore    Float?    // Rolling average of feedback
+  mostAskedTeams      String[]  // Top 5 teams they ask about
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+// High-quality responses to cache and reuse
+model LearnedResponse {
+  id              String   @id @default(cuid())
+  queryPattern    String   // Normalized query pattern
+  queryHash       String   @unique // For fast lookup
+  response        String   // The good response
+  
+  // Quality metrics
+  feedbackScore   Float    @default(0) // Cumulative score from feedback
+  useCount        Int      @default(0) // Times this response was used
+  lastUsedAt      DateTime @default(now())
+  
+  // Context
+  sport           String?
+  intent          String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([queryHash])
+  @@index([sport])
+  @@index([feedbackScore])
 }
 

@@ -150,6 +150,8 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
               width={36}
               height={36}
               className="rounded-lg"
+              priority
+              style={{ width: '36px', height: '36px' }}
             />
             <span className="text-xl font-bold text-text-primary group-hover:text-accent transition-colors">
               Sport<span className="text-accent">Bot</span>

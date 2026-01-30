@@ -95,7 +95,7 @@ export default function TrendingSectionServer({ maxMatches = 6, locale = 'en' }:
         {/* Turf texture - LAZY LOAD for better LCP (below fold) */}
         <div className="absolute inset-0 opacity-40">
           <Image
-            src="/images/turf-bg.jpg"
+            src="/images/turf-bg.webp"
             alt=""
             fill
             loading="lazy"

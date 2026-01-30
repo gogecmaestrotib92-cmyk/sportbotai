@@ -33,29 +33,45 @@ export const SITE_CONFIG = {
 export const META = {
   home: {
     title: 'SportBot AI – AI Sports Analysis in 60 Seconds',
-    description: 'Free AI-powered sports match analysis. Get probability estimates, value detection, and risk assessment for any match in 60 seconds. Soccer, NBA, NFL, Tennis & more.',
+    description: 'Free AI-powered sports match analysis. Get data-driven predictions, probability estimates, and value detection for soccer, NBA, NFL matches. AI picks with accuracy you can trust.',
     keywords: [
-      // 1. The Power Keywords (High Volume, High Intent)
-      'ai sports betting',            // #1 Keyword (3.6k Vol)
+      // 1. Primary Target: "ai picks soccer" cluster
+      'ai picks soccer',
+      'ai soccer predictions',
+      'ai football prediction',
+      'soccer prediction ai',
+      'ai-powered soccer analysis',
+      'data-driven soccer picks',
+      
+      // 2. The Power Keywords (High Volume, High Intent)
+      'ai sports betting',
       'ai sports picks',
       'ai sports predictions',
       'ai betting predictions',
-      'ai betting bot',               // Matches "SportBot" brand
+      'ai betting bot',
       'ai predictor',
       'free ai sports predictions',
       
-      // 2. The "Bridge" Keywords (Accessible)
-      'ai picks',
-      'sports ai',
-      'betting edge',
+      // 3. Match & Prediction focused
+      'match prediction',
+      'soccer match analysis',
+      'football prediction tips',
+      'ai predictions accuracy',
       
-      // 3. Sport Specific (Long Tail)
-      'nba ai predictions',
-      'football ai analysis',
-      'tennis match predictor',
+      // 4. Leagues (from NeuronWriter)
+      'premier league predictions',
+      'la liga ai picks',
+      'bundesliga predictions',
+      'ligue 1 predictions',
       
-      // 4. Brand & Tech Authority
-      'most accurate prediction site', // Bold claim, high traffic
+      // 5. Tech/Trust signals
+      'data-driven betting',
+      'ai analyze match',
+      'betting trend analysis',
+      'outcome prediction ai',
+      
+      // 6. Brand & Tech Authority
+      'most accurate prediction site',
       'AI market edge',
       'predictive sports engine',
       'sports probability model'
@@ -63,25 +79,40 @@ export const META = {
   },
   
   matches: {
-    title: 'Browse Matches – Live Sports Analysis',
-    description: 'Browse upcoming matches across 4 major sports. Get instant AI analysis for Premier League, La Liga, Champions League, NBA, NFL & NHL. Real-time odds and probability models.',
+    title: 'AI Soccer Picks & Match Predictions – Live Analysis',
+    description: 'Browse upcoming soccer matches with AI-powered predictions. Get data-driven football predictions for Premier League, La Liga, Bundesliga, Ligue 1. Accurate match analysis and betting tips.',
     keywords: [
+      // Primary: ai picks soccer cluster
+      'ai picks soccer',
+      'soccer predictions today',
+      'football prediction ai',
+      'ai soccer tips',
+      'match prediction accuracy',
+      
+      // Leagues
+      'premier league predictions',
+      'la liga ai picks',
+      'bundesliga predictions',
+      'ligue 1 predictions',
+      'champions league tips',
+      
+      // Match/Analysis focused
       'upcoming matches',
       'live sports analysis',
       'match analyzer',
-      'sports analysis tool',
-      'football match analysis',
-      'NBA game analysis',
+      'data-driven picks',
+      'ai analyze soccer',
+      'football betting trends',
+      'outcome predictions',
+      
+      // Sports variety
+      'NBA ai predictions',
       'NFL analysis tool',
-      'tennis match analyzer',
-      'premier league analysis',
-      'la liga analysis',
-      'champions league analysis',
-      // AI/Edge Keywords
-      'AI match forecasts',
-      'value detection tool',
-      'sports market trends',
-      'algorithmic odds comparison',
+      
+      // Trust signals
+      'accurate soccer predictions',
+      'ai-powered analysis',
+      'sports probability model',
     ],
   },
   

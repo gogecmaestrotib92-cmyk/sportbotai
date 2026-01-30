@@ -76,6 +76,8 @@ export default function FooterI18n({ locale: localeProp }: FooterI18nProps) {
                 width={36}
                 height={36}
                 className="rounded-lg"
+                priority={false}
+                style={{ width: '36px', height: '36px' }}
               />
               <span className="text-xl font-bold text-text-primary">
                 Sport<span className="text-accent">Bot</span>
@@ -152,6 +154,11 @@ export default function FooterI18n({ locale: localeProp }: FooterI18nProps) {
             <h3 className="text-text-primary font-semibold mb-4 text-sm uppercase tracking-wider">{locale === 'sr' ? 'Sportovi' : 'Sports'}</h3>
             <ul className="space-y-1">
               <li>
+                <Link href={`${localePath}/soccer`} className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
+                  {locale === 'sr' ? 'AI Fudbalske Prognoze' : 'AI Soccer Predictions'}
+                </Link>
+              </li>
+              <li>
                 <Link href={`${localePath}/nba`} className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
                   NBA
                 </Link>
@@ -164,11 +171,6 @@ export default function FooterI18n({ locale: localeProp }: FooterI18nProps) {
               <li>
                 <Link href={`${localePath}/nhl`} className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
                   NHL
-                </Link>
-              </li>
-              <li>
-                <Link href={`${localePath}/soccer`} className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
-                  {locale === 'sr' ? 'Fudbal' : 'Soccer'}
                 </Link>
               </li>
             </ul>
@@ -230,8 +232,8 @@ export default function FooterI18n({ locale: localeProp }: FooterI18nProps) {
                   className="opacity-80 hover:opacity-100 transition-opacity"
                 />
               </a>
-              {/* Techbase Directory Badge */}
-              <a
+              {/* Techbase Directory Badge - hidden to improve CLS (image 29KB but displays tiny) */}
+              {/* <a
                 href="https://techbasedirectory.com/product/sportbot-ai?utm_source=featured_embed"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -244,7 +246,7 @@ export default function FooterI18n({ locale: localeProp }: FooterI18nProps) {
                   loading="lazy"
                   className="opacity-80 hover:opacity-100 transition-opacity"
                 />
-              </a>
+              </a> */}
               {/* NextGen Tools Badge */}
               <a
                 href="https://nxgntools.com/tools/sportbot-ai"

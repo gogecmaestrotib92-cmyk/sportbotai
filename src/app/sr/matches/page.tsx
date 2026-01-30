@@ -115,10 +115,10 @@ export default async function MatchesPageSr({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="min-h-screen bg-bg relative overflow-hidden">
-        {/* Ambient Background Glows */}
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
-        <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="min-h-screen bg-bg relative overflow-hidden" style={{ contain: 'layout' }}>
+        {/* Ambient Background Glows - fixed position to prevent CLS */}
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" aria-hidden="true" style={{ contain: 'strict' }} />
+        <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" aria-hidden="true" style={{ contain: 'strict' }} />
 
         {/* Header */}
         <section className="relative border-b border-white/5">

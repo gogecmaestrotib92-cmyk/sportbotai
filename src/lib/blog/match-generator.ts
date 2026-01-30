@@ -1071,6 +1071,16 @@ Primary: "${keywords.primary}" (use in title, first paragraph, and 3-4 times thr
 Secondary: ${keywords.secondary.join(', ')} (use each 1-2 times)
 Long-tail: ${keywords.longTail.join(', ')} (use naturally where relevant)
 
+=== HIGH-VALUE SEO TERMS (from NeuronWriter - use naturally throughout) ===
+• "prediction" / "predictions" - use 4-15+ times naturally
+• "AI" / "ai-powered" - use 4-10+ times naturally
+• "match" - use 4-15+ times naturally (easy for match previews)
+• "football" / "soccer" - use where relevant to the sport
+• "tips" / "tip" - use 1-8+ times (e.g., "betting tips", "prediction tips")
+• "accuracy" / "data-driven" - use 1-3 times each
+• Include league names: Bundesliga, La Liga, Ligue 1, Premier League, Serie A when relevant
+DO NOT keyword-stuff - these must flow naturally in context!
+
 RESEARCH DATA:
 Home Team Info: ${JSON.stringify(research.homeTeamInfo)}
 Away Team Info: ${JSON.stringify(research.awayTeamInfo)}

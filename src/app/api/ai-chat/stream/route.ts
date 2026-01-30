@@ -63,6 +63,16 @@ import {
   formatConversationHistory,
   extractEntitiesForMemory
 } from '@/lib/chat-memory';
+// Chat Learning - makes AI smarter over time
+import {
+  getOrCreateSession,
+  addMessage as addLearningMessage,
+  getUserTopicsForPrompt,
+  buildUserContext,
+  updateUserPreferences,
+  getConversationHistoryForPrompt,
+  findLearnedResponse,
+} from '@/lib/chat-learning';
 // Chat Tools - function calling for data retrieval
 import { CHAT_TOOLS, executeTool, formatToolResults, type ToolResult } from '@/lib/chat-tools';
 import * as toolDeps from '@/lib/chat-tool-deps';
@@ -1992,6 +2002,36 @@ If their favorite team has a match today/tonight, lead with that information.`;
       }
     }
 
+    // ==========================================
+    // FETCH USER LEARNING CONTEXT (cross-session memory)
+    // ==========================================
+    let userLearningContext = '';
+    let learningSessionId: string | null = null;
+    if (userId) {
+      try {
+        // Get or create a persistent chat session for this user
+        learningSessionId = await withTimeout(
+          getOrCreateSession(userId),
+          2000,
+          'Learning session'
+        );
+
+        // Build user context from past interactions
+        const userContext = await withTimeout(
+          getUserTopicsForPrompt(userId),
+          2000,
+          'User learning context'
+        );
+
+        if (userContext) {
+          userLearningContext = userContext;
+          console.log('[AI-Chat-Stream] User learning context loaded');
+        }
+      } catch (err) {
+        console.log('[AI-Chat-Stream] Could not fetch learning context:', err);
+      }
+    }
+
     // ============================================
     // STEP 0: SMART QUERY UNDERSTANDING
     // Use LLM-backed classification for better intent detection
@@ -3376,6 +3416,11 @@ Rather than make something up, I'll be honest - I can't find reliable stats for 
             systemPrompt += `\n\n${favoriteTeamsContext}`;
           }
 
+          // Add user learning context (cross-session memory)
+          if (userLearningContext) {
+            systemPrompt += `\n\n${userLearningContext}`;
+          }
+
           // Add language instruction
           if (translation.needsTranslation && originalLanguage !== 'en') {
             const langNames: Record<string, string> = {
@@ -3842,6 +3887,41 @@ The user deserves to know when we have verified analysis vs when we're just shar
             abTestVariant: abVariant,
             abTestId: abTestId,
           }).catch(() => { });
+
+          // ============================================
+          // SAVE TO LEARNING SYSTEM (for cross-session memory)
+          // ============================================
+          if (userId && learningSessionId) {
+            try {
+              // Save user message
+              await addLearningMessage(learningSessionId, {
+                role: 'user',
+                content: message,
+                teams: queryUnderstanding?.entities.filter(e => e.type === 'TEAM').map(e => e.name) || [],
+                players: queryUnderstanding?.entities.filter(e => e.type === 'PLAYER').map(e => e.name) || [],
+                sport: detectedSport,
+                intent: queryUnderstanding?.intent,
+              });
+
+              // Save assistant response
+              await addLearningMessage(learningSessionId, {
+                role: 'assistant',
+                content: fullResponse.slice(0, 5000), // Limit stored content
+                sport: detectedSport,
+              });
+
+              // Update user preferences based on this interaction
+              await updateUserPreferences(userId, {
+                sport: detectedSport,
+                teams: queryUnderstanding?.entities.filter(e => e.type === 'TEAM').map(e => e.name),
+                intent: queryUnderstanding?.intent,
+              });
+
+              console.log('[AI-Chat-Stream] Learning: saved messages and updated preferences');
+            } catch (err) {
+              console.log('[AI-Chat-Stream] Learning save failed (non-critical):', err);
+            }
+          }
 
           // Detect entity mismatch (asked about X, answered about Y)
           // This helps us learn from mistakes

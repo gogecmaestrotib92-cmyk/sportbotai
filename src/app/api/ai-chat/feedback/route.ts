@@ -15,6 +15,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { hashChatQuery } from '@/lib/cache';
 import { recordFeedback as recordFeedbackForLearning } from '@/lib/query-learning';
+import { saveLearnedResponse, downgradeLearnedResponse, processFeedback as processChatLearningFeedback } from '@/lib/chat-learning';
 
 // ============================================
 // LEARNING FROM FEEDBACK
@@ -209,6 +210,25 @@ export async function POST(request: NextRequest) {
       console.log(`[Feedback] Updated ChatQuery with feedback rating: ${rating}`);
     } catch (updateErr) {
       console.error('[Feedback] Failed to update ChatQuery with feedback:', updateErr);
+    }
+
+    // ============================================
+    // CHAT LEARNING SYSTEM - Save high-quality responses
+    // ============================================
+    if (userId) {
+      try {
+        if (rating === 5) {
+          // Save this as a learned high-quality response
+          await saveLearnedResponse(query, response, rating, sport, category);
+          console.log(`[Learning] ✅ Saved learned response for positive feedback`);
+        } else {
+          // Downgrade any existing learned response
+          await downgradeLearnedResponse(query);
+          console.log(`[Learning] ❌ Downgraded learned response for negative feedback`);
+        }
+      } catch (learnErr) {
+        console.error('[Learning] Failed to update learned responses:', learnErr);
+      }
     }
 
     return NextResponse.json({

@@ -9,12 +9,12 @@ import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Soccer Odds Today - Live Football Betting Lines & Spreads',
-    description: 'Get today\'s soccer odds, moneylines, spreads, and totals for Premier League, La Liga, Champions League. Live football betting odds with AI analysis.',
-    keywords: ['soccer odds', 'football betting odds', 'premier league odds', 'champions league betting', 'soccer moneyline', 'soccer betting', 'la liga odds', 'bundesliga odds', 'football odds today'],
+    title: 'AI Soccer Predictions & Odds Today - Football Tips & Betting Lines',
+    description: 'AI-powered soccer predictions and live odds for Premier League, La Liga, Bundesliga, Champions League. Data-driven football tips with betting lines and probability analysis.',
+    keywords: ['ai soccer predictions', 'ai picks soccer', 'soccer odds', 'football predictions', 'soccer tips', 'premier league odds', 'premier league predictions', 'champions league tips', 'la liga odds', 'bundesliga odds', 'football betting tips', 'soccer betting odds', 'ai football analysis', 'soccer match predictions'],
     openGraph: {
-        title: 'Soccer Odds Today - Live Football Betting Lines | SportBot AI',
-        description: 'Today\'s soccer betting odds with AI analysis. Live moneylines, spreads, and totals.',
+        title: 'AI Soccer Predictions & Odds Today | SportBot AI',
+        description: 'AI-powered soccer predictions and live betting odds. Football tips for Premier League, La Liga, Champions League.',
         url: 'https://sportbotai.com/soccer',
         type: 'website',
     },
