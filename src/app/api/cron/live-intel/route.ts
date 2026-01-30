@@ -473,11 +473,8 @@ export async function GET(request: NextRequest) {
     
     console.log(`[Live-Intel-Cron] Created post ${post.id} (confidence: ${postResult.confidence}/10) in ${Date.now() - startTime}ms`);
     
-    // Post to Twitter only every 4th post AND only for high-confidence posts (7+)
-    // AND only if auto-posting is enabled (may be paused for account restrictions)
-    const totalPosts = await prisma.agentPost.count();
-    const isHighConfidence = postResult.confidence >= 7;
-    const shouldPostToTwitter = TWITTER_AUTO_POST_ENABLED && (totalPosts % 4 === 0) && isHighConfidence;
+    // Post EVERY Live Intel post to Twitter (if auto-posting is enabled)
+    const shouldPostToTwitter = TWITTER_AUTO_POST_ENABLED;
     
     let twitterResult = null;
     if (shouldPostToTwitter) {
@@ -487,7 +484,7 @@ export async function GET(request: NextRequest) {
           const hashtags = getSmartHashtags(selectedPrediction.sport, selectedPrediction.homeTeam);
           const formattedContent = formatForTwitter(postResult.content, { hashtags });
           
-          console.log(`[Live-Intel-Cron] Posting to Twitter (post #${totalPosts}, high confidence ${postResult.confidence}/10)...`);
+          console.log(`[Live-Intel-Cron] Posting to Twitter...`);
           twitterResult = await twitter.postTweet(formattedContent);
           
           if (twitterResult.success) {
@@ -511,10 +508,7 @@ export async function GET(request: NextRequest) {
         console.error('[Live-Intel-Cron] Twitter error:', twitterError);
       }
     } else {
-      const reason = !isHighConfidence 
-        ? `confidence ${postResult.confidence}/10 below threshold (7+)`
-        : `post #${totalPosts} - only every 4th`;
-      console.log(`[Live-Intel-Cron] Skipping Twitter: ${reason}`);
+      console.log(`[Live-Intel-Cron] Twitter auto-post disabled`);
     }
     
     return NextResponse.json({
