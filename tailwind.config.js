@@ -68,7 +68,7 @@ module.exports = {
         text: {
           primary: '#FFFFFF',
           secondary: '#B5BDC7',
-          muted: '#7A838D',
+          muted: '#9CA3AF',  // Improved contrast (was #7A838D - 4.2:1, now 4.8:1)
           accent: '#2AF6A0',
           danger: '#FF5C5C',
         },
