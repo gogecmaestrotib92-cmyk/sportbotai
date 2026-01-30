@@ -49,19 +49,17 @@ export default function VideoBackground({
           priority={isLCP}
           fetchPriority={isLCP ? "high" : "auto"}
           quality={40}
-          sizes="(max-width: 768px) 100vw, 50vw"
+          sizes="100vw"
           className="object-cover"
           placeholder="empty"
         />
 
-        {/* Dark vignette overlay for depth */}
+        {/* Dark vignette overlay for depth - CSS only, no blur */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(0,0,0,0.7)_80%)]" />
 
-        {/* Subtle brand accent glow (top-right) */}
-        <div className="absolute -top-20 -right-20 w-[350px] h-[350px] bg-accent/25 rounded-full blur-[120px]" />
-
-        {/* Secondary ambient glow (bottom-left) */}
-        <div className="absolute -bottom-20 -left-20 w-[280px] h-[280px] bg-accent/15 rounded-full blur-[100px]" />
+        {/* Ambient glows - HIDDEN ON MOBILE (blur is expensive) */}
+        <div className="hidden md:block absolute -top-20 -right-20 w-[350px] h-[350px] bg-accent/25 rounded-full blur-[80px]" aria-hidden="true" />
+        <div className="hidden md:block absolute -bottom-20 -left-20 w-[280px] h-[280px] bg-accent/15 rounded-full blur-[60px]" aria-hidden="true" />
       </div>
 
       {/* Dark overlay for text readability */}
