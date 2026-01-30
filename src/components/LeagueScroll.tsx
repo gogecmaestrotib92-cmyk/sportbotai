@@ -1,8 +1,8 @@
 /**
- * Infinite League Logos Scroll - v7.0
+ * Infinite League Logos Scroll - v8.0
  * 
- * FAST + SMOOTH marquee using proven CSS technique.
- * Two tracks side by side, each animating independently.
+ * GPU-accelerated marquee using translate3d for silky smooth animation.
+ * Reduced motion support for accessibility.
  */
 
 'use client';
@@ -26,18 +26,19 @@ const leagues = [
 const LeagueItem = ({ league }: { league: typeof leagues[0] }) => (
   <Link
     href={`/matches?league=${league.key}`}
-    className="flex-shrink-0 flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors"
+    className="flex-shrink-0 flex items-center gap-3 px-4 py-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors"
   >
-    <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-white rounded-lg p-1.5">
+    <div className="relative w-10 h-10 flex-shrink-0 bg-white rounded-lg p-1.5">
       <Image
         src={league.logo}
         alt={`${league.name} logo`}
         fill
-        sizes="48px"
+        sizes="40px"
         className="object-contain p-0.5"
+        loading="lazy"
       />
     </div>
-    <span className="text-sm sm:text-base font-semibold text-gray-300 whitespace-nowrap">
+    <span className="text-sm font-semibold text-gray-300 whitespace-nowrap">
       {league.name}
     </span>
   </Link>
@@ -47,26 +48,24 @@ export default function LeagueScroll() {
   return (
     <section className="py-8 bg-bg-primary border-y border-white/5 overflow-hidden">
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes scrollLeft {
-          from { transform: translateX(0); }
-          to { transform: translateX(-100%); }
+        @keyframes marquee {
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-50%, 0, 0); }
         }
-        .marquee-container {
+        .marquee-wrapper {
           display: flex;
-          overflow: hidden;
-          gap: 0;
+          width: max-content;
+          animation: marquee 30s linear infinite;
+          will-change: transform;
+          backface-visibility: hidden;
+          perspective: 1000px;
         }
-        .marquee-track {
-          display: flex;
-          gap: 1rem;
-          padding-right: 1rem;
-          animation: scrollLeft 10s linear infinite;
-          flex-shrink: 0;
+        .marquee-wrapper:hover {
+          animation-play-state: paused;
         }
-        @media (min-width: 640px) {
-          .marquee-track {
-            gap: 1.5rem;
-            padding-right: 1.5rem;
+        @media (prefers-reduced-motion: reduce) {
+          .marquee-wrapper {
+            animation: none;
           }
         }
       `}} />
@@ -80,17 +79,17 @@ export default function LeagueScroll() {
 
         <div className="relative overflow-hidden">
           {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-20 bg-gradient-to-r from-bg-primary to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-20 bg-gradient-to-l from-bg-primary to-transparent z-10 pointer-events-none" />
+          <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-bg-primary to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-bg-primary to-transparent z-10 pointer-events-none" />
 
-          {/* Two identical tracks create seamless infinite scroll */}
-          <div className="marquee-container">
-            <div className="marquee-track">
+          {/* Single wrapper with duplicated content for seamless loop */}
+          <div className="marquee-wrapper">
+            <div className="flex gap-4 pr-4">
               {leagues.map((league) => (
                 <LeagueItem key={`a-${league.key}`} league={league} />
               ))}
             </div>
-            <div className="marquee-track">
+            <div className="flex gap-4 pr-4">
               {leagues.map((league) => (
                 <LeagueItem key={`b-${league.key}`} league={league} />
               ))}
