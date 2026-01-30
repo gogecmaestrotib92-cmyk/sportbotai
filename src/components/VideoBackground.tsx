@@ -48,8 +48,8 @@ export default function VideoBackground({
           fill
           priority={isLCP}
           fetchPriority={isLCP ? "high" : "auto"}
-          quality={75}
-          sizes="100vw"
+          quality={40}
+          sizes="(max-width: 768px) 100vw, 50vw"
           className="object-cover"
           placeholder="empty"
         />

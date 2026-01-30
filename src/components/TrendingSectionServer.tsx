@@ -99,9 +99,9 @@ export default function TrendingSectionServer({ maxMatches = 6, locale = 'en' }:
             alt=""
             fill
             loading="lazy"
-            quality={50}
+            quality={40}
             className="object-cover"
-            sizes="100vw"
+            sizes="(max-width: 768px) 100vw, 50vw"
           />
         </div>
         {/* Dark vignette overlay */}
