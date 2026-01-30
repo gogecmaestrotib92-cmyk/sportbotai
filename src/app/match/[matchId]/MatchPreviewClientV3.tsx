@@ -1104,7 +1104,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
 
             {/* CTA Button - premium feel, mobile-friendly touch target */}
             <Link
-              href={`${localePath}/pricing`}
+              href={`${localePath}/pricing#pro`}
               className="btn-secondary inline-block text-base sm:text-lg px-6 sm:px-8 py-3.5 font-medium"
             >
               {t.upgradeToPro}
@@ -1590,7 +1590,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
                 </div>
               </div>
               <Link
-                href={`${localePath}/pricing`}
+                href={`${localePath}/pricing#pro`}
                 className="flex-shrink-0 px-4 py-2 bg-white text-violet-700 font-semibold text-sm rounded-lg hover:bg-white/90 transition-colors shadow-lg"
               >
                 {locale === 'sr' ? 'Nadogradi' : 'Upgrade'}

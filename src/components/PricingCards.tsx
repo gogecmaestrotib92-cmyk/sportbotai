@@ -309,7 +309,8 @@ export default function PricingCards() {
           return (
             <div
               key={plan.id}
-              className={`card-glass p-5 sm:p-6 relative ${isCurrentPlan
+              id={plan.id}
+              className={`card-glass p-5 sm:p-6 relative scroll-mt-24 ${isCurrentPlan
                 ? 'border-2 border-accent shadow-glow-accent'
                 : plan.highlighted && canUpgrade
                   ? 'border-2 border-accent/50 md:scale-105'
