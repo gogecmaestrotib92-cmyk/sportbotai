@@ -95,14 +95,15 @@ export default function SportLeagueSelector({
                 {/* Background Image - Next.js Image for LCP optimization */}
                 <Image
                   src={bgImage}
-                  alt={sport.name}
+                  alt=""
                   fill
                   sizes="(max-width: 768px) 50vw, 25vw"
-                  className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                  className="object-cover object-center transition-transform duration-300 group-hover:scale-105 pointer-events-none"
                   priority={sport.id === 'soccer'}
+                  aria-hidden="true"
                 />
                 {/* Dark Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30 pointer-events-none" />
                 {/* Content */}
                 <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4 px-3">
                   <span className="text-base md:text-lg font-bold text-white drop-shadow-lg">
