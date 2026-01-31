@@ -8,10 +8,10 @@ export const metadata: Metadata = {
         title: 'Free Hedge Bet Calculator | SportBot AI',
         description: 'Calculate the optimal hedge bet to lock in guaranteed profit on your open bets.',
         type: 'website',
-        url: 'https://sportbotai.com/tools/hedge-calculator',
+        url: 'https://www.sportbotai.com/tools/hedge-calculator',
     },
     alternates: {
-        canonical: 'https://sportbotai.com/tools/hedge-calculator',
+        canonical: 'https://www.sportbotai.com/tools/hedge-calculator',
     },
 };
 

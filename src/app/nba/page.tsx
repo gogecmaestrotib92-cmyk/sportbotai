@@ -16,11 +16,11 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'NBA Odds Today - Live Betting Lines & Spreads | SportBot AI',
         description: 'Today\'s NBA betting odds with AI analysis. Live spreads, moneylines, totals, and player props.',
-        url: 'https://sportbotai.com/nba',
+        url: 'https://www.sportbotai.com/nba',
         type: 'website',
     },
     alternates: {
-        canonical: 'https://sportbotai.com/nba',
+        canonical: 'https://www.sportbotai.com/nba',
     },
 };
 

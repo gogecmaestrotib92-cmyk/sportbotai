@@ -8,10 +8,10 @@ export const metadata: Metadata = {
         title: 'Free Odds Converter - Betting Odds Calculator | SportBot AI',
         description: 'Convert between American, Decimal, and Fractional betting odds instantly. See implied probability for any line.',
         type: 'website',
-        url: 'https://sportbotai.com/tools/odds-converter',
+        url: 'https://www.sportbotai.com/tools/odds-converter',
     },
     alternates: {
-        canonical: 'https://sportbotai.com/tools/odds-converter',
+        canonical: 'https://www.sportbotai.com/tools/odds-converter',
     },
 };
 

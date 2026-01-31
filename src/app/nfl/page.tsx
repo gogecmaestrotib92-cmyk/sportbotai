@@ -15,11 +15,11 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'NFL Odds Today - Live Betting Lines & Spreads | SportBot AI',
         description: 'This week\'s NFL betting odds with AI analysis. Live spreads, moneylines, and totals.',
-        url: 'https://sportbotai.com/nfl',
+        url: 'https://www.sportbotai.com/nfl',
         type: 'website',
     },
     alternates: {
-        canonical: 'https://sportbotai.com/nfl',
+        canonical: 'https://www.sportbotai.com/nfl',
     },
 };
 

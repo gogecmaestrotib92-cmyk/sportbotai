@@ -15,11 +15,11 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'NHL Odds Today - Live Hockey Betting Lines | SportBot AI',
         description: 'Today\'s NHL betting odds with AI analysis. Live puck lines, moneylines, and totals.',
-        url: 'https://sportbotai.com/nhl',
+        url: 'https://www.sportbotai.com/nhl',
         type: 'website',
     },
     alternates: {
-        canonical: 'https://sportbotai.com/nhl',
+        canonical: 'https://www.sportbotai.com/nhl',
     },
 };
 

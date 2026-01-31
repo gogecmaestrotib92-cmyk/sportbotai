@@ -8,10 +8,10 @@ export const metadata: Metadata = {
         title: 'Free Parlay Calculator - Sports Betting Odds & Payout | SportBot AI',
         description: 'Calculate parlay payouts for NFL, NBA, MLB & more. Add up to 15 legs and see total odds instantly.',
         type: 'website',
-        url: 'https://sportbotai.com/tools/parlay-calculator',
+        url: 'https://www.sportbotai.com/tools/parlay-calculator',
     },
     alternates: {
-        canonical: 'https://sportbotai.com/tools/parlay-calculator',
+        canonical: 'https://www.sportbotai.com/tools/parlay-calculator',
     },
 };
 
