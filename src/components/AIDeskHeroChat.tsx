@@ -139,19 +139,22 @@ export default function AIDeskHeroChat() {
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
-  // Rotating placeholder state
+  // Rotating placeholder state - ONLY rotates when input is empty
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Rotate placeholder every 4 seconds
+  // Rotate placeholder every 4 seconds - STOP when user is typing
   useEffect(() => {
+    // Don't rotate if user has typed something (reduces re-renders)
+    if (input.length > 0) return;
+    
     const interval = setInterval(() => {
       setPlaceholderIndex((prev) => (prev + 1) % PLACEHOLDER_EXAMPLES.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [input.length > 0]); // Only re-run when input becomes empty/non-empty
 
   // Fetch dynamic prompts on client mount
   useEffect(() => {
@@ -877,7 +880,7 @@ export default function AIDeskHeroChat() {
               placeholder={voiceState === 'listening' ? 'Listening...' : PLACEHOLDER_EXAMPLES[placeholderIndex]}
               disabled={isLoading || voiceState === 'listening'}
               rows={3}
-              className={`w-full bg-white/[0.03] border rounded-xl sm:rounded-2xl px-4 sm:px-6 py-4 sm:py-5 pr-28 sm:pr-32 text-sm sm:text-base text-white placeholder-text-muted/50 focus:outline-none focus:bg-white/[0.05] disabled:opacity-50 resize-none min-h-[100px] sm:min-h-[140px] transition-all ${voiceState === 'listening'
+              className={`w-full bg-white/[0.03] border rounded-xl sm:rounded-2xl px-4 sm:px-6 py-4 sm:py-5 pr-28 sm:pr-32 text-sm sm:text-base text-white placeholder-text-muted/50 focus:outline-none focus:bg-white/[0.05] disabled:opacity-50 resize-none min-h-[100px] sm:min-h-[140px] ${voiceState === 'listening'
                 ? 'border-red-500/50 animate-pulse'
                 : 'border-white/10 focus:border-primary/30'
                 }`}
