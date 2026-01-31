@@ -13,7 +13,7 @@
  * - TTS audio playback
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Send, Bot, User, Loader2, Sparkles, Trash2, Volume2, VolumeX, Square, ThumbsUp, ThumbsDown, Mic, MicOff } from 'lucide-react';
@@ -335,7 +335,11 @@ export default function AIDeskHeroChat() {
         .map(result => result[0].transcript)
         .join('');
 
-      setInput(transcript);
+      // Update textarea directly via ref (no re-render)
+      if (inputRef.current) {
+        inputRef.current.value = transcript;
+      }
+      setInput(transcript); // For button state
 
       // If final result, process it
       if (event.results[event.results.length - 1].isFinal) {
@@ -351,8 +355,9 @@ export default function AIDeskHeroChat() {
     recognition.onend = () => {
       if (voiceState === 'listening') {
         // If we have input, send it
-        if (input.trim()) {
-          sendMessage(input.trim(), true); // isVoice = true
+        const currentValue = inputRef.current?.value.trim() || '';
+        if (currentValue) {
+          sendMessage(currentValue, true); // isVoice = true
         }
       }
       setVoiceState('idle');
@@ -360,7 +365,7 @@ export default function AIDeskHeroChat() {
 
     recognitionRef.current = recognition;
     recognition.start();
-  }, [input, voiceState]);
+  }, [voiceState]);
 
   const stopVoiceInput = useCallback(() => {
     if (recognitionRef.current) {
@@ -413,13 +418,17 @@ export default function AIDeskHeroChat() {
   }, []);
 
   const sendMessage = async (messageText?: string, isVoice: boolean = false) => {
-    const text = messageText || input.trim();
+    const text = messageText || inputRef.current?.value.trim() || '';
     if (!text || isLoading) return;
 
     // Track chat message in Google Analytics
     trackChatMessage(text, isVoice);
 
     setError(null);
+    // Clear the textarea
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
     setInput('');
 
     const userMessage: ChatMessage = {
@@ -874,8 +883,14 @@ export default function AIDeskHeroChat() {
           <div className="relative">
             <textarea
               ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
+              defaultValue=""
+              onChange={(e) => {
+                // Only update state when needed for button enable/disable
+                const hasText = e.target.value.trim().length > 0;
+                if (hasText !== (input.length > 0)) {
+                  setInput(e.target.value);
+                }
+              }}
               onKeyDown={handleKeyDown}
               placeholder={voiceState === 'listening' ? 'Listening...' : PLACEHOLDER_EXAMPLES[placeholderIndex]}
               disabled={isLoading || voiceState === 'listening'}
