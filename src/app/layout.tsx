@@ -221,16 +221,6 @@ export default async function RootLayout({
         />
       </head>
       <body className={`${inter.className} ${shareTechMono.variable}`}>
-        {/* Google Tag Manager (noscript) - must be right after body opening */}
-        <noscript>
-          <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-NL4HRCX3"
-            height="0"
-            width="0"
-            style={{ display: 'none', visibility: 'hidden' }}
-          />
-        </noscript>
-
         {/* Fallback for users with JavaScript disabled */}
         <noscript>
           <div style={{ background: '#1a1a2e', color: '#fff', padding: '20px', textAlign: 'center', borderBottom: '1px solid #333' }}>
@@ -274,18 +264,8 @@ export default async function RootLayout({
                 <ScrollToTop />
 
                 {/* === DEFERRED ANALYTICS SCRIPTS (Core Web Vitals Optimization) === */}
-                {/* GTM - lazyOnload: loads after everything else to not block render */}
-                <Script
-                  id="gtm-script"
-                  strategy="lazyOnload"
-                  dangerouslySetInnerHTML={{
-                    __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-                    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-                    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-                    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-                    })(window,document,'script','dataLayer','GTM-NL4HRCX3');`
-                  }}
-                />
+                {/* NOTE: GTM removed Jan 31, 2026 - not using paid ads or custom tags */}
+                {/* Saves 244KB + 177ms main thread time */}
 
                 {/* Google Analytics - afterInteractive */}
                 <GoogleAnalytics />
