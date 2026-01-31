@@ -274,10 +274,10 @@ export default async function RootLayout({
                 <ScrollToTop />
 
                 {/* === DEFERRED ANALYTICS SCRIPTS (Core Web Vitals Optimization) === */}
-                {/* GTM - afterInteractive: loads after hydration, before user interaction */}
+                {/* GTM - lazyOnload: loads after everything else to not block render */}
                 <Script
                   id="gtm-script"
-                  strategy="afterInteractive"
+                  strategy="lazyOnload"
                   dangerouslySetInnerHTML={{
                     __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
                     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],

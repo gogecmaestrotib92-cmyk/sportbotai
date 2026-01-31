@@ -13,7 +13,7 @@ import { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 
 // Critical path - load immediately (above fold)
-import HeroABTest from '@/components/HeroABTest';
+import Hero from '@/components/Hero';
 import LeagueScroll from '@/components/LeagueScroll';
 import TrendingSectionServer from '@/components/TrendingSectionServer';
 import { TrustBadges } from '@/components/SocialProof';
@@ -95,8 +95,8 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
-      {/* Hero section - A/B TEST ACTIVE */}
-      <HeroABTest />
+      {/* Hero section */}
+      <Hero />
 
       {/* League logos - infinite scroll */}
       <LeagueScroll />
