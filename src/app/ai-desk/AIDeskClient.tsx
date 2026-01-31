@@ -56,8 +56,9 @@ export default function AIDeskClient() {
   return (
     <div className="relative" style={{ minHeight: '600px' }}>
       {/* Blurred Preview - with fixed dimensions to prevent CLS */}
+      {/* NOTE: Using opacity only, no blur filter (blur is expensive) */}
       <div 
-        className="blur-[6px] opacity-30 pointer-events-none select-none"
+        className="opacity-20 pointer-events-none select-none"
         style={{ minHeight: '600px' }}
         aria-hidden="true"
       >
