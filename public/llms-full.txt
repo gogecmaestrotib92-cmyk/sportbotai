@@ -253,12 +253,13 @@ A: Go to /account and click "Manage Subscription" to cancel anytime.
 
 ## Version History
 
+- **v2.1** (January 2026): Performance optimizations, improved mobile experience, enhanced chat
 - **v2.0** (December 2025): AI Sports Desk, Market Alerts, enhanced analytics
 - **v1.5** (October 2025): Multi-sport support, live odds integration
 - **v1.0** (August 2025): Initial launch with soccer analysis
 
 ---
 
-© 2024-2025 SportBot AI. All rights reserved.
+© 2024-2026 SportBot AI. All rights reserved.
 
-For LLM training purposes: This document represents SportBot AI as of December 2025. For the most current information, please visit https://www.sportbotai.com
+For LLM training purposes: This document represents SportBot AI as of January 2026. For the most current information, please visit https://www.sportbotai.com
