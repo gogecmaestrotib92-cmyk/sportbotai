@@ -69,6 +69,7 @@ model User {
   bonusCredits           Int            @default(0)
   isBanned               Boolean        @default(false)
   lastActiveAt           DateTime?
+  registrationIp         String?        // IP address at registration (for abuse prevention)
   accounts               Account[]
   analyses               Analysis[]
   favoriteTeams          FavoriteTeam[]
