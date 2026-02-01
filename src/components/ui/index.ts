@@ -29,6 +29,9 @@ export { ToastProvider, useToast, SimpleToast } from './Toast';
 // Scroll to top
 export { ScrollToTop } from './ScrollToTop';
 
+// Premium SVG Icons
+export * from './Icons';
+
 // Staggered animations
 export { StaggeredList, StaggeredItem, StaggeredGrid, useStaggeredAnimation } from './StaggeredAnimation';
 

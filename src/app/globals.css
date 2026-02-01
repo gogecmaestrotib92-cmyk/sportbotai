@@ -703,6 +703,46 @@ button:focus-visible {
    ANIMATIONS
    ======================================== */
 
+/* Marquee animation for promo banner */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.marquee-container {
+  overflow: hidden;
+}
+
+.marquee-content {
+  display: flex;
+  width: fit-content;
+}
+
+/* Pause marquee on hover */
+.promo-banner:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+/* When promo banner is visible, set CSS variable for header offset */
+/* Banner height: 36px mobile, 44px desktop */
+:root:has(.promo-banner) {
+  --promo-banner-height: 36px;
+}
+
+@media (min-width: 768px) {
+  :root:has(.promo-banner) {
+    --promo-banner-height: 44px;
+  }
+}
+
+:root {
+  --promo-banner-height: 0px;
+}
+
 /* Heart burst animation for double-tap */
 @keyframes heartBurst {
   0% { 

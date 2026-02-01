@@ -15,6 +15,8 @@ import FooterI18n from '@/components/FooterI18n';
 import MobileBottomNavI18n from '@/components/MobileBottomNavI18n';
 import MobileQuickActions from '@/components/MobileQuickActions';
 import NavigationProgress from '@/components/NavigationProgress';
+import PromoBanner from '@/components/PromoBanner';
+import MainWrapper from '@/components/MainWrapper';
 import { AuthProvider } from '@/components/auth';
 import { FavoritesProvider } from '@/lib/FavoritesContext';
 import { ToastProvider, ScrollToTop } from '@/components/ui';
@@ -242,8 +244,11 @@ export default async function RootLayout({
                   Skip to content
                 </a>
 
-                {/* Flex container for sticky footer */}
-                <div className="min-h-screen flex flex-col pb-16 md:pb-0 pt-16">
+                {/* Promo Banner - above everything */}
+                <PromoBanner />
+
+                {/* Main content wrapper - handles dynamic padding */}
+                <MainWrapper>
                   <HeaderI18n />
 
                   {/* Main content */}
@@ -252,7 +257,7 @@ export default async function RootLayout({
                   </main>
 
                   <FooterI18n />
-                </div>
+                </MainWrapper>
 
                 {/* Mobile Bottom Navigation */}
                 <MobileBottomNavI18n />

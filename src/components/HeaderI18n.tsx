@@ -16,6 +16,7 @@ import { UserMenu } from './auth';
 import { useHideOnScroll } from '@/hooks/useHideOnScroll';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Locale, getTranslations } from '@/lib/i18n';
+import { BoltIcon, BrainIcon, ChartBarIcon } from '@/components/ui/Icons';
 
 // Admin emails list (same as in admin/page.tsx)
 const ADMIN_EMAILS = [
@@ -116,8 +117,9 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
   const locale: Locale = propLocale || (pathname?.startsWith('/sr') ? 'sr' : 'en');
   const t = getTranslations(locale);
 
-  // Scroll-aware styling
+  // Scroll-aware styling - also used to move header up when promo banner hides
   const isScrolled = scrollY > 20;
+  const promoBannerHidden = scrollY > 50; // Same threshold as PromoBanner
 
   // Helper to create locale-aware links
   const localePath = (path: string) => locale === 'sr' ? `/sr${path === '/' ? '' : path}` : path;
@@ -126,7 +128,7 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
   return (
     <header
       className={`
-        fixed top-0 left-0 right-0 z-50
+        fixed left-0 right-0 z-50
         transition-all duration-300 ease-out
         ${isVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'}
         ${isScrolled
@@ -134,6 +136,7 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
           : 'bg-black/20 backdrop-blur-md border-b border-transparent'
         }
       `}
+      style={{ top: promoBannerHidden ? '0px' : 'var(--promo-banner-height, 0px)' }}
     >
       {/* Subtle gradient glow when scrolled */}
       {isScrolled && (
@@ -164,15 +167,15 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
             <NavLink href={homeLink}>
               {t.header.home}
             </NavLink>
-            <NavLink href={localePath('/matches')} icon="⚡">
+            <NavLink href={localePath('/matches')} icon={<BoltIcon className="w-4 h-4 text-accent" />}>
               {t.header.analyze}
             </NavLink>
-            <NavLink href={localePath('/ai-desk')} icon="🧠">
+            <NavLink href={localePath('/ai-desk')} icon={<BrainIcon className="w-4 h-4 text-violet-400" />}>
               {t.header.aiDesk}
             </NavLink>
             <NavLink
               href={localePath('/market-alerts')}
-              icon="📊"
+              icon={<ChartBarIcon className="w-4 h-4 text-amber-400" />}
               badge={<span className="text-[10px] font-semibold bg-gradient-to-r from-zinc-400/20 to-slate-300/20 text-zinc-300 px-1.5 py-0.5 rounded border border-zinc-400/30">{t.header.premium}</span>}
             >
               {t.header.alerts}
@@ -241,14 +244,14 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
                   href={localePath('/ai-desk')}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <span className="text-lg">🧠</span>
+                  <BrainIcon className="w-5 h-5 text-violet-400" />
                   {t.header.aiDesk}
                 </MobileNavLink>
                 <MobileNavLink
                   href={localePath('/matches')}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <span className="text-lg">⚡</span>
+                  <BoltIcon className="w-5 h-5 text-accent" />
                   {t.header.analyzeMatch}
                 </MobileNavLink>
 
@@ -281,7 +284,7 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
                       href={localePath('/market-alerts')}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <span className="text-lg">📊</span>
+                      <ChartBarIcon className="w-5 h-5 text-amber-400" />
                       {t.header.marketAlerts}
                       <span className="text-[10px] font-semibold bg-gradient-to-r from-zinc-400/20 to-slate-300/20 text-zinc-300 px-1.5 py-0.5 rounded border border-zinc-400/30 ml-auto">{t.header.premium}</span>
                     </MobileNavLink>
