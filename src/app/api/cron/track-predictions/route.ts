@@ -777,6 +777,60 @@ export async function GET(request: NextRequest) {
             analysis.bestValueSide === 'AWAY' ? analysis.awayWinProb :
             analysis.bestValueSide === 'DRAW' ? analysis.drawProb : null;
 
+          // Try to extract odds from fullResponse for CLV tracking
+          let openingOdds: number | null = null;
+          let marketOddsAtPrediction: number | null = null;
+          let edgeValue: number | null = null;
+          let marketProbabilityFair: number | null = null;
+          
+          if (analysis.fullResponse && typeof analysis.fullResponse === 'object') {
+            const resp = analysis.fullResponse as Record<string, unknown>;
+            
+            // Try to find odds in various possible locations
+            const valueAnalysis = resp.valueAnalysis as Record<string, unknown> | undefined;
+            const oddsComparison = resp.oddsComparison as Record<string, unknown> | undefined;
+            
+            // Get odds based on which side we're predicting
+            if (valueAnalysis) {
+              if (analysis.bestValueSide === 'HOME') {
+                openingOdds = (valueAnalysis.homeOdds as number) || null;
+                edgeValue = (valueAnalysis.homeEdge as number) || null;
+              } else if (analysis.bestValueSide === 'AWAY') {
+                openingOdds = (valueAnalysis.awayOdds as number) || null;
+                edgeValue = (valueAnalysis.awayEdge as number) || null;
+              } else if (analysis.bestValueSide === 'DRAW') {
+                openingOdds = (valueAnalysis.drawOdds as number) || null;
+                edgeValue = (valueAnalysis.drawEdge as number) || null;
+              }
+            }
+            
+            // Alternative: try oddsComparison
+            if (!openingOdds && oddsComparison) {
+              if (analysis.bestValueSide === 'HOME') {
+                openingOdds = (oddsComparison.homeOdds as number) || null;
+                edgeValue = (oddsComparison.homeEdge as number) || null;
+              } else if (analysis.bestValueSide === 'AWAY') {
+                openingOdds = (oddsComparison.awayOdds as number) || null;
+                edgeValue = (oddsComparison.awayEdge as number) || null;
+              } else if (analysis.bestValueSide === 'DRAW') {
+                openingOdds = (oddsComparison.drawOdds as number) || null;
+                edgeValue = (oddsComparison.drawEdge as number) || null;
+              }
+            }
+            
+            // Calculate market probability from odds
+            if (openingOdds && openingOdds > 1) {
+              marketProbabilityFair = (1 / openingOdds) * 100;
+              marketOddsAtPrediction = openingOdds;
+            }
+          }
+
+          // Determine edge bucket
+          const edgeBucket = edgeValue ? (
+            Math.abs(edgeValue) >= 10 ? 'HIGH' :
+            Math.abs(edgeValue) >= 5 ? 'MEDIUM' : 'SMALL'
+          ) : null;
+
           await prisma.prediction.create({
             data: {
               matchId: matchRef.replace(/\s+/g, '_').toLowerCase(),
@@ -796,12 +850,21 @@ export async function GET(request: NextRequest) {
               draw: analysis.drawProb,
               // Model probability for the selected side
               modelProbability: bestValueProb,
+              // CLV Tracking fields
+              openingOdds,
+              marketOddsAtPrediction,
+              marketProbabilityFair,
+              edgeValue,
+              edgeBucket,
+              clvFetched: false,
+              // Selection text for tracking
+              selection: `${analysis.bestValueSide} WIN`,
               // Store full response if available
               fullResponse: analysis.fullResponse ? JSON.parse(JSON.stringify(analysis.fullResponse)) : undefined,
             },
           });
           results.newAnalysisPredictions++;
-          console.log(`[Track-Predictions] Created analysis prediction for ${matchRef} (conviction: ${rawConviction} -> ${cappedConviction}, modelProb: ${bestValueProb?.toFixed(1)}%)`);
+          console.log(`[Track-Predictions] Created analysis prediction for ${matchRef} (conviction: ${rawConviction} -> ${cappedConviction}, modelProb: ${bestValueProb?.toFixed(1)}%, odds: ${openingOdds || 'N/A'})`);
         } catch (error) {
           console.error(`[Track-Predictions] Error creating analysis prediction:`, error);
           results.errors.push(`Failed to create analysis prediction for ${matchRef}: ${error instanceof Error ? error.message : 'Unknown'}`);
