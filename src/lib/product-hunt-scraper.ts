@@ -9,7 +9,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { extractWebsiteContent, findContactEmail } from './backlink-scout';
-import puppeteer from 'puppeteer';
+import puppeteer, { Browser } from 'puppeteer';
 
 export interface ProductHuntTool {
   name: string;
@@ -40,7 +40,7 @@ const SKIP_BRANDS = [
 /**
  * Fetch Product Hunt search results using Puppeteer
  */
-async function fetchProductHuntSearch(query: string, browser: puppeteer.Browser): Promise<ProductHuntTool[]> {
+async function fetchProductHuntSearch(query: string, browser: Browser): Promise<ProductHuntTool[]> {
   const tools: ProductHuntTool[] = [];
   const page = await browser.newPage();
   
