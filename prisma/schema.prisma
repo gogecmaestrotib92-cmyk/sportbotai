@@ -68,6 +68,7 @@ model User {
   bannedReason           String?
   bonusCredits           Int            @default(0)
   isBanned               Boolean        @default(false)
+  unsubscribedAt         DateTime?      // Marketing email unsubscribe timestamp
   lastActiveAt           DateTime?
   registrationIp         String?        // IP address at registration (for abuse prevention)
   accounts               Account[]
@@ -878,6 +879,52 @@ enum BacklinkStatus {
   NOFOLLOW      // They linked but nofollow
   DOFOLLOW      // Success! Dofollow backlink
   REMOVED       // They removed the link
+}
+
+// ============================================
+// EMAIL CAMPAIGNS (Nurture emails to FREE users)
+// ============================================
+model EmailCampaign {
+  id            String         @id @default(cuid())
+  
+  // Campaign info
+  type          CampaignType   // DAILY_PICKS, WEEKLY_DIGEST, etc.
+  subject       String         // Email subject line
+  
+  // Recipient
+  userId        String
+  userEmail     String
+  userName      String?
+  
+  // Content snapshot (what was sent)
+  matchesData   Json?          // Array of matches sent
+  
+  // Status tracking
+  status        OutreachStatus @default(SENT)
+  sentAt        DateTime       @default(now())
+  openedAt      DateTime?
+  clickedAt     DateTime?
+  unsubscribedAt DateTime?
+  
+  // Conversion tracking
+  convertedToPaid Boolean     @default(false)
+  convertedAt     DateTime?
+  
+  createdAt     DateTime       @default(now())
+  
+  @@index([userId])
+  @@index([userEmail])
+  @@index([type])
+  @@index([status])
+  @@index([sentAt])
+}
+
+enum CampaignType {
+  DAILY_PICKS     // Weekend top picks (Fri/Sat)
+  WEEKLY_DIGEST   // Weekly summary
+  WIN_STREAK      // Your picks are on fire!
+  RE_ENGAGEMENT   // Haven't seen you in a while
+  UPGRADE_NUDGE   // Subtle upgrade reminder
 }
 
 // Twitter engagement tracking (replies, mentions)

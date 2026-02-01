@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 interface OutreachEmail {
   id: string;
   toolName: string;
-  toolUrl: string;
+  toolUrl: string | null;
   contactEmail: string | null;
   blogSlug: string | null;
   reviewTitle: string | null;
@@ -20,6 +20,11 @@ interface OutreachEmail {
   outreachReplyAt: string | null;
   backlinkStatus: string;
   backlinkUrl: string | null;
+  // New fields for unified view
+  emailType?: 'tool-review' | 'nurture';
+  userName?: string | null;
+  matchesCount?: number;
+  convertedToPaid?: boolean;
 }
 
 interface OutreachStats {
@@ -31,10 +36,52 @@ interface OutreachStats {
   bounced: number;
   notSent: number;
   noEmail: number;
+  // Nurture-specific
+  nurtureTotal?: number;
+  nurtureConverted?: number;
 }
 
 // Email template types - Tool Review Outreach is default (most used)
 const EMAIL_TEMPLATES = [
+  {
+    id: 'daily-top-picks',
+    name: '🎯 Daily Top Picks',
+    description: 'Weekend picks for FREE users (Friday & Saturday)',
+    params: { 
+      userName: 'John',
+      matches: [
+        {
+          homeTeam: 'Arsenal',
+          awayTeam: 'Wolverhampton',
+          league: 'Premier League',
+          kickoff: '15:00',
+          confidence: 78,
+          prediction: 'Home Win',
+          edge: '+3.8% edge',
+          headline: "Arsenal's home form (W8 in last 10) vs Wolves' away struggles.",
+        },
+        {
+          homeTeam: 'Barcelona',
+          awayTeam: 'Atletico Madrid',
+          league: 'La Liga',
+          kickoff: '21:00',
+          confidence: 72,
+          prediction: 'Over 2.5 Goals',
+          edge: '+2.4% edge',
+          headline: "Both teams scoring freely. Barca's high line vs Atleti's counter = goals.",
+        },
+        {
+          homeTeam: 'Inter Milan',
+          awayTeam: 'Juventus',
+          league: 'Serie A',
+          kickoff: '20:45',
+          confidence: 68,
+          prediction: 'BTTS Yes',
+          headline: "Derby d'Italia rarely disappoints. BTTS in 7 of last 10 H2H.",
+        },
+      ],
+    },
+  },
   {
     id: 'tool-review-outreach',
     name: 'Tool Review Outreach',
@@ -381,7 +428,7 @@ export default function EmailPreviewPage() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           {/* Stats Cards */}
           {outreachStats && (
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               <div className="bg-slate-900 rounded-xl border border-slate-800 p-4">
                 <p className="text-2xl font-bold text-emerald-400">{outreachStats.sent + outreachStats.opened + outreachStats.clicked + outreachStats.replied}</p>
                 <p className="text-xs text-slate-500 mt-1">Total Sent</p>
@@ -398,14 +445,22 @@ export default function EmailPreviewPage() {
                 <p className="text-2xl font-bold text-amber-400">{outreachStats.replied}</p>
                 <p className="text-xs text-slate-500 mt-1">Replied</p>
               </div>
+              {/* Nurture stats */}
+              <div className="bg-gradient-to-br from-violet-500/10 to-pink-500/10 rounded-xl border border-violet-500/30 p-4">
+                <p className="text-2xl font-bold text-violet-400">{outreachStats.nurtureTotal || 0}</p>
+                <p className="text-xs text-slate-500 mt-1">🎯 Nurture Sent</p>
+                {(outreachStats.nurtureConverted || 0) > 0 && (
+                  <p className="text-xs text-emerald-400 mt-1">✨ {outreachStats.nurtureConverted} converted</p>
+                )}
+              </div>
             </div>
           )}
 
           {/* Outreach Table */}
           <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
             <div className="p-4 border-b border-slate-800">
-              <h2 className="font-semibold">Sent Outreach Emails</h2>
-              <p className="text-xs text-slate-500 mt-1">Track outreach emails sent to tool owners for badge exchange</p>
+              <h2 className="font-semibold">All Outreach Emails</h2>
+              <p className="text-xs text-slate-500 mt-1">Tool reviews + Nurture campaigns (Daily Picks)</p>
             </div>
             
             {loadingOutreach ? (
@@ -422,42 +477,66 @@ export default function EmailPreviewPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-slate-800/50">
                     <tr>
-                      <th className="text-left px-4 py-3 font-medium text-slate-400">Tool</th>
+                      <th className="text-left px-4 py-3 font-medium text-slate-400">Type</th>
+                      <th className="text-left px-4 py-3 font-medium text-slate-400">Details</th>
                       <th className="text-left px-4 py-3 font-medium text-slate-400">Email</th>
                       <th className="text-left px-4 py-3 font-medium text-slate-400">Sent</th>
                       <th className="text-left px-4 py-3 font-medium text-slate-400">Status</th>
-                      <th className="text-left px-4 py-3 font-medium text-slate-400">Backlink</th>
-                      <th className="text-left px-4 py-3 font-medium text-slate-400">Actions</th>
+                      <th className="text-left px-4 py-3 font-medium text-slate-400">Result</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
                     {outreachEmails.map((email) => (
                       <tr key={email.id} className="hover:bg-slate-800/30 transition-colors">
+                        {/* Type Column */}
                         <td className="px-4 py-3">
-                          <div>
-                            <a 
-                              href={email.toolUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="font-medium text-white hover:text-emerald-400 transition-colors"
-                            >
-                              {email.toolName}
-                            </a>
-                            {email.blogSlug && (
-                              <a 
-                                href={`https://www.sportbotai.com/blog/${email.blogSlug}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block text-xs text-slate-500 hover:text-emerald-400 mt-0.5"
-                              >
-                                📝 View Review
-                              </a>
-                            )}
-                          </div>
+                          {email.emailType === 'nurture' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-violet-500/20 text-violet-400">
+                              🎯 Daily Picks
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/20 text-emerald-400">
+                              📝 Tool Review
+                            </span>
+                          )}
                         </td>
+                        {/* Details Column */}
+                        <td className="px-4 py-3">
+                          {email.emailType === 'nurture' ? (
+                            <div>
+                              <span className="font-medium text-white">{email.userName || 'User'}</span>
+                              <span className="block text-xs text-slate-500">
+                                {email.matchesCount || 3} matches included
+                              </span>
+                            </div>
+                          ) : (
+                            <div>
+                              <a 
+                                href={email.toolUrl || '#'} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="font-medium text-white hover:text-emerald-400 transition-colors"
+                              >
+                                {email.toolName}
+                              </a>
+                              {email.blogSlug && (
+                                <a 
+                                  href={`https://www.sportbotai.com/blog/${email.blogSlug}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block text-xs text-slate-500 hover:text-emerald-400 mt-0.5"
+                                >
+                                  📝 View Review
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        {/* Email Column */}
                         <td className="px-4 py-3">
                           <span className="text-slate-400 font-mono text-xs">{email.contactEmail || '-'}</span>
                         </td>
+                        {/* Sent Date Column */}
                         <td className="px-4 py-3">
                           {email.outreachSentAt ? (
                             <span className="text-slate-400 text-xs">
@@ -472,6 +551,7 @@ export default function EmailPreviewPage() {
                             <span className="text-slate-600">-</span>
                           )}
                         </td>
+                        {/* Status Column */}
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
                             email.outreachStatus === 'REPLIED' ? 'bg-amber-500/20 text-amber-400' :
@@ -488,53 +568,28 @@ export default function EmailPreviewPage() {
                             {email.outreachStatus}
                           </span>
                         </td>
+                        {/* Result Column (Backlink for tool review, Conversion for nurture) */}
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
-                            email.backlinkStatus === 'DOFOLLOW' ? 'bg-emerald-500/20 text-emerald-400' :
-                            email.backlinkStatus === 'NOFOLLOW' ? 'bg-amber-500/20 text-amber-400' :
-                            email.backlinkStatus === 'PENDING' ? 'bg-blue-500/20 text-blue-400' :
-                            'bg-slate-500/20 text-slate-400'
-                          }`}>
-                            {email.backlinkStatus === 'DOFOLLOW' && '✅'}
-                            {email.backlinkStatus === 'NOFOLLOW' && '⚠️'}
-                            {email.backlinkStatus === 'PENDING' && '⏳'}
-                            {email.backlinkStatus === 'NONE' && '—'}
-                            {email.backlinkStatus}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            {/* View Email Button */}
-                            {email.outreachStatus === 'SENT' && (
-                              <button
-                                onClick={() => loadEmailPreview(email.toolName, email.contactEmail || '', email.blogSlug)}
-                                className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 rounded transition-colors"
-                                title="View Sent Email"
-                              >
-                                📧 View
-                              </button>
-                            )}
-                            {email.blogSlug && (
-                              <a
-                                href={`https://www.sportbotai.com/blog/${email.blogSlug}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-slate-400 hover:text-emerald-400"
-                                title="View Review"
-                              >
-                                🔗
-                              </a>
-                            )}
-                            <a
-                              href={email.toolUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-slate-400 hover:text-emerald-400"
-                              title="Visit Tool"
-                            >
-                              🌐
-                            </a>
-                          </div>
+                          {email.emailType === 'nurture' ? (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
+                              email.convertedToPaid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-500/20 text-slate-400'
+                            }`}>
+                              {email.convertedToPaid ? '✨ Converted!' : '⏳ Free user'}
+                            </span>
+                          ) : (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
+                              email.backlinkStatus === 'DOFOLLOW' ? 'bg-emerald-500/20 text-emerald-400' :
+                              email.backlinkStatus === 'NOFOLLOW' ? 'bg-amber-500/20 text-amber-400' :
+                              email.backlinkStatus === 'PENDING' ? 'bg-blue-500/20 text-blue-400' :
+                              'bg-slate-500/20 text-slate-400'
+                            }`}>
+                              {email.backlinkStatus === 'DOFOLLOW' && '✅'}
+                              {email.backlinkStatus === 'NOFOLLOW' && '⚠️'}
+                              {email.backlinkStatus === 'PENDING' && '⏳'}
+                              {email.backlinkStatus === 'NONE' && '—'}
+                              {email.backlinkStatus}
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}

@@ -87,6 +87,112 @@ function generatePreviewHtml(templateId: string, params: Record<string, any>): s
 
   // Generate content based on template
   switch (templateId) {
+    case 'daily-top-picks': {
+      const userName = params.userName || null;
+      const matches = params.matches || [];
+      const greeting = userName ? `Hey ${userName.split(' ')[0]}` : 'Hey';
+      const today = new Date().toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+      
+      // Build match cards HTML
+      const matchCardsHtml = matches.map((match: any) => `
+        <div style="background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 15px; border-left: 4px solid ${match.confidence >= 75 ? '#10B981' : match.confidence >= 60 ? '#f59e0b' : '#64748b'};">
+          <div style="margin-bottom: 12px;">
+            <span style="font-size: 12px; color: #64748b; text-transform: uppercase;">${match.league}</span>
+            <span style="font-size: 12px; color: #94a3b8; float: right;">🕐 ${match.kickoff}</span>
+          </div>
+          <div style="font-size: 18px; font-weight: 600; color: #f8fafc; margin-bottom: 10px;">
+            ${match.homeTeam} vs ${match.awayTeam}
+          </div>
+          <div style="margin-bottom: 12px;">
+            <span style="background: ${match.confidence >= 75 ? '#10B981' : match.confidence >= 60 ? '#f59e0b' : '#64748b'}; color: #0f172a; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; display: inline-block;">
+              ${match.confidence}% confidence
+            </span>
+            <span style="color: #10B981; font-weight: 600; font-size: 14px; margin-left: 10px;">${match.prediction}</span>
+            ${match.edge ? `<span style="color: #fbbf24; font-size: 13px; margin-left: 10px;">⚡ ${match.edge}</span>` : ''}
+          </div>
+          <p style="margin: 0; font-size: 14px; color: #94a3b8; line-height: 1.5;">${match.headline}</p>
+        </div>
+      `).join('');
+      
+      return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base target="_blank">
+</head>
+<body style="margin: 0; padding: 0; background: #020617; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #0f172a; color: #e2e8f0;">
+    
+    <!-- Logo -->
+    <div style="text-align: center; margin-bottom: 30px;">
+      <h1 style="color: #f8fafc; margin: 0; font-size: 24px;">
+        SportBot<span style="color: #10B981;">AI</span>
+      </h1>
+    </div>
+    
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 30px;">
+      <h2 style="color: #f8fafc; margin: 0 0 8px 0; font-size: 22px;">🎯 Weekend Top Picks</h2>
+      <p style="color: #64748b; margin: 0; font-size: 14px;">${today}</p>
+    </div>
+    
+    <p style="font-size: 16px; line-height: 1.7;">${greeting},</p>
+    
+    <p style="font-size: 16px; line-height: 1.7;">
+      Here are this weekend's <strong style="color: #10B981;">highest confidence matches</strong> from our AI analysis:
+    </p>
+    
+    <!-- Match Cards -->
+    <div style="margin: 25px 0;">
+      ${matchCardsHtml}
+    </div>
+    
+    <!-- Teaser -->
+    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 12px; padding: 20px; margin: 30px 0; text-align: center;">
+      <p style="margin: 0 0 5px 0; font-size: 14px; color: #94a3b8;">Want the full analysis with edge detection?</p>
+      <p style="margin: 0; font-size: 13px; color: #64748b;">Pro members get detailed breakdowns, AI chat, and 10 analyses/day.</p>
+    </div>
+    
+    <!-- CTA -->
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://sportbotai.com/matches" style="display: inline-block; background: #10B981; color: #0f172a; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 16px;">
+        View Full Analyses →
+      </a>
+      <p style="margin: 15px 0 0 0; font-size: 13px; color: #64748b;">
+        Pro from just <strong>$0.66/day</strong> · Cancel anytime
+      </p>
+    </div>
+    
+    <p style="margin-top: 30px; font-size: 16px;">
+      Good luck this weekend! 🍀<br>
+      <strong>Stefan</strong><br>
+      <span style="color: #64748b; font-size: 14px;">SportBot AI</span>
+    </p>
+    
+    <!-- Footer -->
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #334155; font-size: 12px; color: #64748b; text-align: center;">
+      <p>© 2026 SportBot AI. All rights reserved.</p>
+      <p>
+        <a href="https://sportbotai.com" style="color: #10B981;">Visit Website</a> · 
+        <a href="https://sportbotai.com/contact" style="color: #10B981;">Contact</a>
+      </p>
+      <p style="font-size: 11px; margin-top: 15px;">
+        SportBot AI provides analytical insights for educational purposes only. 18+ only.<br>
+        <a href="https://sportbotai.com/unsubscribe" style="color: #64748b;">Unsubscribe</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+      `;
+    }
+
     case 'welcome': {
       const plan = (params.planName || 'Pro').toUpperCase();
       const displayName = plan === 'PREMIUM' ? 'Premium' : 'Pro';

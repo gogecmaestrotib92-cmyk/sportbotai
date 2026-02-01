@@ -554,3 +554,100 @@ export async function sendToolReviewOutreach(
   });
 }
 
+// ============================================
+// FREE USER NURTURE EMAILS
+// ============================================
+
+import { prisma } from './prisma';
+
+interface TopMatch {
+  homeTeam: string;
+  awayTeam: string;
+  league: string;
+  kickoff: string; // e.g. "15:00"
+  confidence: number; // 0-100
+  prediction: string; // e.g. "Home Win", "Over 2.5", "BTTS"
+  edge?: string; // e.g. "+4.2% edge"
+  headline: string; // Short analysis headline
+}
+
+/**
+ * Daily Top Matches email for FREE users
+ * 
+ * Shows them top 3 high-confidence matches to demonstrate value.
+ * Much better than a generic "upgrade" email!
+ * 
+ * Also tracks the send in EmailCampaign table.
+ */
+export async function sendDailyTopMatchesEmail(
+  userId: string,
+  email: string,
+  userName: string | null,
+  matches: TopMatch[]
+): Promise<boolean> {
+  const greeting = userName ? `Hey ${userName.split(' ')[0]}` : 'Hey';
+  const today = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+  
+  const subject = `🎯 Weekend Top Picks - ${today}`;
+  
+  // Build match cards HTML
+  // Sort by confidence DESC, take only 2 matches, show lowest confidence unlocked
+  const sortedMatches = [...matches].sort((a, b) => b.confidence - a.confidence).slice(0, 2);
+  
+  // Common styles as short variables to reduce HTML size
+  const S = { // Styles
+    card: 'background:#1e293b;border-radius:8px;padding:14px;margin-bottom:10px',
+    title: 'font-size:16px;font-weight:600;color:#f8fafc;margin-bottom:8px',
+    sub: 'font-size:11px;color:#64748b;margin-bottom:6px',
+    txt: 'font-size:13px;color:#94a3b8',
+    g: '#10B981', // green
+    p: '#6366f1', // purple
+  };
+  
+  const matchCardsHtml = sortedMatches.map((match, i) => {
+    const isLastMatch = i === sortedMatches.length - 1;
+    
+    if (isLastMatch) {
+      // UNLOCKED - lowest confidence pick (but still good!)
+      return `<div style="${S.card};border-left:3px solid ${S.g}"><div style="${S.sub}">✅ FREE PICK · ${match.league}</div><div style="${S.title}">${match.homeTeam} vs ${match.awayTeam}</div><div style="margin-bottom:8px"><span style="background:${S.g};color:#0f172a;padding:4px 10px;border-radius:4px;font-size:13px;font-weight:700">${match.confidence}%</span> <span style="color:${S.g};font-weight:700;font-size:14px">${match.prediction}</span>${match.edge ? ` <span style="color:#fbbf24;font-size:13px">⚡${match.edge}</span>` : ''}</div><p style="margin:0;${S.txt};line-height:1.4">${match.headline}</p><p style="margin:8px 0 0;font-size:11px;color:#64748b">🕐 Kickoff: ${match.kickoff}</p></div>`;
+    } else {
+      // LOCKED - the premium pick they're missing
+      const edge = ((match.confidence - 50) * 0.1).toFixed(1);
+      return `<div style="${S.card};border-left:3px solid ${S.p};background:linear-gradient(135deg,#1e293b,#312e81)"><div style="font-size:11px;color:#a5b4fc;margin-bottom:6px">🔒 PRO PICK · ${match.league}</div><div style="${S.title}">${match.homeTeam} vs ${match.awayTeam}</div><div style="background:rgba(99,102,241,.2);border-radius:6px;padding:12px;text-align:center"><p style="margin:0 0 4px;color:#e0e7ff;font-size:14px;font-weight:600">🎯 ${match.confidence}% confidence pick</p><p style="margin:0;color:#a5b4fc;font-size:12px">Our AI found <b>+${edge}% edge</b> on this match</p></div><p style="margin:10px 0 0;font-size:11px;color:#64748b;text-align:center"><a href="https://sportbotai.com/pricing" style="color:${S.g};font-weight:600">Unlock this pick →</a></p></div>`;
+    }
+  }).join('');
+  
+  const html = `<!DOCTYPE html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif"><div style="max-width:600px;margin:0 auto;padding:20px 16px;background:#0f172a;color:#e2e8f0"><div style="text-align:center;margin-bottom:20px"><img src=https://sportbotai.com/logo-icon.png width=40 height=40 alt="SportBot AI"><h1 style="color:#f8fafc;margin:8px 0 4px;font-size:20px">Today's Top Picks</h1><p style="color:#64748b;margin:0;font-size:13px">${today}</p></div><p style="font-size:15px;margin:0 0 6px;line-height:1.5">${greeting}!</p><p style="font-size:14px;margin:0 0 16px;color:#94a3b8;line-height:1.5">Our AI analyzed 50+ matches today. Here's what stood out:</p>${matchCardsHtml}<div style="background:#1e293b;border-radius:8px;padding:16px;margin:16px 0;text-align:center"><p style="margin:0 0 4px;font-size:14px;color:#f8fafc">Want all daily picks + full analysis?</p><p style="margin:0 0 12px;font-size:12px;color:#64748b">Pro members get 10 analyses/day, AI chat, and edge detection.</p><a href=https://sportbotai.com/pricing style="display:inline-block;background:#10B981;color:#0f172a;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;font-size:14px">Try Pro · $0.66/day →</a></div><p style="font-size:14px;margin:16px 0 0;color:#94a3b8">Good luck today! 🍀</p><p style="font-size:13px;margin:4px 0 0;color:#64748b">— Stefan, SportBot AI</p><div style="margin-top:20px;padding-top:12px;border-top:1px solid #334155;font-size:10px;color:#64748b;text-align:center">© 2026 SportBot AI · <a href=https://sportbotai.com style="color:#10B981">Website</a> · 18+ only<br><a href="https://sportbotai.com/unsubscribe?email=${encodeURIComponent(email)}" style="color:#64748b">Unsubscribe</a></div></div></body></html>`;
+
+  const sent = await sendEmail({
+    to: email,
+    subject,
+    html,
+  });
+
+  // Track in database
+  if (sent) {
+    try {
+      await prisma.emailCampaign.create({
+        data: {
+          type: 'DAILY_PICKS',
+          subject,
+          userId,
+          userEmail: email,
+          userName,
+          matchesData: JSON.parse(JSON.stringify(matches)),
+          status: 'SENT',
+          sentAt: new Date(),
+        },
+      });
+    } catch (error) {
+      console.error('[Email] Failed to track campaign:', error);
+    }
+  }
+
+  return sent;
+}
