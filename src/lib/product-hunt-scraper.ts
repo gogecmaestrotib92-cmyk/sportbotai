@@ -166,7 +166,7 @@ export async function discoverFromProductHunt(maxNew: number = 10): Promise<{
   console.log('[ProductHunt] Starting discovery with Puppeteer...\n');
   
   // Launch browser
-  let browser: puppeteer.Browser | null = null;
+  let browser: Browser | null = null;
   
   try {
     browser = await puppeteer.launch({
