@@ -83,20 +83,20 @@ export default function MyTeamsDashboard() {
           const data = await response.json()
           console.log(`[MyTeams] Got ${data.events?.length || 0} events for ${sportKey}`)
           
-          // Map API response (home_team/away_team) to our format (homeTeam/awayTeam)
+          // API already returns camelCase: homeTeam, awayTeam, commenceTime
           return (data.events || []).map((event: {
-            id: string;
-            home_team: string;
-            away_team: string;
-            commence_time: string;
-            sport_title?: string;
+            matchId: string;
+            homeTeam: string;
+            awayTeam: string;
+            commenceTime: string;
+            sportTitle?: string;
           }) => ({
-            id: event.id,
-            homeTeam: event.home_team,
-            awayTeam: event.away_team,
-            commenceTime: event.commence_time,
+            id: event.matchId,
+            homeTeam: event.homeTeam,
+            awayTeam: event.awayTeam,
+            commenceTime: event.commenceTime,
             sport: sportKey,
-            sportTitle: event.sport_title || data.sportTitle
+            sportTitle: event.sportTitle || data.sportTitle
           }))
         })
 
