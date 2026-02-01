@@ -124,7 +124,7 @@ export default function AIDeskHeroChat() {
   const isFreePlan = userPlan === 'FREE';
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
+  const [hasInput, setHasInput] = useState(false); // Only tracks if input exists (boolean, not string)
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [suggestedQuestions, setSuggestedQuestions] = useState(() => getRandomQuestions(6));
@@ -148,13 +148,13 @@ export default function AIDeskHeroChat() {
   // Rotate placeholder every 4 seconds - STOP when user is typing
   useEffect(() => {
     // Don't rotate if user has typed something (reduces re-renders)
-    if (input.length > 0) return;
+    if (hasInput) return;
     
     const interval = setInterval(() => {
       setPlaceholderIndex((prev) => (prev + 1) % PLACEHOLDER_EXAMPLES.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, [input.length > 0]); // Only re-run when input becomes empty/non-empty
+  }, [hasInput]); // Only re-run when hasInput changes
 
   // Fetch dynamic prompts on client mount
   useEffect(() => {
@@ -339,7 +339,7 @@ export default function AIDeskHeroChat() {
       if (inputRef.current) {
         inputRef.current.value = transcript;
       }
-      setInput(transcript); // For button state
+      setHasInput(transcript.trim().length > 0); // For button state
 
       // If final result, process it
       if (event.results[event.results.length - 1].isFinal) {
@@ -429,7 +429,7 @@ export default function AIDeskHeroChat() {
     if (inputRef.current) {
       inputRef.current.value = '';
     }
-    setInput('');
+    setHasInput(false);
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -885,10 +885,10 @@ export default function AIDeskHeroChat() {
               ref={inputRef}
               defaultValue=""
               onChange={(e) => {
-                // Only update state when needed for button enable/disable
+                // Only update boolean state when it changes (minimizes re-renders)
                 const hasText = e.target.value.trim().length > 0;
-                if (hasText !== (input.length > 0)) {
-                  setInput(e.target.value);
+                if (hasText !== hasInput) {
+                  setHasInput(hasText);
                 }
               }}
               onKeyDown={handleKeyDown}
@@ -922,7 +922,7 @@ export default function AIDeskHeroChat() {
               {/* Send button */}
               <button
                 onClick={() => sendMessage()}
-                disabled={!input.trim() || isLoading}
+                disabled={!hasInput || isLoading}
                 className="w-10 h-10 bg-primary hover:bg-primary/80 disabled:bg-white/10 disabled:cursor-not-allowed rounded-xl flex items-center justify-center transition-all active:scale-95"
               >
                 {isLoading ? (
