@@ -305,11 +305,49 @@ async function generatePostFromPrediction(prediction: PredictionWithEdge, catego
     // Step 3: Build computed analysis from REAL prediction data
     // NOTE: impliedProb is stored as percentage (80.8) in DB, convert to decimal (0.808)
     const impliedProb = prediction.impliedProb ? prediction.impliedProb / 100 : 0.5;
+    
+    // Check if this sport has draws (soccer only in our system)
+    const sportHasDraws = prediction.sport.toLowerCase().includes('soccer') || 
+                          prediction.sport.toLowerCase().includes('football_') && 
+                          !prediction.sport.toLowerCase().includes('americanfootball');
+    
+    // Calculate probabilities correctly based on whether sport has draws
+    let homeProb: number, awayProb: number, drawProb: number | undefined;
+    
+    if (sportHasDraws) {
+      // Soccer: favorite gets impliedProb, rest split between underdog and draw
+      const remaining = 1 - impliedProb;
+      if (prediction.prediction.toLowerCase().includes('home')) {
+        homeProb = impliedProb;
+        awayProb = remaining * 0.4;  // Underdog gets less
+        drawProb = remaining * 0.6;  // Draw gets more of the remaining
+      } else if (prediction.prediction.toLowerCase().includes('away')) {
+        awayProb = impliedProb;
+        homeProb = remaining * 0.4;
+        drawProb = remaining * 0.6;
+      } else {
+        // Draw predicted
+        drawProb = impliedProb;
+        homeProb = remaining / 2;
+        awayProb = remaining / 2;
+      }
+    } else {
+      // NBA, NFL, NHL: No draws - must sum to 100%
+      if (prediction.prediction.toLowerCase().includes('home')) {
+        homeProb = impliedProb;
+        awayProb = 1 - impliedProb;
+      } else {
+        awayProb = impliedProb;
+        homeProb = 1 - impliedProb;
+      }
+      drawProb = undefined;
+    }
+    
     const computedAnalysis: ComputedAnalysis = {
       probabilities: {
-        home: prediction.prediction.toLowerCase().includes('home') ? impliedProb : (1 - impliedProb) / 2,
-        away: prediction.prediction.toLowerCase().includes('away') ? impliedProb : (1 - impliedProb) / 2,
-        draw: prediction.sport.includes('soccer') ? (1 - impliedProb) / 2 : undefined,
+        home: homeProb,
+        away: awayProb,
+        draw: drawProb,
       },
       favored: prediction.prediction.toLowerCase().includes('home') ? 'home' : 
                prediction.prediction.toLowerCase().includes('away') ? 'away' : 
