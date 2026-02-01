@@ -116,10 +116,11 @@ export function calculateDataConfidence(params: {
   // Can we answer?
   const canAnswer = level !== 'NONE' && !(missingCritical.length > 0 && score < 30);
 
-  // Build disclaimer - NEVER show disclaimer for our own prediction data
+  // Build disclaimer - NEVER show disclaimer for our own prediction data or Perplexity
+  // Perplexity provides legitimate real-time data, not "limited" data
   let disclaimer: string | undefined;
-  if (params.hasVerifiedPrediction || params.hasDataLayerStats) {
-    // No disclaimer for our own data
+  if (params.hasVerifiedPrediction || params.hasDataLayerStats || params.hasPerplexityData) {
+    // No disclaimer for our own data OR real-time search (Perplexity is legitimate)
     disclaimer = undefined;
   } else if (level === 'PARTIAL') {
     disclaimer = `Note: Analysis based on ${sources.join(', ')}. Some data may be limited.`;
