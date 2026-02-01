@@ -869,6 +869,7 @@ export async function GET(request: NextRequest) {
               actualResult: evaluation.actualResult,
               actualScore: `${result.homeScore}-${result.awayScore}`,
               outcome: evaluation.wasAccurate ? 'HIT' : 'MISS',
+              binaryOutcome: evaluation.wasAccurate ? 1 : 0, // CRITICAL: Set binary outcome for win rate calculation
               validatedAt: new Date(),
               // Value bet outcome tracking
               ...(valueBetOutcome && { valueBetOutcome }),
