@@ -473,19 +473,20 @@ export async function sendAdminPurchaseNotification(
 // ============================================
 // ⚠️  THIS IS THE STANDARD OUTREACH TEMPLATE
 // ============================================
-// ALL tool review outreach MUST use this function.
-// DO NOT create alternative email templates elsewhere!
-// 
-// Why this template works:
-// - Casual, human tone ("Hey!" not "Dear Sir/Madam")
-// - Gets to the point fast (review link upfront)
-// - Simple ask (badge for dofollow, no pressure)
-// - Signed by "Stefan" (consistent brand voice)
-// - No salesy language or emoji spam
+// TOOL REVIEW OUTREACH EMAIL - PREMIUM VERSION
+// ============================================
+// Design principles:
+// - Clean, minimal design (looks like personal email)
+// - Plain text feel with subtle styling
+// - Human, conversational tone (professional, not corporate)
+// - Value-first approach (give before asking)
+// - Single clear CTA button
+// - Mobile-friendly table layout
+// - Includes plain text fallback
 // ============================================
 
 /**
- * Send friendly outreach email when a tool review is published
+ * Send premium outreach email when a tool review is published
  * 
  * @param email - Contact email address
  * @param toolName - Name of the tool (e.g. "Metabet")
@@ -496,61 +497,80 @@ export async function sendToolReviewOutreach(
   toolName: string,
   reviewUrl: string
 ): Promise<boolean> {
-  // Use PNG for email compatibility (SVG doesn't work in most email clients)
-  const logoUrl = 'https://www.sportbotai.com/logo-icon.png';
-
-  // Clean URL for the badge page (review URL + #badge anchor or dedicated page)
-  const badgePageUrl = `${reviewUrl}#badge`;
-
-  // More human, less corporate email
+  
+  // Premium, minimal HTML email - looks like a personal email, not marketing
   const html = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <p>Hey!</p>
-  
-  <p>I just wanted to give you a heads up – we wrote a review of <strong>${toolName}</strong> and published it on our site.</p>
-  
-  <p style="margin: 25px 0;">
-    <a href="${reviewUrl}" style="display: inline-block; background: #10B981; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">Check out the review →</a>
-  </p>
-  
-  <p>We run <a href="https://sportbotai.com" style="color: #10B981;">SportBot AI</a> (sports analytics) and thought ${toolName} was worth featuring. Hope you like what we wrote!</p>
-  
-  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-  
-  <p><strong>Quick thing:</strong> Right now the link to your site is nofollow (standard for reviews). But if you'd like it changed to <strong>dofollow</strong>, I'm happy to do that.</p>
-  
-  <p>Just add our small badge somewhere on your site and let me know. Takes like 2 minutes:</p>
-  
-  <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
-    <div style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: #1e293b; border-radius: 8px;">
-      <img src="${logoUrl}" alt="SportBot AI" width="20" height="20" style="border-radius: 4px;">
-      <span style="color: white; font-size: 13px;">Featured on SportBot AI</span>
-    </div>
-    <p style="margin: 15px 0 0 0;">
-      <a href="${badgePageUrl}" style="color: #10B981; font-size: 14px;">Get the code →</a>
-    </p>
-  </div>
-  
-  <p style="color: #666; font-size: 14px;">No pressure though – the review stays up either way. Just thought I'd offer.</p>
-  
-  <p style="margin-top: 30px;">
-    Cheers,<br>
-    Stefan<br>
-    <span style="color: #888; font-size: 14px;">SportBot AI</span>
-  </p>
+<body style="margin: 0; padding: 0; background-color: #ffffff;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; margin: 0 auto; padding: 40px 20px;">
+    <tr>
+      <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.7; color: #374151;">
+        
+        <p style="margin: 0 0 20px 0;">Hi there,</p>
+        
+        <p style="margin: 0 0 20px 0;">
+          I'm Stefan from SportBot AI. We cover sports analytics tools and platforms, 
+          and I recently wrote a feature on <strong>${toolName}</strong>.
+        </p>
+        
+        <p style="margin: 0 0 25px 0;">
+          Thought you might want to take a look:
+        </p>
+        
+        <p style="margin: 0 0 30px 0;">
+          <a href="${reviewUrl}" style="display: inline-block; background-color: #111827; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px;">Read the Review</a>
+        </p>
+        
+        <p style="margin: 0 0 20px 0;">
+          The link back to your site is currently set to nofollow. If you'd like it 
+          upgraded to dofollow, just let me know – happy to do that in exchange for 
+          a small mention or badge on your site.
+        </p>
+        
+        <p style="margin: 0 0 20px 0;">
+          Either way, the review stays up. No strings attached.
+        </p>
+        
+        <p style="margin: 35px 0 0 0; color: #6b7280;">
+          Best,<br>
+          <strong style="color: #374151;">Stefan</strong><br>
+          <span style="font-size: 13px;">Founder, <a href="https://www.sportbotai.com" style="color: #10B981; text-decoration: none;">SportBot AI</a></span>
+        </p>
+        
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `.trim();
 
+  // Plain text version for email clients that prefer it
+  const text = `Hi there,
+
+I'm Stefan from SportBot AI. We cover sports analytics tools and platforms, and I recently wrote a feature on ${toolName}.
+
+Thought you might want to take a look:
+${reviewUrl}
+
+The link back to your site is currently set to nofollow. If you'd like it upgraded to dofollow, just let me know – happy to do that in exchange for a small mention or badge on your site.
+
+Either way, the review stays up. No strings attached.
+
+Best,
+Stefan
+Founder, SportBot AI
+https://www.sportbotai.com`;
+
   return sendEmail({
     to: email,
-    subject: `Wrote a review of ${toolName}`,
+    subject: `We featured ${toolName}`,
     html,
+    text,
   });
 }
 

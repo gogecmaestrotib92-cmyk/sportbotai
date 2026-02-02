@@ -38,45 +38,42 @@ model Session {
 }
 
 model User {
-  id                     String         @id @default(cuid())
+  id                     String          @id @default(cuid())
   name                   String?
-  email                  String?        @unique
+  email                  String?         @unique
   emailVerified          DateTime?
   image                  String?
   password               String?
-  plan                   Plan           @default(FREE)
-  stripeCustomerId       String?        @unique
-  stripeSubscriptionId   String?        @unique
+  plan                   Plan            @default(FREE)
+  stripeCustomerId       String?         @unique
+  stripeSubscriptionId   String?         @unique
   stripePriceId          String?
   stripeCurrentPeriodEnd DateTime?
-  // PayPal subscription fields
-  paypalSubscriptionId   String?        @unique
-  paypalPlanId           String?
-  paypalCurrentPeriodEnd DateTime?
-  paymentProvider        String?        // 'stripe' or 'paypal'
-  // Analysis credits (per billing period for PRO, reset on subscription renewal)
-  analysisCount          Int            @default(0)
+  analysisCount          Int             @default(0)
   lastAnalysisDate       DateTime?
-  // Chat credits (per billing period for PRO)
-  chatCount              Int            @default(0)
-  lastChatDate           DateTime?
-  createdAt              DateTime       @default(now())
-  updatedAt              DateTime       @updatedAt
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
   referralCampaign       String?
   referralMedium         String?
   referralSource         String?
   bannedReason           String?
-  bonusCredits           Int            @default(0)
-  isBanned               Boolean        @default(false)
-  unsubscribedAt         DateTime?      // Marketing email unsubscribe timestamp
+  bonusCredits           Int             @default(0)
+  isBanned               Boolean         @default(false)
   lastActiveAt           DateTime?
-  registrationIp         String?        // IP address at registration (for abuse prevention)
+  chatCount              Int             @default(0)
+  lastChatDate           DateTime?
+  paymentProvider        String?
+  paypalCurrentPeriodEnd DateTime?
+  paypalPlanId           String?
+  paypalSubscriptionId   String?         @unique
+  registrationIp         String?
+  unsubscribedAt         DateTime?
   accounts               Account[]
   analyses               Analysis[]
-  favoriteTeams          FavoriteTeam[]
-  sessions               Session[]
   chatQueries            ChatQuery[]
   chatSessions           ChatSession[]
+  favoriteTeams          FavoriteTeam[]
+  sessions               Session[]
   preference             UserPreference?
 }
 
@@ -89,7 +86,7 @@ model VerificationToken {
 }
 
 model Analysis {
-  id            String       @id @default(cuid())
+  id            String      @id @default(cuid())
   userId        String
   sport         String
   league        String
@@ -104,12 +101,11 @@ model Analysis {
   riskLevel     String?
   bestValueSide String?
   fullResponse  Json?
-  createdAt     DateTime     @default(now())
-  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  // Outcome tracking
-  outcome       CallOutcome  @default(PENDING)
+  createdAt     DateTime    @default(now())
   actualScore   String?
+  outcome       CallOutcome @default(PENDING)
   validatedAt   DateTime?
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])
@@ -165,18 +161,15 @@ model BlogPost {
   sport              String?
   newsContent        String?
   newsTitle          String?
-  
-  // Serbian translations
+  contentSr          String?
+  excerptSr          String?
+  metaDescriptionSr  String?
+  metaTitleSr        String?
+  newsContentSr      String?
+  newsTitleSr        String?
   slugSr             String?
   titleSr            String?
-  excerptSr          String?
-  contentSr          String?
-  metaTitleSr        String?
-  metaDescriptionSr  String?
-  newsTitleSr        String?
-  newsContentSr      String?
-  translatedAt       DateTime?    // When Serbian translation was done
-  
+  translatedAt       DateTime?
   keyword            BlogKeyword? @relation(fields: [keywordId], references: [id])
 
   @@index([slug])
@@ -211,64 +204,44 @@ model FavoriteTeam {
 }
 
 model ChatQuery {
-  id                 String    @id @default(cuid())
-  query              String
-  queryNormalized    String?
-  category           String?
-  brainMode          String?
-  sport              String?
-  team               String?
-  league             String?
-  usedRealTimeSearch Boolean   @default(false)
-  responseLength     Int?
-  hadCitations       Boolean   @default(false)
-  queryHash          String?
-  similarCount       Int       @default(1)
-  createdAt          DateTime  @default(now())
-  answer             String?
-  citations          Json?
-  expiresAt          DateTime?
-  
-  // User who submitted the query (optional - anonymous queries have no user)
-  userId             String?
-  user               User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
-  // Data confidence metrics (for quality tracking)
-  dataConfidenceLevel String?   // FULL, PARTIAL, MINIMAL, NONE
-  dataConfidenceScore Int?      // 0-100
-  dataSources         Json?     // Array of sources used
-
-  // ============================================
-  // QUERY INTELLIGENCE TRACKING (for learning)
-  // ============================================
-  
-  // Classification details
-  detectedIntent     String?   // MATCH_PREDICTION, PLAYER_STATS, etc.
-  intentConfidence   Float?    // 0.0 - 1.0 (how sure we were)
-  entitiesDetected   Json?     // ["LeBron James", "Lakers"]
-  expandedQuery      String?   // The query after entity expansion
-  
-  // Response quality metrics  
-  feedbackRating     Int?      // 1 (thumbs down) or 5 (thumbs up)
-  feedbackAt         DateTime?
-  feedbackComment    String?   // Optional user comment
-  
-  // Mismatch detection (automatic)
-  entityMismatch     Boolean   @default(false)  // Asked about X, answered about Y
-  mismatchDetails    String?   // "Query mentioned Jokic but response was about Knicks"
-  
-  // Pattern learning
-  patternMatched     String?   // Which pattern matched this query
-  wasLLMClassified   Boolean   @default(false)  // True if patterns failed, used LLM
-  
-  // Response source tracking
-  responseSource     String?   // CACHE, VERIFIED_STATS, PERPLEXITY, OUR_PREDICTION, LLM
-  cacheHit           Boolean   @default(false)
-  latencyMs          Int?      // How long the response took
-  
-  // A/B Testing
-  abTestVariant      String?   // Which A/B test variant was used (A or B)
-  abTestId           String?   // Which A/B test this query was part of
+  id                  String    @id @default(cuid())
+  query               String
+  queryNormalized     String?
+  category            String?
+  brainMode           String?
+  sport               String?
+  team                String?
+  league              String?
+  usedRealTimeSearch  Boolean   @default(false)
+  responseLength      Int?
+  hadCitations        Boolean   @default(false)
+  queryHash           String?
+  similarCount        Int       @default(1)
+  createdAt           DateTime  @default(now())
+  answer              String?
+  citations           Json?
+  expiresAt           DateTime?
+  userId              String?
+  dataConfidenceLevel String?
+  dataConfidenceScore Int?
+  dataSources         Json?
+  cacheHit            Boolean   @default(false)
+  detectedIntent      String?
+  entitiesDetected    Json?
+  entityMismatch      Boolean   @default(false)
+  expandedQuery       String?
+  feedbackAt          DateTime?
+  feedbackComment     String?
+  feedbackRating      Int?
+  intentConfidence    Float?
+  latencyMs           Int?
+  mismatchDetails     String?
+  patternMatched      String?
+  responseSource      String?
+  wasLLMClassified    Boolean   @default(false)
+  abTestId            String?
+  abTestVariant       String?
+  user                User?     @relation(fields: [userId], references: [id])
 
   @@index([category])
   @@index([sport])
@@ -306,24 +279,23 @@ model TrendingTopic {
 }
 
 model ChatFeedback {
-  id                    String   @id @default(cuid())
-  messageId             String
-  queryHash             String
-  query                 String
-  response              String
-  rating                Int
-  feedback              String?
-  sport                 String?
-  category              String?
-  brainMode             String?
-  usedRealTimeSearch    Boolean  @default(false)
-  fromCache             Boolean  @default(false)
-  userId                String?
-  userPlan              String?
-  createdAt             DateTime @default(now())
-  // Data confidence tracking (correlate quality with feedback)
-  dataConfidenceLevel   String?   // FULL, PARTIAL, MINIMAL, NONE
-  dataConfidenceScore   Int?      // 0-100
+  id                  String   @id @default(cuid())
+  messageId           String
+  queryHash           String
+  query               String
+  response            String
+  rating              Int
+  feedback            String?
+  sport               String?
+  category            String?
+  brainMode           String?
+  usedRealTimeSearch  Boolean  @default(false)
+  fromCache           Boolean  @default(false)
+  userId              String?
+  userPlan            String?
+  createdAt           DateTime @default(now())
+  dataConfidenceLevel String?
+  dataConfidenceScore Int?
 
   @@index([messageId])
   @@index([queryHash])
@@ -400,91 +372,58 @@ model SportExpertise {
   @@index([sport])
 }
 
-// Edge bucket classification for predictions
-enum EdgeBucket {
-  NO_EDGE     // |edge| < 2%
-  SMALL       // 2-5%
-  MEDIUM      // 5-8%
-  HIGH        // >8%
-}
-
-// Market types for predictions
-enum MarketType {
-  MONEYLINE   // 1X2 / H2H
-  SPREAD      // Point spread / Handicap
-  TOTALS      // Over/Under
-}
-
 model Prediction {
-  id                String           @id @default(cuid())
-  matchId           String
-  matchName         String
-  sport             String
-  league            String
-  kickoff           DateTime
-  type              CallType
-  prediction        String           // Legacy: "Home Win", "Away Win", etc.
-  reasoning         String
-  conviction        Int
-  
-  // === LEGACY FIELDS (kept for backward compatibility) ===
-  odds              Float?           // Legacy: bookmaker odds
-  impliedProb       Float?           // Legacy: implied probability
-  tweetId           String?
-  validationTweetId String?
-  outcome           CallOutcome      @default(PENDING)
-  actualResult      String?
-  validatedAt       DateTime?
-  actualScore       String?
-  source            PredictionSource @default(PRE_ANALYZE)
-  openingOdds       Float?
-  valueBetEdge      Float?
-  valueBetOdds      Float?
-  valueBetOutcome   CallOutcome?
-  valueBetProfit    Float?
-  valueBetSide      String?
-  modelVersion      String           @default("v2")
-  
-  // === AI CHAT PROBABILITY FIELDS ===
-  // Without these, AI chat makes up fake probabilities!
-  homeWin           Float?           // Model probability for home win (0-100)
-  awayWin           Float?           // Model probability for away win (0-100)
-  draw              Float?           // Model probability for draw (0-100), null for non-draw sports
-  predictedScore    String?          // Expected score like "110-105"
-  headline          String?          // Match headline for display
-  signals           String?          // JSON signals data for detailed analysis
-  fullResponse      Json?            // Full analysis response for AI chat (same data as match-preview page)
-  
-  // === NEW EDGE PERFORMANCE TRACKING FIELDS ===
-  // Core probabilities (immutable snapshot at prediction time)
-  modelProbability      Float?       // P_model: model-estimated probability (0-100)
-  marketProbabilityRaw  Float?       // P_market_raw: bookmaker implied prob with vig
-  marketProbabilityFair Float?       // P_market_fair: vig-removed market probability
-  marketOddsAtPrediction Float?      // Decimal odds at prediction time
-  
-  // Edge calculation
-  edgeValue             Float?       // P_model - P_market_fair (can be negative)
-  edgeBucket            EdgeBucket?  // Classified bucket for fast aggregation
-  
-  // Selection details
-  selection             String?      // "home" | "away" | "draw" | "over" | "under"
-  marketType            MarketType?  // Type of market
-  
-  // Closing line value (CLV)
-  closingOdds           Float?       // Odds just before match start
-  closingProbabilityFair Float?      // Fair probability from closing odds
-  clvValue              Float?       // P_closing_fair - P_opening_fair
-  clvFetched            Boolean      @default(false)
-  clvPercentage         Float?       // Legacy field
-  
-  // Binary outcome for clean analysis
-  binaryOutcome         Int?         // 1 = selection won, 0 = selection lost, null = pending
-  
-  // Timestamps
-  predictionTimestamp   DateTime?    // When prediction was made
-  resultTimestamp       DateTime?    // When result was recorded
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
+  id                     String           @id @default(cuid())
+  matchId                String
+  matchName              String
+  sport                  String
+  league                 String
+  kickoff                DateTime
+  type                   CallType
+  prediction             String
+  reasoning              String
+  conviction             Int
+  odds                   Float?
+  impliedProb            Float?
+  tweetId                String?
+  validationTweetId      String?
+  outcome                CallOutcome      @default(PENDING)
+  actualResult           String?
+  validatedAt            DateTime?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  actualScore            String?
+  source                 PredictionSource @default(PRE_ANALYZE)
+  closingOdds            Float?
+  clvFetched             Boolean          @default(false)
+  clvPercentage          Float?
+  openingOdds            Float?
+  valueBetEdge           Float?
+  valueBetOdds           Float?
+  valueBetOutcome        CallOutcome?
+  valueBetProfit         Float?
+  valueBetSide           String?
+  modelVersion           String           @default("v2")
+  binaryOutcome          Int?
+  closingProbabilityFair Float?
+  clvValue               Float?
+  edgeBucket             EdgeBucket?
+  edgeValue              Float?
+  marketOddsAtPrediction Float?
+  marketProbabilityFair  Float?
+  marketProbabilityRaw   Float?
+  marketType             MarketType?
+  modelProbability       Float?
+  predictionTimestamp    DateTime?
+  resultTimestamp        DateTime?
+  selection              String?
+  awayWin                Float?
+  draw                   Float?
+  headline               String?
+  homeWin                Float?
+  predictedScore         String?
+  signals                String?
+  fullResponse           Json?
 
   @@index([matchId])
   @@index([outcome])
@@ -611,6 +550,255 @@ model OddsSnapshot {
   @@index([matchRef])
 }
 
+model ShareLink {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  homeTeam   String
+  awayTeam   String
+  league     String    @default("Match")
+  verdict    String    @default("AI Analysis")
+  risk       String    @default("MEDIUM")
+  confidence Int       @default(75)
+  value      String?
+  matchDate  String?
+  sport      String    @default("soccer")
+  views      Int       @default(0)
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+
+  @@index([code])
+  @@index([createdAt])
+}
+
+model EdgeTracking {
+  id             String      @id @default(cuid())
+  predictionId   String
+  matchId        String
+  sport          String
+  league         String
+  kickoff        DateTime
+  ourModelHome   Float
+  ourModelAway   Float
+  ourModelDraw   Float?
+  marketHome     Float
+  marketAway     Float
+  marketDraw     Float?
+  ensembleMethod String      @default("default")
+  finalHome      Float
+  finalAway      Float
+  finalDraw      Float?
+  edgeSide       String
+  edgeValue      Float
+  conviction     Int
+  situationalAdj Float       @default(0)
+  trapGameFlag   Boolean     @default(false)
+  outcome        CallOutcome @default(PENDING)
+  actualResult   String?
+  clvPercentage  Float?
+  beatingMarket  Boolean?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([sport])
+  @@index([ensembleMethod])
+  @@index([outcome])
+  @@index([createdAt])
+}
+
+model LineMovement {
+  id           String    @id @default(cuid())
+  matchId      String    @unique
+  matchName    String
+  sport        String
+  league       String
+  kickoff      DateTime
+  openingHome  Float
+  openingAway  Float
+  openingDraw  Float?
+  openingTime  DateTime
+  currentHome  Float
+  currentAway  Float
+  currentDraw  Float?
+  updatedTime  DateTime
+  homeMovement Float
+  awayMovement Float
+  drawMovement Float?
+  isSharpMove  Boolean   @default(false)
+  sharpSide    String?
+  alertSent    Boolean   @default(false)
+  alertSentAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([sport])
+  @@index([kickoff])
+  @@index([isSharpMove])
+  @@index([alertSent])
+}
+
+model ToolReview {
+  id                String         @id @default(cuid())
+  toolName          String
+  toolUrl           String         @unique
+  toolDescription   String?
+  toolLogo          String?
+  scrapedFrom       String
+  sourceUrl         String?
+  scrapedAt         DateTime       @default(now())
+  contentExtracted  String?
+  contentWords      Int            @default(0)
+  contactEmail      String?
+  contactName       String?
+  emailSource       String?
+  reviewStatus      ReviewStatus   @default(PENDING)
+  blogPostId        String?        @unique
+  blogSlug          String?
+  reviewTitle       String?
+  reviewContent     String?
+  reviewGeneratedAt DateTime?
+  outreachStatus    OutreachStatus @default(NOT_SENT)
+  outreachSentAt    DateTime?
+  outreachEmailId   String?
+  outreachOpened    Boolean        @default(false)
+  outreachClicked   Boolean        @default(false)
+  outreachReplied   Boolean        @default(false)
+  outreachReplyAt   DateTime?
+  backlinkStatus    BacklinkStatus @default(NONE)
+  backlinkUrl       String?
+  backlinkCheckedAt DateTime?
+  dofollow          Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([scrapedFrom])
+  @@index([reviewStatus])
+  @@index([outreachStatus])
+  @@index([backlinkStatus])
+  @@index([scrapedAt])
+}
+
+model EmailCampaign {
+  id              String         @id @default(cuid())
+  type            CampaignType
+  subject         String
+  userId          String
+  userEmail       String
+  userName        String?
+  matchesData     Json?
+  status          OutreachStatus @default(SENT)
+  sentAt          DateTime       @default(now())
+  openedAt        DateTime?
+  clickedAt       DateTime?
+  unsubscribedAt  DateTime?
+  convertedToPaid Boolean        @default(false)
+  convertedAt     DateTime?
+  createdAt       DateTime       @default(now())
+
+  @@index([userId])
+  @@index([userEmail])
+  @@index([type])
+  @@index([status])
+  @@index([sentAt])
+}
+
+model TwitterEngagement {
+  id                   String         @id @default(cuid())
+  type                 EngagementType
+  targetTweetId        String
+  targetAuthorId       String
+  targetAuthorUsername String?
+  targetText           String?
+  replyTweetId         String?
+  replyText            String?
+  createdAt            DateTime       @default(now())
+
+  @@index([targetAuthorId])
+  @@index([targetTweetId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model ChatSession {
+  id            String        @id @default(cuid())
+  userId        String
+  title         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  lastMessageAt DateTime      @default(now())
+  messageCount  Int           @default(0)
+  messages      ChatMessage[]
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([lastMessageAt])
+}
+
+model ChatMessage {
+  id         String      @id @default(cuid())
+  sessionId  String
+  role       String
+  content    String
+  createdAt  DateTime    @default(now())
+  teams      String[]
+  players    String[]
+  sport      String?
+  intent     String?
+  feedback   Int?
+  feedbackAt DateTime?
+  session    ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+model UserPreference {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  preferredSports  String[]
+  preferredLeagues String[]
+  analysisStyle    String?
+  bettingStyle     String?
+  totalQueries     Int      @default(0)
+  avgFeedbackScore Float?
+  mostAskedTeams   String[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model LearnedResponse {
+  id            String   @id @default(cuid())
+  queryPattern  String
+  queryHash     String   @unique
+  response      String
+  feedbackScore Float    @default(0)
+  useCount      Int      @default(0)
+  lastUsedAt    DateTime @default(now())
+  sport         String?
+  intent        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([queryHash])
+  @@index([sport])
+  @@index([feedbackScore])
+}
+
+enum EdgeBucket {
+  NO_EDGE
+  SMALL
+  MEDIUM
+  HIGH
+}
+
+enum MarketType {
+  MONEYLINE
+  SPREAD
+  TOTALS
+}
+
 enum Plan {
   FREE
   PRO
@@ -681,363 +869,44 @@ enum PostCategory {
   LIVE_INTEL
 }
 
-// Short share links for social media
-model ShareLink {
-  id         String    @id @default(cuid())
-  code       String    @unique // Short code like "abc123"
-  homeTeam   String
-  awayTeam   String
-  league     String    @default("Match")
-  verdict    String    @default("AI Analysis")
-  risk       String    @default("MEDIUM")
-  confidence Int       @default(75)
-  value      String?   // Best value side
-  matchDate  String?
-  sport      String    @default("soccer")
-  views      Int       @default(0)
-  createdAt  DateTime  @default(now())
-  expiresAt  DateTime?
-  
-  @@index([code])
-  @@index([createdAt])
-}
-
-// Edge Tracking for A/B Testing Model Accuracy
-model EdgeTracking {
-  id              String        @id @default(cuid())
-  predictionId    String
-  matchId         String
-  sport           String
-  league          String
-  kickoff         DateTime
-  
-  // Model outputs
-  ourModelHome    Float         // Our model home prob
-  ourModelAway    Float         // Our model away prob
-  ourModelDraw    Float?        // Our model draw prob
-  marketHome      Float         // Market implied home
-  marketAway      Float         // Market implied away
-  marketDraw      Float?        // Market implied draw
-  
-  // Ensemble weights used
-  ensembleMethod  String        @default("default")  // e.g., "default", "market_heavy", "model_heavy"
-  finalHome       Float         // Final blended home prob
-  finalAway       Float         // Final blended away prob
-  finalDraw       Float?        // Final blended draw prob
-  
-  // Edge identified
-  edgeSide        String        // "home", "away", "draw"
-  edgeValue       Float         // Edge percentage
-  conviction      Int           // 1-10
-  
-  // Situational factors used
-  situationalAdj  Float         @default(0)  // Net situational adjustment
-  trapGameFlag    Boolean       @default(false)
-  
-  // Outcome tracking
-  outcome         CallOutcome   @default(PENDING)
-  actualResult    String?
-  
-  // CLV tracking
-  clvPercentage   Float?
-  beatingMarket   Boolean?
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
-  @@index([sport])
-  @@index([ensembleMethod])
-  @@index([outcome])
-  @@index([createdAt])
-}
-
-// Line Movement Tracking & Alerts
-model LineMovement {
-  id              String        @id @default(cuid())
-  matchId         String
-  matchName       String
-  sport           String
-  league          String
-  kickoff         DateTime
-  
-  // Opening snapshot
-  openingHome     Float
-  openingAway     Float
-  openingDraw     Float?
-  openingTime     DateTime
-  
-  // Current/Latest snapshot  
-  currentHome     Float
-  currentAway     Float
-  currentDraw     Float?
-  updatedTime     DateTime
-  
-  // Movement analysis
-  homeMovement    Float         // Percentage change
-  awayMovement    Float
-  drawMovement    Float?
-  
-  // Alerts
-  isSharpMove     Boolean       @default(false)  // 3%+ move detected
-  sharpSide       String?       // Which side moved sharply
-  alertSent       Boolean       @default(false)
-  alertSentAt     DateTime?
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
-  @@unique([matchId])
-  @@index([sport])
-  @@index([kickoff])
-  @@index([isSharpMove])
-  @@index([alertSent])
-}
-
-// ============================================
-// BACKLINK OUTREACH SYSTEM
-// Automated tool discovery and outreach for backlinks
-// ============================================
-
-model ToolReview {
-  id              String    @id @default(cuid())
-  
-  // Tool info
-  toolName        String
-  toolUrl         String    @unique
-  toolDescription String?
-  toolLogo        String?
-  
-  // Scraping metadata
-  scrapedFrom     String    // "producthunt", "alternativeto", "betalist", etc.
-  sourceUrl       String?   // Direct link to listing on source site
-  scrapedAt       DateTime  @default(now())
-  contentExtracted String?  @db.Text // First 5000 words from their site
-  contentWords    Int       @default(0)
-  
-  // Contact info found
-  contactEmail    String?
-  contactName     String?
-  emailSource     String?   // "contact_page", "footer", "about", "whois"
-  
-  // Review status
-  reviewStatus    ReviewStatus @default(PENDING)
-  blogPostId      String?   @unique
-  blogSlug        String?
-  reviewTitle     String?
-  reviewContent   String?   @db.Text
-  reviewGeneratedAt DateTime?
-  
-  // Outreach tracking
-  outreachStatus  OutreachStatus @default(NOT_SENT)
-  outreachSentAt  DateTime?
-  outreachEmailId String?   // Resend email ID for tracking
-  outreachOpened  Boolean   @default(false)
-  outreachClicked Boolean   @default(false)
-  outreachReplied Boolean   @default(false)
-  outreachReplyAt DateTime?
-  
-  // Backlink tracking
-  backlinkStatus  BacklinkStatus @default(NONE)
-  backlinkUrl     String?   // Their page that links to us
-  backlinkCheckedAt DateTime?
-  dofollow        Boolean   @default(false)
-  
-  // Timestamps
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  @@index([scrapedFrom])
-  @@index([reviewStatus])
-  @@index([outreachStatus])
-  @@index([backlinkStatus])
-  @@index([scrapedAt])
-}
-
 enum ReviewStatus {
-  PENDING       // Just discovered, not reviewed yet
-  SKIP          // Not relevant (casino, gambling site, etc.)
-  GENERATING    // GPT is writing the review
-  GENERATED     // Review ready, not published
-  PUBLISHED     // Published to blog
-  FAILED        // Generation failed
+  PENDING
+  SKIP
+  GENERATING
+  GENERATED
+  PUBLISHED
+  FAILED
 }
 
 enum OutreachStatus {
-  NOT_SENT      // No email sent yet
-  NO_EMAIL      // Couldn't find email
-  QUEUED        // In queue to send
-  SENT          // Email sent, awaiting response
-  OPENED        // Email opened (tracked)
-  CLICKED       // Link clicked
-  REPLIED       // Got a reply
-  BOUNCED       // Email bounced
+  NOT_SENT
+  NO_EMAIL
+  QUEUED
+  SENT
+  OPENED
+  CLICKED
+  REPLIED
+  BOUNCED
 }
 
 enum BacklinkStatus {
-  NONE          // No backlink
-  PENDING       // They said they'll add it
-  NOFOLLOW      // They linked but nofollow
-  DOFOLLOW      // Success! Dofollow backlink
-  REMOVED       // They removed the link
-}
-
-// ============================================
-// EMAIL CAMPAIGNS (Nurture emails to FREE users)
-// ============================================
-model EmailCampaign {
-  id            String         @id @default(cuid())
-  
-  // Campaign info
-  type          CampaignType   // DAILY_PICKS, WEEKLY_DIGEST, etc.
-  subject       String         // Email subject line
-  
-  // Recipient
-  userId        String
-  userEmail     String
-  userName      String?
-  
-  // Content snapshot (what was sent)
-  matchesData   Json?          // Array of matches sent
-  
-  // Status tracking
-  status        OutreachStatus @default(SENT)
-  sentAt        DateTime       @default(now())
-  openedAt      DateTime?
-  clickedAt     DateTime?
-  unsubscribedAt DateTime?
-  
-  // Conversion tracking
-  convertedToPaid Boolean     @default(false)
-  convertedAt     DateTime?
-  
-  createdAt     DateTime       @default(now())
-  
-  @@index([userId])
-  @@index([userEmail])
-  @@index([type])
-  @@index([status])
-  @@index([sentAt])
+  NONE
+  PENDING
+  NOFOLLOW
+  DOFOLLOW
+  REMOVED
 }
 
 enum CampaignType {
-  DAILY_PICKS     // Weekend top picks (Fri/Sat)
-  WEEKLY_DIGEST   // Weekly summary
-  WIN_STREAK      // Your picks are on fire!
-  RE_ENGAGEMENT   // Haven't seen you in a while
-  UPGRADE_NUDGE   // Subtle upgrade reminder
-}
-
-// Twitter engagement tracking (replies, mentions)
-model TwitterEngagement {
-  id                   String          @id @default(cuid())
-  type                 EngagementType
-  targetTweetId        String          // Tweet we're replying to
-  targetAuthorId       String          // Author of the tweet we replied to
-  targetAuthorUsername String?         // Username for logging
-  targetText           String?         // Original tweet text (truncated)
-  replyTweetId         String?         // Our reply tweet ID
-  replyText            String?         // Our reply text
-  createdAt            DateTime        @default(now())
-
-  @@index([targetAuthorId])
-  @@index([targetTweetId])
-  @@index([type])
-  @@index([createdAt])
+  DAILY_PICKS
+  WEEKLY_DIGEST
+  WIN_STREAK
+  RE_ENGAGEMENT
+  UPGRADE_NUDGE
 }
 
 enum EngagementType {
-  MENTION_REPLY    // Reply to someone who mentioned us
-  ACCOUNT_REPLY    // Reply to monitored account post
-  QUOTE_TWEET      // Quote tweet of someone else's post
+  MENTION_REPLY
+  ACCOUNT_REPLY
+  QUOTE_TWEET
 }
-
-// ============================================
-// AI CHAT LEARNING SYSTEM
-// ============================================
-
-// Persistent chat sessions per user (survives browser close)
-model ChatSession {
-  id            String        @id @default(cuid())
-  userId        String
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title         String?       // Auto-generated from first message
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  lastMessageAt DateTime      @default(now())
-  messageCount  Int           @default(0)
-  messages      ChatMessage[]
-
-  @@index([userId])
-  @@index([lastMessageAt])
-}
-
-// Individual messages within a chat session
-model ChatMessage {
-  id            String      @id @default(cuid())
-  sessionId     String
-  session       ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  role          String      // 'user' or 'assistant'
-  content       String
-  createdAt     DateTime    @default(now())
-  
-  // Extracted context (for learning)
-  teams         String[]    // Teams mentioned
-  players       String[]    // Players mentioned
-  sport         String?     // Detected sport
-  intent        String?     // MATCH_PREDICTION, PLAYER_STATS, etc.
-  
-  // Feedback (for assistant messages)
-  feedback      Int?        // 1 = thumbs down, 5 = thumbs up
-  feedbackAt    DateTime?
-
-  @@index([sessionId])
-  @@index([createdAt])
-}
-
-// User preferences learned over time
-model UserPreference {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Learned preferences
-  preferredSports     String[]  // Sports they ask about most
-  preferredLeagues    String[]  // Leagues they follow
-  analysisStyle       String?   // 'detailed', 'quick', 'stats-heavy'
-  bettingStyle        String?   // 'value', 'favorites', 'underdogs'
-  
-  // Interaction stats
-  totalQueries        Int       @default(0)
-  avgFeedbackScore    Float?    // Rolling average of feedback
-  mostAskedTeams      String[]  // Top 5 teams they ask about
-  
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-
-  @@index([userId])
-}
-
-// High-quality responses to cache and reuse
-model LearnedResponse {
-  id              String   @id @default(cuid())
-  queryPattern    String   // Normalized query pattern
-  queryHash       String   @unique // For fast lookup
-  response        String   // The good response
-  
-  // Quality metrics
-  feedbackScore   Float    @default(0) // Cumulative score from feedback
-  useCount        Int      @default(0) // Times this response was used
-  lastUsedAt      DateTime @default(now())
-  
-  // Context
-  sport           String?
-  intent          String?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@index([queryHash])
-  @@index([sport])
-  @@index([feedbackScore])
-}
-
