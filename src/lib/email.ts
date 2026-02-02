@@ -20,13 +20,14 @@ interface SendEmailOptions {
   to: string;
   subject: string;
   html: string;
+  text?: string;
   replyTo?: string;
 }
 
 /**
  * Send an email using Brevo API
  */
-export async function sendEmail({ to, subject, html, replyTo }: SendEmailOptions): Promise<boolean> {
+export async function sendEmail({ to, subject, html, text, replyTo }: SendEmailOptions): Promise<boolean> {
   const BREVO_API_KEY = getBrevoApiKey();
   if (!BREVO_API_KEY) {
     console.log('[Email] BREVO_API_KEY not configured, skipping email');
@@ -49,6 +50,7 @@ export async function sendEmail({ to, subject, html, replyTo }: SendEmailOptions
         to: [{ email: to }],
         subject,
         htmlContent: html,
+        ...(text && { textContent: text }),
         replyTo: { email: replyTo || SUPPORT_EMAIL },
       }),
     });
