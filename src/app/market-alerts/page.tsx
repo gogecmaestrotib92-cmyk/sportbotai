@@ -25,6 +25,7 @@ import { getLeagueLogo } from '@/lib/logos';
 
 interface MarketAlert {
   id: string;
+  matchId: string;  // SEO-friendly slug for linking to full analysis
   matchRef: string;
   sport: string;
   sportTitle: string;
@@ -206,7 +207,7 @@ function MarketSummary({
 /**
  * Edge Strength Bar - Compact inline indicator
  */
-function EdgeStrengthBar({ percent, alertLevel }: { percent: number; alertLevel: 'HIGH' | 'MEDIUM' | 'LOW' | null }) {
+function EdgeStrengthBar({ percent, alertLevel, noBorder = false }: { percent: number; alertLevel: 'HIGH' | 'MEDIUM' | 'LOW' | null; noBorder?: boolean }) {
   const { bars, label } = getEdgeStrength(percent);
   const confidence = getConfidenceLevel(alertLevel);
   
@@ -215,7 +216,7 @@ function EdgeStrengthBar({ percent, alertLevel }: { percent: number; alertLevel:
                    'bg-emerald-600/60';
   
   return (
-    <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/5">
+    <div className={`flex items-center justify-between gap-3 flex-1 ${noBorder ? '' : 'pt-2 border-t border-white/5'}`}>
       {/* Edge Strength */}
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-[10px] text-text-muted uppercase shrink-0">Strength</span>
@@ -339,8 +340,19 @@ function EdgeMatchCard({ alert }: { alert: MarketAlert }) {
         )}
       </div>
       
-      {/* Inline strength indicator */}
-      <EdgeStrengthBar percent={edgePercent} alertLevel={alert.alertLevel} />
+      {/* Inline strength indicator + View Analysis link */}
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
+        <EdgeStrengthBar percent={edgePercent} alertLevel={alert.alertLevel} noBorder />
+        <Link 
+          href={`/match/${alert.matchId}`}
+          className="text-[10px] text-violet hover:text-violet-light transition-colors flex items-center gap-1 shrink-0"
+        >
+          Full Analysis
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
+      </div>
     </div>
   );
 }

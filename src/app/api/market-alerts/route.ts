@@ -27,6 +27,7 @@ import { cacheGet, CACHE_KEYS } from '@/lib/cache';
 
 interface MarketAlert {
   id: string;
+  matchId: string;  // SEO-friendly slug for linking to full analysis
   matchRef: string;
   sport: string;
   sportTitle: string;
@@ -112,6 +113,17 @@ const ALERT_SPORTS = [
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
+
+/**
+ * Generate SEO-friendly matchId slug for linking to full analysis
+ */
+function generateMatchId(homeTeam: string, awayTeam: string, sportKey: string, matchDate: string): string {
+  const homeSlug = homeTeam.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+  const awaySlug = awayTeam.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+  const sportCode = sportKey.split('_').slice(1).join('-') || sportKey;
+  const date = matchDate.split('T')[0];
+  return `${homeSlug}-vs-${awaySlug}-${sportCode}-${date}`;
+}
 
 /**
  * Calculate consensus odds from multiple bookmakers
@@ -581,7 +593,7 @@ export async function GET(request: NextRequest) {
         !!prevSnapshot
       );
       
-      // Get cached AI analysis (O(1) from map)
+      // Get cached AI analysis (O(1) from map) - FALLBACK source
       const cachedAnalysis = cachedAnalyses.get(cacheKey) as {
         marketIntel?: {
           modelProbability?: { home: number; away: number; draw?: number };
@@ -599,7 +611,29 @@ export async function GET(request: NextRequest) {
       let valueEdgeLabel: string | undefined;
       let usingPipelineProbs = false; // Track if we're using proper Poisson/Elo probabilities
       
-      if (cachedAnalysis?.marketIntel?.modelProbability) {
+      // PRIORITY 1: Use OddsSnapshot model probabilities (populated by pre-analyze cron with Poisson/Elo)
+      // This is the most reliable source as it's persisted in DB
+      if (prevSnapshot?.modelHomeProb && prevSnapshot?.modelAwayProb && 
+          prevSnapshot.modelHomeProb > 0 && prevSnapshot.modelAwayProb > 0) {
+        modelHomeProb = prevSnapshot.modelHomeProb;
+        modelAwayProb = prevSnapshot.modelAwayProb;
+        modelDrawProb = prevSnapshot.modelDrawProb ?? undefined;
+        homeEdge = prevSnapshot.homeEdge ?? 0;
+        awayEdge = prevSnapshot.awayEdge ?? 0;
+        drawEdge = prevSnapshot.drawEdge ?? undefined;
+        valueEdgeLabel = prevSnapshot.alertNote ?? undefined;
+        usingPipelineProbs = true;
+        // Note: We still recalculate edges below based on CURRENT consensus odds
+        // in case odds have changed since pre-analyze ran
+        const homeImplied = oddsToImpliedProb(consensus.home);
+        const awayImplied = oddsToImpliedProb(consensus.away);
+        const drawImplied = consensus.draw ? oddsToImpliedProb(consensus.draw) : 0;
+        homeEdge = modelHomeProb - homeImplied;
+        awayEdge = modelAwayProb - awayImplied;
+        drawEdge = modelDrawProb ? modelDrawProb - drawImplied : undefined;
+      }
+      // PRIORITY 2: Use Redis cached analysis (may be empty on serverless cold start)
+      else if (cachedAnalysis?.marketIntel?.modelProbability) {
         const aiProbs = cachedAnalysis.marketIntel.modelProbability;
         modelHomeProb = aiProbs.home;
         modelAwayProb = aiProbs.away;
@@ -659,6 +693,7 @@ export async function GET(request: NextRequest) {
         homeTeam: event.home_team,
         awayTeam: event.away_team,
         matchDate: event.commence_time,
+        matchId: generateMatchId(event.home_team, event.away_team, sport.key, event.commence_time),
         
         homeOdds: consensus.home,
         awayOdds: consensus.away,
