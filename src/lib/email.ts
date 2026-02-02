@@ -544,6 +544,10 @@ export async function sendToolReviewOutreach(
           <span style="font-size: 13px;">Founder, <a href="https://www.sportbotai.com" style="color: #10B981; text-decoration: none;">SportBot AI</a></span>
         </p>
         
+        <p style="margin: 30px 0 0 0; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 13px; color: #9ca3af;">
+          P.S. If you want the badge, <a href="https://www.sportbotai.com/badge" style="color: #10B981; text-decoration: none;">grab the code here</a> – takes 30 seconds.
+        </p>
+        
       </td>
     </tr>
   </table>
@@ -566,7 +570,9 @@ Either way, the review stays up. No strings attached.
 Best,
 Stefan
 Founder, SportBot AI
-https://www.sportbotai.com`;
+https://www.sportbotai.com
+
+P.S. If you want the badge, grab the code here: https://www.sportbotai.com/badge`;
 
   return sendEmail({
     to: email,

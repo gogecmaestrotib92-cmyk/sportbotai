@@ -124,11 +124,11 @@ export default function SoccerPage() {
                                     </span>
                                 </div>
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-3">
-                                    Soccer Odds Today
+                                    AI Soccer Predictions & Odds
                                 </h1>
                                 <p className="text-gray-400 text-base sm:text-lg max-w-xl">
-                                    Live soccer betting odds for Premier League, La Liga, Champions League, and more.
-                                    Get moneylines, spreads, and AI-powered analysis.
+                                    AI-powered soccer predictions and live odds for Premier League, La Liga, Champions League.
+                                    Data-driven football tips with probability analysis.
                                 </p>
                             </div>
 

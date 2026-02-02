@@ -61,11 +61,11 @@ export default function SoccerPageSr() {
                                 </span>
                             </div>
                             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-3">
-                                Fudbal Kvote Danas
+                                AI Fudbalske Prognoze i Kvote
                             </h1>
                             <p className="text-gray-400 text-base sm:text-lg max-w-xl">
-                                Live fudbalske kvote za sve velike lige. Rezultati 1X2, oba tima daju gol,
-                                totali i specijalne opklade sa AI detekcijom vrednosti.
+                                AI prognoze za fudbal i live kvote za Premier Ligu, La Ligu, Ligu Šampiona.
+                                Tipovi zasnovani na podacima sa analizom verovatnoće.
                             </p>
                         </div>
 
