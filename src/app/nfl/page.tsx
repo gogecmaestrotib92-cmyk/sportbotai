@@ -9,12 +9,12 @@ import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'NFL Odds Today - Live Football Betting Lines & Spreads',
-    description: 'Get this week\'s NFL odds, point spreads, moneylines, and totals for every football game. Live NFL betting odds with AI analysis. Find value on NFL bets, player props, and Super Bowl futures.',
-    keywords: ['nfl odds', 'nfl betting odds', 'nfl lines', 'nfl spreads', 'nfl moneyline', 'football betting', 'nfl point spread', 'nfl totals', 'nfl player props', 'super bowl odds', 'football odds today'],
+    title: 'AI NFL Predictions & Football Odds Today | SportBot AI',
+    description: 'Free AI NFL predictions for this week\'s games. Get AI-powered football picks, point spreads, moneylines with probability analysis. Data-driven NFL betting predictions and Super Bowl futures.',
+    keywords: ['ai nfl predictions', 'ai football predictions', 'nfl ai picks', 'nfl odds', 'nfl betting odds', 'nfl lines', 'nfl spreads', 'ai sports predictions', 'nfl predictions today', 'football betting', 'super bowl odds'],
     openGraph: {
-        title: 'NFL Odds Today - Live Betting Lines & Spreads | SportBot AI',
-        description: 'This week\'s NFL betting odds with AI analysis. Live spreads, moneylines, and totals.',
+        title: 'AI NFL Predictions & Football Odds Today | SportBot AI',
+        description: 'Free AI NFL predictions with probability analysis. Data-driven football picks.',
         url: 'https://www.sportbotai.com/nfl',
         type: 'website',
     },
@@ -127,11 +127,11 @@ export default function NflPage() {
                                     </span>
                                 </div>
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-3">
-                                    NFL Odds Today
+                                    AI NFL Predictions & Odds
                                 </h1>
                                 <p className="text-gray-400 text-base sm:text-lg max-w-xl">
-                                    Live NFL betting odds for every football game. Get spreads, moneylines,
-                                    totals, and player props with AI-powered value detection.
+                                    Free AI football predictions for this week&apos;s NFL games. Get AI-powered picks,
+                                    probability analysis, spreads, and moneylines with data-driven insights.
                                 </p>
                             </div>
 
@@ -153,9 +153,10 @@ export default function NflPage() {
                 <section className="border-b border-white/5">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                         <p className="text-gray-400 leading-relaxed max-w-4xl">
-                            Find this week&apos;s <strong className="text-white">NFL odds</strong> and betting lines for every football game.
-                            Whether you&apos;re betting on the <strong className="text-white">point spread</strong>, moneyline, or total,
-                            our AI analyzes sportsbook odds to help bettors find value. Compare <strong className="text-white">NFL betting odds</strong> and make smarter wagers.
+                            Get free <strong className="text-white">AI NFL predictions</strong> for every football game this week.
+                            Our <strong className="text-white">AI sports predictor</strong> analyzes team stats, injuries, weather,
+                            and line movements to generate <strong className="text-white">AI football picks</strong> with probability estimates.
+                            Compare <strong className="text-white">NFL odds</strong> and find value bets with data-driven insights.
                         </p>
                     </div>
                 </section>
@@ -171,32 +172,33 @@ export default function NflPage() {
                 <section className="border-t border-white/10">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
                         <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6">
-                            How to Bet on NFL Games
+                            How Our AI Football Predictions Work
                         </h2>
                         <p className="text-gray-400 mb-8 max-w-3xl">
-                            NFL betting is America&apos;s most popular sports betting market. Here&apos;s how to place an NFL bet:
+                            Our AI sports predictor uses machine learning to analyze thousands of data points
+                            and generate accurate NFL predictions. Here&apos;s how it works:
                         </p>
 
                         <div className="grid sm:grid-cols-4 gap-4">
                             <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
                                 <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-400 font-bold mb-3">1</div>
-                                <h3 className="text-white font-semibold mb-2">Choose Your Wager</h3>
-                                <p className="text-gray-400 text-sm">Pick spread, moneyline, total, or player props for your NFL bet.</p>
+                                <h3 className="text-white font-semibold mb-2">Data Collection</h3>
+                                <p className="text-gray-400 text-sm">AI gathers team stats, injuries, weather, and real-time NFL odds.</p>
                             </div>
                             <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
                                 <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-400 font-bold mb-3">2</div>
-                                <h3 className="text-white font-semibold mb-2">Compare Odds</h3>
-                                <p className="text-gray-400 text-sm">Check betting odds across sportsbooks. Key NFL numbers: 3, 7, 10.</p>
+                                <h3 className="text-white font-semibold mb-2">Pattern Analysis</h3>
+                                <p className="text-gray-400 text-sm">Machine learning identifies trends and key numbers (3, 7, 10) in NFL data.</p>
                             </div>
                             <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
                                 <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-400 font-bold mb-3">3</div>
-                                <h3 className="text-white font-semibold mb-2">Analyze Value</h3>
-                                <p className="text-gray-400 text-sm">Use our AI to find which team will win against the spread.</p>
+                                <h3 className="text-white font-semibold mb-2">Probability Calc</h3>
+                                <p className="text-gray-400 text-sm">AI calculates win probabilities and compares them to bookmaker odds.</p>
                             </div>
                             <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
                                 <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-400 font-bold mb-3">4</div>
-                                <h3 className="text-white font-semibold mb-2">Place Your Bet</h3>
-                                <p className="text-gray-400 text-sm">Enter your stake and confirm your football bet on the sportsbook.</p>
+                                <h3 className="text-white font-semibold mb-2">Value Detection</h3>
+                                <p className="text-gray-400 text-sm">Highlights mismatches where AI probability differs from market odds.</p>
                             </div>
                         </div>
                     </div>

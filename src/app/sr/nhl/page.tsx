@@ -7,9 +7,9 @@ import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'NHL Kvote Danas - Hokej Linije za Klađenje',
-    description: 'Pogledajte današnje NHL kvote, puck linije i totale. Live NHL kvote za klađenje sa AI analizom.',
-    keywords: ['nhl kvote', 'nhl kladjenje', 'hokej kladjenje', 'nhl linije', 'nhl opklade'],
+    title: 'AI NHL Predikcije i Kvote Danas | SportBot AI',
+    description: 'Besplatne AI hokej predikcije za današnje NHL utakmice. AI tipovi sa analizom verovatnoće, puck linije i kvote. Data-driven NHL predikcije.',
+    keywords: ['ai nhl predikcije', 'ai hokej predikcije', 'nhl ai tipovi', 'nhl kvote', 'nhl kladjenje', 'ai sportske predikcije'],
     openGraph: {
         title: 'NHL Kvote Danas | SportBot AI',
         description: 'Današnje NHL kvote za klađenje sa AI analizom.',
@@ -56,11 +56,11 @@ export default function NhlPageSr() {
                                 </span>
                             </div>
                             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-3">
-                                NHL Kvote Danas
+                                AI NHL Predikcije i Kvote
                             </h1>
                             <p className="text-gray-400 text-base sm:text-lg max-w-xl">
-                                Live NHL kvote za svaku hokejasku utakmicu. Puck linije, manije linije,
-                                totali i puck propovi sa AI detekcijom vrednosti.
+                                Besplatne AI predikcije za današnje NHL utakmice. AI tipovi,
+                                analiza verovatnoće, puck linije i kvote sa data-driven uvidima.
                             </p>
                         </div>
 
@@ -82,8 +82,9 @@ export default function NhlPageSr() {
             <section className="border-b border-white/5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <p className="text-gray-400 leading-relaxed max-w-4xl">
-                        Pronađite današnje <strong className="text-white">NHL kvote</strong> i linije za klađenje za svaku hokejašku utakmicu.
-                        Naš AI analizira kvote kladionica da vam pomogne pronaći <strong className="text-white">vrednost za NHL opklade</strong>.
+                        Dobijte besplatne <strong className="text-white">AI hokej predikcije</strong> za svaku NHL utakmicu danas.
+                        Naš <strong className="text-white">AI sportski prediktor</strong> analizira golmanske duel, formu timova,
+                        i <strong className="text-white">hokej kvote</strong> da generiše AI NHL tipove sa procenama verovatnoće.
                     </p>
                 </div>
             </section>

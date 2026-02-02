@@ -79,62 +79,54 @@ export const META = {
   },
   
   matches: {
-    title: 'AI Soccer Picks & Match Predictions – Live Analysis',
-    description: 'Browse upcoming soccer matches with AI-powered predictions. Get data-driven football predictions for Premier League, La Liga, Bundesliga, Ligue 1. Accurate match analysis and betting tips.',
+    title: 'AI Sports Predictions & Picks Today – Free Analysis | SportBot AI',
+    description: 'Free AI sports predictions for today\'s matches. Get AI-powered picks for soccer, NBA, NFL, NHL with probability analysis. Data-driven sports betting predictions you can trust.',
     keywords: [
-      // Primary: ai picks soccer cluster
+      // Primary: AI sports picks/predictions (HIGH VOLUME)
+      'ai sports picks',
+      'ai sports predictions',
+      'ai betting predictions',
+      'free ai sports predictions',
+      'ai sports betting predictions',
+      'best ai sports predictions',
+      'sports ai picks',
+      
+      // Soccer specific
       'ai picks soccer',
-      'soccer predictions today',
-      'football prediction ai',
-      'ai soccer tips',
-      'match prediction accuracy',
-      
-      // Leagues
+      'ai soccer predictions',
       'premier league predictions',
-      'la liga ai picks',
-      'bundesliga predictions',
-      'ligue 1 predictions',
-      'champions league tips',
       
-      // Match/Analysis focused
-      'upcoming matches',
-      'live sports analysis',
-      'match analyzer',
-      'data-driven picks',
-      'ai analyze soccer',
-      'football betting trends',
-      'outcome predictions',
-      
-      // Sports variety
-      'NBA ai predictions',
-      'NFL analysis tool',
+      // Multi-sport
+      'ai basketball predictions',
+      'ai nba predictions',
+      'ai nfl predictions',
+      'ai hockey predictions',
       
       // Trust signals
-      'accurate soccer predictions',
+      'most accurate sports predictions',
       'ai-powered analysis',
-      'sports probability model',
+      'data-driven picks',
     ],
   },
   
   aiDesk: {
-    title: 'AI Sports Desk – Real-Time Intelligence Feed',
-    description: 'Live sports intelligence powered by AI. Get instant updates on injuries, lineups, market movements, and match insights. Your 24/7 AI sports analyst covering football, NBA, NFL & more.',
+    title: 'AI Sports Chat – Free Predictions & Analysis | SportBot AI',
+    description: 'Free AI sports chat for instant match analysis. Ask any question about soccer, NBA, NFL, NHL - get AI predictions, injury updates, and insights in seconds.',
     keywords: [
-      'sports intelligence feed',
+      // Primary: AI sports chat/predictor
+      'sports ai',
+      'ai sports predictor',
+      'sports prediction ai',
+      'ai sports chat',
+      'ChatGPT for sports',
+      'AI sports assistant',
+      'ai sport prediction',
+      // Secondary
       'live sports news',
-      'AI sports analyst',
       'real-time injury updates',
       'lineup news',
-      'sports market analysis',
-      'football news live',
-      'NBA news updates',
-      'sports data feed',
       'match intelligence',
       'sports AI assistant',
-      // AI Assistant Keywords
-      'ChatGPT for sports',
-      'AI sports research bot',
-      'automated sports researcher',
       'real-time match insights',
     ],
   },

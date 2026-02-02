@@ -51,7 +51,7 @@ export default function Hero() {
 
             {/* Subheadline - Glassmorphism card */}
             <p className="text-base sm:text-lg text-white/90 leading-relaxed mb-6 sm:mb-8 max-w-xl mx-auto lg:mx-0 card-glass px-5 py-4">
-              Pre-match intelligence: headlines, form, H2H history & AI insights.
+              AI Sports Predictions: free picks, analysis & insights for Soccer, NBA, NFL & NHL.
               <strong className="text-accent"> Soccer, NBA, NFL & NHL—all in 60 seconds.</strong>
             </p>
 

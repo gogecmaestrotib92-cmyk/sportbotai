@@ -7,9 +7,9 @@ import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'NFL Kvote Danas - Linije za Klađenje na Američki Fudbal',
-    description: 'Pogledajte današnje NFL kvote, spredove, manije linije i totale. Live NFL kvote za klađenje sa AI analizom.',
-    keywords: ['nfl kvote', 'nfl kladjenje', 'americki fudbal kladjenje', 'nfl linije', 'nfl opklade'],
+    title: 'AI NFL Predikcije i Kvote Danas | SportBot AI',
+    description: 'Besplatne AI NFL predikcije za utakmice ove nedelje. AI tipovi sa analizom verovatnoće, spredovi i kvote. Data-driven fudbalske predikcije.',
+    keywords: ['ai nfl predikcije', 'ai americki fudbal predikcije', 'nfl ai tipovi', 'nfl kvote', 'nfl kladjenje', 'ai sportske predikcije'],
     openGraph: {
         title: 'NFL Kvote Danas | SportBot AI',
         description: 'Današnje NFL kvote za klađenje sa AI analizom.',
@@ -57,11 +57,11 @@ export default function NflPageSr() {
                                 </span>
                             </div>
                             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-3">
-                                NFL Kvote Danas
+                                AI NFL Predikcije i Kvote
                             </h1>
                             <p className="text-gray-400 text-base sm:text-lg max-w-xl">
-                                Live NFL kvote za svaku utakmicu. Spredovi, manije linije,
-                                totali i igračke opklade sa AI detekcijom vrednosti.
+                                Besplatne AI predikcije za NFL utakmice ove nedelje. AI tipovi,
+                                analiza verovatnoće, spredovi i kvote sa data-driven uvidima.
                             </p>
                         </div>
 
@@ -83,8 +83,9 @@ export default function NflPageSr() {
             <section className="border-b border-white/5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <p className="text-gray-400 leading-relaxed max-w-4xl">
-                        Pronađite današnje <strong className="text-white">NFL kvote</strong> i linije za klađenje za svaku utakmicu američkog fudbala.
-                        Naš AI analizira kvote kladionica da vam pomogne pronaći <strong className="text-white">vrednost za NFL opklade</strong>.
+                        Dobijte besplatne <strong className="text-white">AI NFL predikcije</strong> za svaku utakmicu ove nedelje.
+                        Naš <strong className="text-white">AI sportski prediktor</strong> analizira statistike timova, povrede,
+                        i kretanja linija da generiše <strong className="text-white">AI fudbalske tipove</strong> sa procenama verovatnoće.
                     </p>
                 </div>
             </section>

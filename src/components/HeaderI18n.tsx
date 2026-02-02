@@ -176,7 +176,6 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
             <NavLink
               href={localePath('/market-alerts')}
               icon={<ChartBarIcon className="w-4 h-4 text-amber-400" />}
-              badge={<span className="text-[10px] font-semibold bg-gradient-to-r from-zinc-400/20 to-slate-300/20 text-zinc-300 px-1.5 py-0.5 rounded border border-zinc-400/30">{t.header.premium}</span>}
             >
               {t.header.alerts}
             </NavLink>

@@ -10,12 +10,12 @@ import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'NBA Odds Today - Live Basketball Betting Lines & Spreads',
-    description: 'Get today\'s NBA odds, point spreads, moneylines, and totals for every basketball game. Live NBA betting odds from top sportsbooks with AI-powered analysis. Find value on NBA bets, player props, and futures.',
-    keywords: ['nba odds', 'nba betting odds', 'nba lines', 'nba spreads', 'nba moneyline', 'basketball betting', 'nba point spread', 'nba totals', 'nba player props', 'nba futures', 'basketball odds today', 'nba game odds'],
+    title: 'AI Basketball Predictions & NBA Odds Today | SportBot AI',
+    description: 'Free AI basketball predictions for today\'s NBA games. Get AI-powered NBA picks, point spreads, moneylines, and totals with probability analysis. Data-driven NBA betting predictions you can trust.',
+    keywords: ['ai basketball predictions', 'ai nba predictions', 'nba ai picks', 'nba odds', 'nba betting odds', 'nba lines', 'nba spreads', 'nba moneyline', 'basketball betting', 'ai sports predictions', 'nba predictions today', 'basketball odds today'],
     openGraph: {
-        title: 'NBA Odds Today - Live Betting Lines & Spreads | SportBot AI',
-        description: 'Today\'s NBA betting odds with AI analysis. Live spreads, moneylines, totals, and player props.',
+        title: 'AI Basketball Predictions & NBA Odds Today | SportBot AI',
+        description: 'Free AI basketball predictions for NBA games. AI-powered picks with probability analysis.',
         url: 'https://www.sportbotai.com/nba',
         type: 'website',
     },
@@ -146,11 +146,11 @@ export default function NbaPage() {
                                     </span>
                                 </div>
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-3">
-                                    NBA Odds Today
+                                    AI NBA Predictions & Odds
                                 </h1>
                                 <p className="text-gray-400 text-base sm:text-lg max-w-xl">
-                                    Live NBA betting odds for every basketball game. Get spreads, moneylines,
-                                    totals, and player props with AI-powered value detection.
+                                    Free AI basketball predictions for today&apos;s NBA games. Get AI-powered picks,
+                                    probability analysis, spreads, and moneylines with data-driven insights.
                                 </p>
                             </div>
 
@@ -173,10 +173,10 @@ export default function NbaPage() {
                 <section className="border-b border-white/5">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                         <p className="text-gray-400 leading-relaxed max-w-4xl">
-                            Find today&apos;s <strong className="text-white">NBA odds</strong> and betting lines for every basketball game.
-                            Whether you&apos;re looking to place an <strong className="text-white">NBA bet</strong> on the point spread,
-                            moneyline, or total, our AI analyzes sportsbook odds to help bettors find value.
-                            Compare <strong className="text-white">NBA betting odds</strong> and make smarter wagers on your favorite teams.
+                            Get free <strong className="text-white">AI basketball predictions</strong> for every NBA game today.
+                            Our <strong className="text-white">AI sports predictor</strong> analyzes historical data, team form, injuries,
+                            and odds movements to generate <strong className="text-white">AI NBA picks</strong> with probability estimates.
+                            Compare <strong className="text-white">NBA odds</strong> and find value bets with data-driven insights.
                         </p>
                     </div>
                 </section>
@@ -193,33 +193,33 @@ export default function NbaPage() {
                 <section className="border-t border-white/10">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
                         <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6">
-                            How to Bet on NBA Games
+                            How Our AI Basketball Predictions Work
                         </h2>
                         <p className="text-gray-400 mb-8 max-w-3xl">
-                            Sports betting on NBA games is straightforward once you understand the basics.
-                            Here&apos;s how to place an NBA bet at any sportsbook:
+                            Our AI sports predictor uses machine learning to analyze thousands of data points
+                            and generate accurate NBA predictions. Here&apos;s how it works:
                         </p>
 
                         <div className="grid sm:grid-cols-4 gap-4 mb-8">
                             <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
                                 <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400 font-bold mb-3">1</div>
-                                <h3 className="text-white font-semibold mb-2">Choose Your Wager</h3>
-                                <p className="text-gray-400 text-sm">Pick spread, moneyline, total, or player props for your NBA bet.</p>
+                                <h3 className="text-white font-semibold mb-2">Data Collection</h3>
+                                <p className="text-gray-400 text-sm">AI gathers team stats, injuries, form, H2H history, and real-time odds.</p>
                             </div>
                             <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
                                 <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400 font-bold mb-3">2</div>
-                                <h3 className="text-white font-semibold mb-2">Compare Odds</h3>
-                                <p className="text-gray-400 text-sm">Check betting odds across sportsbooks to get the best number.</p>
+                                <h3 className="text-white font-semibold mb-2">Pattern Analysis</h3>
+                                <p className="text-gray-400 text-sm">Machine learning identifies patterns and trends from historical NBA data.</p>
                             </div>
                             <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
                                 <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400 font-bold mb-3">3</div>
-                                <h3 className="text-white font-semibold mb-2">Analyze Value</h3>
-                                <p className="text-gray-400 text-sm">Use our AI to find which team will win against the spread.</p>
+                                <h3 className="text-white font-semibold mb-2">Probability Calc</h3>
+                                <p className="text-gray-400 text-sm">AI calculates win probabilities and compares them to bookmaker odds.</p>
                             </div>
                             <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
                                 <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400 font-bold mb-3">4</div>
-                                <h3 className="text-white font-semibold mb-2">Place Your Bet</h3>
-                                <p className="text-gray-400 text-sm">Enter your stake and confirm your basketball bet on the sportsbook.</p>
+                                <h3 className="text-white font-semibold mb-2">Value Detection</h3>
+                                <p className="text-gray-400 text-sm">Highlights mismatches where AI probability differs from market odds.</p>
                             </div>
                         </div>
                     </div>

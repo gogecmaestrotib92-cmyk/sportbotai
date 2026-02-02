@@ -39,7 +39,7 @@ export const translations = {
 
       title: 'Find Where',
       titleHighlight: 'The Market Is Wrong',
-      subtitle: 'Pre-match intelligence: headlines, form, H2H history & AI insights.',
+      subtitle: 'AI Sports Predictions: free picks, analysis & insights for Soccer, NBA, NFL & NHL.',
       subtitleHighlight: ' Soccer, NBA, NFL, NHL & UFC—all in 60 seconds.',
       ctaPrimary: 'Browse Matches',
       ctaSecondary: 'Ask AI Agent',

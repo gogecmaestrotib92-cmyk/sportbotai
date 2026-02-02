@@ -9,12 +9,12 @@ import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'NHL Odds Today - Live Hockey Betting Lines & Puck Lines',
-    description: 'Get today\'s NHL odds, puck lines, moneylines, and totals for every hockey game. Live NHL betting odds with AI analysis. Find value on hockey bets and Stanley Cup futures.',
-    keywords: ['nhl odds', 'nhl betting odds', 'hockey odds', 'nhl puck line', 'nhl moneyline', 'hockey betting', 'nhl totals', 'stanley cup odds', 'hockey odds today'],
+    title: 'AI Hockey Predictions & NHL Odds Today | SportBot AI',
+    description: 'Free AI hockey predictions for today\'s NHL games. Get AI-powered NHL picks, puck lines, moneylines with probability analysis. Data-driven hockey betting predictions and Stanley Cup futures.',
+    keywords: ['ai hockey predictions', 'ai nhl predictions', 'nhl ai picks', 'nhl odds', 'nhl betting odds', 'hockey odds', 'nhl puck line', 'ai sports predictions', 'nhl predictions today', 'stanley cup odds'],
     openGraph: {
-        title: 'NHL Odds Today - Live Hockey Betting Lines | SportBot AI',
-        description: 'Today\'s NHL betting odds with AI analysis. Live puck lines, moneylines, and totals.',
+        title: 'AI Hockey Predictions & NHL Odds Today | SportBot AI',
+        description: 'Free AI hockey predictions with probability analysis. Data-driven NHL picks.',
         url: 'https://www.sportbotai.com/nhl',
         type: 'website',
     },
@@ -121,11 +121,11 @@ export default function NhlPage() {
                                     </span>
                                 </div>
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-3">
-                                    NHL Odds Today
+                                    AI NHL Predictions & Odds
                                 </h1>
                                 <p className="text-gray-400 text-base sm:text-lg max-w-xl">
-                                    Live NHL betting odds for every hockey game. Get puck lines, moneylines,
-                                    totals, and AI-powered value detection.
+                                    Free AI hockey predictions for today&apos;s NHL games. Get AI-powered picks,
+                                    probability analysis, puck lines, and moneylines with data-driven insights.
                                 </p>
                             </div>
 
@@ -147,9 +147,9 @@ export default function NhlPage() {
                 <section className="border-b border-white/5">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                         <p className="text-gray-400 leading-relaxed max-w-4xl">
-                            Find today&apos;s <strong className="text-white">NHL odds</strong> and betting lines for every hockey game.
-                            Whether you&apos;re betting on the <strong className="text-white">puck line</strong>, moneyline, or total,
-                            our AI analyzes <strong className="text-white">hockey odds</strong> to help bettors find value.
+                            Get free <strong className="text-white">AI hockey predictions</strong> for every NHL game today.
+                            Our <strong className="text-white">AI sports predictor</strong> analyzes goalie matchups, team form, injuries,
+                            and <strong className="text-white">hockey odds</strong> to generate AI NHL picks with probability estimates.
                         </p>
                     </div>
                 </section>
@@ -160,6 +160,42 @@ export default function NhlPage() {
                     accentColor="blue-400"
                     maxMatches={12}
                 />
+
+                {/* How AI Predictions Work */}
+                <section className="border-t border-white/10">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6">
+                            How Our AI Hockey Predictions Work
+                        </h2>
+                        <p className="text-gray-400 mb-8 max-w-3xl">
+                            Our AI sports predictor uses machine learning to analyze thousands of data points
+                            and generate accurate NHL predictions. Here&apos;s how it works:
+                        </p>
+
+                        <div className="grid sm:grid-cols-4 gap-4">
+                            <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
+                                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold mb-3">1</div>
+                                <h3 className="text-white font-semibold mb-2">Data Collection</h3>
+                                <p className="text-gray-400 text-sm">AI gathers goalie stats, team form, injuries, and real-time NHL odds.</p>
+                            </div>
+                            <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
+                                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold mb-3">2</div>
+                                <h3 className="text-white font-semibold mb-2">Pattern Analysis</h3>
+                                <p className="text-gray-400 text-sm">Machine learning identifies trends and patterns from historical hockey data.</p>
+                            </div>
+                            <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
+                                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold mb-3">3</div>
+                                <h3 className="text-white font-semibold mb-2">Probability Calc</h3>
+                                <p className="text-gray-400 text-sm">AI calculates win probabilities and compares them to bookmaker odds.</p>
+                            </div>
+                            <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
+                                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold mb-3">4</div>
+                                <h3 className="text-white font-semibold mb-2">Value Detection</h3>
+                                <p className="text-gray-400 text-sm">Highlights mismatches where AI probability differs from market odds.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
                 {/* Betting Markets */}
                 <section className="border-t border-white/10 bg-white/[0.01]">

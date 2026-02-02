@@ -9,9 +9,9 @@ import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'NBA Kvote Danas - Košarkaške Linije za Klađenje',
-    description: 'Pogledajte današnje NBA kvote, spredove, manije linije i totale za svaku košarkašku utakmicu. Live NBA kvote za klađenje sa AI analizom.',
-    keywords: ['nba kvote', 'nba kladjenje', 'nba linije', 'nba spredovi', 'kosarka kladjenje', 'nba opklade'],
+    title: 'AI NBA Predikcije i Kvote Danas | SportBot AI',
+    description: 'Besplatne AI košarkaške predikcije za današnje NBA utakmice. AI tipovi sa analizom verovatnoće, spredovi i kvote. Data-driven NBA predikcije.',
+    keywords: ['ai nba predikcije', 'ai kosarka predikcije', 'nba ai tipovi', 'nba kvote', 'nba kladjenje', 'nba linije', 'ai sportske predikcije'],
     openGraph: {
         title: 'NBA Kvote Danas - Linije za Klađenje | SportBot AI',
         description: 'Današnje NBA kvote za klađenje sa AI analizom.',
@@ -81,11 +81,11 @@ export default function NbaPageSr() {
                                     </span>
                                 </div>
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-3">
-                                    NBA Kvote Danas
+                                    AI NBA Predikcije i Kvote
                                 </h1>
                                 <p className="text-gray-400 text-base sm:text-lg max-w-xl">
-                                    Live NBA kvote za klađenje za svaku košarkašku utakmicu. Spredovi, manije linije,
-                                    totali i igračke opklade sa AI detekcijom vrednosti.
+                                    Besplatne AI predikcije za današnje NBA utakmice. AI tipovi,
+                                    analiza verovatnoće, spredovi i kvote sa data-driven uvidima.
                                 </p>
                             </div>
 
@@ -108,9 +108,9 @@ export default function NbaPageSr() {
                 <section className="border-b border-white/5">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                         <p className="text-gray-400 leading-relaxed max-w-4xl">
-                            Pronađite današnje <strong className="text-white">NBA kvote</strong> i linije za klađenje za svaku košarkašku utakmicu.
-                            Bilo da tražite <strong className="text-white">NBA opkladu</strong> na spred,
-                            manije liniju ili total, naš AI analizira kvote kladionica da vam pomogne pronaći vrednost.
+                            Dobijte besplatne <strong className="text-white">AI košarkaške predikcije</strong> za svaku NBA utakmicu danas.
+                            Naš <strong className="text-white">AI sportski prediktor</strong> analizira istorijske podatke, formu timova, povrede,
+                            i kretanja kvota da generiše <strong className="text-white">AI NBA tipove</strong> sa procenama verovatnoće.
                         </p>
                     </div>
                 </section>
