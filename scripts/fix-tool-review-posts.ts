@@ -1,4 +1,4 @@
-/**
+bro/**
  * Fix Tool Review Posts - Add tools/ prefix and publish
  * 
  * This script:
