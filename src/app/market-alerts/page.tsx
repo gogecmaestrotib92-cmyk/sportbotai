@@ -170,19 +170,19 @@ function MarketSummary({
   const state = getMarketState();
   
   return (
-    <div className="card-glass rounded-lg px-4 py-3 mb-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+    <div className="card-glass rounded-lg px-3 sm:px-4 py-3 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         {/* Market State */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <span className="text-lg">🧠</span>
-          <div>
-            <span className="text-[10px] text-text-muted uppercase tracking-wider mr-2">Status:</span>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <span className="text-[10px] text-text-muted uppercase tracking-wider">Status:</span>
             <span className={`text-sm font-semibold ${state.color}`}>{state.text}</span>
           </div>
         </div>
         
         {/* Stats row */}
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-3 sm:gap-4 text-sm">
           <div className="flex items-center gap-1.5">
             <span className="text-xl font-extrabold text-emerald-400">{edgeCount}</span>
             <span className="text-text-muted text-xs">edges</span>
@@ -192,8 +192,8 @@ function MarketSummary({
             <span className="text-xl font-extrabold text-amber-400">{steamCount}</span>
             <span className="text-text-muted text-xs">steam</span>
           </div>
-          <div className="w-px h-4 bg-white/10"></div>
-          <div className="text-text-muted/50 text-xs">
+          <div className="w-px h-4 bg-white/10 hidden sm:block"></div>
+          <div className="text-text-muted/50 text-xs hidden sm:block">
             {matchesScanned} scanned
             {lastRefresh && ` • ${lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
           </div>
@@ -215,20 +215,20 @@ function EdgeStrengthBar({ percent, alertLevel }: { percent: number; alertLevel:
                    'bg-emerald-600/60';
   
   return (
-    <div className="flex items-center gap-4 pt-2 border-t border-white/5">
+    <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/5">
       {/* Edge Strength */}
-      <div className="flex items-center gap-2 flex-1">
-        <span className="text-[10px] text-text-muted uppercase">Strength</span>
-        <div className="flex gap-0.5 flex-1 max-w-[60px]">
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-[10px] text-text-muted uppercase shrink-0">Strength</span>
+        <div className="flex gap-0.5 w-12 sm:w-[60px] shrink-0">
           {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className={`h-1 flex-1 rounded-full ${i <= bars ? barColor : 'bg-text-muted/20'}`} />
           ))}
         </div>
-        <span className="text-[10px] text-emerald-400">{label}</span>
+        <span className="text-[10px] text-emerald-400 truncate">{label}</span>
       </div>
       {/* Confidence */}
-      <div className="flex items-center gap-1.5">
-        <span className="text-[10px] text-text-muted uppercase">Conf</span>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <span className="text-[10px] text-text-muted uppercase hidden sm:inline">Conf</span>
         <span className={`text-[10px] font-medium ${confidence.color}`}>{confidence.label}</span>
       </div>
     </div>
@@ -313,27 +313,29 @@ function EdgeMatchCard({ alert }: { alert: MarketAlert }) {
         </div>
       </div>
       
-      {/* Compact odds row */}
-      <div className="flex items-center gap-3 text-xs mb-2.5 bg-emerald-500/5 rounded px-2 py-1.5">
-        <span className="text-text-muted">Odds</span>
-        <span className="font-mono text-text-secondary">
-          {edgeOutcome === 'home' ? alert.homeOdds.toFixed(2) : 
-           edgeOutcome === 'away' ? alert.awayOdds.toFixed(2) : 
-           alert.drawOdds?.toFixed(2)}
-        </span>
-        <span className="text-text-muted/50">→</span>
-        <span className="text-text-muted">Model</span>
-        <span className="font-mono text-emerald-400 font-medium">
-          {edgeOutcome === 'home' ? alert.modelHomeProb : 
-           edgeOutcome === 'away' ? alert.modelAwayProb : 
-           alert.modelDrawProb}%
-        </span>
+      {/* Compact odds row - responsive for mobile */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs mb-2.5 bg-emerald-500/5 rounded px-2 py-1.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-text-muted">Odds</span>
+          <span className="font-mono text-text-secondary">
+            {edgeOutcome === 'home' ? alert.homeOdds.toFixed(2) : 
+             edgeOutcome === 'away' ? alert.awayOdds.toFixed(2) : 
+             alert.drawOdds?.toFixed(2)}
+          </span>
+          <span className="text-text-muted/50">→</span>
+          <span className="text-text-muted">Model</span>
+          <span className="font-mono text-emerald-400 font-medium">
+            {(edgeOutcome === 'home' ? alert.modelHomeProb : 
+             edgeOutcome === 'away' ? alert.modelAwayProb : 
+             alert.modelDrawProb)?.toFixed(1)}%
+          </span>
+        </div>
         {alert.drawOdds && (
-          <>
-            <span className="text-text-muted/30 mx-1">|</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-text-muted/30 hidden sm:inline">|</span>
             <span className="text-text-muted">Draw</span>
             <span className="font-mono text-text-muted">{alert.drawOdds.toFixed(2)}</span>
-          </>
+          </div>
         )}
       </div>
       

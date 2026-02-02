@@ -138,11 +138,13 @@ export default function AIDeskFeedSidebar({ limit = 8 }: { limit?: number }) {
   return (
     <div className="bg-bg-secondary border border-emerald-500/30 ring-1 ring-emerald-500/10 rounded-xl overflow-hidden min-h-[450px] flex flex-col">
       {/* Header - Collapsible */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors"
+      <div
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer"
       >
-        <div className="flex items-center gap-2">
+        <div 
+          className="flex items-center gap-2 flex-1"
+          onClick={() => setExpanded(!expanded)}
+        >
           <Radio className="w-4 h-4 text-emerald-400" />
           <span className="text-sm font-semibold text-white">Live Intel Feed</span>
           <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-medium rounded border border-emerald-500/30">
@@ -151,22 +153,21 @@ export default function AIDeskFeedSidebar({ limit = 8 }: { limit?: number }) {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleRefresh();
-            }}
+            onClick={handleRefresh}
             className="p-1 hover:bg-white/10 rounded transition-colors"
             disabled={refreshing}
           >
             <RefreshCw className={`w-3.5 h-3.5 text-text-muted ${refreshing ? 'animate-spin' : ''}`} />
           </button>
-          {expanded ? (
-            <ChevronUp className="w-4 h-4 text-text-muted" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-text-muted" />
-          )}
+          <button onClick={() => setExpanded(!expanded)} className="p-1">
+            {expanded ? (
+              <ChevronUp className="w-4 h-4 text-text-muted" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-text-muted" />
+            )}
+          </button>
         </div>
-      </button>
+      </div>
 
       {/* Posts List */}
       {expanded && (
