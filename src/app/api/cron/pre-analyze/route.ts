@@ -1730,6 +1730,77 @@ export async function GET(request: NextRequest) {
             const bestEdge = Math.max(homeEdge, awayEdge, drawEdge || 0);
             const alertLevel = bestEdge > 10 ? 'HIGH' : bestEdge > 5 ? 'MEDIUM' : bestEdge > 3 ? 'LOW' : null;
 
+            // ============================================
+            // REAL STEAM MOVE DETECTION
+            // Fetch existing snapshot to calculate ACTUAL line movement
+            // ============================================
+            const existingSnapshot = await prisma.oddsSnapshot.findUnique({
+              where: {
+                matchRef_sport_bookmaker: {
+                  matchRef,
+                  sport: sport.key,
+                  bookmaker: 'consensus',
+                },
+              },
+              select: {
+                homeOdds: true,
+                awayOdds: true,
+                drawOdds: true,
+                openingHomeOdds: true,
+                openingAwayOdds: true,
+                openingDrawOdds: true,
+              },
+            });
+
+            // Calculate real odds changes
+            const STEAM_THRESHOLD = 2.5; // 2.5% change = significant movement
+            let homeChange: number | null = null;
+            let awayChange: number | null = null;
+            let drawChange: number | null = null;
+            let hasSteamMove = false;
+            let steamNote: string | null = null;
+
+            if (existingSnapshot && existingSnapshot.homeOdds > 0) {
+              // Calculate % change from last snapshot
+              homeChange = ((consensus.home - existingSnapshot.homeOdds) / existingSnapshot.homeOdds) * 100;
+              awayChange = ((consensus.away - existingSnapshot.awayOdds) / existingSnapshot.awayOdds) * 100;
+              if (consensus.draw && existingSnapshot.drawOdds) {
+                drawChange = ((consensus.draw - existingSnapshot.drawOdds) / existingSnapshot.drawOdds) * 100;
+              }
+
+              // Detect REAL steam move (significant line movement)
+              if (Math.abs(homeChange) >= STEAM_THRESHOLD) {
+                hasSteamMove = true;
+                steamNote = homeChange < 0 
+                  ? `Sharp money on Home (${Math.abs(homeChange).toFixed(1)}% drop: ${existingSnapshot.homeOdds.toFixed(2)} → ${consensus.home.toFixed(2)})`
+                  : `Line drifting from Home (+${homeChange.toFixed(1)}%: ${existingSnapshot.homeOdds.toFixed(2)} → ${consensus.home.toFixed(2)})`;
+              } else if (Math.abs(awayChange) >= STEAM_THRESHOLD) {
+                hasSteamMove = true;
+                steamNote = awayChange < 0
+                  ? `Sharp money on Away (${Math.abs(awayChange).toFixed(1)}% drop: ${existingSnapshot.awayOdds.toFixed(2)} → ${consensus.away.toFixed(2)})`
+                  : `Line drifting from Away (+${awayChange.toFixed(1)}%: ${existingSnapshot.awayOdds.toFixed(2)} → ${consensus.away.toFixed(2)})`;
+              } else if (drawChange !== null && Math.abs(drawChange) >= STEAM_THRESHOLD) {
+                hasSteamMove = true;
+                steamNote = drawChange < 0
+                  ? `Sharp money on Draw (${Math.abs(drawChange).toFixed(1)}% drop)`
+                  : `Line drifting from Draw (+${drawChange.toFixed(1)}%)`;
+              }
+
+              if (hasSteamMove) {
+                console.log(`[Pre-Analyze] STEAM DETECTED: ${matchRef} - ${steamNote}`);
+              }
+            }
+
+            // Store previous odds (for tracking movement over time)
+            const prevHomeOdds = existingSnapshot?.homeOdds ?? null;
+            const prevAwayOdds = existingSnapshot?.awayOdds ?? null;
+            const prevDrawOdds = existingSnapshot?.drawOdds ?? null;
+
+            // Store opening odds (first time we see this match)
+            const openingHomeOdds = existingSnapshot?.openingHomeOdds ?? consensus.home;
+            const openingAwayOdds = existingSnapshot?.openingAwayOdds ?? consensus.away;
+            const openingDrawOdds = existingSnapshot?.openingDrawOdds ?? consensus.draw ?? null;
+
             await prisma.oddsSnapshot.upsert({
               where: {
                 matchRef_sport_bookmaker: {
@@ -1748,6 +1819,9 @@ export async function GET(request: NextRequest) {
                 homeOdds: consensus.home,
                 awayOdds: consensus.away,
                 drawOdds: consensus.draw ?? null,
+                openingHomeOdds: consensus.home,  // First snapshot = opening odds
+                openingAwayOdds: consensus.away,
+                openingDrawOdds: consensus.draw ?? null,
                 modelHomeProb: homeProb,  // PIPELINE probability (Poisson/Elo)
                 modelAwayProb: awayProb,
                 modelDrawProb: drawProb || null,
@@ -1755,14 +1829,29 @@ export async function GET(request: NextRequest) {
                 awayEdge,
                 drawEdge,
                 hasValueEdge: bestEdge >= 3,
+                hasSteamMove: false,  // First snapshot = no steam yet
                 alertLevel,
                 alertNote: pipelineMarketIntel?.valueEdge?.label || null,
                 bookmaker: 'consensus',
               },
               update: {
+                // Current odds
                 homeOdds: consensus.home,
                 awayOdds: consensus.away,
                 drawOdds: consensus.draw ?? null,
+                // Previous odds (for tracking)
+                prevHomeOdds,
+                prevAwayOdds,
+                prevDrawOdds,
+                // Opening odds (preserved)
+                openingHomeOdds,
+                openingAwayOdds,
+                openingDrawOdds,
+                // Calculated changes
+                homeChange,
+                awayChange,
+                drawChange,
+                // Model probabilities
                 modelHomeProb: homeProb,  // PIPELINE probability (Poisson/Elo)
                 modelAwayProb: awayProb,
                 modelDrawProb: drawProb || null,
@@ -1770,8 +1859,10 @@ export async function GET(request: NextRequest) {
                 awayEdge,
                 drawEdge,
                 hasValueEdge: bestEdge >= 3,
+                // REAL steam detection
+                hasSteamMove,
                 alertLevel,
-                alertNote: pipelineMarketIntel?.valueEdge?.label || null,
+                alertNote: hasSteamMove ? steamNote : (pipelineMarketIntel?.valueEdge?.label || null),
                 updatedAt: new Date(),
               },
             });

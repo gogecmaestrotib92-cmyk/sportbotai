@@ -314,18 +314,34 @@ function calculateOddsChange(current: number, previous: number | null): number |
 
 /**
  * Detect steam moves (sharp line movements)
- * If no previous data exists, simulate potential steam based on market patterns
+ * ONLY returns true if we have REAL line movement data from OddsSnapshot
+ * No more fake "watching for movement" based on odds patterns
  */
 function detectSteamMove(
   homeChange: number | undefined, 
   awayChange: number | undefined,
   homeOdds: number,
   awayOdds: number,
-  hasPreviousData: boolean
+  hasPreviousData: boolean,
+  dbSteamMove?: boolean,  // From OddsSnapshot.hasSteamMove
+  dbSteamNote?: string    // From OddsSnapshot.alertNote (if steam)
 ): { hasSteam: boolean; direction: string; note: string } {
   const STEAM_THRESHOLD = 2.5; // 2.5% change is significant
   
-  // If we have actual change data
+  // PRIORITY 1: Use pre-computed steam move from DB (most reliable)
+  // This is calculated by pre-analyze cron which tracks actual line movement
+  if (dbSteamMove && dbSteamNote) {
+    const direction = dbSteamNote.includes('Home') ? 'toward_home' : 
+                      dbSteamNote.includes('Away') ? 'toward_away' : 
+                      dbSteamNote.includes('Draw') ? 'toward_draw' : 'stable';
+    return {
+      hasSteam: true,
+      direction,
+      note: dbSteamNote,
+    };
+  }
+  
+  // PRIORITY 2: If we have actual change data from current session
   if (homeChange !== undefined && Math.abs(homeChange) >= STEAM_THRESHOLD) {
     return {
       hasSteam: true,
@@ -346,33 +362,9 @@ function detectSteamMove(
     };
   }
   
-  // If no previous data, detect potential steam from odds pattern
-  // Very short prices (< 1.40) often move - indicate monitoring
-  if (!hasPreviousData) {
-    if (homeOdds < 1.40) {
-      return {
-        hasSteam: true,
-        direction: 'toward_home',
-        note: `Heavy favorite - watching for line movement`,
-      };
-    }
-    if (awayOdds < 1.40) {
-      return {
-        hasSteam: true,
-        direction: 'toward_away',
-        note: `Heavy favorite - watching for line movement`,
-      };
-    }
-    // Close matches often see steam
-    if (Math.abs(homeOdds - awayOdds) < 0.20 && homeOdds < 2.5) {
-      return {
-        hasSteam: true,
-        direction: 'stable',
-        note: `Tight line - potential sharp action expected`,
-      };
-    }
-  }
-  
+  // NO FAKE STEAM: If no real data, return no steam
+  // Previously we had heuristics like "Heavy favorite - watching for movement"
+  // but that's misleading - it's not a real steam move
   return { hasSteam: false, direction: 'stable', note: '' };
 }
 
@@ -584,13 +576,15 @@ export async function GET(request: NextRequest) {
         ? calculateOddsChange(consensus.draw, prevSnapshot.drawOdds)
         : undefined;
       
-      // Detect steam moves
+      // Detect steam moves - use REAL data from DB or calculated changes
       const steam = detectSteamMove(
         homeChange, 
         awayChange, 
         consensus.home, 
         consensus.away, 
-        !!prevSnapshot
+        !!prevSnapshot,
+        prevSnapshot?.hasSteamMove ?? false,  // DB-computed steam move
+        prevSnapshot?.hasSteamMove ? (prevSnapshot?.alertNote ?? undefined) : undefined  // Steam note
       );
       
       // Get cached AI analysis (O(1) from map) - FALLBACK source
