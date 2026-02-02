@@ -378,12 +378,26 @@ function HeroContent({
 
       {/* Probability Comparison Grid - Vertical Cards in Row */}
       {canSeeExactNumbers && modelProbability && impliedProbability && (() => {
-        // Calculate which outcome has the best value edge
+        // IMPORTANT: Normalize implied probabilities to remove vig
+        // Raw implied probs sum to >100% due to bookmaker margin
+        // We need to normalize them so edge calculations make sense
+        const impliedSum = impliedProbability.home + impliedProbability.away + 
+          (hasDraw && impliedProbability.draw !== undefined ? impliedProbability.draw : 0);
+        
+        const normalizedImplied = {
+          home: (impliedProbability.home / impliedSum) * 100,
+          away: (impliedProbability.away / impliedSum) * 100,
+          draw: hasDraw && impliedProbability.draw !== undefined 
+            ? (impliedProbability.draw / impliedSum) * 100 
+            : undefined
+        };
+        
+        // Calculate which outcome has the best value edge (using normalized probs)
         const edges = {
-          home: modelProbability.home - impliedProbability.home,
-          away: modelProbability.away - impliedProbability.away,
-          draw: hasDraw && modelProbability.draw !== undefined && impliedProbability.draw !== undefined 
-            ? modelProbability.draw - impliedProbability.draw 
+          home: modelProbability.home - normalizedImplied.home,
+          away: modelProbability.away - normalizedImplied.away,
+          draw: normalizedImplied.draw !== undefined && modelProbability.draw !== undefined
+            ? modelProbability.draw - normalizedImplied.draw 
             : -Infinity
         };
         const maxEdge = Math.max(edges.home, edges.away, edges.draw);
@@ -397,17 +411,17 @@ function HeroContent({
             <ProbabilityCard
               label={homeTeam || 'Home'}
               modelProb={modelProbability.home}
-              marketProb={impliedProbability.home}
+              marketProb={normalizedImplied.home}
               t={t}
               isBestValue={bestValue === 'home'}
             />
             
             {/* Draw (if applicable) - in middle */}
-            {hasDraw && modelProbability.draw !== undefined && impliedProbability.draw !== undefined && (
+            {hasDraw && modelProbability.draw !== undefined && normalizedImplied.draw !== undefined && (
               <ProbabilityCard
                 label="Draw"
                 modelProb={modelProbability.draw}
-                marketProb={impliedProbability.draw}
+                marketProb={normalizedImplied.draw}
                 t={t}
                 isBestValue={bestValue === 'draw'}
               />
@@ -417,7 +431,7 @@ function HeroContent({
             <ProbabilityCard
               label={awayTeam || 'Away'}
               modelProb={modelProbability.away}
-              marketProb={impliedProbability.away}
+              marketProb={normalizedImplied.away}
               t={t}
               isBestValue={bestValue === 'away'}
             />
