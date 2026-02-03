@@ -98,8 +98,10 @@ export default function SportLeagueSelector({
                   alt=""
                   fill
                   sizes="(max-width: 768px) 50vw, 25vw"
+                  quality={60}
                   className="object-cover object-center transition-transform duration-300 group-hover:scale-105 pointer-events-none"
                   priority={sport.id === 'soccer'}
+                  fetchPriority={sport.id === 'soccer' ? 'high' : 'auto'}
                   aria-hidden="true"
                 />
                 {/* Dark Gradient Overlay */}
