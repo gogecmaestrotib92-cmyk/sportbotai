@@ -545,7 +545,7 @@ export async function sendToolReviewOutreach(
         </p>
         
         <p style="margin: 30px 0 0 0; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 13px; color: #9ca3af;">
-          P.S. If you want the badge, <a href="https://www.sportbotai.com/badge" style="color: #10B981; text-decoration: none;">grab the code here</a> – takes 30 seconds.
+          P.S. If you want the badge, <a href="${reviewUrl}#badge" style="color: #10B981; text-decoration: none;">grab the code here</a> – takes 30 seconds.
         </p>
         
       </td>
@@ -572,7 +572,7 @@ Stefan
 Founder, SportBot AI
 https://www.sportbotai.com
 
-P.S. If you want the badge, grab the code here: https://www.sportbotai.com/badge`;
+P.S. If you want the badge, grab the code here: ${reviewUrl}#badge`;
 
   return sendEmail({
     to: email,
