@@ -852,42 +852,62 @@ async function runQuickAnalysis(
 
     // Get enriched match data through UNIFIED SERVICE (consistent 4-layer data across app)
     // Also get injuries, referee, and roster context in parallel
-    // For soccer: fetch via API-Sports, for NBA/NHL/NFL: fetch via Perplexity
+    // For soccer: fetch via API-Sports, for NBA/NHL/NFL: fetch via ESPN injuries API
     const isSoccerMatch = sport.startsWith('soccer_');
     const isUSAorBasketball = sport.includes('basketball') || sport.includes('hockey') || sport.includes('nhl') ||
       sport.includes('football') || sport.includes('nfl');
 
-    const [unifiedData, injuryInfo, structuredInjuries, perplexityInjuries, refereeContext, rosterContext] = await Promise.all([
+    // Determine ESPN sport key for US sports
+    const espnSportKey: 'nba' | 'nhl' | 'nfl' | null = isUSAorBasketball
+      ? (sport.includes('basketball') || sport.includes('nba') ? 'nba'
+        : sport.includes('hockey') || sport.includes('nhl') ? 'nhl'
+        : sport.includes('football') || sport.includes('nfl') ? 'nfl' : null)
+      : null;
+
+    const [unifiedData, injuryInfo, structuredInjuries, espnHomeInjuries, espnAwayInjuries, refereeContext, rosterContext] = await Promise.all([
       getUnifiedMatchData(matchId, { odds: oddsInfo, includeOdds: false }),
       getInjuryInfo(homeTeam, awayTeam, sport, league),
       isSoccerMatch ? getMatchInjuries(homeTeam, awayTeam, league) : Promise.resolve({ home: [], away: [] }),
-      isUSAorBasketball ? getMatchInjuriesViaPerplexity(homeTeam, awayTeam, sport) : Promise.resolve({ success: false, home: [], away: [] }),
+      // For US sports: use ESPN injuries API directly (not Perplexity)
+      espnSportKey ? getESPNInjuriesForTeam(homeTeam, espnSportKey) : Promise.resolve([]),
+      espnSportKey ? getESPNInjuriesForTeam(awayTeam, espnSportKey) : Promise.resolve([]),
       getRefereeContext(homeTeam, awayTeam, sport, league),
       // Fetch real-time roster context for NBA/NHL/NFL to avoid outdated AI training data
       rosterSport ? getRosterContextCached(homeTeam, awayTeam, rosterSport, league) : Promise.resolve(null),
     ]);
 
-    // Merge injuries from soccer API or Perplexity - with safeguards against undefined values
+    // Merge injuries from soccer API or ESPN - with safeguards against undefined values
     const safeString = (val: any, fallback = 'Unknown'): string =>
       val !== undefined && val !== null && val !== '' ? String(val) : fallback;
 
     const finalInjuries = {
       home: isSoccerMatch
         ? (structuredInjuries?.home || [])
-        : (perplexityInjuries?.home?.map(i => ({
+        : (espnHomeInjuries?.map(i => ({
           player: safeString(i.playerName, 'Unknown Player'),
-          reason: `${safeString(i.injury, 'Injury')} - ${safeString(i.status, 'Unknown Status')}`
+          position: 'Unknown', // ESPN doesn't provide position in NormalizedInjury
+          reason: 'injury' as const,
+          details: `${safeString(i.type, 'Injury')} - ${safeString(i.status, 'Unknown Status')}`,
+          expectedReturn: i.expectedReturn ? i.expectedReturn.toISOString() : undefined,
         })).filter(i => i.player !== 'Unknown Player') || []),
       away: isSoccerMatch
         ? (structuredInjuries?.away || [])
-        : (perplexityInjuries?.away?.map(i => ({
+        : (espnAwayInjuries?.map(i => ({
           player: safeString(i.playerName, 'Unknown Player'),
-          reason: `${safeString(i.injury, 'Injury')} - ${safeString(i.status, 'Unknown Status')}`
+          position: 'Unknown', // ESPN doesn't provide position in NormalizedInjury
+          reason: 'injury' as const,
+          details: `${safeString(i.type, 'Injury')} - ${safeString(i.status, 'Unknown Status')}`,
+          expectedReturn: i.expectedReturn ? i.expectedReturn.toISOString() : undefined,
         })).filter(i => i.player !== 'Unknown Player') || []),
     };
 
     console.log(`[Pre-Analyze] Injuries fetched - home: ${finalInjuries.home.length}, away: ${finalInjuries.away.length} (source: ${isSoccerMatch ? 'API-Sports' : 'ESPN'})`);
-
+    if (finalInjuries.home.length > 0) {
+      console.log(`[Pre-Analyze] ${homeTeam} injuries: ${finalInjuries.home.slice(0, 3).map(i => i.player).join(', ')}`);
+    }
+    if (finalInjuries.away.length > 0) {
+      console.log(`[Pre-Analyze] ${awayTeam} injuries: ${finalInjuries.away.slice(0, 3).map(i => i.player).join(', ')}`);
+    }
 
     // Use enriched data from unified service for cross-sport compatibility
     const enrichedData = unifiedData.enrichedData as any;
