@@ -333,7 +333,7 @@ function parseMatchIdClient(matchId: string): { homeTeam: string; awayTeam: stri
       awayTeam: parts[1].replace(/-/g, ' '),
       league: parts[2].replace(/-/g, ' '),
       sport: 'soccer',
-      kickoff: kickoff || undefined,
+      kickoff: kickoff || new Date().toISOString(),
     };
   }
 
