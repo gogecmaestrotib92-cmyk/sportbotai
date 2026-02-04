@@ -15,6 +15,7 @@ const ESPN_INJURY_URLS = {
 } as const;
 
 // Team name mappings from ESPN format to our normalized format
+// ESPN uses abbreviations like "LA Clippers" instead of "Los Angeles Clippers"
 const ESPN_TO_NORMALIZED_TEAM: Record<string, string> = {
     'atlanta hawks': 'hawks',
     'boston celtics': 'celtics',
@@ -28,7 +29,9 @@ const ESPN_TO_NORMALIZED_TEAM: Record<string, string> = {
     'golden state warriors': 'warriors',
     'houston rockets': 'rockets',
     'indiana pacers': 'pacers',
+    'la clippers': 'clippers',  // ESPN uses "LA" not "Los Angeles"
     'los angeles clippers': 'clippers',
+    'la lakers': 'lakers',  // ESPN might use "LA" 
     'los angeles lakers': 'lakers',
     'memphis grizzlies': 'grizzlies',
     'miami heat': 'heat',
@@ -37,15 +40,16 @@ const ESPN_TO_NORMALIZED_TEAM: Record<string, string> = {
     'new orleans pelicans': 'pelicans',
     'new york knicks': 'knicks',
     'oklahoma city thunder': 'thunder',
+    'phoenix suns': 'suns',
     'orlando magic': 'magic',
     'philadelphia 76ers': '76ers',
-    'phoenix suns': 'suns',
     'portland trail blazers': 'trail blazers',
     'sacramento kings': 'kings',
     'san antonio spurs': 'spurs',
     'toronto raptors': 'raptors',
     'utah jazz': 'jazz',
     'washington wizards': 'wizards',
+    'indiana pacers': 'pacers',
 };
 
 interface ESPNInjuryResponse {
@@ -172,21 +176,32 @@ export async function getESPNInjuriesForTeam(
 
     // Normalize the team name for matching
     const normalizedQuery = teamName.toLowerCase().trim();
+    // Extract just the team nickname (last word) - "Clippers", "Lakers", "Cavaliers"
+    const queryNickname = normalizedQuery.split(' ').pop() || normalizedQuery;
 
     // Find matching team
     const teamData = data.injuries.find(team => {
         const teamNameLower = team.displayName.toLowerCase();
         const shortName = ESPN_TO_NORMALIZED_TEAM[teamNameLower] || teamNameLower;
+        // Extract ESPN's team nickname
+        const espnNickname = teamNameLower.split(' ').pop() || teamNameLower;
 
         return (
+            // Direct match
+            teamNameLower === normalizedQuery ||
+            // ESPN name contains our query
             teamNameLower.includes(normalizedQuery) ||
+            // Our query contains ESPN's short name
             normalizedQuery.includes(shortName) ||
-            normalizedQuery.includes(teamNameLower.split(' ').pop() || '') // Match just "Nuggets", "Lakers", etc.
+            // Match by nickname (most reliable for "LA Clippers" vs "Los Angeles Clippers")
+            espnNickname === queryNickname ||
+            // Our query contains ESPN's nickname
+            normalizedQuery.includes(espnNickname)
         );
     });
 
     if (!teamData || !teamData.injuries) {
-        console.log(`[ESPN Injuries] No injury data found for team: ${teamName}`);
+        console.log(`[ESPN Injuries] No injury data found for team: ${teamName} (searched with nickname: ${queryNickname})`);
         return [];
     }
 
