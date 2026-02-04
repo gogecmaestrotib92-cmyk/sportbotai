@@ -677,6 +677,40 @@ function getConsensusOdds(event: OddsApiEvent): { home: number; away: number; dr
 }
 
 /**
+ * Get Over/Under line from bookmakers
+ * Returns the consensus O/U line (averaged across bookmakers)
+ */
+function getOverUnderData(event: OddsApiEvent): { line: number; overOdds?: number; underOdds?: number } | null {
+  if (!event.bookmakers || event.bookmakers.length === 0) return null;
+
+  let lineTotal = 0, overOddsTotal = 0, underOddsTotal = 0;
+  let count = 0;
+
+  for (const bookmaker of event.bookmakers) {
+    const totalsMarket = bookmaker.markets.find(m => m.key === 'totals');
+    if (!totalsMarket) continue;
+
+    const overOutcome = totalsMarket.outcomes.find(o => o.name.toLowerCase() === 'over');
+    const underOutcome = totalsMarket.outcomes.find(o => o.name.toLowerCase() === 'under');
+
+    if (overOutcome?.point && overOutcome.price && underOutcome?.price) {
+      lineTotal += overOutcome.point;
+      overOddsTotal += overOutcome.price;
+      underOddsTotal += underOutcome.price;
+      count++;
+    }
+  }
+
+  if (count === 0) return null;
+
+  return {
+    line: lineTotal / count,
+    overOdds: overOddsTotal / count,
+    underOdds: underOddsTotal / count,
+  };
+}
+
+/**
  * Generate clean, SEO-friendly matchId slug
  */
 function generateMatchId(event: OddsApiEvent, sportKey: string, _league: string): string {
@@ -1255,10 +1289,10 @@ export async function GET(request: NextRequest) {
     try {
       console.log(`[Pre-Analyze] Fetching events for ${sport.key}...`);
 
-      // Get odds (includes events)
+      // Get odds (includes events) - fetch h2h AND totals for O/U data
       const oddsResponse = await theOddsClient.getOddsForSport(sport.key, {
         regions: ['eu', 'us'],
-        markets: ['h2h'],
+        markets: ['h2h', 'totals'],
       });
 
       if (!oddsResponse.data || oddsResponse.data.length === 0) {
@@ -1289,6 +1323,12 @@ export async function GET(request: NextRequest) {
           if (!consensus) {
             console.log(`[Pre-Analyze] No odds for ${event.home_team} vs ${event.away_team}`);
             continue;
+          }
+
+          // Extract O/U data from the same event
+          const overUnderData = getOverUnderData(event);
+          if (overUnderData) {
+            console.log(`[Pre-Analyze] O/U line: ${overUnderData.line} (over: ${overUnderData.overOdds?.toFixed(2)}, under: ${overUnderData.underOdds?.toFixed(2)})`);
           }
 
           const matchRef = `${event.home_team} vs ${event.away_team}`;
@@ -1706,6 +1746,8 @@ export async function GET(request: NextRequest) {
             },
             // Expected scores from Poisson/Elo model
             expectedScores,
+            // Over/Under data from totals market
+            overUnder: overUnderData,
             preAnalyzed: true,
             preAnalyzedAt: new Date().toISOString(),
           };
