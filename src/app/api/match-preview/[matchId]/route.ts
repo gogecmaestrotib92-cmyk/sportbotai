@@ -1484,7 +1484,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       awayTeam: matchInfo.awayTeam,
       league: matchInfo.league,
       sport: matchInfo.sport,
-      kickoff: matchInfo.kickoff,
+      kickoff: matchInfo.kickoff || new Date().toISOString(),
       homeForm: homeFormStr,
       awayForm: awayFormStr,
       homeStats,
