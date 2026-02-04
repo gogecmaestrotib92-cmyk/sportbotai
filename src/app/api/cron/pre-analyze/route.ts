@@ -1627,7 +1627,12 @@ export async function GET(request: NextRequest) {
             awayForm: awayFormStr,
           };
 
-          const expectedScores = getExpectedScores(modelInputForScores);
+          // Pass consensus odds to getExpectedScores for odds-based adjustments when stats are missing
+          const expectedScores = getExpectedScores(modelInputForScores, {
+            homeOdds: consensus.home,
+            awayOdds: consensus.away,
+            drawOdds: consensus.draw,
+          });
           console.log(`[Pre-Analyze] Expected scores: ${event.home_team} ${expectedScores.home} - ${expectedScores.away} ${event.away_team}`);
 
           const cacheResponse = {

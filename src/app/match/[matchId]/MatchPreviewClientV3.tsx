@@ -316,12 +316,24 @@ function parseMatchIdClient(matchId: string): { homeTeam: string; awayTeam: stri
   // Fallback: parse underscore-separated format (old format)
   const parts = matchId.split('_');
   if (parts.length >= 3) {
+    // Safely parse timestamp - only use if it's a valid number
+    // Use empty string as fallback to avoid hydration mismatch (new Date() differs server/client)
+    let kickoff = '';
+    if (parts[3]) {
+      const timestamp = parseInt(parts[3]);
+      if (!isNaN(timestamp) && timestamp > 0) {
+        const date = new Date(timestamp);
+        if (!isNaN(date.getTime())) {
+          kickoff = date.toISOString();
+        }
+      }
+    }
     return {
       homeTeam: parts[0].replace(/-/g, ' '),
       awayTeam: parts[1].replace(/-/g, ' '),
       league: parts[2].replace(/-/g, ' '),
       sport: 'soccer',
-      kickoff: parts[3] ? new Date(parseInt(parts[3])).toISOString() : new Date().toISOString(),
+      kickoff: kickoff || undefined,
     };
   }
 

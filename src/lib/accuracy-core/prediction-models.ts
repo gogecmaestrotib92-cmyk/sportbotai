@@ -580,20 +580,23 @@ export function getExpectedScores(
   // For hockey/NHL with missing stats: Use league average + odds adjustment
   if (isHockey && !hasStats) {
     console.log(`[getExpectedScores] Using league average for hockey (no stats)`);
+    // NHL averages: ~3.1 goals/game per team, home team slightly higher
     let homeGoals = 3.2;
-    let awayGoals = 3.0;
+    let awayGoals = 2.9;
     
-    // If we have odds, adjust based on favorite
+    // If we have odds, adjust based on favorite strength
+    // This gives more realistic score spreads based on market expectations
     if (odds?.homeOdds && odds?.awayOdds) {
       const homeProb = 1 / odds.homeOdds;
       const awayProb = 1 / odds.awayOdds;
       const total = homeProb + awayProb;
       const normHomeProb = homeProb / total;
       
-      // Swing ±0.3 goals based on favorite
-      const homeAdj = (normHomeProb - 0.5) * 0.6;
-      homeGoals = Math.max(2.5, Math.min(4.0, 3.2 + homeAdj));
-      awayGoals = Math.max(2.5, Math.min(3.5, 3.0 - homeAdj));
+      // Stronger swing ±0.8 goals based on favorite for meaningful variation
+      // normHomeProb: 0.5 = even, 0.6 = home slight fav, 0.7 = home big fav
+      const homeAdj = (normHomeProb - 0.5) * 1.6; // ±0.8 for strong favorites
+      homeGoals = Math.max(2.4, Math.min(4.2, 3.2 + homeAdj));
+      awayGoals = Math.max(2.2, Math.min(3.6, 2.9 - homeAdj * 0.6)); // Away adjusts less
     }
     
     return {

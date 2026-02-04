@@ -2144,15 +2144,35 @@ function parseMatchId(matchId: string) {
   }
 
   // Fallback: underscore-separated format
+  // Check for _vs_ format first (e.g., leeds_united_vs_nottingham_forest)
+  if (matchId.includes('_vs_')) {
+    const [homePart, awayPart] = matchId.split('_vs_');
+    if (homePart && awayPart) {
+      return {
+        homeTeam: homePart.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+        awayTeam: awayPart.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+        league: 'TBD',
+        sport: 'soccer',
+        kickoff: undefined, // Will be filled from database
+        venue: null,
+      };
+    }
+  }
+
   const parts = matchId.split('_');
   if (parts.length >= 3) {
     const league = normalizeLeagueName(parts[2].replace(/-/g, ' '));
+    // Validate that parts[3] is a valid timestamp number before using it
+    const timestamp = parts[3] ? parseInt(parts[3]) : NaN;
+    const kickoff = !isNaN(timestamp) && timestamp > 0 
+      ? new Date(timestamp).toISOString() 
+      : new Date().toISOString();
     return {
       homeTeam: parts[0].replace(/-/g, ' '),
       awayTeam: parts[1].replace(/-/g, ' '),
       league,
       sport: detectSportFromLeague(league) || 'soccer',
-      kickoff: parts[3] ? new Date(parseInt(parts[3])).toISOString() : new Date().toISOString(),
+      kickoff,
       venue: null,
     };
   }

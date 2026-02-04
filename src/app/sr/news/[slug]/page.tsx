@@ -328,10 +328,17 @@ export default async function SerbianNewsArticlePage({ params }: NewsArticlePage
                 </div>
               )}
 
-              {/* Title */}
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-6 leading-tight">
+              {/* Title - Creative headline for readers */}
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-3 leading-tight">
                 {articleTitle}
               </h1>
+
+              {/* SEO Subtitle - Shows "prediction" keyword when newsTitle differs from title */}
+              {post.newsTitle && post.newsTitle !== post.title && (
+                <p className="text-lg text-slate-600 mb-6 font-medium">
+                  {post.titleSr || post.title}
+                </p>
+              )}
 
               {/* Meta - with author link */}
               <div className="flex flex-wrap items-center gap-4 text-slate-700 text-sm mb-8 font-medium">

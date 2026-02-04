@@ -3,7 +3,7 @@
 import { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getBlogPostBreadcrumb, SITE_CONFIG } from '@/lib/seo';
 import ViewTracker from '@/components/ViewTracker';
@@ -47,6 +47,11 @@ async function getPost(slug: string) {
 
   if (!post || post.status !== 'PUBLISHED') {
     return null;
+  }
+
+  // Signal that MATCH_PREVIEW posts should redirect to /news/[slug]
+  if (post.postType === 'MATCH_PREVIEW') {
+    return { redirectToNews: true, slug };
   }
 
   // NOTE: Views are tracked client-side via ViewTracker component
@@ -179,6 +184,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   if (!data) {
     notFound();
+  }
+
+  // Redirect MATCH_PREVIEW posts to /news for proper news layout
+  if ('redirectToNews' in data && data.redirectToNews) {
+    redirect(`/news/${data.slug}`);
   }
 
   const { post, relatedPosts } = data;

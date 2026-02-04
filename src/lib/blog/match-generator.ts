@@ -324,7 +324,12 @@ async function generateMatchFeaturedImage(
       alt: `${match.homeTeam} vs ${match.awayTeam} - ${match.league} Match Preview`,
     };
   } catch (error) {
-    console.warn('[Match Image] Image generation failed:', error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error('[Match Image] ❌ Image generation failed for', match.homeTeam, 'vs', match.awayTeam);
+    console.error('[Match Image] Error details:', errorMsg);
+    if (error instanceof Error && error.stack) {
+      console.error('[Match Image] Stack:', error.stack.split('\n').slice(0, 3).join('\n'));
+    }
 
     // Fallback: Use a placeholder with match info
     const placeholderText = encodeURIComponent(`${match.homeTeam} vs ${match.awayTeam}`);

@@ -4,7 +4,7 @@
 import { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { SITE_CONFIG } from '@/lib/seo';
 import ViewTracker from '@/components/ViewTracker';
@@ -62,6 +62,11 @@ async function getBlogPost(slug: string) {
 
   if (!post) {
     return null;
+  }
+
+  // Signal that MATCH_PREVIEW posts should redirect to /sr/news/[slug]
+  if (post.postType === 'MATCH_PREVIEW') {
+    return { redirectToNews: true, slug };
   }
 
   // Get related posts with Serbian content
@@ -169,6 +174,11 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
 
   if (!data) {
     notFound();
+  }
+
+  // Redirect MATCH_PREVIEW posts to /sr/news for proper news layout
+  if ('redirectToNews' in data && data.redirectToNews) {
+    redirect(`/sr/news/${data.slug}`);
   }
 
   const { post, relatedPosts } = data;
