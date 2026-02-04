@@ -85,7 +85,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   const slug = slugArray.join('/');
   const data = await getPost(slug);
 
-  if (!data) {
+  if (!data || !('post' in data) || !data.post) {
     return {
       title: 'Post Not Found | SportBot AI',
     };
