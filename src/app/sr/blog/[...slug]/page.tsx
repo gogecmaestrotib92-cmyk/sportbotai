@@ -180,6 +180,11 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
     redirect(`/sr/news/${data.slug}`);
   }
 
+  // Type guard - at this point we know data has post
+  if (!('post' in data) || !data.post) {
+    notFound();
+  }
+
   const { post, relatedPosts } = data;
   const baseUrl = SITE_CONFIG.url;
 

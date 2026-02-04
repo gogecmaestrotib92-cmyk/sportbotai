@@ -190,6 +190,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     redirect(`/news/${data.slug}`);
   }
 
+  // Type guard - at this point we know data has post
+  if (!('post' in data) || !data.post) {
+    notFound();
+  }
+
   const { post, relatedPosts } = data;
 
   // JSON-LD structured data
