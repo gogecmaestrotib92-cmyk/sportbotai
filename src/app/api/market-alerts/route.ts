@@ -605,26 +605,24 @@ export async function GET(request: NextRequest) {
       let valueEdgeLabel: string | undefined;
       let usingPipelineProbs = false; // Track if we're using proper Poisson/Elo probabilities
       
-      // PRIORITY 1: Use OddsSnapshot model probabilities (populated by pre-analyze cron with Poisson/Elo)
+      // PRIORITY 1: Use OddsSnapshot model probabilities and edges (populated by pre-analyze cron with Poisson/Elo)
       // This is the most reliable source as it's persisted in DB
+      // FIX: Use the stored edge directly - it was calculated with accurate pipeline data
+      // Don't recalculate with live odds as that can reduce edge visibility
       if (prevSnapshot?.modelHomeProb && prevSnapshot?.modelAwayProb && 
           prevSnapshot.modelHomeProb > 0 && prevSnapshot.modelAwayProb > 0) {
         modelHomeProb = prevSnapshot.modelHomeProb;
         modelAwayProb = prevSnapshot.modelAwayProb;
         modelDrawProb = prevSnapshot.modelDrawProb ?? undefined;
+        // Use stored edge directly - this is what the AI model calculated
         homeEdge = prevSnapshot.homeEdge ?? 0;
         awayEdge = prevSnapshot.awayEdge ?? 0;
         drawEdge = prevSnapshot.drawEdge ?? undefined;
         valueEdgeLabel = prevSnapshot.alertNote ?? undefined;
         usingPipelineProbs = true;
-        // Note: We still recalculate edges below based on CURRENT consensus odds
-        // in case odds have changed since pre-analyze ran
-        const homeImplied = oddsToImpliedProb(consensus.home);
-        const awayImplied = oddsToImpliedProb(consensus.away);
-        const drawImplied = consensus.draw ? oddsToImpliedProb(consensus.draw) : 0;
-        homeEdge = modelHomeProb - homeImplied;
-        awayEdge = modelAwayProb - awayImplied;
-        drawEdge = modelDrawProb ? modelDrawProb - drawImplied : undefined;
+        // NOTE: We no longer recalculate edges with live odds
+        // The stored edge represents the model's view at analysis time
+        // If odds have drifted, that's actually more value (or the edge has closed)
       }
       // PRIORITY 2: Use Redis cached analysis (may be empty on serverless cold start)
       else if (cachedAnalysis?.marketIntel?.modelProbability) {
