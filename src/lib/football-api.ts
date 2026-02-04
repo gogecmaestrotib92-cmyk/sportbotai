@@ -307,8 +307,8 @@ const TEAM_NAME_MAPPINGS: Record<string, { id?: number; leagueId?: number; searc
   'Cadiz CF': { id: 724, leagueId: 141 },
   'Granada': { id: 715, leagueId: 141 },
   'Granada CF': { id: 715, leagueId: 141 },
-  'Levante': { id: 541, leagueId: 141 },
-  'Levante UD': { id: 541, leagueId: 141 },
+  'Levante': { id: 538, leagueId: 141 },  // Corrected from 541
+  'Levante UD': { id: 538, leagueId: 141 },  // Corrected from 541
   'Racing Santander': { id: 721, leagueId: 141 },
   'Sporting Gijon': { id: 546, leagueId: 141 },
   'Real Sporting': { id: 546, leagueId: 141 },
@@ -398,7 +398,7 @@ const TEAM_NAME_MAPPINGS: Record<string, { id?: number; leagueId?: number; searc
   'Crvena Zvezda': { id: 592, leagueId: 2 },
   'Olympiacos': { id: 553, leagueId: 2 },
   'PAOK': { id: 556, leagueId: 3 },
-  'Panathinaikos': { id: 556, leagueId: 3 },
+  'Panathinaikos': { id: 557, leagueId: 3 },  // Corrected from 556
 
   // ============================================
   // SERIE A (league 135) - 20 teams
@@ -713,6 +713,233 @@ const TEAM_NAME_MAPPINGS: Record<string, { id?: number; leagueId?: number; searc
   'Partick Thistle': { id: 901, leagueId: 179 },
   'Ayr United': { id: 1387, leagueId: 179 },
   'Ayr Utd': { id: 1387, leagueId: 179 },
+  'Falkirk F.C.': { id: 1389, leagueId: 179 },  // Odds API variant
+
+  // ============================================
+  // PRIMEIRA LIGA ADDITIONS (league 94) - Portugal
+  // Additional teams and variants from The Odds API
+  // ============================================
+  'CF Estrela': { id: 4281, leagueId: 94 },  // CF Estrela da Amadora
+  'CF Estrela Amadora': { id: 4281, leagueId: 94 },
+  'Tondela': { id: 240, leagueId: 94 },
+  'CD Tondela': { id: 240, leagueId: 94 },
+  'Alverca': { id: 15630, leagueId: 94 },
+  'FC Alverca': { id: 15630, leagueId: 94 },
+
+  // ============================================
+  // SUPER LIG ADDITIONS (league 203) - Turkey
+  // Additional teams and variants from The Odds API
+  // ============================================
+  'Fatih Karagümrük': { id: 3589, leagueId: 203 },
+  'Fatih Karagumruk': { id: 3589, leagueId: 203 },
+  'Karagumruk': { id: 3589, leagueId: 203 },
+  'Eyüpspor': { id: 3571, leagueId: 203 },  // With diacritic
+  'Çaykur Rizespor': { id: 3575, leagueId: 203 },  // With diacritic (matches existing Caykur)
+  'Torku Konyaspor': { id: 604, leagueId: 203 },  // Sponsor variant of Konyaspor
+
+  // ============================================
+  // EREDIVISIE ADDITIONS (league 88) - Netherlands
+  // Additional teams and variants from The Odds API
+  // ============================================
+  'Excelsior': { id: 211, leagueId: 88 },
+  'SBV Excelsior': { id: 211, leagueId: 88 },
+  'Excelsior Rotterdam': { id: 211, leagueId: 88 },
+  'FC Zwolle': { id: 208, leagueId: 88 },  // PEC Zwolle variant
+  'FC Volendam': { id: 215, leagueId: 88 },
+  'Volendam': { id: 215, leagueId: 88 },
+  'FC Twente Enschede': { id: 195, leagueId: 88 },  // Full name variant
+
+  // ============================================
+  // BELGIAN PRO LEAGUE ADDITIONS (league 144)
+  // Additional teams and variants from The Odds API
+  // ============================================
+  'Sint Truiden': { id: 573, leagueId: 144 },  // Without hyphen (matches STVV)
+  'SV Zulte-Waregem': { id: 576, leagueId: 144 },
+  'Zulte Waregem': { id: 576, leagueId: 144 },
+  'Zulte-Waregem': { id: 576, leagueId: 144 },
+  'Dender': { id: 18840, leagueId: 144 },  // Short name (matches FCV Dender EH)
+  'Cercle Brugge KSV': { id: 627, leagueId: 144 },  // Full name
+  'Leuven': { id: 570, leagueId: 144 },  // Short name (matches OH Leuven)
+
+  // ============================================
+  // SERIE A/B ADDITIONS (leagues 135/136) - Italy
+  // Additional teams and variants from The Odds API
+  // ============================================
+  'Pisa': { id: 520, leagueId: 136 },  // Serie B
+  'AC Pisa': { id: 520, leagueId: 136 },
+  'Atalanta BC': { id: 499, leagueId: 135 },  // Full official name
+  'Cremonese': { id: 527, leagueId: 136 },  // Serie B
+  'US Cremonese': { id: 527, leagueId: 136 },
+  'Spezia': { id: 515, leagueId: 136 },
+  'Spezia Calcio': { id: 515, leagueId: 136 },
+  'Sampdoria': { id: 498, leagueId: 136 },
+  'UC Sampdoria': { id: 498, leagueId: 136 },
+  'Palermo': { id: 1569, leagueId: 136 },
+  'Bari': { id: 519, leagueId: 136 },
+  'SSC Bari': { id: 519, leagueId: 136 },
+
+  // ============================================
+  // LA LIGA ADDITIONS (leagues 140/141) - Spain
+  // Additional teams from The Odds API
+  // ============================================
+  'Oviedo': { id: 556, leagueId: 141 },  // Short name (matches Real Oviedo)
+  // Levante already defined in La Liga 2 section with corrected ID 538
+
+  // ============================================
+  // BUNDESLIGA ADDITIONS (leagues 78/79) - Germany
+  // Additional teams from The Odds API
+  // ============================================
+  'Hamburger SV': { id: 180, leagueId: 79 },  // Bundesliga 2
+  'Hamburg': { id: 180, leagueId: 79 },
+  'HSV': { id: 180, leagueId: 79 },
+  'Hannover 96': { id: 185, leagueId: 79 },
+  'Hannover': { id: 185, leagueId: 79 },
+  'Fortuna Düsseldorf': { id: 182, leagueId: 79 },
+  'Fortuna Dusseldorf': { id: 182, leagueId: 79 },
+  'Düsseldorf': { id: 182, leagueId: 79 },
+  'Hertha Berlin': { id: 159, leagueId: 79 },
+  'Hertha BSC': { id: 159, leagueId: 79 },
+  'Hertha': { id: 159, leagueId: 79 },
+  'Schalke 04': { id: 174, leagueId: 79 },
+  'FC Schalke 04': { id: 174, leagueId: 79 },
+  'Schalke': { id: 174, leagueId: 79 },
+  'Karlsruher SC': { id: 183, leagueId: 79 },
+  'Karlsruhe': { id: 183, leagueId: 79 },
+  'Nürnberg': { id: 178, leagueId: 79 },
+  'Nurnberg': { id: 178, leagueId: 79 },
+  '1. FC Nürnberg': { id: 178, leagueId: 79 },
+
+  // ============================================
+  // UEFA CHAMPIONS LEAGUE ADDITIONS (league 2)
+  // Additional teams from The Odds API
+  // ============================================
+  'Qarabağ FK': { id: 569, leagueId: 2 },
+  'Qarabag FK': { id: 569, leagueId: 2 },
+  'Qarabag': { id: 569, leagueId: 2 },
+  'Olympiakos Piraeus': { id: 553, leagueId: 2 },  // Full name variant
+  'Olympiacos Piraeus': { id: 553, leagueId: 2 },
+  'Bodø/Glimt': { id: 324, leagueId: 2 },
+  'Bodo/Glimt': { id: 324, leagueId: 2 },
+  'Bodo Glimt': { id: 324, leagueId: 2 },
+  'FK Bodø/Glimt': { id: 324, leagueId: 2 },
+  // Atalanta BC already defined in Serie A section
+
+  // ============================================
+  // UEFA EUROPA LEAGUE ADDITIONS (league 3)
+  // Additional teams from The Odds API
+  // ============================================
+  'SK Brann': { id: 323, leagueId: 3 },
+  'Brann': { id: 323, leagueId: 3 },
+  'PFC Ludogorets Razgrad': { id: 566, leagueId: 3 },
+  'Ludogorets Razgrad': { id: 566, leagueId: 3 },
+  'Ludogorets': { id: 566, leagueId: 3 },
+  'Ferencváros TC': { id: 614, leagueId: 3 },
+  'Ferencvaros TC': { id: 614, leagueId: 3 },
+  'Ferencvaros': { id: 614, leagueId: 3 },
+  'Ferencvarosi TC': { id: 614, leagueId: 3 },
+  'Panathinaikos FC': { id: 557, leagueId: 3 },  // Corrected from 556
+  'Viktoria Plzeň': { id: 594, leagueId: 3 },
+  'Viktoria Plzen': { id: 594, leagueId: 3 },
+  'Plzen': { id: 594, leagueId: 3 },
+  'FC Viktoria Plzen': { id: 594, leagueId: 3 },
+  // Teams below already defined in their domestic league sections but participate in Europa:
+  // Real Sociedad, Roma, Lazio, Athletic Bilbao, West Ham, Lyon, AEK Athens, Rangers
+  'Slavia Prague': { id: 609, leagueId: 3 },  // Variant of Slavia Praha
+  'Maccabi Tel Aviv': { id: 639, leagueId: 3 },
+  'Maccabi Tel-Aviv': { id: 639, leagueId: 3 },
+  'Union Saint Gilloise': { id: 571, leagueId: 3 },  // Also in Europa
+
+  // ============================================
+  // LIGUE 1 CORRECTIONS (league 61/62) - France
+  // Teams may move between leagues - keeping definitions in original Ligue 2 section
+  // ============================================
+  // Metz, Lorient, Clermont already defined in Ligue 2 section
+
+  // ============================================
+  // NORWEGIAN ELITESERIEN (league 103)
+  // For European competition participants
+  // ============================================
+  'Rosenborg': { id: 325, leagueId: 103 },
+  'Rosenborg BK': { id: 325, leagueId: 103 },
+  'Molde': { id: 322, leagueId: 103 },
+  'Molde FK': { id: 322, leagueId: 103 },
+
+  // ============================================
+  // GREEK SUPER LEAGUE (league 197)
+  // For European competition participants
+  // ============================================
+  'AEK Athens': { id: 549, leagueId: 197 },
+  'AEK Athens FC': { id: 549, leagueId: 197 },
+  // Panathinaikos already defined in UCL/UEL section
+
+  // ============================================
+  // AUSTRIAN BUNDESLIGA (league 218)
+  // For European competition participants
+  // ============================================
+  'Sturm Graz': { id: 620, leagueId: 218 },
+  'LASK': { id: 621, leagueId: 218 },
+  'LASK Linz': { id: 621, leagueId: 218 },
+  'Austria Wien': { id: 617, leagueId: 218 },
+  'Rapid Wien': { id: 619, leagueId: 218 },
+  'Rapid Vienna': { id: 619, leagueId: 218 },
+
+  // ============================================
+  // DANISH SUPERLIGA (league 119)
+  // (FC Copenhagen, FC Midtjylland already in UCL section)
+  // ============================================
+  'Copenhagen': { id: 341, leagueId: 119 },
+  'Midtjylland': { id: 363, leagueId: 119 },
+  'Brondby': { id: 342, leagueId: 119 },
+  'Brøndby': { id: 342, leagueId: 119 },
+  'Brondby IF': { id: 342, leagueId: 119 },
+
+  // ============================================
+  // SWEDISH ALLSVENSKAN (league 113)
+  // For European competition participants
+  // ============================================
+  'Malmo FF': { id: 331, leagueId: 113 },
+  'Malmö FF': { id: 331, leagueId: 113 },
+  'Malmo': { id: 331, leagueId: 113 },
+  'AIK': { id: 328, leagueId: 113 },
+  'AIK Stockholm': { id: 328, leagueId: 113 },
+  'Djurgarden': { id: 330, leagueId: 113 },
+  'Djurgårdens IF': { id: 330, leagueId: 113 },
+
+  // ============================================
+  // CZECH FIRST LEAGUE (league 345)
+  // For European competition participants
+  // ============================================
+  'Sparta Prague': { id: 593, leagueId: 345 },  // Also Sparta Praha
+  // Slavia Prague and Viktoria Plzen already defined in UEL section
+
+  // ============================================
+  // CROATIAN HNL (league 210)
+  // For European competition participants
+  // ============================================
+  // Dinamo Zagreb already defined in UCL section
+  'GNK Dinamo Zagreb': { id: 620, leagueId: 210 },
+  'Hajduk Split': { id: 626, leagueId: 210 },
+  'Rijeka': { id: 621, leagueId: 210 },
+  'HNK Rijeka': { id: 621, leagueId: 210 },
+
+  // ============================================
+  // SERBIAN SUPERLIGA (league 286)
+  // For European competition participants
+  // ============================================
+  'Red Star': { id: 592, leagueId: 286 },
+  'FK Crvena Zvezda': { id: 592, leagueId: 286 },
+  'Partizan': { id: 591, leagueId: 286 },
+  'FK Partizan': { id: 591, leagueId: 286 },
+  'Partizan Belgrade': { id: 591, leagueId: 286 },
+
+  // ============================================
+  // UKRAINIAN PREMIER LEAGUE (league 333)
+  // For European competition participants
+  // ============================================
+  'Shakhtar': { id: 632, leagueId: 333 },
+  'Dynamo Kyiv': { id: 633, leagueId: 333 },
+  'Dynamo Kiev': { id: 633, leagueId: 333 },
+  'Dynamo': { id: 633, leagueId: 333 },
 };
 
 /**
