@@ -182,6 +182,29 @@ interface EdgePerformanceStats {
     valueBetSide: string | null;
     valueBetOdds: number | null;
   }>;
+  // Daily Picks - High confidence picks for public showcase
+  dailyPicks?: {
+    total: number;
+    wins: number;
+    losses: number;
+    pending: number;
+    winRate: number;
+    avgConfidence: number;
+    avgEdge: number;
+    streak: number; // positive = winning streak, negative = losing streak
+    recentPicks: Array<{
+      id: string;
+      matchId: string;
+      matchName: string;
+      sport: string;
+      league: string;
+      kickoff: Date;
+      selection: string | null;
+      modelProbability: number | null;
+      edgeValue: number | null;
+      binaryOutcome: number | null; // 1 = win, 0 = loss, null = pending
+    }>;
+  };
 }
 
 interface AdminDashboardProps {
@@ -193,7 +216,7 @@ interface AdminDashboardProps {
 }
 
 type TabType = 'overview' | 'users' | 'chat' | 'predictions';
-type PredictionSubTab = 'overview' | 'calibration' | 'clv' | 'roi' | 'raw' | 'manage';
+type PredictionSubTab = 'overview' | 'calibration' | 'clv' | 'roi' | 'raw' | 'manage' | 'dailypicks';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -205,7 +228,7 @@ export default function AdminDashboard({
   edgePerformanceStats,
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [predictionSubTab, setPredictionSubTab] = useState<PredictionSubTab>('overview');
+  const [predictionSubTab, setPredictionSubTab] = useState<PredictionSubTab>('dailypicks');
   const [showUserManagement, setShowUserManagement] = useState(false);
 
   // Pagination states
@@ -443,6 +466,9 @@ export default function AdminDashboard({
 
             {/* Sub-tabs for detailed views */}
             <div className="flex gap-2 overflow-x-auto pb-2">
+              <SubTabButton active={predictionSubTab === 'dailypicks'} onClick={() => setPredictionSubTab('dailypicks')}>
+                ⭐ Daily Picks ({edgePerformanceStats.dailyPicks?.total || 0})
+              </SubTabButton>
               <SubTabButton active={predictionSubTab === 'manage'} onClick={() => setPredictionSubTab('manage')}>
                 ✏️ Manage ({edgePerformanceStats.pendingPredictionsList?.length || 0})
               </SubTabButton>
@@ -462,6 +488,190 @@ export default function AdminDashboard({
                 📋 Raw Data
               </SubTabButton>
             </div>
+
+            {/* ===== DAILY PICKS - HIGH CONFIDENCE SHOWCASE ===== */}
+            {predictionSubTab === 'dailypicks' && (
+              <div className="space-y-6">
+                {/* Stats Overview */}
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  <div className="card p-4 text-center">
+                    <div className="text-3xl font-bold text-accent-primary">
+                      {edgePerformanceStats.dailyPicks?.total || 0}
+                    </div>
+                    <div className="text-xs text-text-secondary">Total Picks</div>
+                  </div>
+                  <div className="card p-4 text-center">
+                    <div className={`text-3xl font-bold ${
+                      (edgePerformanceStats.dailyPicks?.winRate || 0) >= 60 
+                        ? 'text-green-400' 
+                        : (edgePerformanceStats.dailyPicks?.winRate || 0) >= 50 
+                          ? 'text-yellow-400' 
+                          : 'text-red-400'
+                    }`}>
+                      {edgePerformanceStats.dailyPicks?.winRate || 0}%
+                    </div>
+                    <div className="text-xs text-text-secondary">Win Rate</div>
+                  </div>
+                  <div className="card p-4 text-center bg-green-500/10 border-green-500/30">
+                    <div className="text-3xl font-bold text-green-400">
+                      {edgePerformanceStats.dailyPicks?.wins || 0}
+                    </div>
+                    <div className="text-xs text-text-secondary">✅ Wins</div>
+                  </div>
+                  <div className="card p-4 text-center bg-red-500/10 border-red-500/30">
+                    <div className="text-3xl font-bold text-red-400">
+                      {edgePerformanceStats.dailyPicks?.losses || 0}
+                    </div>
+                    <div className="text-xs text-text-secondary">❌ Losses</div>
+                  </div>
+                  <div className="card p-4 text-center bg-blue-500/10 border-blue-500/30">
+                    <div className="text-3xl font-bold text-blue-400">
+                      {edgePerformanceStats.dailyPicks?.pending || 0}
+                    </div>
+                    <div className="text-xs text-text-secondary">⏳ Pending</div>
+                  </div>
+                  <div className="card p-4 text-center">
+                    <div className={`text-3xl font-bold ${
+                      (edgePerformanceStats.dailyPicks?.streak || 0) > 0 
+                        ? 'text-green-400' 
+                        : (edgePerformanceStats.dailyPicks?.streak || 0) < 0 
+                          ? 'text-red-400' 
+                          : 'text-text-secondary'
+                    }`}>
+                      {(edgePerformanceStats.dailyPicks?.streak || 0) > 0 
+                        ? `🔥 ${edgePerformanceStats.dailyPicks?.streak}`
+                        : (edgePerformanceStats.dailyPicks?.streak || 0) < 0 
+                          ? `❄️ ${Math.abs(edgePerformanceStats.dailyPicks?.streak || 0)}`
+                          : '-'}
+                    </div>
+                    <div className="text-xs text-text-secondary">Streak</div>
+                  </div>
+                </div>
+
+                {/* Average Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="card p-4">
+                    <div className="text-sm text-text-secondary mb-1">Avg Confidence</div>
+                    <div className="text-2xl font-bold text-accent-primary">
+                      {edgePerformanceStats.dailyPicks?.avgConfidence || 0}%
+                    </div>
+                    <div className="text-xs text-text-muted mt-1">
+                      Min required: 60%
+                    </div>
+                  </div>
+                  <div className="card p-4">
+                    <div className="text-sm text-text-secondary mb-1">Avg Edge</div>
+                    <div className="text-2xl font-bold text-green-400">
+                      +{edgePerformanceStats.dailyPicks?.avgEdge || 0}%
+                    </div>
+                    <div className="text-xs text-text-muted mt-1">
+                      Min required: 3%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Public Record Banner */}
+                <div className="card p-4 bg-gradient-to-r from-accent-primary/20 to-purple-500/20 border-accent-primary/30">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-text-primary">📊 Public Record</h3>
+                      <p className="text-sm text-text-secondary">
+                        {edgePerformanceStats.dailyPicks?.wins || 0}W - {edgePerformanceStats.dailyPicks?.losses || 0}L 
+                        ({edgePerformanceStats.dailyPicks?.winRate || 0}% win rate)
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-text-muted">Criteria: Confidence ≥60%, Edge ≥3%</div>
+                      <div className="text-xs text-text-muted">These are our showcase picks</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Daily Picks Table */}
+                <div className="card overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border-primary">
+                    <h3 className="text-sm font-medium text-text-primary">Recent Daily Picks</h3>
+                    <p className="text-xs text-text-muted mt-1">High confidence picks (≥60% model confidence, ≥3% edge)</p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-bg-tertiary">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Match</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Sport</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Selection</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Confidence</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Edge</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Result</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border-primary">
+                        {(edgePerformanceStats.dailyPicks?.recentPicks || []).length > 0 ? (
+                          edgePerformanceStats.dailyPicks?.recentPicks.map((pick) => (
+                            <tr key={pick.id} className="hover:bg-bg-tertiary/50">
+                              <td className="px-4 py-3">
+                                <Link 
+                                  href={`/match/${pick.matchId}`}
+                                  className="text-accent-primary hover:underline"
+                                >
+                                  {pick.matchName}
+                                </Link>
+                              </td>
+                              <td className="px-4 py-3 text-text-secondary">
+                                {pick.sport}
+                              </td>
+                              <td className="px-4 py-3 text-text-primary font-medium">
+                                {pick.selection || 'N/A'}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className="text-accent-primary font-medium">
+                                  {pick.modelProbability?.toFixed(0) || '-'}%
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className="text-green-400 font-medium">
+                                  +{pick.edgeValue?.toFixed(1) || '-'}%
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                {pick.binaryOutcome === 1 ? (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
+                                    ✅ WIN
+                                  </span>
+                                ) : pick.binaryOutcome === 0 ? (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
+                                    ❌ LOSS
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
+                                    ⏳ PENDING
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-text-muted text-xs">
+                                {new Date(pick.kickoff).toLocaleDateString('en-GB', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={7} className="px-4 py-8 text-center text-text-muted">
+                              No Daily Picks yet. Picks will appear when confidence ≥60% and edge ≥3%.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* ===== MANAGE PENDING PREDICTIONS ===== */}
             {predictionSubTab === 'manage' && (

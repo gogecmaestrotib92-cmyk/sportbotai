@@ -9,7 +9,6 @@ import { prisma } from '@/lib/prisma';
 import { SITE_CONFIG } from '@/lib/seo';
 import ViewTracker from '@/components/ViewTracker';
 import FeaturedBadgeSnippet from '@/components/FeaturedBadgeSnippet';
-import { autoLinkTeamsSimple } from '@/lib/team-linker';
 
 export const dynamicParams = true;
 export const revalidate = 60;
@@ -402,7 +401,8 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
             <div className="max-w-3xl mx-auto">
               <article
                 className="blog-content bg-white rounded-2xl shadow-lg p-8 md:p-12 border border-slate-200"
-                dangerouslySetInnerHTML={{ __html: autoLinkTeamsSimple(articleContent) }}
+                dangerouslySetInnerHTML={{ __html: articleContent }}
+                suppressHydrationWarning
               />
             </div>
           </div>

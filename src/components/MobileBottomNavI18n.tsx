@@ -9,6 +9,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useHideOnScroll } from '@/hooks/useHideOnScroll';
@@ -68,9 +69,15 @@ const getNavItems = (locale: Locale, t: ReturnType<typeof getTranslations>) => {
 export default function MobileBottomNavI18n() {
   const pathname = usePathname();
   const { isVisible } = useHideOnScroll({ threshold: 10, mobileOnly: true });
+  const [mounted, setMounted] = useState(false);
   
-  // Determine locale from pathname
-  const locale: Locale = pathname?.startsWith('/sr') ? 'sr' : 'en';
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  // Determine locale from pathname - use 'en' during SSR to avoid hydration mismatch
+  const detectedLocale: Locale = pathname?.startsWith('/sr') ? 'sr' : 'en';
+  const locale: Locale = mounted ? detectedLocale : 'en';
   const t = getTranslations(locale);
   const navItems = getNavItems(locale, t);
 

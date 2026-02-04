@@ -8,7 +8,6 @@ import { prisma } from '@/lib/prisma';
 import { getBlogPostBreadcrumb, SITE_CONFIG } from '@/lib/seo';
 import ViewTracker from '@/components/ViewTracker';
 import FeaturedBadgeSnippet from '@/components/FeaturedBadgeSnippet';
-import { autoLinkTeamsSimple } from '@/lib/team-linker';
 
 // Allow dynamic rendering for new blog posts not in generateStaticParams
 export const dynamicParams = true;
@@ -449,7 +448,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {/* Article Content - Custom Blog Styling with auto-linked team names */}
               <article
                 className="blog-content bg-white rounded-2xl shadow-lg p-8 md:p-12 border border-slate-200"
-                dangerouslySetInnerHTML={{ __html: autoLinkTeamsSimple(post.content) }}
+                dangerouslySetInnerHTML={{ __html: post.content }}
+                suppressHydrationWarning
               />
 
               {/* Tags */}

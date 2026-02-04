@@ -41,8 +41,8 @@ export default function PromoBanner({ show = true }: PromoBannerProps) {
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   
-  // Check if Serbian version
-  const isSerbian = pathname?.startsWith('/sr');
+  // Check if Serbian version - use false during SSR to avoid hydration mismatch
+  const isSerbian = isMounted && pathname?.startsWith('/sr');
   
   // Don't show on pricing page (redundant)
   const hiddenPaths = ['/pricing', '/sr/pricing', '/checkout', '/sr/checkout'];

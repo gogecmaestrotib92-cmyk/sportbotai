@@ -1717,6 +1717,134 @@ button:focus-visible {
    BLOG MATCH INFO BOX - Mobile Responsive
    ======================================== */
 
+/* ========================================
+   🧪 EXPERIMENTAL: Match Card Styling
+   Pure Black Glass + Sharp Edges + White Interior
+   ======================================== */
+
+/* Main match info box - pure black glass with rounded corners */
+.blog-content .match-info-box,
+.blog-content div[style*="background: linear-gradient(135deg, #1e293b"] {
+  background: #000000 !important;
+  border-radius: 12px !important;
+  border: 1px solid #333 !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* All text inside - pure white */
+.blog-content .match-info-box p,
+.blog-content .match-info-box h4,
+.blog-content .match-info-box span,
+.blog-content div[style*="background: linear-gradient(135deg, #1e293b"] p {
+  color: #ffffff !important;
+}
+
+/* Keep HOME green and AWAY red accents */
+.blog-content .match-info-box p[style*="color: #10b981"] {
+  color: #10b981 !important;
+}
+.blog-content .match-info-box p[style*="color: #ef4444"] {
+  color: #ef4444 !important;
+}
+
+/* Divider lines - subtle white */
+.blog-content .match-info-box div[style*="border-top"] {
+  border-color: rgba(255,255,255,0.15) !important;
+}
+
+/* H2H and other stat boxes - same black glass treatment */
+.blog-content div[style*="background: #1e293b"],
+.blog-content div[style*="background: linear-gradient(135deg, #0f172a"],
+.blog-content div[style*="background: linear-gradient(90deg, #1e293b"] {
+  background: #000000 !important;
+  border-radius: 12px !important;
+  border: 1px solid #333 !important;
+}
+
+/* Force white text only on gray paragraphs inside dark boxes */
+.blog-content div[style*="background: #1e293b"] p[style*="color: #94a3b8"],
+.blog-content div[style*="background: linear-gradient"] p[style*="color: #94a3b8"],
+.blog-content div[style*="border-left: 4px solid"] p[style*="color: #94a3b8"] {
+  color: #ffffff !important;
+}
+
+/* Keep green and red colors */
+.blog-content p[style*="color: #10b981"] {
+  color: #10b981 !important;
+}
+.blog-content p[style*="color: #ef4444"] {
+  color: #ef4444 !important;
+}
+.blog-content h4[style*="color: #10b981"] {
+  color: #10b981 !important;
+}
+.blog-content h4[style*="color: #ef4444"] {
+  color: #ef4444 !important;
+}
+
+/* Key players boxes */
+.blog-content div[style*="border-left: 4px solid #10b981"],
+.blog-content div[style*="border-left: 4px solid #ef4444"] {
+  background: #000000 !important;
+  border-radius: 12px !important;
+}
+
+/* Form table - black glass */
+.blog-content table[style*="background"],
+.blog-content table {
+  background: #000000 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+/* Table header - pure black */
+.blog-content table thead,
+.blog-content table thead tr,
+.blog-content table thead th,
+.blog-content table tr:first-child,
+.blog-content table tr:first-child td,
+.blog-content table tr[style*="background: #f1f5f9"],
+.blog-content table tr[style*="background: #e2e8f0"],
+.blog-content table th[style*="background"] {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Table body rows */
+.blog-content table tbody tr,
+.blog-content table tbody td {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #333 !important;
+}
+
+/* ========================================
+   SVG Icons replacing Emoji (CSS only test)
+   ======================================== */
+
+/* Hide emoji text, show SVG instead */
+.blog-content p[style*="color: #94a3b8"]::first-letter {
+  font-size: 0;
+}
+
+/* Calendar icon for Date */
+.blog-content div:has(> p:first-child:contains("Date"))::before,
+.blog-content p[style*="color: #94a3b8"]:first-of-type {
+  /* Can't easily replace emoji with CSS alone */
+}
+
+/* Alternative: Use font-family to render emoji as text, then style */
+.blog-content .match-info-box p[style*="color: #94a3b8"] {
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+
+/* Prediction box */
+.blog-content div[style*="background: linear-gradient(135deg, #064e3b"] {
+  background: #000000 !important;
+  border-radius: 12px !important;
+  border: 1px solid #10b981 !important;
+}
+
 /* Match info box container - generated inline, need !important overrides */
 .blog-content .match-info-box,
 .blog-content div[style*="grid-template-columns: 1fr auto 1fr"] {
@@ -1761,6 +1889,99 @@ button:focus-visible {
   .blog-content div[style*="display: grid"][style*="repeat(3, 1fr)"] {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
+  }
+  
+  /* Key Players grid container - stack vertically on mobile */
+  .blog-content div[style*="display: grid"][style*="repeat(2, 1fr)"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  
+  /* Key Players boxes - full width clean design */
+  .blog-content div[style*="border-left: 4px solid #10b981"],
+  .blog-content div[style*="border-left: 4px solid #ef4444"] {
+    width: 100% !important;
+    padding: 16px !important;
+    border-radius: 8px !important;
+  }
+  
+  /* Key Players title - inline with team name */
+  .blog-content div[style*="border-left: 4px solid"] h4,
+  .blog-content div[style*="border-left: 4px solid"] p[style*="font-weight: bold"] {
+    font-size: 14px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  /* Player items - cleaner spacing */
+  .blog-content div[style*="border-left: 4px solid"] p {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    padding: 6px 0 !important;
+    margin: 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  }
+  
+  .blog-content div[style*="border-left: 4px solid"] p:last-child {
+    border-bottom: none !important;
+  }
+  
+  /* Tactical Matchups boxes - stack vertically */
+  .blog-content div[style*="display: grid"][style*="1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  /* CTA boxes - ensure they stack properly */
+  .blog-content div[style*="display: flex"][style*="gap: 20px"] {
+    flex-direction: column !important;
+    text-align: center !important;
+  }
+  
+  /* Form table - force all columns visible on mobile */
+  .blog-content table {
+    display: table !important;
+    width: max-content !important;
+    min-width: 100% !important;
+  }
+  
+  .blog-content table th,
+  .blog-content table td {
+    padding: 8px 6px !important;
+    font-size: 11px !important;
+    white-space: nowrap !important;
+  }
+  
+  /* Team name column - shorter */
+  .blog-content table td:first-child,
+  .blog-content table th:first-child {
+    max-width: 90px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  
+  /* W/D/L columns - compact */
+  .blog-content table th:nth-child(2),
+  .blog-content table th:nth-child(3),
+  .blog-content table th:nth-child(4),
+  .blog-content table td:nth-child(2),
+  .blog-content table td:nth-child(3),
+  .blog-content table td:nth-child(4) {
+    width: 30px !important;
+    min-width: 30px !important;
+    padding: 8px 4px !important;
+  }
+  
+  /* Form dots column - compact */
+  .blog-content table td:last-child,
+  .blog-content table th:last-child {
+    padding: 8px 4px !important;
+  }
+  
+  .blog-content table td span {
+    font-size: 10px !important;
+    margin: 0 1px !important;
   }
 }
 

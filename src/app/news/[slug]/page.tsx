@@ -8,7 +8,6 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { SITE_CONFIG } from '@/lib/seo';
 import ViewTracker from '@/components/ViewTracker';
-import { autoLinkTeamsSimple } from '@/lib/team-linker';
 
 export const dynamicParams = true;
 export const revalidate = 60;
@@ -302,7 +301,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
                   <Link href="/news" className="hover:text-slate-900">News</Link>
                 </li>
                 <li>/</li>
-                <li className="text-slate-900 truncate max-w-[200px] font-medium">{post.newsTitle || post.title}</li>
+                <li className="text-slate-900 truncate max-w-[200px] font-medium">{post.title}</li>
               </ol>
             </nav>
 
@@ -317,15 +316,15 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
                 </Link>
               )}
 
-              {/* Title - Creative headline for readers */}
+              {/* Title - SEO optimized headline with prediction keyword */}
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-3 leading-tight">
-                {post.newsTitle || post.title}
+                {post.title}
               </h1>
 
-              {/* SEO Subtitle - Shows "prediction" keyword when newsTitle differs from title */}
+              {/* Creative Subtitle - engaging hook for readers */}
               {post.newsTitle && post.newsTitle !== post.title && (
                 <p className="text-lg text-slate-600 mb-6 font-medium">
-                  {post.title}
+                  {post.newsTitle}
                 </p>
               )}
 
@@ -391,7 +390,8 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
               {/* Use same blog-content CSS class for visual consistency with auto-linked team names */}
               <article
                 className="blog-content bg-white rounded-2xl shadow-lg p-8 md:p-12 border border-slate-200"
-                dangerouslySetInnerHTML={{ __html: autoLinkTeamsSimple(post.newsContent || post.content) }}
+                dangerouslySetInnerHTML={{ __html: post.newsContent || post.content }}
+                suppressHydrationWarning
               />
             </div>
           </div>

@@ -19,11 +19,16 @@ export function UserMenu() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   
-  // Detect if we're on Serbian version
-  const isSerbian = pathname?.startsWith('/sr');
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  // Detect if we're on Serbian version - use false during SSR to avoid hydration mismatch
+  const isSerbian = mounted && pathname?.startsWith('/sr');
   const localePath = (path: string) => isSerbian ? `/sr${path}` : path;
   
   // Use live plan from API, fallback to session

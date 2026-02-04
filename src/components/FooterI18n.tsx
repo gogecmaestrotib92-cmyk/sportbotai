@@ -7,6 +7,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -56,14 +57,23 @@ interface FooterI18nProps {
 export default function FooterI18n({ locale: localeProp }: FooterI18nProps) {
   const pathname = usePathname();
   const currentYear = CURRENT_YEAR;
+  
+  // Use state to handle locale after hydration to avoid mismatch
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  // Auto-detect locale from pathname if not provided
-  const locale: Locale = localeProp || (pathname?.startsWith('/sr') ? 'sr' : 'en');
+  // During SSR and initial hydration, use 'en' as default
+  // After mount, detect from pathname
+  const detectedLocale: Locale = pathname?.startsWith('/sr') ? 'sr' : 'en';
+  const locale: Locale = localeProp || (mounted ? detectedLocale : 'en');
   const t = translations[locale];
   const localePath = locale === 'sr' ? '/sr' : '';
 
   return (
-    <footer className="bg-bg text-text-secondary">
+    <footer className="bg-bg text-text-secondary" suppressHydrationWarning>
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">

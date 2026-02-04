@@ -7,14 +7,20 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import FloatingActionButton from '@/components/ui/FloatingActionButton';
 
 export default function MobileQuickActions() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   
-  // Detect locale from pathname
-  const isSerbian = pathname.startsWith('/sr');
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  // Detect locale from pathname - use 'en' during SSR to avoid hydration mismatch
+  const isSerbian = mounted && pathname?.startsWith('/sr');
   
   // Translations
   const t = {

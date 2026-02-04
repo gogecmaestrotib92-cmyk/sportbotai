@@ -9,7 +9,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { UserMenu } from './auth';
@@ -108,13 +108,20 @@ interface HeaderI18nProps {
 
 export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { data: session } = useSession();
   const pathname = usePathname();
   const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
   const { isVisible, scrollY } = useHideOnScroll({ threshold: 15, mobileOnly: true });
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Determine current locale from pathname or prop
-  const locale: Locale = propLocale || (pathname?.startsWith('/sr') ? 'sr' : 'en');
+  // Use 'en' during SSR to avoid hydration mismatch
+  const detectedLocale: Locale = pathname?.startsWith('/sr') ? 'sr' : 'en';
+  const locale: Locale = propLocale || (mounted ? detectedLocale : 'en');
   const t = getTranslations(locale);
 
   // Scroll-aware styling - also used to move header up when promo banner hides
@@ -137,6 +144,7 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
         }
       `}
       style={{ top: promoBannerHidden ? '0px' : 'var(--promo-banner-height, 0px)' }}
+      suppressHydrationWarning
     >
       {/* Subtle gradient glow when scrolled */}
       {isScrolled && (
