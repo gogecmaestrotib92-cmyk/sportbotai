@@ -605,7 +605,9 @@ const TEAM_NAME_MAPPINGS: Record<string, { id?: number; leagueId?: number; searc
   'Rio Ave': { id: 226, leagueId: 94 },
   'Rio Ave FC': { id: 226, leagueId: 94 },
   'Famalicao': { id: 3893, leagueId: 94 },
+  'Famalicão': { id: 3893, leagueId: 94 },
   'FC Famalicao': { id: 3893, leagueId: 94 },
+  'FC Famalicão': { id: 3893, leagueId: 94 },
   'Casa Pia': { id: 4282, leagueId: 94 },
   'Casa Pia AC': { id: 4282, leagueId: 94 },
   'Arouca': { id: 247, leagueId: 94 },
@@ -682,22 +684,35 @@ const TEAM_NAME_MAPPINGS: Record<string, { id?: number; leagueId?: number; searc
   'Beerschot': { id: 16198, leagueId: 144 },
 
   // ============================================
-  // SCOTTISH PREMIERSHIP (league 179)
-  // (Celtic, Rangers already defined in Champions League section)
+  // SCOTTISH PREMIERSHIP (league 179) - CORRECT API-FOOTBALL IDs
+  // (Celtic=247, Rangers=257 already defined in Champions League section)
   // ============================================
-  'Aberdeen': { id: 248, leagueId: 179 },
-  'Aberdeen FC': { id: 248, leagueId: 179 },
-  'Hearts': { id: 250, leagueId: 179 },
-  'Heart of Midlothian': { id: 250, leagueId: 179 },
-  'Hibernian': { id: 251, leagueId: 179 },
-  'Dundee United': { id: 253, leagueId: 179 },
-  'Motherwell': { id: 254, leagueId: 179 },
-  'Dundee': { id: 255, leagueId: 179 },
-  'Dundee FC': { id: 255, leagueId: 179 },
-  'St Mirren': { id: 256, leagueId: 179 },
-  'Kilmarnock': { id: 258, leagueId: 179 },
-  'Ross County': { id: 252, leagueId: 179 },
-  'St Johnstone': { id: 259, leagueId: 179 },
+  'Aberdeen': { id: 252, leagueId: 179 },
+  'Aberdeen FC': { id: 252, leagueId: 179 },
+  'Hearts': { id: 254, leagueId: 179 },
+  'Heart of Midlothian': { id: 254, leagueId: 179 },
+  'Heart Of Midlothian': { id: 254, leagueId: 179 },
+  'Hibernian': { id: 249, leagueId: 179 },
+  'Hibs': { id: 249, leagueId: 179 },
+  'Dundee United': { id: 1386, leagueId: 179 },
+  'Dundee Utd': { id: 1386, leagueId: 179 },
+  'Motherwell': { id: 256, leagueId: 179 },
+  'Dundee': { id: 253, leagueId: 179 },
+  'Dundee FC': { id: 253, leagueId: 179 },
+  'St Mirren': { id: 251, leagueId: 179 },
+  'ST Mirren': { id: 251, leagueId: 179 },
+  'Kilmarnock': { id: 250, leagueId: 179 },
+  'Ross County': { id: 902, leagueId: 179 },
+  'St Johnstone': { id: 258, leagueId: 179 },
+  'ST Johnstone': { id: 258, leagueId: 179 },
+  'Livingston': { id: 255, leagueId: 179 },
+  'Livingston FC': { id: 255, leagueId: 179 },
+  'Falkirk': { id: 1389, leagueId: 179 },
+  'Falkirk FC': { id: 1389, leagueId: 179 },
+  'Partick': { id: 901, leagueId: 179 },
+  'Partick Thistle': { id: 901, leagueId: 179 },
+  'Ayr United': { id: 1387, leagueId: 179 },
+  'Ayr Utd': { id: 1387, leagueId: 179 },
 };
 
 /**
@@ -719,11 +734,14 @@ function getTeamLeagueId(teamName: string): number | null {
 
 /**
  * Normalize team name for better matching
+ * Handles diacritics (ã→a, é→e, etc.) and special characters
  */
 function normalizeTeamName(name: string): string {
   return name
+    .normalize('NFD')            // Decompose Unicode (ã → a + combining tilde)
+    .replace(/[\u0300-\u036f]/g, '') // Remove combining diacritical marks
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '') // Remove special chars
+    .replace(/[^a-z0-9\s]/g, '') // Remove remaining special chars
     .replace(/\s+/g, ' ')        // Normalize spaces
     .trim();
 }
