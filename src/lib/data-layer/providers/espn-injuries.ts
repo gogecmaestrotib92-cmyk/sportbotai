@@ -14,9 +14,52 @@ const ESPN_INJURY_URLS = {
     nfl: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/injuries',
 } as const;
 
-// Team name mappings from ESPN format to our normalized format
-// ESPN uses abbreviations like "LA Clippers" instead of "Los Angeles Clippers"
+// ============================================================================
+// TEAM NAME MAPPINGS
+// ============================================================================
+// Maps from The Odds API team names -> ESPN team names
+// The Odds API uses full names ("Los Angeles Clippers")
+// ESPN sometimes uses abbreviations ("LA Clippers")
+// Also handles accent differences (Montréal vs Montreal)
+
+// NBA: The Odds API -> ESPN display name mapping
+const ODDS_TO_ESPN_NBA: Record<string, string> = {
+    'los angeles clippers': 'la clippers',  // Key difference!
+    'los angeles lakers': 'los angeles lakers',  // ESPN uses full name for Lakers
+    // All other teams match exactly (Odds API = ESPN)
+};
+
+// NHL: The Odds API -> ESPN display name mapping  
+const ODDS_TO_ESPN_NHL: Record<string, string> = {
+    'montréal canadiens': 'montreal canadiens',  // Accent difference
+    'montreal canadiens': 'montreal canadiens',
+    'st louis blues': 'st. louis blues',  // Period difference
+    'st. louis blues': 'st. louis blues',
+    // Arizona Coyotes relocated to Utah - might need mapping
+    'utah hockey club': 'utah mammoth',  // If Odds API uses different name
+};
+
+// NFL: Generally consistent naming, but adding for safety
+const ODDS_TO_ESPN_NFL: Record<string, string> = {
+    // Add any NFL mismatches here if found
+};
+
+// Unified lookup function
+function normalizeTeamNameForESPN(teamName: string, sport: 'nba' | 'nhl' | 'nfl'): string {
+    const normalized = teamName.toLowerCase().trim();
+    
+    // Check sport-specific mappings
+    const sportMap = sport === 'nba' ? ODDS_TO_ESPN_NBA 
+                   : sport === 'nhl' ? ODDS_TO_ESPN_NHL 
+                   : ODDS_TO_ESPN_NFL;
+    
+    return sportMap[normalized] || normalized;
+}
+
+// Team name mappings from ESPN format to our normalized format (nicknames)
+// Used for fuzzy matching when exact match fails
 const ESPN_TO_NORMALIZED_TEAM: Record<string, string> = {
+    // NBA
     'atlanta hawks': 'hawks',
     'boston celtics': 'celtics',
     'brooklyn nets': 'nets',
@@ -29,9 +72,9 @@ const ESPN_TO_NORMALIZED_TEAM: Record<string, string> = {
     'golden state warriors': 'warriors',
     'houston rockets': 'rockets',
     'indiana pacers': 'pacers',
-    'la clippers': 'clippers',  // ESPN uses "LA" not "Los Angeles"
+    'la clippers': 'clippers',
     'los angeles clippers': 'clippers',
-    'la lakers': 'lakers',  // ESPN might use "LA" 
+    'la lakers': 'lakers',
     'los angeles lakers': 'lakers',
     'memphis grizzlies': 'grizzlies',
     'miami heat': 'heat',
@@ -40,16 +83,86 @@ const ESPN_TO_NORMALIZED_TEAM: Record<string, string> = {
     'new orleans pelicans': 'pelicans',
     'new york knicks': 'knicks',
     'oklahoma city thunder': 'thunder',
-    'phoenix suns': 'suns',
     'orlando magic': 'magic',
     'philadelphia 76ers': '76ers',
+    'phoenix suns': 'suns',
     'portland trail blazers': 'trail blazers',
     'sacramento kings': 'kings',
     'san antonio spurs': 'spurs',
     'toronto raptors': 'raptors',
     'utah jazz': 'jazz',
     'washington wizards': 'wizards',
-    'indiana pacers': 'pacers',
+    
+    // NHL
+    'anaheim ducks': 'ducks',
+    'boston bruins': 'bruins',
+    'buffalo sabres': 'sabres',
+    'calgary flames': 'flames',
+    'carolina hurricanes': 'hurricanes',
+    'chicago blackhawks': 'blackhawks',
+    'colorado avalanche': 'avalanche',
+    'columbus blue jackets': 'blue jackets',
+    'dallas stars': 'stars',
+    'detroit red wings': 'red wings',
+    'edmonton oilers': 'oilers',
+    'florida panthers': 'panthers',
+    'los angeles kings': 'kings',
+    'minnesota wild': 'wild',
+    'montreal canadiens': 'canadiens',
+    'montréal canadiens': 'canadiens',
+    'nashville predators': 'predators',
+    'new jersey devils': 'devils',
+    'new york islanders': 'islanders',
+    'new york rangers': 'rangers',
+    'ottawa senators': 'senators',
+    'philadelphia flyers': 'flyers',
+    'pittsburgh penguins': 'penguins',
+    'san jose sharks': 'sharks',
+    'seattle kraken': 'kraken',
+    'st. louis blues': 'blues',
+    'st louis blues': 'blues',
+    'tampa bay lightning': 'lightning',
+    'toronto maple leafs': 'maple leafs',
+    'utah mammoth': 'mammoth',
+    'utah hockey club': 'mammoth',
+    'vancouver canucks': 'canucks',
+    'vegas golden knights': 'golden knights',
+    'washington capitals': 'capitals',
+    'winnipeg jets': 'jets',
+    
+    // NFL
+    'arizona cardinals': 'cardinals',
+    'atlanta falcons': 'falcons',
+    'baltimore ravens': 'ravens',
+    'buffalo bills': 'bills',
+    'carolina panthers': 'panthers',
+    'chicago bears': 'bears',
+    'cincinnati bengals': 'bengals',
+    'cleveland browns': 'browns',
+    'dallas cowboys': 'cowboys',
+    'denver broncos': 'broncos',
+    'detroit lions': 'lions',
+    'green bay packers': 'packers',
+    'houston texans': 'texans',
+    'indianapolis colts': 'colts',
+    'jacksonville jaguars': 'jaguars',
+    'kansas city chiefs': 'chiefs',
+    'las vegas raiders': 'raiders',
+    'los angeles chargers': 'chargers',
+    'los angeles rams': 'rams',
+    'miami dolphins': 'dolphins',
+    'minnesota vikings': 'vikings',
+    'new england patriots': 'patriots',
+    'new orleans saints': 'saints',
+    'new york giants': 'giants',
+    'new york jets': 'jets',
+    'philadelphia eagles': 'eagles',
+    'pittsburgh steelers': 'steelers',
+    'san francisco 49ers': '49ers',
+    'seattle seahawks': 'seahawks',
+    'tampa bay buccaneers': 'buccaneers',
+    'tennessee titans': 'titans',
+    'washington commanders': 'commanders',
 };
 
 interface ESPNInjuryResponse {
@@ -174,10 +287,15 @@ export async function getESPNInjuriesForTeam(
         return [];
     }
 
-    // Normalize the team name for matching
-    const normalizedQuery = teamName.toLowerCase().trim();
-    // Extract just the team nickname (last word) - "Clippers", "Lakers", "Cavaliers"
+    // Step 1: Normalize the team name using sport-specific mapping
+    // This handles "Los Angeles Clippers" -> "la clippers" for ESPN matching
+    const normalizedQuery = normalizeTeamNameForESPN(teamName, sport);
+    
+    // Step 2: Extract nickname as fallback (last word)
     const queryNickname = normalizedQuery.split(' ').pop() || normalizedQuery;
+    
+    // Step 3: Also get nickname from original query for matching
+    const originalNickname = teamName.toLowerCase().trim().split(' ').pop() || '';
 
     // Find matching team
     const teamData = data.injuries.find(team => {
@@ -187,14 +305,17 @@ export async function getESPNInjuriesForTeam(
         const espnNickname = teamNameLower.split(' ').pop() || teamNameLower;
 
         return (
-            // Direct match
+            // Direct match after normalization (handles LA Clippers)
             teamNameLower === normalizedQuery ||
-            // ESPN name contains our query
+            // Direct match with original query
+            teamNameLower === teamName.toLowerCase().trim() ||
+            // ESPN name contains our normalized query
             teamNameLower.includes(normalizedQuery) ||
             // Our query contains ESPN's short name
             normalizedQuery.includes(shortName) ||
             // Match by nickname (most reliable for "LA Clippers" vs "Los Angeles Clippers")
             espnNickname === queryNickname ||
+            espnNickname === originalNickname ||
             // Our query contains ESPN's nickname
             normalizedQuery.includes(espnNickname)
         );
