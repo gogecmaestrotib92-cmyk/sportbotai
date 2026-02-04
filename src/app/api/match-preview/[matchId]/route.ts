@@ -2236,7 +2236,7 @@ function buildGoalsTiming(homeGoals: number, awayGoals: number) {
 }
 
 function buildContextFactors(
-  matchInfo: { homeTeam: string; awayTeam: string; league: string; kickoff: string },
+  matchInfo: { homeTeam: string; awayTeam: string; league: string; kickoff?: string },
   homeStats: { played: number; wins: number; goalsScored: number },
   awayStats: { played: number; wins: number; goalsScored: number },
   h2h: { totalMeetings: number; homeWins: number; awayWins: number; draws: number }
