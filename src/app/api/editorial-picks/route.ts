@@ -145,13 +145,18 @@ export async function GET(request: NextRequest) {
       }
       const displayHeadline = frHeadline || headlineText || 'AI has identified an opportunity in this match';
 
-      // Free users only get teaser
+      // Free users get teaser with probabilities but no selection/edge
       if (!isPro) {
         return {
           ...basePick,
           selection: null,
           odds: null,
-          probabilities: null,
+          // Show probabilities to all users (teaser value)
+          probabilities: {
+            home: pred.homeWin,
+            draw: pred.draw,
+            away: pred.awayWin,
+          },
           // Teaser content
           headline: displayHeadline,
           locked: true,
