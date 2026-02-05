@@ -26,17 +26,17 @@ import {
   Shield
 } from 'lucide-react';
 
-// Team Logo with fallback
+// Team Logo with fallback - Light card style
 function TeamLogo({ name, sport, size = 40 }: { name: string; sport: string; size?: number }) {
   const [error, setError] = useState(false);
   const url = getTeamLogo(name, sport);
   
   if (error || !url) {
-    // Fallback: show initials
+    // Fallback: show initials with light bg
     const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
     return (
       <div 
-        className="flex items-center justify-center bg-white/10 rounded-lg text-white font-bold"
+        className="flex items-center justify-center bg-zinc-100 rounded-xl text-zinc-600 font-bold"
         style={{ width: size, height: size, fontSize: size * 0.35 }}
       >
         {initials}
@@ -50,7 +50,7 @@ function TeamLogo({ name, sport, size = 40 }: { name: string; sport: string; siz
       alt={name}
       width={size}
       height={size}
-      className="rounded-lg bg-white/5 object-contain"
+      className="rounded-xl bg-zinc-50 object-contain p-1"
       style={{ width: size, height: size }}
       onError={() => setError(true)}
     />
@@ -63,7 +63,7 @@ function LeagueLogo({ league, size = 20 }: { league: string; size?: number }) {
   const url = getLeagueLogo(league);
   
   if (error || !url) {
-    return <Shield className="text-gray-500" style={{ width: size, height: size }} />;
+    return <Shield className="text-zinc-400" style={{ width: size, height: size }} />;
   }
   
   return (
@@ -174,13 +174,13 @@ function safeString(value: unknown): string {
   return '';
 }
 
-// Confidence badge
+// Confidence badge - light card style
 function ConfidenceBadge({ confidence }: { confidence: number }) {
   const level = confidence >= 70 ? 'high' : confidence >= 60 ? 'medium' : 'low';
   const colors = {
-    high: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    medium: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    low: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    high: 'text-emerald-600',
+    medium: 'text-amber-600',
+    low: 'text-blue-600',
   };
   const labels = {
     high: 'High Confidence',
@@ -189,30 +189,39 @@ function ConfidenceBadge({ confidence }: { confidence: number }) {
   };
   
   return (
-    <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${colors[level]}`}>
+    <span className={`text-sm font-medium ${colors[level]}`}>
       {labels[level]} • {confidence}%
     </span>
   );
 }
 
-// Edge badge
-function EdgeBadge({ edge }: { edge: number }) {
-  const color = edge >= 10 ? 'text-emerald-400' : edge >= 5 ? 'text-green-400' : 'text-blue-400';
+// Star rating component (like reviews)
+function StarRating({ confidence }: { confidence: number }) {
+  const stars = Math.round(confidence / 20); // 60% = 3 stars, 80% = 4 stars, 100% = 5 stars
   return (
-    <span className={`text-lg font-bold ${color}`}>
-      +{edge.toFixed(1)}% Edge
-    </span>
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <svg
+          key={star}
+          className={`w-4 h-4 ${star <= stars ? 'text-amber-400' : 'text-gray-300'}`}
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      ))}
+      <span className="text-xs text-gray-500 ml-1">{confidence}%</span>
+    </div>
   );
 }
 
-// Single Pick Card - Premium Design
+// Single Pick Card - Breatheeze Style (Light cards, dark badge)
 function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: number }) {
   const analysis = pick.analysis;
   
   // Format probabilities (stored as 0-1, display as %)
   const probs = pick.probabilities;
   const homeProb = probs?.home ? Math.round(probs.home * 100) : null;
-  const drawProb = probs?.draw ? Math.round(probs.draw * 100) : null;
   const awayProb = probs?.away ? Math.round(probs.away * 100) : null;
   
   // Determine favored team based on probabilities
@@ -221,137 +230,107 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
     : null;
 
   return (
-    <article className="group relative bg-gradient-to-br from-zinc-900/80 to-zinc-900/40 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300">
-      {/* Rank Badge */}
-      <div className="absolute top-4 left-4 z-10">
-        <div className="w-10 h-10 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center">
-          <span className="text-accent font-bold text-lg">#{rank}</span>
+    <article className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+      {/* Top Badge - Dark strip like Breatheeze */}
+      <div className="bg-zinc-900 px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="bg-accent text-black text-xs font-bold px-2 py-0.5 rounded">#{rank}</span>
+          <span className="text-white/90 text-sm font-medium">+{pick.edgeValue.toFixed(1)}% EDGE</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <LeagueLogo league={pick.league} size={16} />
+          <span className="text-white/60 text-xs">{formatLeague(pick.league)}</span>
         </div>
       </div>
       
-      {/* Header */}
-      <div className="px-4 sm:px-6 pt-6 pb-4">
-        {/* League & Time */}
-        <div className="flex items-center justify-between mb-4 ml-12 sm:ml-14">
-          <div className="flex items-center gap-2">
-            <LeagueLogo league={pick.league} size={18} />
-            <span className="text-xs sm:text-sm text-gray-400 truncate max-w-[100px] sm:max-w-none">{formatLeague(pick.league)}</span>
-          </div>
-          <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">{formatKickoffShort(pick.kickoff)}</span>
-        </div>
-        
-        {/* Teams - Stack on mobile */}
-        <div className="flex items-center justify-center gap-3 sm:gap-6">
+      {/* Main Content - Light background */}
+      <div className="p-5">
+        {/* Teams Display */}
+        <div className="flex items-center justify-center gap-4 mb-5">
           {/* Home Team */}
-          <div className="flex-1 flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-            <TeamLogo name={pick.homeTeam} sport={pick.sport} size={36} />
-            <div className="text-center sm:text-left">
-              <p className="font-semibold text-white text-sm sm:text-base leading-tight">{pick.homeTeam}</p>
-              {homeProb !== null && (
-                <p className="text-xs sm:text-sm text-gray-400">{homeProb}%</p>
-              )}
-            </div>
+          <div className="flex-1 flex flex-col items-center text-center">
+            <TeamLogo name={pick.homeTeam} sport={pick.sport} size={52} />
+            <p className="font-semibold text-zinc-800 text-sm mt-2 leading-tight">{pick.homeTeam}</p>
+            {homeProb !== null && (
+              <p className="text-xs text-zinc-500 mt-0.5">{homeProb}%</p>
+            )}
           </div>
           
-          {/* VS */}
-          <div className="flex-shrink-0">
-            <span className="text-lg sm:text-xl text-gray-600 font-light">vs</span>
+          {/* VS Divider */}
+          <div className="flex flex-col items-center px-2">
+            <span className="text-zinc-400 text-sm font-medium">VS</span>
+            <span className="text-[10px] text-zinc-400 mt-1 whitespace-nowrap">{formatKickoffShort(pick.kickoff)}</span>
           </div>
           
           {/* Away Team */}
-          <div className="flex-1 flex flex-col sm:flex-row-reverse items-center gap-2 sm:gap-3">
-            <TeamLogo name={pick.awayTeam} sport={pick.sport} size={36} />
-            <div className="text-center sm:text-right">
-              <p className="font-semibold text-white text-sm sm:text-base leading-tight">{pick.awayTeam}</p>
-              {awayProb !== null && (
-                <p className="text-xs sm:text-sm text-gray-400">{awayProb}%</p>
-              )}
-            </div>
+          <div className="flex-1 flex flex-col items-center text-center">
+            <TeamLogo name={pick.awayTeam} sport={pick.sport} size={52} />
+            <p className="font-semibold text-zinc-800 text-sm mt-2 leading-tight">{pick.awayTeam}</p>
+            {awayProb !== null && (
+              <p className="text-xs text-zinc-500 mt-0.5">{awayProb}%</p>
+            )}
           </div>
         </div>
-      </div>
-      
-      {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-      
-      {/* Selection & Edge Section */}
-      <div className="px-4 sm:px-6 py-4 sm:py-5">
+        
+        {/* Star Rating */}
+        <div className="flex justify-center mb-4">
+          <StarRating confidence={pick.confidence} />
+        </div>
+        
+        {/* Divider */}
+        <div className="h-px bg-zinc-200 mb-4" />
+        
         {!pick.locked && pick.selection ? (
           <>
-            {/* Our Pick */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Our Pick</p>
-                <p className="text-lg sm:text-xl font-bold text-white">{pick.selection}</p>
-              </div>
-              <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-1">
-                <EdgeBadge edge={pick.edgeValue} />
-                {pick.odds && (
-                  <p className="text-sm text-gray-400">@ {pick.odds.toFixed(2)}</p>
-                )}
-              </div>
+            {/* Our Pick - Clean typography */}
+            <div className="text-center mb-4">
+              <p className="text-lg font-bold text-zinc-900">{pick.selection}</p>
+              {pick.odds && (
+                <p className="text-zinc-500 text-sm">@ {pick.odds.toFixed(2)}</p>
+              )}
             </div>
             
-            {/* Confidence & Headline */}
-            <div className="flex items-center gap-3 mb-4">
-              <ConfidenceBadge confidence={pick.confidence} />
-            </div>
-            
-            {/* Headline/Reasoning */}
+            {/* Headline */}
             {analysis?.headlines?.[0] && (
-              <p className="text-gray-300 text-sm leading-relaxed mb-4 line-clamp-2">
+              <p className="text-zinc-600 text-sm text-center leading-relaxed mb-4 line-clamp-2">
                 &ldquo;{safeString(analysis.headlines[0])}&rdquo;
               </p>
             )}
             
-            {/* Form Preview */}
-            {analysis?.form && (analysis.form.homeForm || analysis.form.awayForm) && (
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                {analysis.form.homeForm && (
-                  <div className="bg-white/5 rounded-lg px-3 py-2">
-                    <p className="text-xs text-gray-500 mb-1">{pick.homeTeam}</p>
-                    <p className="font-mono text-sm text-white tracking-wider">{safeString(analysis.form.homeForm)}</p>
-                  </div>
-                )}
-                {analysis.form.awayForm && (
-                  <div className="bg-white/5 rounded-lg px-3 py-2">
-                    <p className="text-xs text-gray-500 mb-1">{pick.awayTeam}</p>
-                    <p className="font-mono text-sm text-white tracking-wider">{safeString(analysis.form.awayForm)}</p>
-                  </div>
-                )}
-              </div>
-            )}
+            {/* CTA Button */}
+            <Link
+              href={`/match/${pick.matchId}`}
+              className="flex items-center justify-center gap-2 w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-3 rounded-xl transition-colors text-sm"
+            >
+              View Full Analysis
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </>
         ) : (
           /* Locked State */
           <>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Model Prediction</p>
-                <p className="text-base sm:text-lg font-semibold text-white">
-                  {favoredTeam ? `${favoredTeam} favored` : 'Analysis available'}
-                </p>
-              </div>
+            <div className="text-center mb-4">
+              <p className="text-base font-semibold text-zinc-900">
+                {favoredTeam ? `${favoredTeam} favored` : 'Analysis available'}
+              </p>
               <ConfidenceBadge confidence={pick.confidence} />
             </div>
             
             {pick.headline && (
-              <p className="text-gray-400 text-sm mb-4 line-clamp-2 italic">
+              <p className="text-zinc-500 text-sm text-center mb-4 line-clamp-2 italic">
                 &ldquo;{safeString(pick.headline)}&rdquo;
               </p>
             )}
             
-            <div className="bg-gradient-to-r from-accent/5 to-purple-500/5 border border-accent/20 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:justify-between">
-              <div className="flex items-center gap-3">
-                <Lock className="w-5 h-5 text-accent/60 flex-shrink-0" />
-                <div>
-                  <p className="text-white font-medium text-sm">Unlock full pick</p>
-                  <p className="text-xs text-gray-500">Selection, odds & analysis</p>
-                </div>
+            {/* Unlock CTA */}
+            <div className="bg-zinc-100 rounded-xl p-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Lock className="w-4 h-4 text-zinc-400" />
+                <span className="text-zinc-600 text-sm font-medium">Unlock full analysis</span>
               </div>
               <Link
                 href="/pricing"
-                className="inline-flex items-center gap-1 bg-accent hover:bg-accent/90 text-black font-semibold px-4 py-2 rounded-lg text-sm transition-colors w-full sm:w-auto justify-center"
+                className="inline-flex items-center gap-1 bg-accent hover:bg-accent/90 text-black font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors"
               >
                 Go Pro
                 <ChevronRight className="w-4 h-4" />
@@ -360,19 +339,6 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
           </>
         )}
       </div>
-      
-      {/* Footer - View Analysis CTA */}
-      {!pick.locked && (
-        <div className="px-4 sm:px-6 pb-4 sm:pb-5">
-          <Link
-            href={`/match/${pick.matchId}`}
-            className="flex items-center justify-center gap-2 w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors text-sm sm:text-base"
-          >
-            View Full Analysis
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      )}
     </article>
   );
 }
