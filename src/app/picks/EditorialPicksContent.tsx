@@ -9,7 +9,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { getTeamLogo, getLeagueLogo } from '@/lib/logos';
 import { 
@@ -23,8 +22,62 @@ import {
   ArrowRight,
   Lock,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Shield
 } from 'lucide-react';
+
+// Team Logo with fallback
+function TeamLogo({ name, sport, size = 40 }: { name: string; sport: string; size?: number }) {
+  const [error, setError] = useState(false);
+  const url = getTeamLogo(name, sport);
+  
+  if (error || !url) {
+    // Fallback: show initials
+    const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    return (
+      <div 
+        className="flex items-center justify-center bg-white/10 rounded-lg text-white font-bold"
+        style={{ width: size, height: size, fontSize: size * 0.35 }}
+      >
+        {initials}
+      </div>
+    );
+  }
+  
+  return (
+    <img
+      src={url}
+      alt={name}
+      width={size}
+      height={size}
+      className="rounded-lg bg-white/5 object-contain"
+      style={{ width: size, height: size }}
+      onError={() => setError(true)}
+    />
+  );
+}
+
+// League Logo with fallback
+function LeagueLogo({ league, size = 20 }: { league: string; size?: number }) {
+  const [error, setError] = useState(false);
+  const url = getLeagueLogo(league);
+  
+  if (error || !url) {
+    return <Shield className="text-gray-500" style={{ width: size, height: size }} />;
+  }
+  
+  return (
+    <img
+      src={url}
+      alt={league}
+      width={size}
+      height={size}
+      className="rounded object-contain"
+      style={{ width: size, height: size }}
+      onError={() => setError(true)}
+    />
+  );
+}
 
 // Types
 interface Analysis {
@@ -177,58 +230,43 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
       </div>
       
       {/* Header */}
-      <div className="px-6 pt-6 pb-4">
+      <div className="px-4 sm:px-6 pt-6 pb-4">
         {/* League & Time */}
-        <div className="flex items-center justify-between mb-4 pl-12">
+        <div className="flex items-center justify-between mb-4 ml-12 sm:ml-14">
           <div className="flex items-center gap-2">
-            <Image
-              src={getLeagueLogo(pick.league)}
-              alt={pick.league}
-              width={20}
-              height={20}
-              className="rounded"
-            />
-            <span className="text-sm text-gray-400">{formatLeague(pick.league)}</span>
+            <LeagueLogo league={pick.league} size={18} />
+            <span className="text-xs sm:text-sm text-gray-400 truncate max-w-[100px] sm:max-w-none">{formatLeague(pick.league)}</span>
           </div>
-          <span className="text-sm text-gray-500">{formatKickoffShort(pick.kickoff)}</span>
+          <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">{formatKickoffShort(pick.kickoff)}</span>
         </div>
         
-        {/* Teams */}
-        <div className="flex items-center justify-between gap-4 mb-4">
-          <div className="flex-1 flex items-center gap-3">
-            <Image
-              src={getTeamLogo(pick.homeTeam, pick.sport)}
-              alt={pick.homeTeam}
-              width={40}
-              height={40}
-              className="rounded-lg bg-white/5 p-1"
-            />
-            <div>
-              <p className="font-semibold text-white text-lg">{pick.homeTeam}</p>
+        {/* Teams - Stack on mobile */}
+        <div className="flex items-center justify-center gap-3 sm:gap-6">
+          {/* Home Team */}
+          <div className="flex-1 flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3">
+            <TeamLogo name={pick.homeTeam} sport={pick.sport} size={36} />
+            <div className="text-center sm:text-left">
+              <p className="font-semibold text-white text-sm sm:text-base leading-tight">{pick.homeTeam}</p>
               {homeProb !== null && (
-                <p className="text-sm text-gray-400">{homeProb}%</p>
+                <p className="text-xs sm:text-sm text-gray-400">{homeProb}%</p>
               )}
             </div>
           </div>
           
-          <div className="text-center px-4">
-            <span className="text-2xl text-gray-500 font-light">vs</span>
+          {/* VS */}
+          <div className="flex-shrink-0">
+            <span className="text-lg sm:text-xl text-gray-600 font-light">vs</span>
           </div>
           
-          <div className="flex-1 flex items-center gap-3 justify-end text-right">
-            <div>
-              <p className="font-semibold text-white text-lg">{pick.awayTeam}</p>
+          {/* Away Team */}
+          <div className="flex-1 flex flex-col-reverse sm:flex-row-reverse items-center sm:items-center gap-2 sm:gap-3">
+            <TeamLogo name={pick.awayTeam} sport={pick.sport} size={36} />
+            <div className="text-center sm:text-right">
+              <p className="font-semibold text-white text-sm sm:text-base leading-tight">{pick.awayTeam}</p>
               {awayProb !== null && (
-                <p className="text-sm text-gray-400">{awayProb}%</p>
+                <p className="text-xs sm:text-sm text-gray-400">{awayProb}%</p>
               )}
             </div>
-            <Image
-              src={getTeamLogo(pick.awayTeam, pick.sport)}
-              alt={pick.awayTeam}
-              width={40}
-              height={40}
-              className="rounded-lg bg-white/5 p-1"
-            />
           </div>
         </div>
       </div>
@@ -237,19 +275,19 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
       <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       
       {/* Selection & Edge Section */}
-      <div className="px-6 py-5">
+      <div className="px-4 sm:px-6 py-4 sm:py-5">
         {!pick.locked && pick.selection ? (
           <>
             {/* Our Pick */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Our Pick</p>
-                <p className="text-xl font-bold text-white">{pick.selection}</p>
+                <p className="text-lg sm:text-xl font-bold text-white">{pick.selection}</p>
               </div>
-              <div className="text-right">
+              <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-1">
                 <EdgeBadge edge={pick.edgeValue} />
                 {pick.odds && (
-                  <p className="text-sm text-gray-400 mt-1">@ {pick.odds.toFixed(2)}</p>
+                  <p className="text-sm text-gray-400">@ {pick.odds.toFixed(2)}</p>
                 )}
               </div>
             </div>
@@ -287,10 +325,10 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
         ) : (
           /* Locked State */
           <>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Model Prediction</p>
-                <p className="text-lg font-semibold text-white">
+                <p className="text-base sm:text-lg font-semibold text-white">
                   {favoredTeam ? `${favoredTeam} favored` : 'Analysis available'}
                 </p>
               </div>
@@ -303,9 +341,9 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
               </p>
             )}
             
-            <div className="bg-gradient-to-r from-accent/5 to-purple-500/5 border border-accent/20 rounded-xl p-4 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-accent/5 to-purple-500/5 border border-accent/20 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:justify-between">
               <div className="flex items-center gap-3">
-                <Lock className="w-5 h-5 text-accent/60" />
+                <Lock className="w-5 h-5 text-accent/60 flex-shrink-0" />
                 <div>
                   <p className="text-white font-medium text-sm">Unlock full pick</p>
                   <p className="text-xs text-gray-500">Selection, odds & analysis</p>
@@ -313,7 +351,7 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
               </div>
               <Link
                 href="/pricing"
-                className="inline-flex items-center gap-1 bg-accent hover:bg-accent/90 text-black font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+                className="inline-flex items-center gap-1 bg-accent hover:bg-accent/90 text-black font-semibold px-4 py-2 rounded-lg text-sm transition-colors w-full sm:w-auto justify-center"
               >
                 Go Pro
                 <ChevronRight className="w-4 h-4" />
@@ -325,10 +363,10 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
       
       {/* Footer - View Analysis CTA */}
       {!pick.locked && (
-        <div className="px-6 pb-5">
+        <div className="px-4 sm:px-6 pb-4 sm:pb-5">
           <Link
             href={`/match/${pick.matchId}`}
-            className="flex items-center justify-center gap-2 w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-3 rounded-xl transition-colors"
+            className="flex items-center justify-center gap-2 w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors text-sm sm:text-base"
           >
             View Full Analysis
             <ArrowRight className="w-4 h-4" />
