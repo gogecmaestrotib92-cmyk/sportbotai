@@ -18,7 +18,7 @@ import { prisma } from '@/lib/prisma';
 // Force dynamic rendering (uses headers/session)
 export const dynamic = 'force-dynamic';
 import { theOddsClient, OddsApiEvent } from '@/lib/theOdds';
-import { oddsToImpliedProb } from '@/lib/value-detection';
+import { oddsToImpliedProb, removeVig } from '@/lib/value-detection';
 import { cacheGet, CACHE_KEYS } from '@/lib/cache';
 
 // ============================================
@@ -605,24 +605,24 @@ export async function GET(request: NextRequest) {
       let valueEdgeLabel: string | undefined;
       let usingPipelineProbs = false; // Track if we're using proper Poisson/Elo probabilities
       
-      // PRIORITY 1: Use OddsSnapshot model probabilities and edges (populated by pre-analyze cron with Poisson/Elo)
-      // This is the most reliable source as it's persisted in DB
-      // FIX: Use the stored edge directly - it was calculated with accurate pipeline data
-      // Don't recalculate with live odds as that can reduce edge visibility
+      // PRIORITY 1: Use OddsSnapshot model probabilities (populated by pre-analyze cron with Poisson/Elo)
+      // BUT recalculate edge with CURRENT live odds to match what /api/analyze shows
+      // This ensures Market Alerts edge matches the Full Analysis edge
       if (prevSnapshot?.modelHomeProb && prevSnapshot?.modelAwayProb && 
           prevSnapshot.modelHomeProb > 0 && prevSnapshot.modelAwayProb > 0) {
         modelHomeProb = prevSnapshot.modelHomeProb;
         modelAwayProb = prevSnapshot.modelAwayProb;
         modelDrawProb = prevSnapshot.modelDrawProb ?? undefined;
-        // Use stored edge directly - this is what the AI model calculated
-        homeEdge = prevSnapshot.homeEdge ?? 0;
-        awayEdge = prevSnapshot.awayEdge ?? 0;
-        drawEdge = prevSnapshot.drawEdge ?? undefined;
-        valueEdgeLabel = prevSnapshot.alertNote ?? undefined;
         usingPipelineProbs = true;
-        // NOTE: We no longer recalculate edges with live odds
-        // The stored edge represents the model's view at analysis time
-        // If odds have drifted, that's actually more value (or the edge has closed)
+        
+        // IMPORTANT: Use removeVig to match analyzeMarket() in value-detection.ts
+        // This removes bookmaker margin for accurate edge calculation
+        const noVigProbs = removeVig(consensus.home, consensus.away, consensus.draw);
+        
+        homeEdge = modelHomeProb - noVigProbs.home;
+        awayEdge = modelAwayProb - noVigProbs.away;
+        drawEdge = modelDrawProb && noVigProbs.draw ? modelDrawProb - noVigProbs.draw : undefined;
+        valueEdgeLabel = prevSnapshot.alertNote ?? undefined;
       }
       // PRIORITY 2: Use Redis cached analysis (may be empty on serverless cold start)
       else if (cachedAnalysis?.marketIntel?.modelProbability) {
@@ -632,13 +632,12 @@ export async function GET(request: NextRequest) {
         modelDrawProb = aiProbs.draw;
         usingPipelineProbs = true;
         
-        const homeImplied = oddsToImpliedProb(consensus.home);
-        const awayImplied = oddsToImpliedProb(consensus.away);
-        const drawImplied = consensus.draw ? oddsToImpliedProb(consensus.draw) : 0;
+        // Use removeVig to match analyzeMarket() in value-detection.ts
+        const noVigProbs = removeVig(consensus.home, consensus.away, consensus.draw);
         
-        homeEdge = modelHomeProb - homeImplied;
-        awayEdge = modelAwayProb - awayImplied;
-        drawEdge = modelDrawProb ? modelDrawProb - drawImplied : undefined;
+        homeEdge = modelHomeProb - noVigProbs.home;
+        awayEdge = modelAwayProb - noVigProbs.away;
+        drawEdge = modelDrawProb && noVigProbs.draw ? modelDrawProb - noVigProbs.draw : undefined;
         valueEdgeLabel = cachedAnalysis.marketIntel.valueEdge?.label;
       } else {
         // FALLBACK: No cached pipeline data, use heuristic approximation
@@ -649,13 +648,12 @@ export async function GET(request: NextRequest) {
         modelAwayProb = modelProb.away;
         modelDrawProb = modelProb.draw;
         
-        const homeImplied = oddsToImpliedProb(consensus.home);
-        const awayImplied = oddsToImpliedProb(consensus.away);
-        const drawImplied = consensus.draw ? oddsToImpliedProb(consensus.draw) : 0;
+        // Use removeVig to match analyzeMarket() in value-detection.ts
+        const noVigProbs = removeVig(consensus.home, consensus.away, consensus.draw);
         
-        homeEdge = modelHomeProb - homeImplied;
-        awayEdge = modelAwayProb - awayImplied;
-        drawEdge = modelDrawProb ? modelDrawProb - drawImplied : undefined;
+        homeEdge = modelHomeProb - noVigProbs.home;
+        awayEdge = modelAwayProb - noVigProbs.away;
+        drawEdge = modelDrawProb && noVigProbs.draw ? modelDrawProb - noVigProbs.draw : undefined;
       }
       
       // Determine best edge
