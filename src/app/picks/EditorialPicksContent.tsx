@@ -230,7 +230,7 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
     : null;
 
   return (
-    <article className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 tracking-wide">
+    <article className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 tracking-wide h-full flex flex-col">
       {/* Top Badge - Dark strip like Breatheeze */}
       <div className="bg-zinc-900 px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -244,7 +244,7 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
       </div>
       
       {/* Main Content - Light background, pure black text */}
-      <div className="p-5 text-black">
+      <div className="p-5 text-black flex-1 flex flex-col">
         {/* Teams Display */}
         <div className="flex items-center justify-center gap-4 mb-5">
           {/* Home Team */}
@@ -280,6 +280,8 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
         {/* Divider */}
         <div className="h-px bg-black/20 mb-4" />
         
+        {/* Content wrapper - flex-1 to push CTA to bottom */}
+        <div className="flex-1 flex flex-col">
         {!pick.locked && pick.selection ? (
           <>
             {/* Our Pick - Clean typography */}
@@ -297,10 +299,13 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
               </p>
             )}
             
+            {/* Spacer to push button down */}
+            <div className="flex-1" />
+            
             {/* CTA Button */}
             <Link
               href={`/match/${pick.slug}`}
-              className="flex items-center justify-center gap-2 w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-3 rounded-none transition-colors text-sm tracking-wide"
+              className="flex items-center justify-center gap-2 w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-3 rounded-none transition-colors text-sm tracking-wide mt-auto"
             >
               View Full Analysis
               <ArrowRight className="w-4 h-4" />
@@ -322,8 +327,11 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
               </p>
             )}
             
+            {/* Spacer to push button down */}
+            <div className="flex-1" />
+            
             {/* Unlock CTA */}
-            <div className="bg-zinc-100 rounded-xl p-4 text-center">
+            <div className="bg-zinc-100 rounded-xl p-4 text-center mt-auto">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Lock className="w-4 h-4 text-black" />
                 <span className="text-black text-sm font-medium">Unlock full analysis</span>
@@ -338,6 +346,7 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
             </div>
           </>
         )}
+        </div>
       </div>
     </article>
   );
@@ -533,7 +542,7 @@ export default function EditorialPicksContent({ locale }: Props) {
           <p className="text-gray-500">{t.checkBack}</p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
+        <div className="grid md:grid-cols-2 gap-6 mb-12 items-stretch">
           {data.picks.map((pick, index) => (
             <PickCard key={pick.id} pick={pick} isPro={data.isPro} rank={index + 1} />
           ))}
