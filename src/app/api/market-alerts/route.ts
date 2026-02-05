@@ -616,8 +616,10 @@ export async function GET(request: NextRequest) {
         usingPipelineProbs = true;
         
         // IMPORTANT: Use removeVig to match analyzeMarket() in value-detection.ts
-        // This removes bookmaker margin for accurate edge calculation
-        const noVigProbs = removeVig(consensus.home, consensus.away, consensus.draw);
+        // Only pass draw odds for sports with real draws (soccer)
+        // For NHL/NBA/NFL, draw odds are "tie at regulation" which we don't model
+        const drawForVig = sport.hasDraw ? consensus.draw : undefined;
+        const noVigProbs = removeVig(consensus.home, consensus.away, drawForVig);
         
         homeEdge = modelHomeProb - noVigProbs.home;
         awayEdge = modelAwayProb - noVigProbs.away;
@@ -632,8 +634,9 @@ export async function GET(request: NextRequest) {
         modelDrawProb = aiProbs.draw;
         usingPipelineProbs = true;
         
-        // Use removeVig to match analyzeMarket() in value-detection.ts
-        const noVigProbs = removeVig(consensus.home, consensus.away, consensus.draw);
+        // Use removeVig - only pass draw for sports with real draws
+        const drawForVig = sport.hasDraw ? consensus.draw : undefined;
+        const noVigProbs = removeVig(consensus.home, consensus.away, drawForVig);
         
         homeEdge = modelHomeProb - noVigProbs.home;
         awayEdge = modelAwayProb - noVigProbs.away;
@@ -648,8 +651,9 @@ export async function GET(request: NextRequest) {
         modelAwayProb = modelProb.away;
         modelDrawProb = modelProb.draw;
         
-        // Use removeVig to match analyzeMarket() in value-detection.ts
-        const noVigProbs = removeVig(consensus.home, consensus.away, consensus.draw);
+        // Use removeVig - only pass draw for sports with real draws
+        const drawForVig = sport.hasDraw ? consensus.draw : undefined;
+        const noVigProbs = removeVig(consensus.home, consensus.away, drawForVig);
         
         homeEdge = modelHomeProb - noVigProbs.home;
         awayEdge = modelAwayProb - noVigProbs.away;
