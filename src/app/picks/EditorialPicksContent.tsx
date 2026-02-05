@@ -243,7 +243,7 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
         {/* Teams - Stack on mobile */}
         <div className="flex items-center justify-center gap-3 sm:gap-6">
           {/* Home Team */}
-          <div className="flex-1 flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3">
+          <div className="flex-1 flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
             <TeamLogo name={pick.homeTeam} sport={pick.sport} size={36} />
             <div className="text-center sm:text-left">
               <p className="font-semibold text-white text-sm sm:text-base leading-tight">{pick.homeTeam}</p>
@@ -259,7 +259,7 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
           </div>
           
           {/* Away Team */}
-          <div className="flex-1 flex flex-col-reverse sm:flex-row-reverse items-center sm:items-center gap-2 sm:gap-3">
+          <div className="flex-1 flex flex-col sm:flex-row-reverse items-center gap-2 sm:gap-3">
             <TeamLogo name={pick.awayTeam} sport={pick.sport} size={36} />
             <div className="text-center sm:text-right">
               <p className="font-semibold text-white text-sm sm:text-base leading-tight">{pick.awayTeam}</p>
