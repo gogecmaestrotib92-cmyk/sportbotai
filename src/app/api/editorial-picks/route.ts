@@ -79,13 +79,14 @@ export async function GET(request: NextRequest) {
     // Get total count for "X more picks" display
     const totalCount = await prisma.prediction.count({ where: whereClause });
 
-    // Sort by MODEL PROBABILITY first - our most confident edge picks
-    // These are picks where: market is wrong AND we're confident
+    // Sort by EDGE VALUE first - our best value picks
+    // These are picks where market mispricing is highest
+    // Edge = Our probability - Market implied probability
     const predictions = await prisma.prediction.findMany({
       where: whereClause,
       orderBy: [
-        { modelProbability: 'desc' }, // Primary: highest confidence
-        { edgeValue: 'desc' },        // Secondary: best edge
+        { edgeValue: 'desc' },        // Primary: best edge (biggest market error)
+        { modelProbability: 'desc' }, // Secondary: our confidence in the pick
       ],
       take: limit,
       select: {

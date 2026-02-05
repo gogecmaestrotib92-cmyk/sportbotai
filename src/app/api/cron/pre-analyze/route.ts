@@ -1992,9 +1992,37 @@ export async function GET(request: NextRequest) {
           // ============================================
           // This runs for ALL matches, not just value bets
           // Ensures chat can display analysis even for non-value matches
+          // NOW ALSO stores edge data for daily picks filtering
           try {
             const predictionDateStr = new Date(event.commence_time).toISOString().split('T')[0];
             const chatPredictionId = `pre_${sport.key}_${event.id}_${predictionDateStr}`;
+
+            // Calculate best edge for this match (even if not a qualified value bet)
+            const edges = {
+              home: pipelineEdge.home * 100,
+              away: pipelineEdge.away * 100,
+              draw: pipelineEdge.draw !== undefined ? pipelineEdge.draw * 100 : -999,
+            };
+            
+            // Find best edge candidate
+            type EdgeCandidate = { side: 'HOME' | 'AWAY' | 'DRAW'; edge: number; odds: number; prob: number };
+            const edgeCandidates: EdgeCandidate[] = [
+              { side: 'HOME', edge: edges.home, odds: consensus.home, prob: pipelineProbs.home },
+              { side: 'AWAY', edge: edges.away, odds: consensus.away, prob: pipelineProbs.away },
+            ];
+            if (pipelineProbs.draw && consensus.draw && edges.draw > -999) {
+              edgeCandidates.push({ side: 'DRAW', edge: edges.draw, odds: consensus.draw, prob: pipelineProbs.draw });
+            }
+            edgeCandidates.sort((a, b) => b.edge - a.edge);
+            const bestEdge = edgeCandidates[0];
+            
+            // Determine edge bucket (using Prisma enum values)
+            const getEdgeBucket = (edge: number): 'NO_EDGE' | 'SMALL' | 'MEDIUM' | 'HIGH' => {
+              if (edge >= 5) return 'HIGH';
+              if (edge >= 3) return 'MEDIUM';
+              if (edge >= 2) return 'SMALL';
+              return 'NO_EDGE';
+            };
 
             await prisma.prediction.upsert({
               where: { id: chatPredictionId },
@@ -2016,6 +2044,16 @@ export async function GET(request: NextRequest) {
                 draw: pipelineProbabilitiesForUI.draw || null,
                 predictedScore: `${expectedScores.home}-${expectedScores.away}`,
                 fullResponse: JSON.parse(JSON.stringify(cacheResponse)),
+                // Edge data for daily picks
+                selection: bestEdge.side === 'HOME' ? event.home_team : bestEdge.side === 'AWAY' ? event.away_team : 'Draw',
+                modelProbability: bestEdge.prob * 100,
+                marketOddsAtPrediction: bestEdge.odds,
+                edgeValue: bestEdge.edge,
+                edgeBucket: getEdgeBucket(bestEdge.edge),
+                odds: bestEdge.odds,
+                valueBetSide: bestEdge.side,
+                valueBetOdds: bestEdge.odds,
+                valueBetEdge: bestEdge.edge,
               },
               update: {
                 homeWin: pipelineProbabilitiesForUI.home,
@@ -2023,9 +2061,19 @@ export async function GET(request: NextRequest) {
                 draw: pipelineProbabilitiesForUI.draw || null,
                 predictedScore: `${expectedScores.home}-${expectedScores.away}`,
                 fullResponse: JSON.parse(JSON.stringify(cacheResponse)),
+                // Edge data for daily picks
+                selection: bestEdge.side === 'HOME' ? event.home_team : bestEdge.side === 'AWAY' ? event.away_team : 'Draw',
+                modelProbability: bestEdge.prob * 100,
+                marketOddsAtPrediction: bestEdge.odds,
+                edgeValue: bestEdge.edge,
+                edgeBucket: getEdgeBucket(bestEdge.edge),
+                odds: bestEdge.odds,
+                valueBetSide: bestEdge.side,
+                valueBetOdds: bestEdge.odds,
+                valueBetEdge: bestEdge.edge,
               },
             });
-            console.log(`[Pre-Analyze] ✅ Stored fullResponse for chat: ${matchRef}`);
+            console.log(`[Pre-Analyze] ✅ Stored fullResponse for chat: ${matchRef} (edge: ${bestEdge.edge.toFixed(1)}%, selection: ${bestEdge.side})`);
           } catch (fullResponseError) {
             console.error(`[Pre-Analyze] Failed to store fullResponse:`, fullResponseError);
           }
