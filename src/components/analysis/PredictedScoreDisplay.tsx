@@ -281,7 +281,7 @@ export default function PredictedScoreDisplay({
 
                             <div className="text-center flex-1">
                                 <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{t.marketLine}</p>
-                                <p className="text-lg font-semibold text-zinc-300">{overUnder.line}</p>
+                                <p className="text-lg font-semibold text-zinc-300">{formatLine(overUnder.line)}</p>
                             </div>
                         </div>
 
@@ -290,7 +290,7 @@ export default function PredictedScoreDisplay({
                             <div className="flex gap-2">
                                 {overUnder.overOdds && (
                                     <div className={`flex-1 p-2 rounded-lg text-center ${valueIndicator === 'over' ? 'bg-green-500/20 border border-green-500/30' : 'bg-white/5'}`}>
-                                        <p className="text-[10px] text-zinc-400 uppercase">{t.over} {overUnder.line}</p>
+                                        <p className="text-[10px] text-zinc-400 uppercase">{t.over} {formatLine(overUnder.line)}</p>
                                         <p className={`text-base font-bold ${valueIndicator === 'over' ? 'text-green-400' : 'text-white'}`}>
                                             {overUnder.overOdds.toFixed(2)}
                                         </p>
@@ -298,7 +298,7 @@ export default function PredictedScoreDisplay({
                                 )}
                                 {overUnder.underOdds && (
                                     <div className={`flex-1 p-2 rounded-lg text-center ${valueIndicator === 'under' ? 'bg-red-500/20 border border-red-500/30' : 'bg-white/5'}`}>
-                                        <p className="text-[10px] text-zinc-400 uppercase">{t.under} {overUnder.line}</p>
+                                        <p className="text-[10px] text-zinc-400 uppercase">{t.under} {formatLine(overUnder.line)}</p>
                                         <p className={`text-base font-bold ${valueIndicator === 'under' ? 'text-red-400' : 'text-white'}`}>
                                             {overUnder.underOdds.toFixed(2)}
                                         </p>

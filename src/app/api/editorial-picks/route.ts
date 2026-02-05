@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
+import { generateMatchSlug } from '@/lib/match-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,27 +57,30 @@ export async function GET(request: NextRequest) {
     futureLimit.setUTCHours(23, 59, 59, 999);
 
     // Build where clause
-    // DAILY PICKS = Our MOST CONFIDENT predictions (highest model probability)
-    // These are the picks we're proud to show publicly and track record for
+    // DAILY PICKS = Picks where we have BOTH:
+    // 1. An edge (market is mispriced) - minimum 2%
+    // 2. High model confidence - we're sure about the outcome
     const whereClause = {
       kickoff: {
         gte: now,
         lte: futureLimit,
       },
       outcome: 'PENDING' as const,
-      modelProbability: {
-        gte: 60, // High confidence only (60%+ model probability)
-      },
+      // Must have meaningful edge (market is wrong)
       edgeValue: {
-        gte: 3, // Must have meaningful edge (market is wrong)
+        gte: 2, // At least 2% edge
+      },
+      // Must have fullResponse (properly analyzed)
+      NOT: {
+        fullResponse: { equals: Prisma.DbNull },
       },
     };
 
     // Get total count for "X more picks" display
     const totalCount = await prisma.prediction.count({ where: whereClause });
 
-    // Sort by MODEL CONFIDENCE first (our most confident picks)
-    // These are the picks we can be proud of and track publicly
+    // Sort by MODEL PROBABILITY first - our most confident edge picks
+    // These are picks where: market is wrong AND we're confident
     const predictions = await prisma.prediction.findMany({
       where: whereClause,
       orderBy: [
@@ -121,12 +126,17 @@ export async function GET(request: NextRequest) {
       }
 
       // Base pick info
+      const homeTeamTrimmed = homeTeam?.trim() || 'TBD';
+      const awayTeamTrimmed = awayTeam?.trim() || 'TBD';
+      const slug = generateMatchSlug(homeTeamTrimmed, awayTeamTrimmed, pred.sport, pred.kickoff.toISOString());
+      
       const basePick = {
         rank: index + 1,
         id: pred.id,
         matchId: pred.matchId,
-        homeTeam: homeTeam?.trim() || 'TBD',
-        awayTeam: awayTeam?.trim() || 'TBD',
+        slug, // SEO-friendly URL slug
+        homeTeam: homeTeamTrimmed,
+        awayTeam: awayTeamTrimmed,
         sport: pred.sport,
         league: pred.league,
         kickoff: pred.kickoff.toISOString(),

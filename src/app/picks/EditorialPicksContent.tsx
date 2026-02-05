@@ -17,7 +17,6 @@ import {
   Calendar, 
   Unlock, 
   TrendingUp, 
-  Trophy,
   Zap,
   ArrowRight,
   Lock,
@@ -67,15 +66,20 @@ function LeagueLogo({ league, size = 20 }: { league: string; size?: number }) {
   }
   
   return (
-    <img
-      src={url}
-      alt={league}
-      width={size}
-      height={size}
-      className="rounded object-contain"
-      style={{ width: size, height: size }}
-      onError={() => setError(true)}
-    />
+    <div 
+      className="bg-white rounded-sm flex items-center justify-center p-0.5"
+      style={{ width: size + 4, height: size + 4 }}
+    >
+      <img
+        src={url}
+        alt={league}
+        width={size}
+        height={size}
+        className="rounded-sm object-contain"
+        style={{ width: size, height: size }}
+        onError={() => setError(true)}
+      />
+    </div>
   );
 }
 
@@ -102,6 +106,7 @@ interface Pick {
   rank: number;
   id: string;
   matchId: string;
+  slug: string; // SEO-friendly URL slug
   homeTeam: string;
   awayTeam: string;
   sport: string;
@@ -177,11 +182,6 @@ function safeString(value: unknown): string {
 // Confidence badge - light card style
 function ConfidenceBadge({ confidence }: { confidence: number }) {
   const level = confidence >= 70 ? 'high' : confidence >= 60 ? 'medium' : 'low';
-  const colors = {
-    high: 'text-emerald-600',
-    medium: 'text-amber-600',
-    low: 'text-blue-600',
-  };
   const labels = {
     high: 'High Confidence',
     medium: 'Good Confidence',
@@ -189,7 +189,7 @@ function ConfidenceBadge({ confidence }: { confidence: number }) {
   };
   
   return (
-    <span className={`text-sm font-medium ${colors[level]}`}>
+    <span className="text-sm font-medium text-black tracking-wide">
       {labels[level]} • {confidence}%
     </span>
   );
@@ -203,14 +203,14 @@ function StarRating({ confidence }: { confidence: number }) {
       {[1, 2, 3, 4, 5].map((star) => (
         <svg
           key={star}
-          className={`w-4 h-4 ${star <= stars ? 'text-amber-400' : 'text-gray-300'}`}
+          className={`w-4 h-4 ${star <= stars ? 'text-amber-400' : 'text-black/20'}`}
           fill="currentColor"
           viewBox="0 0 20 20"
         >
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
       ))}
-      <span className="text-xs text-gray-500 ml-1">{confidence}%</span>
+      <span className="text-xs text-black ml-1 tracking-wide">{confidence}%</span>
     </div>
   );
 }
@@ -230,44 +230,44 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
     : null;
 
   return (
-    <article className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+    <article className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 tracking-wide">
       {/* Top Badge - Dark strip like Breatheeze */}
       <div className="bg-zinc-900 px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="bg-accent text-black text-xs font-bold px-2 py-0.5 rounded">#{rank}</span>
           <span className="text-white/90 text-sm font-medium">+{pick.edgeValue.toFixed(1)}% EDGE</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 bg-white/10 px-2.5 py-1 rounded-lg">
           <LeagueLogo league={pick.league} size={16} />
-          <span className="text-white/60 text-xs">{formatLeague(pick.league)}</span>
+          <span className="text-white text-xs font-medium">{formatLeague(pick.league)}</span>
         </div>
       </div>
       
-      {/* Main Content - Light background */}
-      <div className="p-5">
+      {/* Main Content - Light background, pure black text */}
+      <div className="p-5 text-black">
         {/* Teams Display */}
         <div className="flex items-center justify-center gap-4 mb-5">
           {/* Home Team */}
           <div className="flex-1 flex flex-col items-center text-center">
             <TeamLogo name={pick.homeTeam} sport={pick.sport} size={52} />
-            <p className="font-semibold text-zinc-800 text-sm mt-2 leading-tight">{pick.homeTeam}</p>
+            <p className="font-semibold text-black text-sm mt-2 leading-tight">{pick.homeTeam}</p>
             {homeProb !== null && (
-              <p className="text-xs text-zinc-500 mt-0.5">{homeProb}%</p>
+              <p className="text-xs text-black mt-0.5">{homeProb}%</p>
             )}
           </div>
           
           {/* VS Divider */}
           <div className="flex flex-col items-center px-2">
-            <span className="text-zinc-400 text-sm font-medium">VS</span>
-            <span className="text-[10px] text-zinc-400 mt-1 whitespace-nowrap">{formatKickoffShort(pick.kickoff)}</span>
+            <span className="text-black text-sm font-medium">VS</span>
+            <span className="text-[10px] text-black mt-1 whitespace-nowrap">{formatKickoffShort(pick.kickoff)}</span>
           </div>
           
           {/* Away Team */}
           <div className="flex-1 flex flex-col items-center text-center">
             <TeamLogo name={pick.awayTeam} sport={pick.sport} size={52} />
-            <p className="font-semibold text-zinc-800 text-sm mt-2 leading-tight">{pick.awayTeam}</p>
+            <p className="font-semibold text-black text-sm mt-2 leading-tight">{pick.awayTeam}</p>
             {awayProb !== null && (
-              <p className="text-xs text-zinc-500 mt-0.5">{awayProb}%</p>
+              <p className="text-xs text-black mt-0.5">{awayProb}%</p>
             )}
           </div>
         </div>
@@ -278,29 +278,29 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
         </div>
         
         {/* Divider */}
-        <div className="h-px bg-zinc-200 mb-4" />
+        <div className="h-px bg-black/20 mb-4" />
         
         {!pick.locked && pick.selection ? (
           <>
             {/* Our Pick - Clean typography */}
             <div className="text-center mb-4">
-              <p className="text-lg font-bold text-zinc-900">{pick.selection}</p>
+              <p className="text-lg font-bold text-black">{pick.selection}</p>
               {pick.odds && (
-                <p className="text-zinc-500 text-sm">@ {pick.odds.toFixed(2)}</p>
+                <p className="text-black text-sm">@ {pick.odds.toFixed(2)}</p>
               )}
             </div>
             
             {/* Headline */}
             {analysis?.headlines?.[0] && (
-              <p className="text-zinc-600 text-sm text-center leading-relaxed mb-4 line-clamp-2">
+              <p className="text-black text-sm text-center leading-relaxed mb-4 line-clamp-2">
                 &ldquo;{safeString(analysis.headlines[0])}&rdquo;
               </p>
             )}
             
             {/* CTA Button */}
             <Link
-              href={`/match/${pick.matchId}`}
-              className="flex items-center justify-center gap-2 w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-3 rounded-xl transition-colors text-sm"
+              href={`/match/${pick.slug}`}
+              className="flex items-center justify-center gap-2 w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-3 rounded-none transition-colors text-sm tracking-wide"
             >
               View Full Analysis
               <ArrowRight className="w-4 h-4" />
@@ -310,14 +310,14 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
           /* Locked State */
           <>
             <div className="text-center mb-4">
-              <p className="text-base font-semibold text-zinc-900">
+              <p className="text-base font-semibold text-black">
                 {favoredTeam ? `${favoredTeam} favored` : 'Analysis available'}
               </p>
               <ConfidenceBadge confidence={pick.confidence} />
             </div>
             
             {pick.headline && (
-              <p className="text-zinc-500 text-sm text-center mb-4 line-clamp-2 italic">
+              <p className="text-black text-sm text-center mb-4 line-clamp-2 italic">
                 &ldquo;{safeString(pick.headline)}&rdquo;
               </p>
             )}
@@ -325,12 +325,12 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
             {/* Unlock CTA */}
             <div className="bg-zinc-100 rounded-xl p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <Lock className="w-4 h-4 text-zinc-400" />
-                <span className="text-zinc-600 text-sm font-medium">Unlock full analysis</span>
+                <Lock className="w-4 h-4 text-black" />
+                <span className="text-black text-sm font-medium">Unlock full analysis</span>
               </div>
               <Link
                 href="/pricing"
-                className="inline-flex items-center gap-1 bg-accent hover:bg-accent/90 text-black font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors"
+                className="inline-flex items-center gap-1 bg-accent hover:bg-accent/90 text-black font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors tracking-wide"
               >
                 Go Pro
                 <ChevronRight className="w-4 h-4" />
@@ -343,44 +343,79 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
   );
 }
 
-// Track Record Stats
+// Track Record Stats - fetches real data from API
 function TrackRecord() {
+  const [stats, setStats] = useState<{
+    totalPicks: number;
+    roi: number;
+    hasData: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/prediction-stats')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.stats?.hasData) {
+          setStats(data.stats);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  // Don't show if no real data or less than 10 picks
+  if (!stats || !stats.hasData || stats.totalPicks < 10) {
+    return null;
+  }
+
   return (
-    <div className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 border border-emerald-500/20 rounded-2xl p-6 mb-8">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-          <BarChart3 className="w-5 h-5 text-emerald-400" />
+    <article className="bg-zinc-100 rounded-2xl shadow-lg overflow-hidden mb-8 tracking-wide">
+      {/* Dark header strip - matching pick cards */}
+      <div className="bg-zinc-900 px-4 py-3 flex items-center justify-between relative overflow-hidden">
+        {/* Subtle gradient glow */}
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-transparent to-cyan-500/10" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent" />
+        
+        <div className="relative flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center">
+            <BarChart3 className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-white font-semibold text-sm">AI Track Record</span>
         </div>
-        <div>
-          <h3 className="font-semibold text-white">Our Track Record</h3>
-          <p className="text-sm text-gray-400">High-confidence picks performance</p>
+        <div className="relative flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">Live</span>
         </div>
       </div>
       
-      <div className="grid grid-cols-3 gap-4">
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-1 mb-1">
-            <Trophy className="w-4 h-4 text-emerald-400" />
+      {/* Content - gray background */}
+      <div className="p-5">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="text-center py-3 px-4 bg-white rounded-xl border border-zinc-200">
+            <div className="flex items-center justify-center gap-1.5 mb-2">
+              <TrendingUp className="w-4 h-4 text-emerald-600" />
+              <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-medium">ROI</span>
+            </div>
+            <p className={`text-3xl font-black tracking-tight ${stats.roi >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              {stats.roi >= 0 ? '+' : ''}{stats.roi}%
+            </p>
           </div>
-          <p className="text-2xl font-bold text-emerald-400">67%</p>
-          <p className="text-xs text-gray-500">Win Rate</p>
+          <div className="text-center py-3 px-4 bg-white rounded-xl border border-zinc-200">
+            <div className="flex items-center justify-center gap-1.5 mb-2">
+              <Zap className="w-4 h-4 text-amber-500" />
+              <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-medium">Analyzed</span>
+            </div>
+            <p className="text-3xl font-black text-black tracking-tight">{stats.totalPicks}</p>
+          </div>
         </div>
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-1 mb-1">
-            <TrendingUp className="w-4 h-4 text-accent" />
-          </div>
-          <p className="text-2xl font-bold text-white">+8.2%</p>
-          <p className="text-xs text-gray-500">Avg Edge</p>
-        </div>
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-1 mb-1">
-            <Zap className="w-4 h-4 text-amber-400" />
-          </div>
-          <p className="text-2xl font-bold text-white">142</p>
-          <p className="text-xs text-gray-500">Picks Made</p>
+        
+        {/* Footer badges */}
+        <div className="mt-4 flex items-center justify-center gap-2 text-[10px]">
+          <span className="px-2 py-0.5 rounded bg-gradient-to-b from-zinc-200 to-zinc-300 border border-zinc-400/50 font-mono text-black font-bold shadow-sm">2%+ EDGE</span>
+          <span className="text-zinc-400">•</span>
+          <span className="font-mono text-black font-bold">FLAT STAKE</span>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
