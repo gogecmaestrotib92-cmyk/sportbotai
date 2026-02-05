@@ -12,6 +12,19 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { getTeamLogo, getLeagueLogo } from '@/lib/logos';
+import { 
+  Target, 
+  BarChart3, 
+  Calendar, 
+  Unlock, 
+  TrendingUp, 
+  Trophy,
+  Zap,
+  ArrowRight,
+  Lock,
+  Sparkles,
+  ChevronRight
+} from 'lucide-react';
 
 // Types
 interface Analysis {
@@ -63,14 +76,6 @@ interface PicksResponse {
     showing: number;
   };
 }
-
-// Sport icons
-const sportIcons: Record<string, string> = {
-  soccer: '⚽',
-  basketball: '🏀',
-  americanfootball: '🏈',
-  icehockey: '🏒',
-};
 
 function formatKickoffShort(dateString: string): string {
   const date = new Date(dateString);
@@ -149,7 +154,6 @@ function EdgeBadge({ edge }: { edge: number }) {
 
 // Single Pick Card - Premium Design
 function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: number }) {
-  const sportKey = pick.sport.split('_')[0];
   const analysis = pick.analysis;
   
   // Format probabilities (stored as 0-1, display as %)
@@ -300,15 +304,19 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
             )}
             
             <div className="bg-gradient-to-r from-accent/5 to-purple-500/5 border border-accent/20 rounded-xl p-4 flex items-center justify-between">
-              <div>
-                <p className="text-white font-medium text-sm">Unlock full pick</p>
-                <p className="text-xs text-gray-500">Selection, odds & analysis</p>
+              <div className="flex items-center gap-3">
+                <Lock className="w-5 h-5 text-accent/60" />
+                <div>
+                  <p className="text-white font-medium text-sm">Unlock full pick</p>
+                  <p className="text-xs text-gray-500">Selection, odds & analysis</p>
+                </div>
               </div>
               <Link
                 href="/pricing"
-                className="bg-accent hover:bg-accent/90 text-black font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+                className="inline-flex items-center gap-1 bg-accent hover:bg-accent/90 text-black font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
               >
                 Go Pro
+                <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
           </>
@@ -320,9 +328,10 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
         <div className="px-6 pb-5">
           <Link
             href={`/match/${pick.matchId}`}
-            className="block w-full text-center bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-3 rounded-xl transition-colors"
+            className="flex items-center justify-center gap-2 w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-3 rounded-xl transition-colors"
           >
-            View Full Analysis →
+            View Full Analysis
+            <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       )}
@@ -336,7 +345,7 @@ function TrackRecord() {
     <div className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 border border-emerald-500/20 rounded-2xl p-6 mb-8">
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-          <span className="text-xl">📊</span>
+          <BarChart3 className="w-5 h-5 text-emerald-400" />
         </div>
         <div>
           <h3 className="font-semibold text-white">Our Track Record</h3>
@@ -346,14 +355,23 @@ function TrackRecord() {
       
       <div className="grid grid-cols-3 gap-4">
         <div className="text-center">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <Trophy className="w-4 h-4 text-emerald-400" />
+          </div>
           <p className="text-2xl font-bold text-emerald-400">67%</p>
           <p className="text-xs text-gray-500">Win Rate</p>
         </div>
         <div className="text-center">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <TrendingUp className="w-4 h-4 text-accent" />
+          </div>
           <p className="text-2xl font-bold text-white">+8.2%</p>
           <p className="text-xs text-gray-500">Avg Edge</p>
         </div>
         <div className="text-center">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <Zap className="w-4 h-4 text-amber-400" />
+          </div>
           <p className="text-2xl font-bold text-white">142</p>
           <p className="text-xs text-gray-500">Picks Made</p>
         </div>
@@ -435,12 +453,13 @@ export default function EditorialPicksContent({ locale }: Props) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-16 pt-24 text-center">
         <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6">
-          <span className="text-4xl">🎯</span>
+          <Target className="w-10 h-10 text-gray-400" />
         </div>
         <h1 className="text-3xl font-bold text-white mb-4">{t.noPicks}</h1>
         <p className="text-gray-400 mb-8">{t.checkBack}</p>
-        <Link href="/analyzer" className="inline-block bg-accent hover:bg-accent/90 text-black font-semibold px-6 py-3 rounded-xl transition-colors">
+        <Link href="/analyzer" className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-black font-semibold px-6 py-3 rounded-xl transition-colors">
           Analyze Any Match
+          <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
     );
@@ -451,7 +470,7 @@ export default function EditorialPicksContent({ locale }: Props) {
       {/* Header */}
       <header className="text-center mb-12">
         <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 px-4 py-2 rounded-full mb-6">
-          <span className="text-accent text-lg">🎯</span>
+          <Target className="w-4 h-4 text-accent" />
           <span className="text-accent font-medium text-sm">Daily AI Picks</span>
         </div>
         
@@ -469,7 +488,7 @@ export default function EditorialPicksContent({ locale }: Props) {
       {data.picks.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6">
-            <span className="text-4xl">📅</span>
+            <Calendar className="w-10 h-10 text-gray-400" />
           </div>
           <p className="text-gray-400 text-lg mb-2">{t.noPicks}</p>
           <p className="text-gray-500">{t.checkBack}</p>
@@ -499,7 +518,7 @@ export default function EditorialPicksContent({ locale }: Props) {
       {!isPro && data.picks.length > 0 && (
         <div className="mt-12 bg-gradient-to-r from-accent/10 via-purple-500/10 to-accent/10 border border-accent/20 rounded-2xl p-8 text-center">
           <div className="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">🔓</span>
+            <Unlock className="w-8 h-8 text-accent" />
           </div>
           <h3 className="text-2xl font-bold text-white mb-2">
             {locale === 'sr' ? 'Otključaj Sve Pikove' : 'Unlock All Picks'}
@@ -512,9 +531,11 @@ export default function EditorialPicksContent({ locale }: Props) {
           </p>
           <Link
             href="/pricing"
-            className="inline-block bg-accent hover:bg-accent/90 text-black font-bold px-8 py-4 rounded-xl transition-colors text-lg"
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-black font-bold px-8 py-4 rounded-xl transition-colors text-lg"
           >
+            <Sparkles className="w-5 h-5" />
             {locale === 'sr' ? 'Nadogradi na Pro' : 'Upgrade to Pro'}
+            <ChevronRight className="w-5 h-5" />
           </Link>
         </div>
       )}
