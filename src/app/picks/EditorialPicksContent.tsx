@@ -190,7 +190,7 @@ function ConfidenceBadge({ confidence }: { confidence: number }) {
   
   return (
     <span className="text-sm font-medium text-black tracking-wide">
-      {labels[level]} • {confidence}%
+      {labels[level]} • {Math.round(confidence)}%
     </span>
   );
 }
@@ -210,7 +210,7 @@ function StarRating({ confidence }: { confidence: number }) {
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
       ))}
-      <span className="text-xs text-black ml-1 tracking-wide">{confidence}%</span>
+      <span className="text-xs text-black ml-1 tracking-wide">{Math.round(confidence)}%</span>
     </div>
   );
 }
@@ -219,10 +219,10 @@ function StarRating({ confidence }: { confidence: number }) {
 function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: number }) {
   const analysis = pick.analysis;
   
-  // Format probabilities (stored as 0-1, display as %)
+  // Format probabilities (already stored as percentages like 36.41)
   const probs = pick.probabilities;
-  const homeProb = probs?.home ? Math.round(probs.home * 100) : null;
-  const awayProb = probs?.away ? Math.round(probs.away * 100) : null;
+  const homeProb = probs?.home ? Math.round(probs.home) : null;
+  const awayProb = probs?.away ? Math.round(probs.away) : null;
   
   // Determine favored team based on probabilities
   const favoredTeam = homeProb && awayProb 
