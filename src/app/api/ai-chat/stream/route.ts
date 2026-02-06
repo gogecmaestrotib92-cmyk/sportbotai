@@ -3173,6 +3173,49 @@ If their favorite team has a match today/tonight, lead with that information.`;
                 }
               }
 
+              // ULTIMATE FALLBACK: Short match query detection (handles "Celta Osasuna" without vs)
+              // Same logic as query-intelligence isShortMatchQuery
+              if (!homeTeam || !awayTeam) {
+                const msgLower = searchMessage.toLowerCase().trim();
+                const words = msgLower.split(/\s+/);
+                
+                // Only try if it's a short query (2-5 words) without question words
+                if (words.length >= 2 && words.length <= 5 && !/\b(who|what|when|where|why|how|will|can|should|is|are)\b/i.test(msgLower)) {
+                  const foundTeams: string[] = [];
+                  
+                  // All major football leagues patterns
+                  const allFootballPatterns = [
+                    // La Liga
+                    /\b(real madrid|barcelona|barca|atletico|atletico madrid|sevilla|villarreal|real sociedad|sociedad|real betis|betis|athletic bilbao|athletic|celta|celta vigo|osasuna|getafe|rayo vallecano|rayo|mallorca|alaves|las palmas|leganes|valladolid|espanyol|girona|valencia)\b/gi,
+                    // Premier League
+                    /\b(arsenal|chelsea|liverpool|man united|manchester united|man city|manchester city|tottenham|spurs|newcastle|west ham|aston villa|brighton|crystal palace|fulham|brentford|everton|wolves|wolverhampton|bournemouth|nottingham forest|forest|burnley|sheffield|luton|ipswich|leicester|leeds|sunderland)\b/gi,
+                    // Serie A
+                    /\b(roma|as roma|lazio|napoli|juventus|juve|inter|ac milan|milan|atalanta|fiorentina|torino|bologna|sassuolo|udinese|cagliari|verona|monza|empoli|lecce|genoa|parma|como|venezia)\b/gi,
+                    // Bundesliga
+                    /\b(bayern|bayern munich|dortmund|borussia dortmund|bvb|rb leipzig|leipzig|leverkusen|bayer leverkusen|frankfurt|eintracht|wolfsburg|freiburg|hoffenheim|mainz|augsburg|werder bremen|bremen|koln|cologne|union berlin|bochum|heidenheim|st pauli|monchengladbach|gladbach|stuttgart|hertha)\b/gi,
+                    // Ligue 1
+                    /\b(psg|paris saint-germain|paris|marseille|lyon|monaco|lille|nice|lens|rennes|strasbourg|nantes|montpellier|toulouse|reims|brest|lorient|clermont|metz|le havre|auxerre|angers|saint-etienne)\b/gi,
+                    // Other leagues
+                    /\b(benfica|porto|sporting|ajax|psv|feyenoord|club brugge|anderlecht|genk|galatasaray|fenerbahce|besiktas|celtic|rangers|salzburg|young boys|olympiacos|panathinaikos|aek|paok)\b/gi,
+                  ];
+                  
+                  for (const pattern of allFootballPatterns) {
+                    let match;
+                    while ((match = pattern.exec(msgLower)) !== null) {
+                      if (!foundTeams.some(t => t.toLowerCase() === match[0].toLowerCase())) {
+                        foundTeams.push(match[0]);
+                      }
+                    }
+                  }
+                  
+                  if (foundTeams.length >= 2) {
+                    homeTeam = foundTeams[0].charAt(0).toUpperCase() + foundTeams[0].slice(1);
+                    awayTeam = foundTeams[1].charAt(0).toUpperCase() + foundTeams[1].slice(1);
+                    console.log(`[AI-Chat-Stream] 🎯 ULTIMATE FALLBACK: Detected short match query "${homeTeam} vs ${awayTeam}" from "${searchMessage}"`);
+                  }
+                }
+              }
+
               if (homeTeam && awayTeam) {
                 // Detect sport from team names if not already detected
                 let sport = queryUnderstanding?.sport || detectSportFromTeams(homeTeam, awayTeam);
