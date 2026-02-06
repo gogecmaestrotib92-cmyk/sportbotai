@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { generateMatchSlug } from '@/lib/match-utils';
-import { getTeamLogo, getLeagueLogo } from '@/lib/logos';
+import { getOptimizedTeamLogo, getOptimizedLeagueLogo } from '@/lib/logos';
 import { Lock, Shield, ArrowRight } from 'lucide-react';
 
 interface Pick {
@@ -47,10 +47,11 @@ interface EditorialPicksResponse {
   };
 }
 
-// Team Logo with fallback - Light card style
+// Team Logo with fallback - Light card style (uses optimized ESPN URLs)
 function TeamLogo({ name, sport, size = 32 }: { name: string; sport: string; size?: number }) {
   const [error, setError] = useState(false);
-  const url = getTeamLogo(name, sport);
+  // Use optimized URL that resizes ESPN images on-the-fly
+  const url = getOptimizedTeamLogo(name, sport, size);
   
   if (error || !url) {
     const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -77,10 +78,11 @@ function TeamLogo({ name, sport, size = 32 }: { name: string; sport: string; siz
   );
 }
 
-// League Logo with fallback
+// League Logo with fallback (uses optimized ESPN URLs)
 function LeagueLogo({ league, size = 16 }: { league: string; size?: number }) {
   const [error, setError] = useState(false);
-  const url = getLeagueLogo(league);
+  // Use optimized URL for league logos
+  const url = getOptimizedLeagueLogo(league, size);
   
   if (error || !url) {
     return <Shield className="text-zinc-400" style={{ width: size, height: size }} />;

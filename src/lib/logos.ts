@@ -2556,3 +2556,50 @@ export function getLogoProps(
     fallback: generateFallbackLogo(name, type),
   };
 }
+
+/**
+ * Get optimized logo URL with proper sizing
+ * Uses ESPN's image combiner to resize logos on-the-fly
+ * Reduces image size from ~80KB (500px) to ~2KB (50px)
+ * 
+ * @param originalUrl - The original logo URL
+ * @param size - Desired size in pixels (default 52 for team logos)
+ * @returns Optimized URL if ESPN, otherwise original
+ */
+export function getOptimizedLogoUrl(originalUrl: string, size: number = 52): string {
+  if (!originalUrl) return originalUrl;
+  
+  // Only optimize ESPN URLs (they have the combiner endpoint)
+  // Pattern: https://a.espncdn.com/i/teamlogos/nba/500/bos.png
+  if (originalUrl.includes('a.espncdn.com/i/')) {
+    // Extract the path after /i/
+    const match = originalUrl.match(/espncdn\.com(\/i\/.+)$/);
+    if (match) {
+      const imagePath = match[1];
+      // Use ESPN's combiner with size params
+      return `https://a.espncdn.com/combiner/i?img=${imagePath}&h=${size}&w=${size}`;
+    }
+  }
+  
+  // For football-data.org, they don't have resizer but images are smaller
+  // For api-sports.io, same situation
+  // Return original URL for non-ESPN sources
+  return originalUrl;
+}
+
+/**
+ * Get team logo with automatic size optimization
+ * Use this instead of getTeamLogo for better performance
+ */
+export function getOptimizedTeamLogo(teamName: string, sport: string, size: number = 52, league?: string): string {
+  const originalUrl = getTeamLogo(teamName, sport, league);
+  return getOptimizedLogoUrl(originalUrl, size);
+}
+
+/**
+ * Get league logo with automatic size optimization
+ */
+export function getOptimizedLeagueLogo(leagueName: string, size: number = 24, sport?: string): string {
+  const originalUrl = getLeagueLogo(leagueName, sport);
+  return getOptimizedLogoUrl(originalUrl, size);
+}

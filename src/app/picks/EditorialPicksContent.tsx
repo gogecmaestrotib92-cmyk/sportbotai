@@ -10,7 +10,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { getTeamLogo, getLeagueLogo } from '@/lib/logos';
+import { getOptimizedTeamLogo, getOptimizedLeagueLogo } from '@/lib/logos';
 import { 
   Target, 
   BarChart3, 
@@ -28,10 +28,11 @@ import {
   CircleDot
 } from 'lucide-react';
 
-// Team Logo with fallback - Light card style
+// Team Logo with fallback - Light card style (uses optimized ESPN URLs)
 function TeamLogo({ name, sport, size = 40 }: { name: string; sport: string; size?: number }) {
   const [error, setError] = useState(false);
-  const url = getTeamLogo(name, sport);
+  // Use optimized URL that resizes ESPN images on-the-fly (500px -> actual display size)
+  const url = getOptimizedTeamLogo(name, sport, size);
   
   if (error || !url) {
     // Fallback: show initials with light bg
@@ -59,10 +60,11 @@ function TeamLogo({ name, sport, size = 40 }: { name: string; sport: string; siz
   );
 }
 
-// League Logo with fallback
+// League Logo with fallback (uses optimized ESPN URLs)
 function LeagueLogo({ league, size = 20 }: { league: string; size?: number }) {
   const [error, setError] = useState(false);
-  const url = getLeagueLogo(league);
+  // Use optimized URL for league logos
+  const url = getOptimizedLeagueLogo(league, size);
   
   if (error || !url) {
     return <Shield className="text-zinc-400" style={{ width: size, height: size }} />;
