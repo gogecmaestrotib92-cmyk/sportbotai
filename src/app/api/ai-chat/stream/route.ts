@@ -3035,90 +3035,58 @@ If their favorite team has a match today/tonight, lead with that information.`;
 
             // =====================================================
             // ULTRA-FAST PATH: Check Prediction table FIRST
-            // This returns instantly for pre-analyzed matches, skipping ALL slow HTTP calls
+            // SMART APPROACH: Extract keywords and fuzzy search DB
+            // User says "Celta Osasuna" → find "Celta Vigo vs CA Osasuna"
             // =====================================================
             try {
-              let homeWord = '';
-              let awayWord = '';
+              // Extract potential team keywords from the message
+              // Remove common words and keep what looks like team names
+              const msgWords = searchMessage
+                .toLowerCase()
+                .replace(/[^\w\s]/g, ' ')
+                .split(/\s+/)
+                .filter(w => w.length >= 3)
+                .filter(w => !['the', 'and', 'for', 'will', 'win', 'who', 'what', 'how', 'analyze', 'analyse', 'preview', 'prediction', 'match', 'game', 'today', 'tonight', 'tomorrow'].includes(w));
               
-              // Method 1: Try traditional "vs" pattern first
-              const quickTeamMatch = searchMessage.match(/(?:analyze|analyse|preview)?\s*([a-zA-Z\s]+?)\s+(?:vs\.?|versus|against|@)\s+([a-zA-Z\s]+)/i);
-              if (quickTeamMatch) {
-                const [, rawHome, rawAway] = quickTeamMatch;
-                homeWord = rawHome.trim().split(/\s+/).pop() || '';
-                awayWord = rawAway.trim().split(/\s+/).pop() || '';
-                console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST: Found teams via 'vs' pattern: ${homeWord} vs ${awayWord}`);
-              }
+              console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST: Extracted keywords: ${msgWords.join(', ')}`);
               
-              // Method 2: Short match query detection (no "vs" needed)
-              if (!homeWord || !awayWord) {
-                const msgLower = searchMessage.toLowerCase().trim();
-                const footballTeamPatterns = [
-                  /\b(real madrid|barcelona|barca|atletico|atletico madrid|sevilla|villarreal|real sociedad|sociedad|real betis|betis|athletic bilbao|athletic|celta|celta vigo|osasuna|getafe|rayo vallecano|rayo|mallorca|alaves|las palmas|leganes|valladolid|espanyol|girona|valencia)\b/gi,
-                  /\b(arsenal|chelsea|liverpool|man united|manchester united|man city|manchester city|tottenham|spurs|newcastle|west ham|aston villa|brighton|crystal palace|fulham|brentford|everton|wolves|wolverhampton|bournemouth|nottingham forest|forest|burnley|sheffield|luton|ipswich|leicester|leeds|sunderland)\b/gi,
-                  /\b(roma|as roma|lazio|napoli|juventus|juve|inter|ac milan|milan|atalanta|fiorentina|torino|bologna|sassuolo|udinese|cagliari|verona|monza|empoli|lecce|genoa|parma|como|venezia)\b/gi,
-                  /\b(bayern|bayern munich|dortmund|borussia dortmund|bvb|rb leipzig|leipzig|leverkusen|bayer leverkusen|frankfurt|eintracht|wolfsburg|freiburg|hoffenheim|mainz|augsburg|werder bremen|bremen|koln|cologne|union berlin|bochum|heidenheim|st pauli|monchengladbach|gladbach|stuttgart|hertha)\b/gi,
-                  /\b(psg|paris saint-germain|paris|marseille|lyon|monaco|lille|nice|lens|rennes|strasbourg|nantes|montpellier|toulouse|reims|brest|lorient|clermont|metz|le havre|auxerre|angers|saint-etienne)\b/gi,
-                  /\b(benfica|porto|sporting|ajax|psv|feyenoord|club brugge|anderlecht|genk|galatasaray|fenerbahce|besiktas|celtic|rangers|salzburg|young boys|olympiacos|panathinaikos|aek|paok)\b/gi,
-                ];
+              // Try to find a prediction that contains these keywords
+              if (msgWords.length >= 2) {
+                // Build dynamic search - match should contain at least 2 of the keywords
+                const searchConditions = msgWords.slice(0, 4).map(word => ({
+                  matchName: { contains: word, mode: 'insensitive' as const }
+                }));
                 
-                const foundTeams: string[] = [];
-                for (const pattern of footballTeamPatterns) {
-                  let match: RegExpExecArray | null;
-                  while ((match = pattern.exec(msgLower)) !== null) {
-                    if (!foundTeams.some(t => t.toLowerCase() === match![0].toLowerCase())) {
-                      foundTeams.push(match[0]);
-                    }
-                  }
-                }
+                // Try finding a match with ALL keywords first
+                let prediction = await prisma.prediction.findFirst({
+                  where: {
+                    AND: searchConditions,
+                    kickoff: { gte: new Date(new Date().getTime() - 72 * 60 * 60 * 1000) },
+                    NOT: { fullResponse: { equals: undefined } },
+                  },
+                  orderBy: { kickoff: 'asc' },
+                });
                 
-                if (foundTeams.length >= 2) {
-                  homeWord = foundTeams[0];
-                  awayWord = foundTeams[1];
-                  console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST: Found teams via pattern detection: ${homeWord} vs ${awayWord}`);
-                }
-              }
-              
-              // Method 3: Use LLM entities from query understanding
-              if (!homeWord || !awayWord) {
-                const teamEntities = queryUnderstanding?.entities?.filter(e => e.type === 'TEAM' || e.type === 'MATCH') || [];
-                if (teamEntities.length >= 2) {
-                  homeWord = teamEntities[0].name.split(/\s+/).pop() || '';
-                  awayWord = teamEntities[1].name.split(/\s+/).pop() || '';
-                  console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST: Found teams via LLM entities: ${homeWord} vs ${awayWord}`);
-                }
-              }
-
-              if (homeWord && awayWord) {
-                console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST: Checking Prediction table for ${homeWord} vs ${awayWord}...`);
-
-                  const prediction = await prisma.prediction.findFirst({
+                // If not found, try with just 2 keywords (more lenient)
+                if (!prediction && msgWords.length >= 2) {
+                  prediction = await prisma.prediction.findFirst({
                     where: {
-                      OR: [
-                        {
-                          AND: [
-                            { matchName: { contains: homeWord, mode: 'insensitive' } },
-                            { matchName: { contains: awayWord, mode: 'insensitive' } },
-                          ]
-                        },
-                        {
-                          AND: [
-                            { matchName: { contains: awayWord, mode: 'insensitive' } },
-                            { matchName: { contains: homeWord, mode: 'insensitive' } },
-                          ]
-                        }
+                      AND: [
+                        { matchName: { contains: msgWords[0], mode: 'insensitive' } },
+                        { matchName: { contains: msgWords[1], mode: 'insensitive' } },
                       ],
-                      kickoff: { gte: new Date(new Date().getTime() - 72 * 60 * 60 * 1000) }, // 72h lookback
+                      kickoff: { gte: new Date(new Date().getTime() - 72 * 60 * 60 * 1000) },
                       NOT: { fullResponse: { equals: undefined } },
                     },
                     orderBy: { kickoff: 'asc' },
                   });
+                }
 
-                  if (prediction?.fullResponse) {
-                    console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST HIT: Found ${prediction.matchName} with fullResponse!`);
-                    const fullData = prediction.fullResponse as any;
-                    const kickoff = prediction.kickoff ? new Date(prediction.kickoff) : null;
-                    const now = new Date();
+                if (prediction?.fullResponse) {
+                  console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST HIT: Found "${prediction.matchName}" from keywords!`);
+                  const fullData = prediction.fullResponse as any;
+                  const kickoff = prediction.kickoff ? new Date(prediction.kickoff) : null;
+                  const now = new Date();
 
                     // Check if match is in the past
                     if (kickoff && kickoff < now) {
@@ -3147,13 +3115,18 @@ If their favorite team has a match today/tonight, lead with that information.`;
                     }
 
                     // Future match - build structured data and return immediately
+                    // Extract team names from matchName or fullData
+                    const matchParts = prediction.matchName?.split(/\s+vs\s+/i) || [];
+                    const homeTeamName = fullData.matchInfo?.homeTeam || matchParts[0]?.trim() || '';
+                    const awayTeamName = fullData.matchInfo?.awayTeam || matchParts[1]?.trim() || '';
+                    
                     const structuredData = {
                       matchInfo: {
                         id: prediction.matchName?.toLowerCase().replace(/\s+/g, '-') || '',
-                        homeTeam: fullData.matchInfo?.homeTeam || homeWord,
-                        awayTeam: fullData.matchInfo?.awayTeam || awayWord,
+                        homeTeam: homeTeamName,
+                        awayTeam: awayTeamName,
                         league: fullData.matchInfo?.league || '',
-                        sport: fullData.matchInfo?.sport || 'basketball_nba',
+                        sport: fullData.matchInfo?.sport || 'soccer_spain_la_liga',
                         kickoff: prediction.kickoff?.toISOString() || '',
                       },
                       story: {
@@ -3164,7 +3137,7 @@ If their favorite team has a match today/tonight, lead with that information.`;
                       },
                       universalSignals: fullData.universalSignals,
                       expectedScores: fullData.expectedScores,
-                      matchUrl: `/match/${homeWord.toLowerCase().replace(/\s+/g, '-')}-vs-${awayWord.toLowerCase().replace(/\s+/g, '-')}-nba-${new Date().toISOString().split('T')[0]}`,
+                      matchUrl: `/match/${homeTeamName.toLowerCase().replace(/\s+/g, '-')}-vs-${awayTeamName.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}`,
                     };
 
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({
