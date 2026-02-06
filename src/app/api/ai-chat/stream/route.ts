@@ -3200,9 +3200,9 @@ If their favorite team has a match today/tonight, lead with that information.`;
                   ];
                   
                   for (const pattern of allFootballPatterns) {
-                    let match;
+                    let match: RegExpExecArray | null;
                     while ((match = pattern.exec(msgLower)) !== null) {
-                      if (!foundTeams.some(t => t.toLowerCase() === match[0].toLowerCase())) {
+                      if (!foundTeams.some(t => t.toLowerCase() === match![0].toLowerCase())) {
                         foundTeams.push(match[0]);
                       }
                     }
