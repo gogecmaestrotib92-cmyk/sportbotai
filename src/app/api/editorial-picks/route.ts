@@ -59,7 +59,8 @@ export async function GET(request: NextRequest) {
     // Build where clause
     // DAILY PICKS = Picks where we have BOTH:
     // 1. An edge (market is mispriced) - minimum 2%
-    // 2. High model confidence - we're sure about the outcome
+    // 2. High model confidence - we're sure about the outcome (>= 50%)
+    // This ensures we show SAFE picks with value, not long-shot underdogs
     const whereClause = {
       kickoff: {
         gte: now,
@@ -70,6 +71,11 @@ export async function GET(request: NextRequest) {
       edgeValue: {
         gte: 2, // At least 2% edge
       },
+      // Must be a CONFIDENT pick (favorite, not underdog)
+      // This filters out "long shot value bets" with 20-30% win probability
+      modelProbability: {
+        gte: 50, // At least 50% model confidence = we think they'll win
+      },
       // Must have fullResponse (properly analyzed)
       NOT: {
         fullResponse: { equals: Prisma.DbNull },
@@ -79,14 +85,13 @@ export async function GET(request: NextRequest) {
     // Get total count for "X more picks" display
     const totalCount = await prisma.prediction.count({ where: whereClause });
 
-    // Sort by EDGE VALUE first - our best value picks
-    // These are picks where market mispricing is highest
-    // Edge = Our probability - Market implied probability
+    // Sort by CONFIDENCE first (safest picks), then by edge (best value)
+    // This gives us picks where: we're confident AND market is wrong
     const predictions = await prisma.prediction.findMany({
       where: whereClause,
       orderBy: [
-        { edgeValue: 'desc' },        // Primary: best edge (biggest market error)
-        { modelProbability: 'desc' }, // Secondary: our confidence in the pick
+        { modelProbability: 'desc' }, // Primary: highest confidence (safest picks)
+        { edgeValue: 'desc' },        // Secondary: best edge (biggest market error)
       ],
       take: limit,
       select: {

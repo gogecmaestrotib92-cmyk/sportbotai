@@ -10,6 +10,7 @@
 import { Metadata } from 'next';
 import HeroI18n from '@/components/HeroI18n';
 import TrendingSectionServer from '@/components/TrendingSectionServer';
+import DailyPicksSection from '@/components/DailyPicksSection';
 import ValueBettingExplainer from '@/components/ValueBettingExplainer';
 import HowItWorksVideo from '@/components/HowItWorksVideo';
 import PricingTeaserI18n from '@/components/PricingTeaserI18n';
@@ -83,6 +84,9 @@ export default function SerbianHomePage() {
 
       {/* League logos - infinite scroll */}
       <LeagueScroll />
+
+      {/* Daily Picks - AI value picks with edge */}
+      <DailyPicksSection locale="sr" />
 
       {/* Trending matches - server-rendered for fast LCP */}
       <TrendingSectionServer maxMatches={6} locale="sr" />

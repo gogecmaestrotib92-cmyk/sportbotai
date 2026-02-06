@@ -174,7 +174,7 @@ export default function FavoriteButton({
             ) : !canAddMore ? (
               <span>
                 Limit reached ({favorites.length}/{maxTeams}). 
-                <a href="/pricing" className="text-blue-400 hover:underline ml-1">Upgrade</a>
+                <a href="/pricing#pro" className="text-blue-400 hover:underline ml-1">Upgrade</a>
               </span>
             ) : null}
             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">

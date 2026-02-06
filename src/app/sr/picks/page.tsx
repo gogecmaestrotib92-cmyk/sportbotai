@@ -40,8 +40,48 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function PicksPageSR() {
+  const dateStr = getDateString();
+  const isoDate = new Date().toISOString().split('T')[0];
+  
+  // Schema.org structured data for SEO
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: `Današnji AI Sportski Pikovi - ${dateStr}`,
+    description: 'Top AI predikcije sa visokim poverenjem i detaljnom analizom.',
+    datePublished: isoDate,
+    dateModified: isoDate,
+    inLanguage: 'sr',
+    author: {
+      '@type': 'Organization',
+      name: 'SportBot AI',
+      url: 'https://www.sportbotai.com',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'SportBot AI',
+      url: 'https://www.sportbotai.com',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://www.sportbotai.com/logo.png',
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': 'https://www.sportbotai.com/sr/picks',
+    },
+    about: {
+      '@type': 'Thing',
+      name: 'Sportske Predikcije',
+    },
+  };
+
   return (
     <main className="min-h-screen bg-bg">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <EditorialPicksContent locale="sr" />
     </main>
   );

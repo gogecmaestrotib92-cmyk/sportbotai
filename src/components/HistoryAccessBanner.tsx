@@ -38,7 +38,7 @@ export default function HistoryAccessBanner({
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <Link
-              href="/pricing"
+              href="/pricing#pro"
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
             >
               Unlock Full History

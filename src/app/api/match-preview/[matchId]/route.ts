@@ -2138,7 +2138,8 @@ function parseMatchId(matchId: string) {
       awayTeam: toDisplayName(parsed.awaySlug),
       league: sportCode.toUpperCase(),
       sport: finalSport,
-      kickoff: parsed.date ? `${parsed.date}T12:00:00Z` : new Date().toISOString(),
+      // Don't hardcode time - let it be filled from database/API with real kickoff time
+      kickoff: undefined,
       venue: null,
     };
   }

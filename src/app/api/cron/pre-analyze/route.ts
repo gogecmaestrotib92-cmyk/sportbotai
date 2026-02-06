@@ -1188,7 +1188,7 @@ ${!hasDraw ? 'NO DRAWS in this sport. Pick a winner.' : ''}`;
       },
       // Include headlines
       headlines: [
-        { icon: '📊', text: `${homeTeam} vs ${awayTeam}: Pre-analyzed`, favors: aiResponse.favored || 'neutral', viral: false }
+        { icon: '📊', text: `${homeTeam} vs ${awayTeam}: AI Prediction`, favors: aiResponse.favored || 'neutral', viral: false }
       ],
       // NEW: Include enriched data for building viralStats etc.
       enrichedData: {

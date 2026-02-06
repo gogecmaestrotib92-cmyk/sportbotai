@@ -309,7 +309,8 @@ function parseMatchIdClient(matchId: string): { homeTeam: string; awayTeam: stri
       awayTeam: toDisplayName(parsed.awaySlug),
       league: parsed.sportCode.toUpperCase(),
       sport: sport,
-      kickoff: parsed.date ? `${parsed.date}T12:00:00Z` : new Date().toISOString(),
+      // Don't hardcode time - let it be filled from API with real kickoff time
+      kickoff: undefined,
     };
   }
 

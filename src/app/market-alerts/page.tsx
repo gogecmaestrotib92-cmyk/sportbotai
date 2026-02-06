@@ -382,7 +382,7 @@ function BlurredEdgeCard({ alert }: { alert: MarketAlert }) {
                     'from-emerald-600 to-emerald-700';
   
   return (
-    <Link href="/pricing" className="block">
+    <Link href="/pricing#pro" className="block">
       <div className="group relative bg-bg-card border border-zinc-500/30 rounded-lg p-3.5 hover:border-zinc-400/50 transition-all cursor-pointer overflow-hidden">
         {/* Premium badge overlay */}
         <div className="absolute top-2 right-2 z-10">
@@ -469,7 +469,7 @@ function BlurredSteamCard({ alert }: { alert: MarketAlert }) {
   };
   
   return (
-    <Link href="/pricing" className="block">
+    <Link href="/pricing#pro" className="block">
       <div className="group card-glass border-zinc-500/30 rounded-lg p-3 hover:border-zinc-400/50 transition-all cursor-pointer relative overflow-hidden">
         {/* Top row */}
         <div className="flex items-center justify-between mb-2">
@@ -662,7 +662,7 @@ function PremiumGate() {
             </ul>
           </div>
           
-          <Link href="/pricing" className="btn-secondary inline-block">
+          <Link href="/pricing#premium" className="btn-secondary inline-block">
             Upgrade to Premium
           </Link>
         </div>
@@ -822,7 +822,7 @@ export default function MarketAlertsPage() {
               </div>
             </div>
             <Link 
-              href="/pricing" 
+              href="/pricing#premium" 
               className="btn-secondary flex-shrink-0 text-sm px-5 py-2"
             >
               Upgrade to Premium

@@ -548,7 +548,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
                   <Link
-                    href="/pricing"
+                    href="/pricing#pro"
                     className="inline-flex items-center justify-center px-8 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-400 hover:scale-105 transition-all shadow-lg hover:shadow-emerald-500/25"
                   >
                     Get Your Edge Now

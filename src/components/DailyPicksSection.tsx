@@ -11,6 +11,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { generateMatchSlug } from '@/lib/match-utils';
+import { getTeamLogo, getLeagueLogo } from '@/lib/logos';
+import { Lock, Shield, ArrowRight } from 'lucide-react';
 
 interface Pick {
   id: string;
@@ -44,22 +46,57 @@ interface EditorialPicksResponse {
   };
 }
 
-const sportEmojis: Record<string, string> = {
-  soccer: '⚽',
-  basketball: '🏀',
-  americanfootball: '🏈',
-  icehockey: '🏒',
-  baseball: '⚾',
-  tennis: '🎾',
-  mma: '🥊',
-};
+// Team Logo with fallback - Light card style
+function TeamLogo({ name, sport, size = 32 }: { name: string; sport: string; size?: number }) {
+  const [error, setError] = useState(false);
+  const url = getTeamLogo(name, sport);
+  
+  if (error || !url) {
+    const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    return (
+      <div 
+        className="flex items-center justify-center bg-zinc-100 rounded-lg text-zinc-600 font-bold"
+        style={{ width: size, height: size, fontSize: size * 0.35 }}
+      >
+        {initials}
+      </div>
+    );
+  }
+  
+  return (
+    <img
+      src={url}
+      alt={name}
+      width={size}
+      height={size}
+      className="rounded-lg bg-zinc-50 object-contain p-0.5"
+      style={{ width: size, height: size }}
+      onError={() => setError(true)}
+    />
+  );
+}
 
-const edgeBucketColors: Record<string, string> = {
-  SLIGHT: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  MODERATE: 'bg-green-500/20 text-green-400 border-green-500/30',
-  STRONG: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  VERY_STRONG: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-};
+// League Logo with fallback
+function LeagueLogo({ league, size = 16 }: { league: string; size?: number }) {
+  const [error, setError] = useState(false);
+  const url = getLeagueLogo(league);
+  
+  if (error || !url) {
+    return <Shield className="text-zinc-400" style={{ width: size, height: size }} />;
+  }
+  
+  return (
+    <img
+      src={url}
+      alt={league}
+      width={size}
+      height={size}
+      className="rounded-sm object-contain"
+      style={{ width: size, height: size }}
+      onError={() => setError(true)}
+    />
+  );
+}
 
 const edgeBucketLabels: Record<string, string> = {
   SLIGHT: 'Slight Edge',
@@ -87,86 +124,104 @@ function formatKickoff(dateString: string): string {
   return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ` ${time}`;
 }
 
+function formatLeague(league: string): string {
+  return league
+    .replace(/_/g, ' ')
+    .replace(/soccer |basketball |americanfootball |icehockey /gi, '')
+    .split(' ')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
 function PickCard({ pick, isPro }: { pick: Pick; isPro: boolean }) {
-  const sportKey = pick.sport.split('_')[0];
-  const emoji = sportEmojis[sportKey] || '🎯';
   const isLocked = pick.locked || !isPro;
   
   return (
-    <div className="group relative bg-white/[0.02] hover:bg-white/[0.04] border border-white/10 hover:border-white/20 rounded-xl p-4 transition-all duration-200">
-      {/* Sport & League */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{emoji}</span>
-          <span className="text-xs text-gray-400 uppercase tracking-wide">{pick.league.replace(/_/g, ' ')}</span>
+    <div className="group relative bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full">
+      {/* Header with league logo and edge */}
+      <div className="bg-gradient-to-r from-purple-900/95 via-purple-800/90 to-purple-900/95 px-3 py-2 flex items-center justify-between">
+        <div className="flex items-center gap-2 bg-white/10 px-2 py-1 rounded-lg">
+          <LeagueLogo league={pick.league} size={16} />
+          <span className="text-white/90 text-xs font-medium">{formatLeague(pick.league)}</span>
         </div>
         {pick.edgeBucket && (
-          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${edgeBucketColors[pick.edgeBucket] || 'bg-gray-500/20 text-gray-400'}`}>
+          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-black text-white">
             {edgeBucketLabels[pick.edgeBucket] || pick.edgeBucket}
           </span>
         )}
       </div>
       
-      {/* Teams */}
-      <div className="mb-3">
-        <div className="text-white font-medium">{pick.homeTeam}</div>
-        <div className="text-gray-400 text-sm">vs {pick.awayTeam}</div>
-      </div>
-      
-      {/* Kickoff */}
-      <div className="text-xs text-gray-500 mb-3">
-        {formatKickoff(pick.kickoff)}
-      </div>
-      
-      {/* Edge & Selection - Blurred for free users */}
-      <div className={`space-y-2 ${isLocked ? 'relative' : ''}`}>
-        {isLocked && (
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/80 to-transparent z-10 flex items-center justify-center rounded-lg">
-            <Link 
-              href="/pricing" 
-              className="flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent/80 transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-              </svg>
-              Unlock with Pro
-            </Link>
+      {/* Teams with logos */}
+      <div className="p-4 flex-1 tracking-wide">
+        <div className="flex items-center gap-3 mb-3">
+          <TeamLogo name={pick.homeTeam} sport={pick.sport} size={32} />
+          <div className="flex-1 min-w-0">
+            <div className="text-[#000000] font-semibold text-sm truncate">{pick.homeTeam}</div>
+            <div className="text-[#000000]/60 text-xs">Home</div>
           </div>
-        )}
+        </div>
+        <div className="flex items-center gap-3 mb-3">
+          <TeamLogo name={pick.awayTeam} sport={pick.sport} size={32} />
+          <div className="flex-1 min-w-0">
+            <div className="text-[#000000] font-semibold text-sm truncate">{pick.awayTeam}</div>
+            <div className="text-[#000000]/60 text-xs">Away</div>
+          </div>
+        </div>
         
-        <div className={isLocked ? 'blur-sm select-none' : ''}>
-          {/* Edge Value */}
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">AI Edge</span>
-            <span className={`font-mono ${(pick.edgeValue || 0) >= 5 ? 'text-green-400' : 'text-blue-400'}`}>
-              {pick.edgeValue ? `+${pick.edgeValue.toFixed(1)}%` : '+4.2%'}
-            </span>
-          </div>
+        {/* Kickoff */}
+        <div className="flex items-center gap-1.5 text-xs text-[#000000] font-semibold mb-4">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {formatKickoff(pick.kickoff)}
+        </div>
+        
+        {/* Stats - Blurred for free users */}
+        <div className={`space-y-2 ${isLocked ? 'relative' : ''}`}>
+          {isLocked && (
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-white/95 to-white/80 z-10 flex items-center justify-center rounded-lg">
+              <Link 
+                href="/pricing#pro" 
+                className="flex items-center gap-1.5 text-xs font-medium text-purple-600 hover:text-purple-700 transition-colors tracking-wide"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                Unlock with Pro
+              </Link>
+            </div>
+          )}
           
-          {/* Confidence */}
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">Confidence</span>
-            <span className="text-gray-300">
-              {pick.confidence ? `${pick.confidence.toFixed(0)}%` : '62%'}
-            </span>
-          </div>
-          
-          {/* Selection */}
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">Pick</span>
-            <span className="text-white font-medium">
-              {pick.selection || 'Home Win'}
-            </span>
+          <div className={isLocked ? 'blur-sm select-none' : ''}>
+            <div className="flex items-center justify-between text-sm py-1.5 border-b border-zinc-100">
+              <span className="text-[#000000] font-semibold">AI Edge</span>
+              <span className={`font-mono font-semibold ${(pick.edgeValue || 0) >= 5 ? 'text-green-600' : 'text-blue-600'}`}>
+                {pick.edgeValue ? `+${pick.edgeValue.toFixed(1)}%` : '+4.2%'}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between text-sm py-1.5 border-b border-zinc-100">
+              <span className="text-[#000000] font-semibold">Confidence</span>
+              <span className="text-[#000000] font-medium">
+                {pick.confidence ? `${pick.confidence.toFixed(0)}%` : '62%'}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between text-sm py-1.5">
+              <span className="text-[#000000] font-semibold">Pick</span>
+              <span className="text-[#000000] font-semibold">
+                {pick.selection || 'Home Win'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
       
-      {/* CTA */}
+      {/* CTA Footer */}
       <Link 
         href={`/match/${generateMatchSlug(pick.homeTeam, pick.awayTeam, pick.sport, pick.kickoff)}`}
-        className="mt-4 block text-center text-xs text-accent hover:text-accent/80 transition-colors"
+        className="flex items-center justify-center gap-2 w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-3 rounded-none transition-colors text-sm tracking-wide"
       >
-        View Analysis →
+        View Full Analysis
+        <ArrowRight className="w-4 h-4" />
       </Link>
     </div>
   );
@@ -174,16 +229,31 @@ function PickCard({ pick, isPro }: { pick: Pick; isPro: boolean }) {
 
 function PickCardSkeleton() {
   return (
-    <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4 animate-pulse">
-      <div className="h-4 w-24 bg-white/10 rounded mb-3" />
-      <div className="h-5 w-32 bg-white/10 rounded mb-2" />
-      <div className="h-4 w-24 bg-white/10 rounded mb-3" />
-      <div className="h-3 w-20 bg-white/10 rounded mb-4" />
-      <div className="space-y-2">
-        <div className="h-4 w-full bg-white/10 rounded" />
-        <div className="h-4 w-full bg-white/10 rounded" />
-        <div className="h-4 w-full bg-white/10 rounded" />
+    <div className="bg-white rounded-xl overflow-hidden shadow-md animate-pulse">
+      <div className="h-10 bg-purple-900/50" />
+      <div className="p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-8 h-8 bg-zinc-200 rounded-lg" />
+          <div className="flex-1">
+            <div className="h-4 w-24 bg-zinc-200 rounded mb-1" />
+            <div className="h-3 w-12 bg-zinc-100 rounded" />
+          </div>
+        </div>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-8 h-8 bg-zinc-200 rounded-lg" />
+          <div className="flex-1">
+            <div className="h-4 w-24 bg-zinc-200 rounded mb-1" />
+            <div className="h-3 w-12 bg-zinc-100 rounded" />
+          </div>
+        </div>
+        <div className="h-3 w-20 bg-zinc-100 rounded mb-4" />
+        <div className="space-y-2">
+          <div className="h-8 w-full bg-zinc-100 rounded" />
+          <div className="h-8 w-full bg-zinc-100 rounded" />
+          <div className="h-8 w-full bg-zinc-100 rounded" />
+        </div>
       </div>
+      <div className="h-10 border-t border-zinc-100" />
     </div>
   );
 }
@@ -286,8 +356,12 @@ export default function DailyPicksSection({ locale = 'en' }: DailyPicksSectionPr
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
-              <span className="text-2xl">🎯</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+              <svg className="w-7 h-7 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="6"/>
+                <circle cx="12" cy="12" r="2" fill="currentColor"/>
+              </svg>
               {t.title}
             </h2>
             <p className="text-gray-400 mt-1">{t.subtitle}</p>
@@ -298,11 +372,6 @@ export default function DailyPicksSection({ locale = 'en' }: DailyPicksSectionPr
             className="inline-flex items-center gap-2 text-accent hover:text-accent/80 font-medium transition-colors"
           >
             {t.viewAll}
-            {meta && meta.total > picks.length && (
-              <span className="text-xs bg-accent/20 px-2 py-0.5 rounded-full">
-                +{meta.total - picks.length} {t.morePicks}
-              </span>
-            )}
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -311,8 +380,8 @@ export default function DailyPicksSection({ locale = 'en' }: DailyPicksSectionPr
 
         {/* Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[...Array(3)].map((_, i) => (
               <PickCardSkeleton key={i} />
             ))}
           </div>
@@ -322,7 +391,7 @@ export default function DailyPicksSection({ locale = 'en' }: DailyPicksSectionPr
             <p className="text-sm mt-1">{t.checkBack}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {picks.map((pick) => (
               <PickCard key={pick.id} pick={pick} isPro={isPro} />
             ))}
@@ -331,19 +400,19 @@ export default function DailyPicksSection({ locale = 'en' }: DailyPicksSectionPr
 
         {/* Pro CTA for free users */}
         {!isPro && picks.length > 0 && (
-          <div className="mt-8 text-center">
-            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-accent/10 to-purple-500/10 border border-accent/20 rounded-xl px-6 py-4">
-              <div className="text-left">
+          <div className="mt-8">
+            <div className="flex flex-col items-center gap-3 bg-black border border-zinc-800 rounded-xl px-5 py-4">
+              <div className="text-center">
                 <p className="text-white font-medium">
                   {locale === 'sr' ? 'Otključaj sve pikove i detalje' : 'Unlock all picks & full details'}
                 </p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-zinc-400">
                   {locale === 'sr' ? 'Edge %, confidence, i selekciju' : 'Edge %, confidence, and selection'}
                 </p>
               </div>
               <Link
-                href="/pricing"
-                className="bg-accent hover:bg-accent/90 text-black font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+                href="/pricing#pro"
+                className="w-full bg-accent hover:bg-accent/90 text-black font-semibold px-4 py-1.5 rounded-none transition-colors text-center text-sm"
               >
                 {locale === 'sr' ? 'Idi na Pro' : 'Go Pro'}
               </Link>

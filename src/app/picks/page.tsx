@@ -58,8 +58,51 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function PicksPage() {
+  const dateStr = getDateString();
+  const isoDate = new Date().toISOString().split('T')[0];
+  
+  // Schema.org structured data for SEO
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: `Today's AI Sports Picks - ${dateStr}`,
+    description: "Our AI model's top high-confidence sports predictions with detailed analysis.",
+    datePublished: isoDate,
+    dateModified: isoDate,
+    author: {
+      '@type': 'Organization',
+      name: 'SportBot AI',
+      url: 'https://www.sportbotai.com',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'SportBot AI',
+      url: 'https://www.sportbotai.com',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://www.sportbotai.com/logo.png',
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': 'https://www.sportbotai.com/picks',
+    },
+    about: {
+      '@type': 'Thing',
+      name: 'Sports Predictions',
+    },
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', '.pick-headline', '.pick-verdict'],
+    },
+  };
+
   return (
     <main className="min-h-screen bg-bg">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <EditorialPicksContent locale="en" />
     </main>
   );

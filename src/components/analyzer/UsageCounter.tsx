@@ -88,7 +88,7 @@ export default function UsageCounter({ usedToday = 0 }: UsageCounterProps) {
       {/* Upgrade Link (only for non-premium) */}
       {plan !== 'PREMIUM' && remaining <= 1 && (
         <Link 
-          href="/pricing"
+          href="/pricing#pro"
           className="text-xs text-primary hover:text-primary/80 transition-colors underline"
         >
           Upgrade

@@ -483,6 +483,30 @@ interface EdgePerformanceStats {
 
   // Stuck predictions (PENDING > 24h after kickoff)
   stuckPredictions: number;
+
+  // Daily Picks - High confidence picks for public showcase
+  dailyPicks?: {
+    total: number;
+    wins: number;
+    losses: number;
+    pending: number;
+    winRate: number;
+    avgConfidence: number;
+    avgEdge: number;
+    streak: number; // positive = winning streak, negative = losing streak
+    recentPicks: Array<{
+      id: string;
+      matchId: string;
+      matchName: string;
+      sport: string;
+      league: string;
+      kickoff: Date;
+      selection: string | null;
+      modelProbability: number | null;
+      edgeValue: number | null;
+      binaryOutcome: number | null; // 1 = win, 0 = loss, null = pending
+    }>;
+  };
 }
 
 async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
@@ -851,6 +875,64 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
       new Date(p.kickoff).getTime() < Date.now() - 24 * 60 * 60 * 1000
     ).length;
 
+    // ============================================
+    // DAILY PICKS STATS (edge >= 2% AND confidence >= 50%)
+    // ============================================
+    const dailyPicksCriteria = predictions.filter(p => {
+      const edge = Math.abs(p.edgeValue ?? p.valueBetEdge ?? 0);
+      const confidence = p.modelProbability ?? 0;
+      return edge >= 2 && confidence >= 50;
+    });
+
+    const dailyPicksEvaluated = dailyPicksCriteria.filter(p => p.binaryOutcome !== null);
+    const dailyPicksWins = dailyPicksEvaluated.filter(p => p.binaryOutcome === 1).length;
+    const dailyPicksLosses = dailyPicksEvaluated.filter(p => p.binaryOutcome === 0).length;
+    const dailyPicksPending = dailyPicksCriteria.filter(p => p.binaryOutcome === null).length;
+
+    // Calculate streak (check recent outcomes in order)
+    const sortedByKickoff = [...dailyPicksEvaluated].sort((a, b) => 
+      new Date(b.kickoff).getTime() - new Date(a.kickoff).getTime()
+    );
+    let streak = 0;
+    if (sortedByKickoff.length > 0) {
+      const firstOutcome = sortedByKickoff[0].binaryOutcome;
+      for (const p of sortedByKickoff) {
+        if (p.binaryOutcome === firstOutcome) {
+          streak += firstOutcome === 1 ? 1 : -1;
+        } else break;
+      }
+    }
+
+    const dailyPicksAvgConfidence = dailyPicksCriteria.length > 0
+      ? Math.round(dailyPicksCriteria.reduce((sum, p) => sum + (p.modelProbability ?? 0), 0) / dailyPicksCriteria.length * 10) / 10
+      : 0;
+    const dailyPicksAvgEdge = dailyPicksCriteria.length > 0
+      ? Math.round(dailyPicksCriteria.reduce((sum, p) => sum + Math.abs(p.edgeValue ?? p.valueBetEdge ?? 0), 0) / dailyPicksCriteria.length * 10) / 10
+      : 0;
+
+    const dailyPicks = {
+      total: dailyPicksCriteria.length,
+      wins: dailyPicksWins,
+      losses: dailyPicksLosses,
+      pending: dailyPicksPending,
+      winRate: dailyPicksEvaluated.length > 0 ? Math.round((dailyPicksWins / dailyPicksEvaluated.length) * 100) : 0,
+      avgConfidence: dailyPicksAvgConfidence,
+      avgEdge: dailyPicksAvgEdge,
+      streak,
+      recentPicks: dailyPicksCriteria.slice(0, 20).map(p => ({
+        id: p.id,
+        matchId: p.matchId,
+        matchName: p.matchName,
+        sport: p.sport,
+        league: p.league,
+        kickoff: p.kickoff,
+        selection: p.selection ?? p.prediction,
+        modelProbability: p.modelProbability,
+        edgeValue: p.edgeValue ?? p.valueBetEdge,
+        binaryOutcome: p.binaryOutcome,
+      })),
+    };
+
     return {
       totalPredictions: total,
       evaluatedPredictions: evaluated,
@@ -867,6 +949,7 @@ async function getEdgePerformanceStats(): Promise<EdgePerformanceStats> {
       recentPredictions,
       pendingPredictionsList,
       stuckPredictions,
+      dailyPicks,
     };
   } catch (error) {
     console.error('Error fetching edge performance stats:', error);

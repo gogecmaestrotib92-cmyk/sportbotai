@@ -16,7 +16,7 @@ import { UserMenu } from './auth';
 import { useHideOnScroll } from '@/hooks/useHideOnScroll';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Locale, getTranslations } from '@/lib/i18n';
-import { BoltIcon, BrainIcon, ChartBarIcon } from '@/components/ui/Icons';
+import { BoltIcon, BrainIcon, ChartBarIcon, TargetIcon } from '@/components/ui/Icons';
 
 // Admin emails list (same as in admin/page.tsx)
 const ADMIN_EMAILS = [
@@ -175,6 +175,12 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
             <NavLink href={homeLink}>
               {t.header.home}
             </NavLink>
+            <NavLink 
+              href={localePath('/picks')} 
+              icon={<TargetIcon className="w-4 h-4 text-amber-400" />}
+            >
+              {t.header.picks}
+            </NavLink>
             <NavLink href={localePath('/matches')} icon={<BoltIcon className="w-4 h-4 text-accent" />}>
               {t.header.analyze}
             </NavLink>
@@ -246,6 +252,13 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
                   {t.header.home}
+                </MobileNavLink>
+                <MobileNavLink
+                  href={localePath('/picks')}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <TargetIcon className="w-5 h-5 text-amber-400" />
+                  {t.header.picks}
                 </MobileNavLink>
                 <MobileNavLink
                   href={localePath('/ai-desk')}

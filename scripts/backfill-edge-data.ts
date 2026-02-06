@@ -97,7 +97,7 @@ async function main() {
       where: { id: pred.id },
       data: {
         selection: selection?.trim(),
-        modelProbability: best.prob,
+        modelProbability: best.prob * 100, // Convert from 0-1 to 0-100 percentage
         marketOddsAtPrediction: best.odds,
         edgeValue: best.edge,
         edgeBucket: getEdgeBucket(best.edge),

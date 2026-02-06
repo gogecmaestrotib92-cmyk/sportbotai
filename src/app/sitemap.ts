@@ -24,6 +24,9 @@ const STATIC_PAGES = [
   // News Section (Google News eligible)
   { path: '/news', priority: 0.95, changeFreq: 'hourly' as const },
 
+  // Daily Picks (High-value conversion page)
+  { path: '/picks', priority: 0.9, changeFreq: 'daily' as const },
+
   // Content & Conversion
   { path: '/blog', priority: 0.85, changeFreq: 'daily' as const },
   { path: '/partners', priority: 0.7, changeFreq: 'weekly' as const },
@@ -43,6 +46,7 @@ const SERBIAN_STATIC_PAGES = [
   { path: '/sr/matches', priority: 0.9, changeFreq: 'hourly' as const },
   { path: '/sr/ai-desk', priority: 0.9, changeFreq: 'hourly' as const },
   { path: '/sr/news', priority: 0.9, changeFreq: 'hourly' as const },
+  { path: '/sr/picks', priority: 0.85, changeFreq: 'daily' as const },
   { path: '/sr/blog', priority: 0.8, changeFreq: 'daily' as const },
   { path: '/sr/pricing', priority: 0.75, changeFreq: 'monthly' as const },
   { path: '/sr/analyzer', priority: 0.8, changeFreq: 'weekly' as const },

@@ -221,7 +221,7 @@ export default function PricingTeaser() {
 
               {/* CTA Button - links to pricing page */}
               <Link
-                href="/pricing"
+                href="/pricing#pro"
                 className={`block w-full py-3 px-6 rounded-btn font-semibold transition-all duration-200 min-h-[48px] text-center ${
                   plan.highlighted
                     ? 'bg-accent-dark hover:bg-accent text-white'
@@ -236,7 +236,7 @@ export default function PricingTeaser() {
       </div>
 
       <div className="text-center mt-10">
-        <Link href="/pricing" className="inline-flex items-center gap-2 text-accent font-semibold hover:text-accent-dark transition-colors group">
+        <Link href="/pricing#pro" className="inline-flex items-center gap-2 text-accent font-semibold hover:text-accent-dark transition-colors group">
           View full pricing details
           <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

@@ -22,7 +22,10 @@ import {
   Lock,
   Sparkles,
   ChevronRight,
-  Shield
+  Shield,
+  FlaskConical,
+  BadgeCheck,
+  CircleDot
 } from 'lucide-react';
 
 // Team Logo with fallback - Light card style
@@ -171,12 +174,14 @@ function formatLeague(league: string): string {
 
 // Helper to safely extract string from potential object
 function safeString(value: unknown): string {
-  if (typeof value === 'string') return value;
-  if (value && typeof value === 'object') {
-    if ('text' in value) return String((value as { text?: unknown }).text || '');
-    if ('narrative' in value) return String((value as { narrative?: unknown }).narrative || '');
+  let result = '';
+  if (typeof value === 'string') result = value;
+  else if (value && typeof value === 'object') {
+    if ('text' in value) result = String((value as { text?: unknown }).text || '');
+    else if ('narrative' in value) result = String((value as { narrative?: unknown }).narrative || '');
   }
-  return '';
+  // Replace "Pre-analyzed" with "AI Prediction"
+  return result.replace(/Pre-analyzed/gi, 'AI Prediction');
 }
 
 // Confidence badge - light card style
@@ -216,8 +221,18 @@ function StarRating({ confidence }: { confidence: number }) {
 }
 
 // Single Pick Card - Breatheeze Style (Light cards, dark badge)
-function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: number }) {
+function PickCard({ pick, isPro, rank, locale = 'en' }: { pick: Pick; isPro: boolean; rank: number; locale?: 'en' | 'sr' }) {
   const analysis = pick.analysis;
+  
+  // Translations
+  const t = {
+    edgeHidden: locale === 'sr' ? 'Edge Sakriven' : 'Edge Hidden',
+    premiumPick: locale === 'sr' ? 'Premium Pik' : 'Premium Pick',
+    aiPredictionAvailable: locale === 'sr' ? 'AI predikcija dostupna' : 'AI-powered prediction available',
+    unlockDetails: locale === 'sr' ? 'Otključaj edge %, verovatnoće i analizu' : 'Unlock edge %, probabilities & full analysis',
+    unlockPick: locale === 'sr' ? 'Otključaj Pik' : 'Unlock Pick',
+    viewFullAnalysis: locale === 'sr' ? 'Pogledaj Celu Analizu' : 'View Full Analysis',
+  };
   
   // Format probabilities (already stored as percentages like 36.41)
   const probs = pick.probabilities;
@@ -231,11 +246,19 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
 
   return (
     <article className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 tracking-wide h-full flex flex-col">
-      {/* Top Badge - Dark strip like Breatheeze */}
-      <div className="bg-zinc-900 px-4 py-2.5 flex items-center justify-between">
+      {/* Top Badge - Glass deep purple */}
+      <div className="bg-gradient-to-r from-purple-900/90 via-purple-800/80 to-purple-900/90 backdrop-blur-sm px-4 py-2.5 flex items-center justify-between border-b border-purple-500/20">
         <div className="flex items-center gap-2">
           <span className="bg-accent text-black text-xs font-bold px-2 py-0.5 rounded">#{rank}</span>
-          <span className="text-white/90 text-sm font-medium">+{pick.edgeValue.toFixed(1)}% EDGE</span>
+          {/* Only show edge for Pro users */}
+          {!pick.locked ? (
+            <span className="text-white/90 text-sm font-medium">+{pick.edgeValue.toFixed(1)}% EDGE</span>
+          ) : (
+            <span className="text-white/60 text-sm font-medium flex items-center gap-1">
+              <Lock className="w-3 h-3" />
+              {t.edgeHidden}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2 bg-white/10 px-2.5 py-1 rounded-lg">
           <LeagueLogo league={pick.league} size={16} />
@@ -244,38 +267,42 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
       </div>
       
       {/* Main Content - Light background, pure black text */}
-      <div className="p-5 text-black flex-1 flex flex-col">
+      <div className="p-5 text-[#000000] flex-1 flex flex-col">
         {/* Teams Display */}
         <div className="flex items-center justify-center gap-4 mb-5">
           {/* Home Team */}
           <div className="flex-1 flex flex-col items-center text-center">
             <TeamLogo name={pick.homeTeam} sport={pick.sport} size={52} />
-            <p className="font-semibold text-black text-sm mt-2 leading-tight">{pick.homeTeam}</p>
-            {homeProb !== null && (
-              <p className="text-xs text-black mt-0.5">{homeProb}%</p>
+            <p className="font-semibold text-[#000000] text-sm mt-2 leading-tight">{pick.homeTeam}</p>
+            {/* Hide probabilities for locked picks */}
+            {!pick.locked && homeProb !== null && (
+              <p className="text-xs text-[#000000] mt-0.5">{homeProb}%</p>
             )}
           </div>
           
           {/* VS Divider */}
           <div className="flex flex-col items-center px-2">
-            <span className="text-black text-sm font-medium">VS</span>
-            <span className="text-[10px] text-black mt-1 whitespace-nowrap">{formatKickoffShort(pick.kickoff)}</span>
+            <span className="text-[#000000] text-sm font-medium">VS</span>
+            <span className="text-[10px] text-[#000000] mt-1 whitespace-nowrap">{formatKickoffShort(pick.kickoff)}</span>
           </div>
           
           {/* Away Team */}
           <div className="flex-1 flex flex-col items-center text-center">
             <TeamLogo name={pick.awayTeam} sport={pick.sport} size={52} />
-            <p className="font-semibold text-black text-sm mt-2 leading-tight">{pick.awayTeam}</p>
-            {awayProb !== null && (
-              <p className="text-xs text-black mt-0.5">{awayProb}%</p>
+            <p className="font-semibold text-[#000000] text-sm mt-2 leading-tight">{pick.awayTeam}</p>
+            {/* Hide probabilities for locked picks */}
+            {!pick.locked && awayProb !== null && (
+              <p className="text-xs text-[#000000] mt-0.5">{awayProb}%</p>
             )}
           </div>
         </div>
         
-        {/* Star Rating */}
-        <div className="flex justify-center mb-4">
-          <StarRating confidence={pick.confidence} />
-        </div>
+        {/* Star Rating - only for unlocked */}
+        {!pick.locked && (
+          <div className="flex justify-center mb-4">
+            <StarRating confidence={pick.confidence} />
+          </div>
+        )}
         
         {/* Divider */}
         <div className="h-px bg-black/20 mb-4" />
@@ -286,15 +313,15 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
           <>
             {/* Our Pick - Clean typography */}
             <div className="text-center mb-4">
-              <p className="text-lg font-bold text-black">{pick.selection}</p>
+              <p className="text-lg font-bold text-[#000000]">{pick.selection}</p>
               {pick.odds && (
-                <p className="text-black text-sm">@ {pick.odds.toFixed(2)}</p>
+                <p className="text-purple-700 text-sm font-semibold">@ {pick.odds.toFixed(2)}</p>
               )}
             </div>
             
             {/* Headline */}
             {analysis?.headlines?.[0] && (
-              <p className="text-black text-sm text-center leading-relaxed mb-4 line-clamp-2">
+              <p className="text-[#000000] text-sm text-center leading-relaxed mb-4 line-clamp-2">
                 &ldquo;{safeString(analysis.headlines[0])}&rdquo;
               </p>
             )}
@@ -307,40 +334,38 @@ function PickCard({ pick, isPro, rank }: { pick: Pick; isPro: boolean; rank: num
               href={`/match/${pick.slug}`}
               className="flex items-center justify-center gap-2 w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-3 rounded-none transition-colors text-sm tracking-wide mt-auto"
             >
-              View Full Analysis
+              {t.viewFullAnalysis}
               <ArrowRight className="w-4 h-4" />
             </Link>
           </>
         ) : (
-          /* Locked State */
+          /* Locked State - Minimal info, strong paywall */
           <>
-            <div className="text-center mb-4">
-              <p className="text-base font-semibold text-black">
-                {favoredTeam ? `${favoredTeam} favored` : 'Analysis available'}
-              </p>
-              <ConfidenceBadge confidence={pick.confidence} />
+            {/* Blurred/Hidden analysis preview */}
+            <div className="text-center mb-4 relative">
+              <div className="flex items-center justify-center gap-2 text-zinc-400 mb-3">
+                <Lock className="w-5 h-5" />
+                <span className="text-sm font-medium">{t.premiumPick}</span>
+              </div>
+              {/* Teaser - just show something is available */}
+              <div className="space-y-2">
+                <div className="h-6 bg-zinc-200 rounded w-3/4 mx-auto blur-[2px]" />
+                <div className="h-4 bg-zinc-100 rounded w-1/2 mx-auto blur-[2px]" />
+              </div>
             </div>
-            
-            {pick.headline && (
-              <p className="text-black text-sm text-center mb-4 line-clamp-2 italic">
-                &ldquo;{safeString(pick.headline)}&rdquo;
-              </p>
-            )}
             
             {/* Spacer to push button down */}
             <div className="flex-1" />
             
-            {/* Unlock CTA */}
-            <div className="bg-zinc-100 rounded-xl p-4 text-center mt-auto">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Lock className="w-4 h-4 text-black" />
-                <span className="text-black text-sm font-medium">Unlock full analysis</span>
-              </div>
+            {/* Unlock CTA - More prominent */}
+            <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-xl p-5 text-center mt-auto">
+              <p className="text-white/90 text-sm mb-1">{t.aiPredictionAvailable}</p>
+              <p className="text-white/60 text-xs mb-3">{t.unlockDetails}</p>
               <Link
-                href="/pricing"
-                className="inline-flex items-center gap-1 bg-accent hover:bg-accent/90 text-black font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors tracking-wide"
+                href="/pricing#pro"
+                className="flex items-center justify-center gap-1 w-full bg-accent hover:bg-accent/90 text-black font-semibold py-2 rounded-none text-sm transition-colors tracking-wide"
               >
-                Go Pro
+                {t.unlockPick}
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
@@ -378,21 +403,21 @@ function TrackRecord() {
 
   return (
     <article className="bg-zinc-100 rounded-2xl shadow-lg overflow-hidden mb-8 tracking-wide">
-      {/* Dark header strip - matching pick cards */}
-      <div className="bg-zinc-900 px-4 py-3 flex items-center justify-between relative overflow-hidden">
+      {/* Ultraviolet header strip */}
+      <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 px-4 py-3 flex items-center justify-between relative overflow-hidden">
         {/* Subtle gradient glow */}
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-transparent to-cyan-500/10" />
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-violet-400/20 via-transparent to-purple-400/20" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
         
         <div className="relative flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center">
             <BarChart3 className="w-4 h-4 text-white" />
           </div>
           <span className="text-white font-semibold text-sm">AI Track Record</span>
         </div>
-        <div className="relative flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">Live</span>
+        <div className="relative flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/10 border border-white/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+          <span className="text-[10px] text-white font-semibold uppercase tracking-wider">Live</span>
         </div>
       </div>
       
@@ -410,7 +435,7 @@ function TrackRecord() {
           </div>
           <div className="text-center py-3 px-4 bg-white rounded-xl border border-zinc-200">
             <div className="flex items-center justify-center gap-1.5 mb-2">
-              <Zap className="w-4 h-4 text-amber-500" />
+              <Zap className="w-4 h-4 text-violet-500" />
               <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-medium">Analyzed</span>
             </div>
             <p className="text-3xl font-black text-black tracking-tight">{stats.totalPicks}</p>
@@ -419,7 +444,7 @@ function TrackRecord() {
         
         {/* Footer badges */}
         <div className="mt-4 flex items-center justify-center gap-2 text-[10px]">
-          <span className="px-2 py-0.5 rounded bg-gradient-to-b from-zinc-200 to-zinc-300 border border-zinc-400/50 font-mono text-black font-bold shadow-sm">2%+ EDGE</span>
+          <span className="px-2 py-0.5 rounded bg-gradient-to-b from-violet-500 to-purple-600 border border-violet-400/50 font-mono text-white font-bold shadow-sm">2%+ EDGE</span>
           <span className="text-zinc-400">•</span>
           <span className="font-mono text-black font-bold">FLAT STAKE</span>
         </div>
@@ -461,12 +486,49 @@ export default function EditorialPicksContent({ locale }: Props) {
   const t = {
     en: {
       title: "Today's Top Picks",
-      subtitle: "AI-powered selections with the highest confidence",
+      subtitle: "SportBot AI predictions with the highest confidence",
       noPicks: 'No high-confidence picks available',
       checkBack: 'Check back when matches are scheduled',
       methodology: 'How We Select Picks',
-      methodologyText: 'Our AI model ranks all upcoming matches by confidence level and edge over market odds. Only matches with 60%+ model confidence AND positive value edge make this list.',
+      methodologyText: 'Our AI model evaluates every upcoming match across 50+ data points and calculates true win probabilities. A pick makes this list only when two conditions are met: the model has high confidence (50%+ probability) AND detects a 2%+ edge vs bookmaker odds. This dual filter ensures we surface only high-conviction picks where the market appears to be mispricing the outcome.',
       disclaimer: 'For entertainment purposes only. Gamble responsibly.',
+      // SEO content
+      seo: {
+        aiPredictionsTitle: 'AI Sports Predictions & Analysis',
+        aiPredictionsP1: 'SportBot AI uses advanced machine learning algorithms to analyze thousands of data points and generate accurate sports predictions. Our AI prediction system processes historical match data, team form, head-to-head records, injuries, and real-time odds movements to identify value opportunities.',
+        aiPredictionsP2: 'Unlike traditional tipsters, our AI sports predictor removes emotional bias and delivers data-driven picks across NBA, NFL, Premier League, La Liga, Bundesliga, Serie A, and more. Each AI prediction includes probability estimates, edge calculations, and confidence ratings.',
+        howItWorksTitle: 'How Our AI Sports Picks Work',
+        dataAnalysisTitle: 'Data Analysis',
+        dataAnalysisText: 'Our AI analyzes 50+ variables per match including form, injuries, H2H, and market odds',
+        edgeDetectionTitle: 'Edge Detection',
+        edgeDetectionText: 'We compare AI probabilities vs market odds to find mispriced opportunities',
+        verifiedPicksTitle: 'Verified Picks',
+        verifiedPicksText: 'Only picks with 2%+ edge over market odds make our daily selection',
+        sportsTitle: 'AI Predictions for All Major Sports',
+        sportsText: 'Our AI sports prediction bot covers all major leagues worldwide. Whether you\'re looking for AI basketball predictions, football tips, or hockey picks - SportBot AI delivers free daily predictions with detailed analysis.',
+        faqTitle: 'Frequently Asked Questions',
+        faq1Q: 'What is "edge" in sports betting?',
+        faq1A: 'Edge is the difference between our AI\'s calculated probability and what the bookmaker odds imply. For example, if we calculate 60% win probability but odds imply only 50%, that\'s a +10% edge - meaning the market is undervaluing that outcome.',
+        faq2Q: 'How does your AI calculate win probabilities?',
+        faq2A: 'Our model analyzes 50+ variables per match: recent form, head-to-head history, home/away performance, injuries, rest days, travel distance, weather conditions, and real-time odds movements from 15+ bookmakers.',
+        faq3Q: 'What sports do you cover with AI predictions?',
+        faq3A: 'We cover NBA, NFL, NHL, Premier League, La Liga, Bundesliga, Serie A, Ligue 1, Champions League, EuroLeague basketball, and more. Our AI processes 500+ matches daily across all major leagues.',
+        faq4Q: 'How is this different from tipster services?',
+        faq4A: 'Unlike tipsters who rely on gut feeling, our AI removes emotional bias completely. We show you the math: probability %, edge %, and confidence rating for every pick. Full transparency, no hidden agenda.',
+        faq5Q: 'Can I see your historical prediction accuracy?',
+        faq5A: 'Yes! Check the Track Record section at the top of this page. We track every pick with verified results - wins, losses, and actual ROI. No cherry-picking, full transparency.',
+        sportLinks: [
+          { label: 'NBA Predictions', league: 'basketball_nba' },
+          { label: 'NFL Predictions', league: 'americanfootball_nfl' },
+          { label: 'Premier League Predictions', league: 'soccer_epl' },
+          { label: 'La Liga Predictions', league: 'soccer_spain_la_liga' },
+          { label: 'Bundesliga Predictions', league: 'soccer_germany_bundesliga' },
+          { label: 'Serie A Predictions', league: 'soccer_italy_serie_a' },
+          { label: 'NHL Predictions', league: 'icehockey_nhl' },
+          { label: 'EuroLeague Predictions', league: 'basketball_euroleague' },
+          { label: 'Champions League Predictions', league: 'soccer_uefa_champs_league' },
+        ],
+      },
     },
     sr: {
       title: 'Današnji Top Pikovi',
@@ -474,8 +536,45 @@ export default function EditorialPicksContent({ locale }: Props) {
       noPicks: 'Nema pikova visokog poverenja',
       checkBack: 'Proveri ponovo kada budu zakazani mečevi',
       methodology: 'Kako Biramo Pikove',
-      methodologyText: 'Naš AI model rangira sve predstojeće mečeve po nivou poverenja i edge-u u odnosu na tržišne kvote. Samo mečevi sa 60%+ poverenjem modela I pozitivnim value edge-om ulaze na ovu listu.',
+      methodologyText: 'Naš AI model evaluira svaki predstojeći meč kroz 50+ podataka i izračunava stvarne verovatnoće pobede. Pik ulazi na ovu listu samo kada su ispunjena dva uslova: model ima visoko poverenje (50%+ verovatnoća) I detektuje 2%+ edge u odnosu na kladioničarske kvote. Ovaj dvostruki filter osigurava da prikazujemo samo visoko-pouzdane pikove gde tržište izgleda pogrešno procenjuje ishod.',
       disclaimer: 'Samo u zabavne svrhe. Kladite se odgovorno.',
+      // SEO content - Serbian
+      seo: {
+        aiPredictionsTitle: 'AI Sportske Predikcije i Analize',
+        aiPredictionsP1: 'SportBot AI koristi napredne algoritme mašinskog učenja za analizu hiljada podataka i generisanje tačnih sportskih predikcija. Naš AI sistem obrađuje istorijske podatke mečeva, formu timova, međusobne susrete, povrede i kretanje kvota u realnom vremenu kako bi identifikovao value prilike.',
+        aiPredictionsP2: 'Za razliku od tradicionalnih tipstera, naš AI sportski prediktor uklanja emotivnu pristrasnost i pruža predikcije zasnovane na podacima za NBA, NFL, Premier ligu, La Ligu, Bundesligu, Seriju A i druge. Svaka AI predikcija uključuje procene verovatnoće, edge kalkulacije i ocene poverenja.',
+        howItWorksTitle: 'Kako Funkcionišu Naši AI Sportski Pikovi',
+        dataAnalysisTitle: 'Analiza Podataka',
+        dataAnalysisText: 'Naš AI analizira 50+ varijabli po meču uključujući formu, povrede, H2H i tržišne kvote',
+        edgeDetectionTitle: 'Detekcija Edge-a',
+        edgeDetectionText: 'Poredimo AI verovatnoće sa tržišnim kvotama da pronađemo pogrešno procenjene prilike',
+        verifiedPicksTitle: 'Verifikovani Pikovi',
+        verifiedPicksText: 'Samo pikovi sa 2%+ edge-om u odnosu na tržišne kvote ulaze u našu dnevnu selekciju',
+        sportsTitle: 'AI Predikcije za Sve Velike Sportove',
+        sportsText: 'Naš AI bot za sportske predikcije pokriva sve velike lige širom sveta. Bilo da tražiš AI košarkaške predikcije, fudbalske tipove ili hokej pikove - SportBot AI pruža besplatne dnevne predikcije sa detaljnom analizom.',
+        faqTitle: 'Često Postavljana Pitanja',
+        faq1Q: 'Šta je "edge" u sportskom klađenju?',
+        faq1A: 'Edge je razlika između verovatnoće koju naš AI izračuna i one koju kvote impliciraju. Na primer, ako izračunamo 60% šanse za pobedu a kvote impliciraju samo 50%, to je +10% edge - što znači da tržište potcenjuje taj ishod.',
+        faq2Q: 'Kako vaš AI računa verovatnoće pobede?',
+        faq2A: 'Naš model analizira 50+ varijabli po meču: nedavnu formu, istoriju međusobnih susreta, performanse kod kuće/u gostima, povrede, dane odmora, putnu distancu, vremenske uslove i kretanje kvota u realnom vremenu od 15+ kladionica.',
+        faq3Q: 'Koje sportove pokrivate AI predikcijama?',
+        faq3A: 'Pokrivamo NBA, NFL, NHL, Premier ligu, La Ligu, Bundesligu, Seriju A, Ligue 1, Ligu šampiona, Evroligu košarku i još mnogo toga. Naš AI obrađuje 500+ mečeva dnevno iz svih velikih liga.',
+        faq4Q: 'Kako se ovo razlikuje od tipster servisa?',
+        faq4A: 'Za razliku od tipstera koji se oslanjaju na osećaj, naš AI potpuno uklanja emocionalnu pristrasnost. Pokazujemo vam matematiku: verovatnoću %, edge % i ocenu poverenja za svaki pik. Potpuna transparentnost, bez skrivenih agendi.',
+        faq5Q: 'Mogu li da vidim vašu istorijsku tačnost predikcija?',
+        faq5A: 'Da! Pogledaj sekciju Track Record na vrhu ove stranice. Pratimo svaki pik sa verifikovanim rezultatima - pobede, porazi i stvarni ROI. Bez biranja samo uspešnih, potpuna transparentnost.',
+        sportLinks: [
+          { label: 'NBA Predikcije', league: 'basketball_nba' },
+          { label: 'NFL Pikovi', league: 'americanfootball_nfl' },
+          { label: 'Premier Liga Tipovi', league: 'soccer_epl' },
+          { label: 'La Liga Predikcije', league: 'soccer_spain_la_liga' },
+          { label: 'Bundesliga Analiza', league: 'soccer_germany_bundesliga' },
+          { label: 'Serija A Pikovi', league: 'soccer_italy_serie_a' },
+          { label: 'NHL Predikcije', league: 'icehockey_nhl' },
+          { label: 'Evroliga Košarka', league: 'basketball_euroleague' },
+          { label: 'Liga Šampiona', league: 'soccer_uefa_champs_league' },
+        ],
+      },
     },
   }[locale];
 
@@ -544,47 +643,176 @@ export default function EditorialPicksContent({ locale }: Props) {
       ) : (
         <div className="grid md:grid-cols-2 gap-6 mb-12 items-stretch">
           {data.picks.map((pick, index) => (
-            <PickCard key={pick.id} pick={pick} isPro={data.isPro} rank={index + 1} />
+            <PickCard key={pick.id} pick={pick} isPro={data.isPro} rank={index + 1} locale={locale} />
           ))}
         </div>
       )}
 
       {/* Methodology */}
-      <section className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-        <h2 className="text-lg font-semibold text-white mb-3">{t.methodology}</h2>
-        <p className="text-gray-400 text-sm leading-relaxed">
+      <section className="bg-gradient-to-br from-white/[0.03] to-transparent border border-white/[0.06] rounded-2xl p-6 mb-6 backdrop-blur-sm">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+            <FlaskConical className="w-4 h-4 text-purple-400" />
+          </div>
+          <h2 className="text-lg font-semibold text-white">{t.methodology}</h2>
+        </div>
+        <p className="text-gray-400 text-sm leading-relaxed pl-11">
           {t.methodologyText}
         </p>
       </section>
 
       {/* Disclaimer */}
-      <p className="text-center text-gray-500 text-sm">
+      <p className="text-center text-gray-500/80 text-xs tracking-wide">
         {t.disclaimer}
       </p>
 
-      {/* Pro CTA */}
-      {!isPro && data.picks.length > 0 && (
-        <div className="mt-12 bg-gradient-to-r from-accent/10 via-purple-500/10 to-accent/10 border border-accent/20 rounded-2xl p-8 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-4">
-            <Unlock className="w-8 h-8 text-accent" />
+      {/* SEO Content Section - Premium Layout */}
+      <section className="mt-16 space-y-6">
+        {/* Section Divider */}
+        <div className="flex items-center gap-4 mb-8">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          <span className="text-xs text-gray-500 uppercase tracking-widest font-medium">Learn More</span>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        </div>
+
+        {/* AI Sports Predictions Explained - Hero Card */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-900/20 via-transparent to-transparent border border-white/[0.06] p-8">
+          {/* Subtle glow effect */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          
+          <div className="relative">
+            <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">{t.seo.aiPredictionsTitle}</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <p className="text-gray-400 text-sm leading-relaxed">
+                {t.seo.aiPredictionsP1}
+              </p>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                {t.seo.aiPredictionsP2}
+              </p>
+            </div>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-2">
-            {locale === 'sr' ? 'Otključaj Sve Pikove' : 'Unlock All Picks'}
-          </h3>
-          <p className="text-gray-400 mb-6 max-w-md mx-auto">
-            {locale === 'sr' 
-              ? 'Dobij selekcije, kvote, formu, reasoning i detaljan edge za svaki pick'
-              : 'Get selections, odds, form, reasoning and detailed edge analysis for every pick'
-            }
+        </div>
+
+        {/* How AI Picks Work - Feature Grid */}
+        <div className="rounded-3xl bg-gradient-to-br from-white/[0.02] to-transparent border border-white/[0.06] p-8">
+          <h2 className="text-xl font-bold text-white mb-8 text-center">{t.seo.howItWorksTitle}</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="group relative p-6 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.04] hover:border-purple-500/20 transition-all duration-300">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/30 to-purple-600/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <BarChart3 className="w-7 h-7 text-purple-400" />
+              </div>
+              <h3 className="font-semibold text-white mb-2">{t.seo.dataAnalysisTitle}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">{t.seo.dataAnalysisText}</p>
+            </div>
+            <div className="group relative p-6 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.04] hover:border-purple-500/20 transition-all duration-300">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/30 to-purple-600/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <CircleDot className="w-7 h-7 text-purple-400" />
+              </div>
+              <h3 className="font-semibold text-white mb-2">{t.seo.edgeDetectionTitle}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">{t.seo.edgeDetectionText}</p>
+            </div>
+            <div className="group relative p-6 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.04] hover:border-purple-500/20 transition-all duration-300">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/30 to-purple-600/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <BadgeCheck className="w-7 h-7 text-purple-400" />
+              </div>
+              <h3 className="font-semibold text-white mb-2">{t.seo.verifiedPicksTitle}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">{t.seo.verifiedPicksText}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Sports Covered - Tag Cloud */}
+        <div className="rounded-3xl bg-gradient-to-br from-white/[0.02] to-transparent border border-white/[0.06] p-8">
+          <h2 className="text-xl font-bold text-white mb-6">{t.seo.sportsTitle}</h2>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {t.seo.sportLinks.map(({ label, league }) => (
+              <Link 
+                key={league} 
+                href={`${locale === 'sr' ? '/sr' : ''}/matches?league=${league}`}
+                className="group px-4 py-2 bg-white/[0.04] hover:bg-purple-500/20 border border-white/[0.06] hover:border-purple-500/30 text-gray-400 hover:text-white text-sm rounded-xl transition-all duration-200"
+              >
+                <span className="group-hover:translate-x-0.5 inline-block transition-transform duration-200">{label}</span>
+              </Link>
+            ))}
+          </div>
+          <p className="text-gray-500 text-sm leading-relaxed max-w-3xl">
+            {t.seo.sportsText}
           </p>
-          <Link
-            href="/pricing"
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-black font-bold px-8 py-4 rounded-xl transition-colors text-lg"
-          >
-            <Sparkles className="w-5 h-5" />
-            {locale === 'sr' ? 'Nadogradi na Pro' : 'Upgrade to Pro'}
-            <ChevronRight className="w-5 h-5" />
-          </Link>
+        </div>
+
+        {/* FAQ - Accordion Style */}
+        <div className="rounded-3xl bg-gradient-to-br from-white/[0.02] to-transparent border border-white/[0.06] p-8">
+          <h2 className="text-xl font-bold text-white mb-6">{t.seo.faqTitle}</h2>
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+              <h3 className="font-medium text-white text-sm mb-2 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-xs text-purple-400">Q</span>
+                {t.seo.faq1Q}
+              </h3>
+              <p className="text-gray-500 text-sm leading-relaxed pl-7">{t.seo.faq1A}</p>
+            </div>
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+              <h3 className="font-medium text-white text-sm mb-2 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-xs text-purple-400">Q</span>
+                {t.seo.faq2Q}
+              </h3>
+              <p className="text-gray-500 text-sm leading-relaxed pl-7">{t.seo.faq2A}</p>
+            </div>
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+              <h3 className="font-medium text-white text-sm mb-2 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-xs text-purple-400">Q</span>
+                {t.seo.faq3Q}
+              </h3>
+              <p className="text-gray-500 text-sm leading-relaxed pl-7">{t.seo.faq3A}</p>
+            </div>
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+              <h3 className="font-medium text-white text-sm mb-2 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-xs text-purple-400">Q</span>
+                {t.seo.faq4Q}
+              </h3>
+              <p className="text-gray-500 text-sm leading-relaxed pl-7">{t.seo.faq4A}</p>
+            </div>
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+              <h3 className="font-medium text-white text-sm mb-2 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-xs text-purple-400">Q</span>
+                {t.seo.faq5Q}
+              </h3>
+              <p className="text-gray-500 text-sm leading-relaxed pl-7">{t.seo.faq5A}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pro CTA - Premium */}
+      {!isPro && data.picks.length > 0 && (
+        <div className="mt-16 relative overflow-hidden rounded-3xl border border-purple-500/20">
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-purple-800/10 to-transparent" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+          
+          <div className="relative p-10 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/30 to-purple-500/20 flex items-center justify-center mx-auto mb-5 backdrop-blur-sm border border-white/10">
+              <Unlock className="w-7 h-7 text-accent" />
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+              {locale === 'sr' ? 'Otključaj Sve Pikove' : 'Unlock All Picks'}
+            </h3>
+            <p className="text-gray-400 mb-8 max-w-lg mx-auto">
+              {locale === 'sr' 
+                ? 'Dobij selekcije, kvote, formu, reasoning i detaljan edge za svaki pick'
+                : 'Get selections, odds, form, reasoning and detailed edge analysis for every pick'
+              }
+            </p>
+            <Link
+              href="/pricing#pro"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-black font-bold px-10 py-4 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-accent/20 hover:shadow-accent/30 hover:scale-[1.02]"
+            >
+              <Sparkles className="w-5 h-5" />
+              {locale === 'sr' ? 'Nadogradi na Pro' : 'Upgrade to Pro'}
+              <ChevronRight className="w-5 h-5" />
+            </Link>
+          </div>
         </div>
       )}
     </div>

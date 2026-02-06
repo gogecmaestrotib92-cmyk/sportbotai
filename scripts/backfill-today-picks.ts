@@ -87,7 +87,7 @@ async function backfillToday() {
       await prisma.prediction.update({
         where: { id: p.id },
         data: {
-          modelProbability: Math.round(modelProb * 10) / 10,
+          modelProbability: Math.round(modelProb * 100 * 10) / 10, // Convert to percentage with 1 decimal
           edgeValue: Math.round(edgeVal * 10) / 10,
           edgeBucket,
           headline: headline || null,

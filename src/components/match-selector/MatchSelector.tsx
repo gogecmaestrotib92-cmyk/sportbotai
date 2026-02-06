@@ -391,7 +391,7 @@ export default function MatchSelector({ onResult, onLoading }: MatchSelectorProp
                 {usageInfo.plan === 'FREE' && ' Upgrade for 30 analyses per day.'}
               </p>
               <Link
-                href="/pricing"
+                href="/pricing#pro"
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-accent-dark text-white text-sm font-medium rounded-lg transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

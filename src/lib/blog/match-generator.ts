@@ -1166,7 +1166,7 @@ ${predictionBoxTemplate}
     <p style="color: #fff; font-size: 16px; font-weight: 600; margin: 0;">Unlock Advanced Stats</p>
   </div>
   <p style="color: #fff; font-size: 14px; margin: 0 0 16px 0;">Our AI analyzes 50+ data points including ${sportMetrics}.</p>
-  <a href="/pricing" style="color: #0ea5e9; text-decoration: none; font-weight: 500;">See Pro Features →</a>
+  <a href="/pricing#pro" style="color: #0ea5e9; text-decoration: none; font-weight: 500;">See Pro Features →</a>
 </div>
 
 8. CTA BOX - AFTER TACTICAL ANALYSIS:
@@ -1189,7 +1189,7 @@ ${predictionBoxTemplate}
   <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin: 0 0 20px 0; max-width: 500px; margin-left: auto; margin-right: auto;">Join thousands of sports fans using AI-powered insights to understand matches better.</p>
   <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
     <a href="/register" style="display: inline-block; background: #fff; color: #10b981; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">Start Free Trial</a>
-    <a href="/pricing" style="display: inline-block; background: transparent; color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; border: 2px solid #fff;">View Plans</a>
+    <a href="/pricing#pro" style="display: inline-block; background: transparent; color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; border: 2px solid #fff;">View Plans</a>
   </div>
 </div>
 

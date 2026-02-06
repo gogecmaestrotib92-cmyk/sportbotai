@@ -11,6 +11,7 @@ export const translations = {
     // Header
     header: {
       home: 'Home',
+      picks: 'Picks',
       analyze: 'Analyze',
       aiDesk: 'AI Desk',
       alerts: 'Alerts',
@@ -439,6 +440,7 @@ export const translations = {
     // Header
     header: {
       home: 'Početna',
+      picks: 'Pikovi',
       analyze: 'Analiza',
       aiDesk: 'AI Pomoćnik',
       alerts: 'Alarmi',
@@ -866,6 +868,7 @@ export const translations = {
 export type TranslationsType = {
   header: {
     home: string;
+    picks: string;
     analyze: string;
     aiDesk: string;
     alerts: string;

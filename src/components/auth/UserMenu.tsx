@@ -287,7 +287,7 @@ export function UserMenu() {
             
             {isPro && !isPremium && (
               <Link
-                href={localePath('/pricing')}
+                href={localePath('/pricing#premium')}
                 onClick={closeMenu}
                 className="flex items-center gap-3 px-4 py-2 text-sm bg-gradient-to-r from-slate-300 via-slate-100 to-slate-300 bg-clip-text text-transparent hover:from-white hover:via-slate-200 hover:to-white hover:bg-slate-500/10 transition-colors font-semibold"
                 role="menuitem"

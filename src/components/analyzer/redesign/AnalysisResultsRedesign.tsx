@@ -291,7 +291,7 @@ export default function AnalysisResultsRedesign({ result, locale = 'en' }: Analy
               {t.proDescription}
             </p>
             <Link
-              href="/pricing"
+              href="/pricing#pro"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-medium rounded-xl transition-colors"
             >
               {t.upgradeToPro} - €9.99/mo

@@ -29,7 +29,7 @@ export default function ProBadge({
   if (!isPro && showUpgrade) {
     return (
       <a
-        href="/pricing"
+        href="/pricing#pro"
         className={`
           inline-flex items-center gap-1.5 px-2.5 py-1 
           bg-gradient-to-r from-amber-500/10 to-orange-500/10 

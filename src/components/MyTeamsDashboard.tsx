@@ -403,7 +403,7 @@ export default function MyTeamsDashboard() {
                 </p>
               </div>
               <Link
-                href="/pricing"
+                href="/pricing#pro"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent text-bg rounded-xl font-semibold hover:bg-accent-green transition-colors whitespace-nowrap"
               >
                 View Pro Plans

@@ -16,6 +16,7 @@ import dynamic from 'next/dynamic';
 import Hero from '@/components/Hero';
 import LeagueScroll from '@/components/LeagueScroll';
 import TrendingSectionServer from '@/components/TrendingSectionServer';
+import DailyPicksSection from '@/components/DailyPicksSection';
 import { TrustBadges } from '@/components/SocialProof';
 import { getOrganizationSchema, getWebsiteSchema, getMatchAnalyzerSchema, getAIDeskSchema, getHomepageFAQSchema, getHomeBreadcrumb } from '@/lib/seo';
 
@@ -100,6 +101,9 @@ export default function HomePage() {
 
       {/* League logos - infinite scroll */}
       <LeagueScroll />
+
+      {/* Daily Picks - AI value picks with edge */}
+      <DailyPicksSection locale="en" />
 
       {/* Trending matches - server-rendered for fast LCP */}
       <TrendingSectionServer maxMatches={6} />

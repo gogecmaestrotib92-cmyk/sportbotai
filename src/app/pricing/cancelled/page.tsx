@@ -54,7 +54,7 @@ export default function CancelledPage() {
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
-            href="/pricing"
+            href="/pricing#pro"
             className="btn-primary inline-flex items-center justify-center gap-2"
           >
             View Plans Again

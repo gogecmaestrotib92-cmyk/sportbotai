@@ -77,7 +77,7 @@ export default function UsageLimitBanner({
               You&apos;ve used your free analysis. Upgrade to Pro for 30 analyses per day.
             </p>
             <Link
-              href="/pricing"
+              href="/pricing#pro"
               className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
             >
               <Zap className="w-4 h-4" />
@@ -115,7 +115,7 @@ export default function UsageLimitBanner({
                 Want more? Upgrade for 30/day.
               </p>
               <Link
-                href="/pricing"
+                href="/pricing#pro"
                 className="text-sm text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1"
               >
                 Upgrade
