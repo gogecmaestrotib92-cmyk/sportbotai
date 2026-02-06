@@ -232,6 +232,8 @@ function PickCard({ pick, isPro, rank, locale = 'en' }: { pick: Pick; isPro: boo
     unlockDetails: locale === 'sr' ? 'Otključaj edge %, verovatnoće i analizu' : 'Unlock edge %, probabilities & full analysis',
     unlockPick: locale === 'sr' ? 'Otključaj Pik' : 'Unlock Pick',
     viewFullAnalysis: locale === 'sr' ? 'Pogledaj Celu Analizu' : 'View Full Analysis',
+    ourPick: locale === 'sr' ? 'Naš Pik' : 'Our Pick',
+    underdogValue: locale === 'sr' ? 'Underdog Value' : 'Underdog Value',
   };
   
   // Format probabilities (already stored as percentages like 36.41)
@@ -239,10 +241,11 @@ function PickCard({ pick, isPro, rank, locale = 'en' }: { pick: Pick; isPro: boo
   const homeProb = probs?.home ? Math.round(probs.home) : null;
   const awayProb = probs?.away ? Math.round(probs.away) : null;
   
-  // Determine favored team based on probabilities
-  const favoredTeam = homeProb && awayProb 
+  // Determine if pick is an underdog (selection != expected winner)
+  const expectedWinner = homeProb && awayProb 
     ? homeProb > awayProb ? pick.homeTeam : pick.awayTeam
     : null;
+  const isUnderdogPick = pick.selection && expectedWinner && pick.selection !== expectedWinner;
 
   return (
     <article className="group relative bg-[#FFF3E0] rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 tracking-wide h-full flex flex-col">
@@ -311,12 +314,20 @@ function PickCard({ pick, isPro, rank, locale = 'en' }: { pick: Pick; isPro: boo
         <div className="flex-1 flex flex-col">
         {!pick.locked && pick.selection ? (
           <>
-            {/* Our Pick - Clean typography */}
+            {/* Our Pick - Clean typography with "Value Pick" label */}
             <div className="text-center mb-4 min-h-[3.5rem] flex flex-col justify-center">
+              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">{t.ourPick}</p>
               <p className="text-lg font-bold text-[#000000]">{pick.selection}</p>
-              {pick.odds && (
-                <p className="text-purple-700 text-sm font-semibold">@ {pick.odds.toFixed(2)}</p>
-              )}
+              <div className="flex items-center justify-center gap-2 mt-1">
+                {pick.odds && (
+                  <span className="text-purple-700 text-sm font-semibold">@ {pick.odds.toFixed(2)}</span>
+                )}
+                {isUnderdogPick && (
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                    {t.underdogValue}
+                  </span>
+                )}
+              </div>
             </div>
             
             {/* Headline */}
