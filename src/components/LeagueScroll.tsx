@@ -1,14 +1,17 @@
 /**
- * Infinite League Logos Scroll - v8.0
+ * Infinite League Logos Scroll - v9.0
  * 
- * GPU-accelerated marquee using translate3d for silky smooth animation.
- * Reduced motion support for accessibility.
+ * Optimized for mobile performance:
+ * - Uses CSS-only animation without will-change (avoids GPU memory leak)
+ * - Lightweight img tags instead of Next/Image for static external URLs
+ * - Hardware acceleration via transform3d
+ * - Pauses animation when not visible (IntersectionObserver)
  */
 
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
 
 const leagues = [
   { name: 'Premier League', logo: 'https://media.api-sports.io/football/leagues/39.png', key: 'soccer_epl' },
@@ -28,14 +31,16 @@ const LeagueItem = ({ league }: { league: typeof leagues[0] }) => (
     href={`/matches?league=${league.key}`}
     className="flex-shrink-0 flex items-center gap-3 px-4 py-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors"
   >
-    <div className="relative w-10 h-10 flex-shrink-0 bg-white rounded-lg p-1.5">
-      <Image
+    <div className="w-10 h-10 flex-shrink-0 bg-white rounded-lg p-1.5 flex items-center justify-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src={league.logo}
         alt={`${league.name} logo`}
-        fill
-        sizes="40px"
-        className="object-contain p-0.5"
+        width={28}
+        height={28}
+        className="object-contain"
         loading="lazy"
+        decoding="async"
       />
     </div>
     <span className="text-sm font-semibold text-gray-300 whitespace-nowrap">
@@ -45,26 +50,43 @@ const LeagueItem = ({ league }: { league: typeof leagues[0] }) => (
 );
 
 export default function LeagueScroll() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Pause animation when not visible to save resources
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+    
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="py-8 bg-bg-primary border-y border-white/5 overflow-hidden">
+    <section ref={containerRef} className="py-8 bg-bg-primary border-y border-white/5 overflow-hidden">
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes marquee {
+        @keyframes league-scroll {
           0% { transform: translate3d(0, 0, 0); }
           100% { transform: translate3d(-50%, 0, 0); }
         }
-        .marquee-wrapper {
+        .league-marquee {
           display: flex;
           width: max-content;
-          animation: marquee 30s linear infinite;
-          will-change: transform;
-          backface-visibility: hidden;
-          perspective: 1000px;
+          animation: league-scroll 35s linear infinite;
         }
-        .marquee-wrapper:hover {
+        .league-marquee.paused {
+          animation-play-state: paused;
+        }
+        .league-marquee:hover {
           animation-play-state: paused;
         }
         @media (prefers-reduced-motion: reduce) {
-          .marquee-wrapper {
+          .league-marquee {
             animation: none;
           }
         }
@@ -83,7 +105,7 @@ export default function LeagueScroll() {
           <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-bg-primary to-transparent z-10 pointer-events-none" />
 
           {/* Single wrapper with duplicated content for seamless loop */}
-          <div className="marquee-wrapper">
+          <div className={`league-marquee ${!isVisible ? 'paused' : ''}`}>
             <div className="flex gap-4 pr-4">
               {leagues.map((league) => (
                 <LeagueItem key={`a-${league.key}`} league={league} />
