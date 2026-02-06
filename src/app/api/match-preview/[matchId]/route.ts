@@ -20,6 +20,7 @@ import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { applyConvictionCap, type ModelInput } from '@/lib/accuracy-core/types';
 import { getExpectedScores } from '@/lib/accuracy-core/prediction-models';
+import { runAccuracyPipeline, type PipelineInput } from '@/lib/accuracy-core';
 import { isBase64, parseMatchSlug, decodeBase64MatchId } from '@/lib/match-utils';
 
 // Force dynamic rendering (uses headers/session)
@@ -1573,6 +1574,76 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       console.log('[Match-Preview] Could not fetch opening odds for steam detection');
     }
 
+    // ============================================
+    // RUN ACCURACY PIPELINE - UNIFIED PROBABILITY SOURCE
+    // ============================================
+    // This ensures match-preview uses the SAME Poisson/Elo model as pre-analyze cron
+    // Consistent probability calculations across ALL entry points
+    let pipelineProbabilities: { home: number; away: number; draw?: number | null } | undefined;
+    
+    if (odds) {
+      try {
+        const sportConfig = getSportConfig(matchInfo.sport);
+        
+        // Format odds for pipeline (BookmakerOdds format)
+        const pipelineOdds = [{
+          bookmaker: 'consensus',
+          homeOdds: odds.homeOdds,
+          awayOdds: odds.awayOdds,
+          drawOdds: sportConfig.hasDraw ? (odds.drawOdds || 3.5) : undefined,
+        }];
+
+        const pipelineInput: PipelineInput = {
+          matchId: matchId,  // Use route param (already string)
+          sport: matchInfo.sport,
+          league: matchInfo.league || '',
+          homeTeam: matchInfo.homeTeam,
+          awayTeam: matchInfo.awayTeam,
+          kickoff: matchInfo.kickoff ? new Date(matchInfo.kickoff) : new Date(),
+          homeStats: {
+            played: homeStats.played || 0,
+            wins: homeStats.wins || 0,
+            draws: homeStats.draws || 0,
+            losses: homeStats.losses || 0,
+            scored: homeStats.goalsScored || 0,
+            conceded: homeStats.goalsConceded || 0,
+          },
+          awayStats: {
+            played: awayStats.played || 0,
+            wins: awayStats.wins || 0,
+            draws: awayStats.draws || 0,
+            losses: awayStats.losses || 0,
+            scored: awayStats.goalsScored || 0,
+            conceded: awayStats.goalsConceded || 0,
+          },
+          homeForm: homeFormStr,
+          awayForm: awayFormStr,
+          h2h: h2h.totalMeetings > 0 ? {
+            total: h2h.totalMeetings,
+            homeWins: h2h.homeWins,
+            awayWins: h2h.awayWins,
+            draws: h2h.draws,
+          } : undefined,
+          odds: pipelineOdds,
+          config: { logPredictions: false, minEdgeToShow: 0.02 },
+        };
+
+        const pipelineResult = await runAccuracyPipeline(pipelineInput);
+        
+        // Extract calibrated probabilities - SAME as pre-analyze
+        pipelineProbabilities = {
+          home: pipelineResult.details.calibratedProbabilities.home,
+          away: pipelineResult.details.calibratedProbabilities.away,
+          draw: pipelineResult.details.calibratedProbabilities.draw || null,
+        };
+        
+        console.log(`[Match-Preview] Pipeline: H:${(pipelineProbabilities.home * 100).toFixed(1)}% A:${(pipelineProbabilities.away * 100).toFixed(1)}%${pipelineProbabilities.draw ? ` D:${(pipelineProbabilities.draw * 100).toFixed(1)}%` : ''} (method: ${pipelineResult.details.rawProbabilities.method})`);
+      } catch (pipelineError) {
+        console.error('[Match-Preview] Pipeline calculation failed:', pipelineError);
+        // Will fall back to heuristic model in analyzeMarket
+      }
+    }
+
     // Calculate market intel using AI signals + odds (only if we have both)
     let marketIntel: MarketIntel | null = null;
     if (odds && aiAnalysis?.universalSignals) {
@@ -1585,7 +1656,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           odds,
           sportConfig.hasDraw,
           previousOdds,  // Now passing previous odds for steam/RLM detection!
-          leagueKey
+          leagueKey,
+          pipelineProbabilities  // UNIFIED: Use same probabilities as pre-analyze!
         );
         console.log(`[Match-Preview] Market intel: ${marketIntel.recommendation}, edge: ${marketIntel.valueEdge?.edgePercent || 0}%${marketIntel.lineMovement?.isSteamMove ? ' [STEAM MOVE DETECTED]' : ''}`);
       } catch (miError) {
