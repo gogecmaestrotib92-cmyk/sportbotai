@@ -59,8 +59,13 @@ export async function GET(request: NextRequest) {
     // Build where clause
     // DAILY PICKS = Picks where we have BOTH:
     // 1. An edge (market is mispriced) - minimum 2%
-    // 2. High model confidence - we're sure about the outcome (>= 50%)
-    // This ensures we show SAFE picks with value, not long-shot underdogs
+    // 2. Reasonable model probability (>= 35%)
+    // 
+    // NOTE: Value betting often means betting UNDERDOGS where market 
+    // underestimates their chances. A 35% win probability underdog with
+    // 10% edge is better than a 55% favorite with 2% edge.
+    // 
+    // We lowered threshold from 50% to 35% to include quality underdog value bets.
     const whereClause = {
       kickoff: {
         gte: now,
@@ -71,10 +76,10 @@ export async function GET(request: NextRequest) {
       edgeValue: {
         gte: 2, // At least 2% edge
       },
-      // Must be a CONFIDENT pick (favorite, not underdog)
-      // This filters out "long shot value bets" with 20-30% win probability
+      // Reasonable probability - not extreme longshots
+      // 35% threshold allows quality underdog value bets
       modelProbability: {
-        gte: 50, // At least 50% model confidence = we think they'll win
+        gte: 35, // Allow underdogs with decent win chance
       },
       // Must have fullResponse (properly analyzed)
       NOT: {
@@ -105,6 +110,8 @@ export async function GET(request: NextRequest) {
         edgeBucket: true,
         modelProbability: true,
         marketOddsAtPrediction: true,
+        odds: true,  // Direct odds field
+        valueBetOdds: true,  // Fallback odds
         selection: true,
         valueBetSide: true,
         homeWin: true,
@@ -161,12 +168,19 @@ export async function GET(request: NextRequest) {
       }
       const displayHeadline = frHeadline || headlineText || 'AI has identified an opportunity in this match';
 
-      // Free users get teaser with probabilities but no selection/edge
+      // Determine selection (pick) - fallback chain
+      const pickSelection = pred.selection || pred.valueBetSide || null;
+      
+      // Determine odds - fallback chain  
+      const pickOdds = pred.marketOddsAtPrediction || pred.odds || pred.valueBetOdds || null;
+
+      // Free users get teaser with pick/odds visible but detailed analysis locked
       if (!isPro) {
         return {
           ...basePick,
-          selection: null,
-          odds: null,
+          // Show pick and odds to all - this is the "hook" to upgrade
+          selection: pickSelection,
+          odds: pickOdds,
           // Show probabilities to all users (teaser value)
           probabilities: {
             home: pred.homeWin,
@@ -176,7 +190,7 @@ export async function GET(request: NextRequest) {
           // Teaser content
           headline: displayHeadline,
           locked: true,
-          // No detailed analysis
+          // No detailed analysis - this is the premium content
           analysis: null,
         };
       }
@@ -294,8 +308,8 @@ export async function GET(request: NextRequest) {
       // Pro users get full editorial content
       return {
         ...basePick,
-        selection: pred.selection || pred.valueBetSide,
-        odds: pred.marketOddsAtPrediction,
+        selection: pickSelection,
+        odds: pickOdds,
         probabilities: {
           home: pred.homeWin,
           draw: pred.draw,

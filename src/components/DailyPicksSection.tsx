@@ -191,24 +191,32 @@ function PickCard({ pick, isPro }: { pick: Pick; isPro: boolean }) {
           )}
           
           <div className={isLocked ? 'blur-sm select-none' : ''}>
-            <div className="flex items-center justify-between text-sm py-1.5 border-b border-zinc-100">
-              <span className="text-[#000000] font-semibold">AI Edge</span>
-              <span className={`font-mono font-semibold ${(pick.edgeValue || 0) >= 5 ? 'text-green-600' : 'text-blue-600'}`}>
+            {/* Pick Selection - Most Important */}
+            <div className="flex items-center justify-between text-sm py-2 border-b border-zinc-100">
+              <span className="text-[#000000] font-semibold">Our Pick</span>
+              <span className="text-purple-700 font-bold">
+                {pick.selection || 'Home Win'}
+              </span>
+            </div>
+            
+            {/* Value Edge - Why we like it */}
+            <div className="flex items-center justify-between text-sm py-2 border-b border-zinc-100">
+              <span className="text-[#000000] font-semibold">Value Edge</span>
+              <span className={`font-mono font-bold ${(pick.edgeValue || 0) >= 5 ? 'text-green-600' : 'text-blue-600'}`}>
                 {pick.edgeValue ? `+${pick.edgeValue.toFixed(1)}%` : '+4.2%'}
               </span>
             </div>
             
-            <div className="flex items-center justify-between text-sm py-1.5 border-b border-zinc-100">
-              <span className="text-[#000000] font-semibold">Confidence</span>
-              <span className="text-[#000000] font-medium">
-                {pick.confidence ? `${pick.confidence.toFixed(0)}%` : '62%'}
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between text-sm py-1.5">
-              <span className="text-[#000000] font-semibold">Pick</span>
+            {/* Win Probability + Odds */}
+            <div className="flex items-center justify-between text-sm py-2">
               <span className="text-[#000000] font-semibold">
-                {pick.selection || 'Home Win'}
+                {(pick.confidence || 0) >= 50 ? 'Win Prob' : 'Odds'}
+              </span>
+              <span className="text-[#000000] font-medium">
+                {(pick.confidence || 0) >= 50 
+                  ? `${pick.confidence?.toFixed(0)}%`
+                  : pick.odds ? `@${pick.odds.toFixed(2)}` : '@3.50'
+                }
               </span>
             </div>
           </div>
