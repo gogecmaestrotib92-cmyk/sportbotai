@@ -1,8 +1,11 @@
 /**
  * Editorial Picks API
  * 
- * Returns top 3 picks with full analysis data for editorial content.
+ * Returns top picks with full analysis data for editorial content.
  * Sorted by model confidence (not edge) for "safest" picks.
+ * 
+ * CACHING: Picks are cached for the entire day to ensure consistency.
+ * The same picks appear all day, regardless of new data arriving.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -13,6 +16,24 @@ import { Prisma } from '@prisma/client';
 import { generateMatchSlug } from '@/lib/match-utils';
 
 export const dynamic = 'force-dynamic';
+
+// In-memory cache for daily picks
+// Key format: "YYYY-MM-DD" -> cached picks data
+interface CachedPicks {
+  date: string;
+  pickIds: string[]; // Store just IDs, fetch fresh data each time for user-specific content
+  generatedAt: Date;
+}
+
+let dailyPicksCache: CachedPicks | null = null;
+
+/**
+ * Get today's date string in YYYY-MM-DD format (UTC)
+ */
+function getTodayKey(): string {
+  const now = new Date();
+  return now.toISOString().split('T')[0];
+}
 
 interface FullResponse {
   story?: string;
@@ -98,56 +119,76 @@ export async function GET(request: NextRequest) {
     // Parse query params
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '3'), 12);
+    const forceRefresh = searchParams.get('refresh') === 'true'; // Admin override
     
-    // Get upcoming date range (next 3 days to catch weekend matches)
+    // Get today's date key for caching
+    const todayKey = getTodayKey();
     const now = new Date();
-    const futureLimit = new Date(now);
-    futureLimit.setUTCDate(futureLimit.getUTCDate() + 3);
-    futureLimit.setUTCHours(23, 59, 59, 999);
+    
+    // Check if we have cached picks for today
+    const hasCachedPicks = dailyPicksCache && 
+                           dailyPicksCache.date === todayKey && 
+                           dailyPicksCache.pickIds.length > 0 &&
+                           !forceRefresh;
+    
+    let predictionIds: string[];
+    
+    if (hasCachedPicks) {
+      // Use cached pick IDs - same picks all day!
+      predictionIds = dailyPicksCache!.pickIds;
+      console.log(`[Editorial Picks] Using cached picks from ${dailyPicksCache!.generatedAt.toISOString()} (${predictionIds.length} picks)`);
+    } else {
+      // Generate new picks for today
+      console.log(`[Editorial Picks] Generating fresh picks for ${todayKey}`);
+      
+      const futureLimit = new Date(now);
+      futureLimit.setUTCDate(futureLimit.getUTCDate() + 3);
+      futureLimit.setUTCHours(23, 59, 59, 999);
 
-    // Build where clause
-    // DAILY PICKS = Picks where we have BOTH:
-    // 1. An edge (market is mispriced) - minimum 2%
-    // 2. Reasonable model probability (>= 35%)
-    // 
-    // NOTE: Value betting often means betting UNDERDOGS where market 
-    // underestimates their chances. A 35% win probability underdog with
-    // 10% edge is better than a 55% favorite with 2% edge.
-    // 
-    // We lowered threshold from 50% to 35% to include quality underdog value bets.
-    const whereClause = {
-      kickoff: {
-        gte: now,
-        lte: futureLimit,
-      },
-      outcome: 'PENDING' as const,
-      // Must have meaningful edge (market is wrong)
-      edgeValue: {
-        gte: 2, // At least 2% edge
-      },
-      // Reasonable probability - not extreme longshots
-      // 35% threshold allows quality underdog value bets
-      modelProbability: {
-        gte: 35, // Allow underdogs with decent win chance
-      },
-      // Must have fullResponse (properly analyzed)
-      NOT: {
-        fullResponse: { equals: Prisma.DbNull },
-      },
-    };
+      // Build where clause for selecting daily picks
+      const whereClause = {
+        kickoff: {
+          gte: now,
+          lte: futureLimit,
+        },
+        outcome: 'PENDING' as const,
+        edgeValue: { gte: 2 },
+        modelProbability: { gte: 35 },
+        NOT: {
+          fullResponse: { equals: Prisma.DbNull },
+        },
+      };
 
-    // Get total count for "X more picks" display
-    const totalCount = await prisma.prediction.count({ where: whereClause });
+      // Get top picks sorted by model probability then edge
+      const freshPicks = await prisma.prediction.findMany({
+        where: whereClause,
+        orderBy: [
+          { modelProbability: 'desc' },
+          { edgeValue: 'desc' },
+        ],
+        take: 12, // Cache up to 12 picks
+        select: { id: true },
+      });
 
-    // Sort by CONFIDENCE first (safest picks), then by edge (best value)
-    // This gives us picks where: we're confident AND market is wrong
+      predictionIds = freshPicks.map(p => p.id);
+
+      // Cache the pick IDs for the rest of the day
+      dailyPicksCache = {
+        date: todayKey,
+        pickIds: predictionIds,
+        generatedAt: now,
+      };
+      
+      console.log(`[Editorial Picks] Cached ${predictionIds.length} picks for ${todayKey}`);
+    }
+
+    // Now fetch full data for the cached pick IDs
+    // Filter out any picks that have already started (kickoff < now)
     const predictions = await prisma.prediction.findMany({
-      where: whereClause,
-      orderBy: [
-        { modelProbability: 'desc' }, // Primary: highest confidence (safest picks)
-        { edgeValue: 'desc' },        // Secondary: best edge (biggest market error)
-      ],
-      take: limit,
+      where: {
+        id: { in: predictionIds.slice(0, limit) },
+        kickoff: { gt: now }, // Only include picks that haven't started yet
+      },
       select: {
         id: true,
         matchId: true,
@@ -159,8 +200,8 @@ export async function GET(request: NextRequest) {
         edgeBucket: true,
         modelProbability: true,
         marketOddsAtPrediction: true,
-        odds: true,  // Direct odds field
-        valueBetOdds: true,  // Fallback odds
+        odds: true,
+        valueBetOdds: true,
         selection: true,
         valueBetSide: true,
         homeWin: true,
@@ -172,6 +213,14 @@ export async function GET(request: NextRequest) {
         fullResponse: true,
       },
     });
+
+    // Sort by the original cached order
+    const idOrder = new Map(predictionIds.map((id, idx) => [id, idx]));
+    predictions.sort((a, b) => (idOrder.get(a.id) ?? 999) - (idOrder.get(b.id) ?? 999));
+
+    // Get total count (how many cached picks are still valid)
+    const validPickIds = predictionIds.filter(id => predictions.some(p => p.id === id));
+    const totalCount = validPickIds.length;
 
     // Transform to editorial format
     const picks = predictions.map((pred, index) => {
