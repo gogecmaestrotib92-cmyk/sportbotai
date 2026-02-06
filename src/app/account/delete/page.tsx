@@ -154,8 +154,8 @@ export default function DeleteAccountPage() {
         {/* Email support note */}
         <p className="text-center text-text-muted text-xs mt-8">
           Need help? Contact us at{' '}
-          <a href="mailto:support@sportbot.ai" className="text-primary hover:underline">
-            support@sportbot.ai
+          <a href="mailto:contact@sportbotai.com" className="text-primary hover:underline">
+            contact@sportbotai.com
           </a>
         </p>
       </div>

@@ -13,7 +13,7 @@ import { authOptions } from '@/lib/auth';
 
 const ADMIN_EMAILS = [
     'aiinstamarketing@gmail.com',
-    'admin@sportbot.ai',
+    'admin@sportbotai.com',
 ];
 
 export async function POST(request: NextRequest) {

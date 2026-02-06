@@ -94,7 +94,7 @@ export default function CopyInsightsButton({
     sections.push('---')
     sections.push('🤖 Analysis by SportBot AI')
     sections.push('⚠️ For educational purposes only. Gamble responsibly.')
-    sections.push('🔗 sportbot.ai')
+    sections.push('🔗 sportbotai.com')
 
     return sections.join('\n')
   }, [matchInfo, getVerdict, tacticalAnalysis, valueAnalysis, riskAnalysis, momentumAndForm])

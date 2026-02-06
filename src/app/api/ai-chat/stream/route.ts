@@ -2906,7 +2906,7 @@ If their favorite team has a match today/tonight, lead with that information.`;
             try {
               // Call the analyze API directly
               const protocol = request.headers.get('x-forwarded-proto') || 'https';
-              const host = request.headers.get('host') || 'sportbot.ai';
+              const host = request.headers.get('host') || 'www.sportbotai.com';
               const baseUrl = `${protocol}://${host}`;
               const cookies = request.headers.get('cookie') || '';
 

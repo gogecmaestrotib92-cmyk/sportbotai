@@ -22,7 +22,7 @@ import type { QueryIntent } from '@/lib/query-intelligence';
 export async function GET(request: NextRequest) {
   // Only allow admin users
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email || !['admin@sportbot.ai', 'stefan@sportbot.ai'].includes(session.user.email)) {
+  if (!session?.user?.email || !['admin@sportbotai.com', 'stefan@sportbotai.com'].includes(session.user.email)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   

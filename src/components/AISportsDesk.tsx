@@ -347,7 +347,7 @@ export function StandaloneAgentPost({ post }: { post: AgentPost }) {
 
       {/* Footer */}
       <div className="flex items-center justify-between text-xs text-text-muted">
-        <span>sportbot.ai</span>
+        <span>sportbotai.com</span>
         <span>{new Date(post.timestamp).toLocaleTimeString()}</span>
       </div>
     </div>

@@ -526,7 +526,7 @@ export async function fetchMatchPreviewOrAnalysis(
     request: NextRequest
 ): Promise<MatchAnalysisResult> {
     const protocol = request.headers.get('x-forwarded-proto') || 'https';
-    const host = request.headers.get('host') || 'sportbot.ai';
+    const host = request.headers.get('host') || 'www.sportbotai.com';
     const baseUrl = `${protocol}://${host}`;
     const cookies = request.headers.get('cookie') || '';
     const authHeader = request.headers.get('authorization') || '';

@@ -20,7 +20,7 @@ async function main() {
   
   if (cappers.blogSlug && cappers.contactEmail) {
     console.log('\n📧 Sending outreach email...');
-    const reviewUrl = `https://sportbot.ai/blog/${cappers.blogSlug}`;
+    const reviewUrl = `https://www.sportbotai.com/blog/${cappers.blogSlug}`;
     const sent = await sendToolReviewOutreach(
       cappers.contactEmail,
       cappers.toolName,

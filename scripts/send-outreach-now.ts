@@ -29,7 +29,7 @@ async function main() {
   let failed = 0;
   
   for (const tool of ready) {
-    const reviewUrl = `https://sportbot.ai/blog/${tool.blogSlug}`;
+    const reviewUrl = `https://www.sportbotai.com/blog/${tool.blogSlug}`;
     console.log(`📧 ${tool.toolName} -> ${tool.contactEmail}`);
     
     try {

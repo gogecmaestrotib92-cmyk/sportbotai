@@ -13,7 +13,7 @@ import { prisma } from '@/lib/prisma';
 
 const ADMIN_EMAILS = [
     'aiinstamarketing@gmail.com',
-    'admin@sportbot.ai',
+    'admin@sportbotai.com',
 ];
 
 export async function DELETE(
