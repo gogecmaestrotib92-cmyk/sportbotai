@@ -1026,12 +1026,12 @@ ${analysis.marketInsights.map(m => `• ${m}`).join('\n')}
     <h3 style="color: #10b981; font-size: 18px; font-weight: bold; margin: 0;">SportBot AI Prediction</h3>
   </div>
   <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center; margin-bottom: 16px;">
-    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
-      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">${match.homeTeam}</p>
+    <div style="background: #1e293b; padding: 16px; border-radius: 8px; overflow: hidden;">
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px; overflow-wrap: break-word; word-wrap: break-word;">${match.homeTeam}</p>
       <p style="font-size: 24px; font-weight: bold; color: #fff;">[HOME_%]%</p>
     </div>
-    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
-      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Draw</p>
+    <div style="background: #1e293b; padding: 16px; border-radius: 8px; overflow: hidden;">
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px; overflow-wrap: break-word; word-wrap: break-word;">Draw</p>
       <p style="font-size: 24px; font-weight: bold; color: #fff;">[DRAW_%]%</p>
     </div>
     <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
@@ -1047,12 +1047,12 @@ ${analysis.marketInsights.map(m => `• ${m}`).join('\n')}
     <h3 style="color: #10b981; font-size: 18px; font-weight: bold; margin: 0;">SportBot AI Prediction</h3>
   </div>
   <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; text-align: center; margin-bottom: 16px;">
-    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
-      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">${match.homeTeam}</p>
+    <div style="background: #1e293b; padding: 16px; border-radius: 8px; overflow: hidden;">
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px; overflow-wrap: break-word; word-wrap: break-word;">${match.homeTeam}</p>
       <p style="font-size: 24px; font-weight: bold; color: #fff;">[HOME_%]%</p>
     </div>
-    <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
-      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">${match.awayTeam}</p>
+    <div style="background: #1e293b; padding: 16px; border-radius: 8px; overflow: hidden;">
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px; overflow-wrap: break-word; word-wrap: break-word;">${match.awayTeam}</p>
       <p style="font-size: 24px; font-weight: bold; color: #fff;">[AWAY_%]%</p>
     </div>
   </div>

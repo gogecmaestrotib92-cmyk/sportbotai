@@ -1822,10 +1822,11 @@ button:focus-visible {
    SVG Icons replacing Emoji (CSS only test)
    ======================================== */
 
-/* Hide emoji text, show SVG instead */
+/* REMOVED: This was hiding first letter of team names in prediction boxes!
 .blog-content p[style*="color: #94a3b8"]::first-letter {
   font-size: 0;
 }
+*/
 
 /* Calendar icon for Date */
 .blog-content div:has(> p:first-child:contains("Date"))::before,
