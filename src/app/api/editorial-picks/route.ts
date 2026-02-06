@@ -41,6 +41,55 @@ interface FullResponse {
   };
 }
 
+/**
+ * Calculate data confidence score based on available analysis data.
+ * This measures HOW MUCH DATA we have to make this prediction - not win probability.
+ * More data = more confident in the analysis quality.
+ */
+function calculateDataConfidenceScore(fr: FullResponse | null, reasoning: string | null): number {
+  let score = 0;
+  
+  // Form data: +25 points max
+  if (fr?.momentumAndForm) {
+    const mf = fr.momentumAndForm;
+    if (mf.homeForm || mf.awayForm) score += 15; // Have form strings
+    if (mf.h2hSummary) score += 5;  // Have H2H data
+    if (mf.keyFormFactors?.length) score += 5; // Have form analysis
+  }
+  
+  // Headlines/Story: +20 points max (AI has analyzed)
+  if (fr?.headlines?.length) score += 10;
+  if (fr?.story) score += 10;
+  
+  // Injuries: +15 points (critical for accuracy)
+  if (fr?.injuries) {
+    const hasHomeInjuries = fr.injuries.home?.length;
+    const hasAwayInjuries = fr.injuries.away?.length;
+    // Having injury data (even if empty array) means we checked
+    if (hasHomeInjuries !== undefined || hasAwayInjuries !== undefined) score += 15;
+  }
+  
+  // Viral stats: +10 points (extra research)
+  if (fr?.viralStats?.length) score += 10;
+  
+  // Context factors: +10 points (situational analysis)
+  if (fr?.contextFactors?.length) score += 10;
+  
+  // Market intel: +10 points (sharp money, line moves)
+  if (fr?.marketIntel) {
+    if (fr.marketIntel.lineMovement || fr.marketIntel.sharpAction) score += 10;
+  }
+  
+  // Universal signals: +10 points
+  if (fr?.universalSignals?.length) score += 10;
+  
+  // Reasoning exists: +10 bonus (always have some analysis)
+  if (reasoning && reasoning.length > 50) score += 10;
+  
+  // Cap at 100
+  return Math.min(100, score);
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -129,6 +178,9 @@ export async function GET(request: NextRequest) {
       const [homeTeam, awayTeam] = pred.matchName.split(' vs ');
       const fr = pred.fullResponse as FullResponse | null;
       
+      // Calculate data confidence (how much data we have for this prediction)
+      const dataConfidence = calculateDataConfidenceScore(fr, pred.reasoning);
+      
       // Normalize headline - can be string or object with {text, icon, viral, favors}
       const rawHeadline = pred.headline as unknown;
       let headlineText: string | null = null;
@@ -153,7 +205,8 @@ export async function GET(request: NextRequest) {
         sport: pred.sport,
         league: pred.league,
         kickoff: pred.kickoff.toISOString(),
-        confidence: pred.modelProbability,
+        confidence: dataConfidence, // Data quality score (0-100)
+        modelProbability: pred.modelProbability, // Win probability for selected side
         edgeValue: pred.edgeValue,
         edgeBucket: pred.edgeBucket,
       };

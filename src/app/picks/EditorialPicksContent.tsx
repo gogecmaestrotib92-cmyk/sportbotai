@@ -115,7 +115,8 @@ interface Pick {
   sport: string;
   league: string;
   kickoff: string;
-  confidence: number;
+  confidence: number; // Data quality score (0-100)
+  modelProbability?: number; // Win probability for selected side
   edgeValue: number;
   edgeBucket: string | null;
   selection: string | null;
@@ -184,25 +185,26 @@ function safeString(value: unknown): string {
   return result.replace(/Pre-analyzed/gi, 'AI Prediction');
 }
 
-// Confidence badge - light card style
+// Confidence badge - shows DATA QUALITY (how much data we have for analysis)
 function ConfidenceBadge({ confidence }: { confidence: number }) {
-  const level = confidence >= 70 ? 'high' : confidence >= 60 ? 'medium' : 'low';
+  const level = confidence >= 70 ? 'high' : confidence >= 50 ? 'medium' : 'low';
   const labels = {
-    high: 'High Confidence',
-    medium: 'Good Confidence',
-    low: 'Moderate',
+    high: 'Full Analysis',
+    medium: 'Good Analysis',
+    low: 'Basic Analysis',
   };
   
   return (
     <span className="text-sm font-medium text-black tracking-wide">
-      {labels[level]} • {Math.round(confidence)}%
+      {labels[level]}
     </span>
   );
 }
 
-// Star rating component (like reviews)
+// Star rating component (like reviews) - shows DATA CONFIDENCE (quality of analysis)
 function StarRating({ confidence }: { confidence: number }) {
-  const stars = Math.round(confidence / 20); // 60% = 3 stars, 80% = 4 stars, 100% = 5 stars
+  const stars = Math.round(confidence / 20); // 20% = 1 star, 100% = 5 stars
+  const label = stars >= 4 ? 'Full Data' : stars >= 3 ? 'Good Data' : 'Limited Data';
   return (
     <div className="flex items-center gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -215,7 +217,7 @@ function StarRating({ confidence }: { confidence: number }) {
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
       ))}
-      <span className="text-xs text-black ml-1 tracking-wide">{Math.round(confidence)}%</span>
+      <span className="text-xs text-black/60 ml-1 tracking-wide">{label}</span>
     </div>
   );
 }
@@ -321,6 +323,9 @@ function PickCard({ pick, isPro, rank, locale = 'en' }: { pick: Pick; isPro: boo
               <div className="flex items-center justify-center gap-2 mt-1">
                 {pick.odds && (
                   <span className="text-purple-700 text-sm font-semibold">@ {pick.odds.toFixed(2)}</span>
+                )}
+                {pick.modelProbability && (
+                  <span className="text-xs text-zinc-600">({Math.round(pick.modelProbability)}% win prob)</span>
                 )}
                 {isUnderdogPick && (
                   <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
