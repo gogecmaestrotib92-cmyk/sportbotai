@@ -245,7 +245,7 @@ function PickCard({ pick, isPro, rank, locale = 'en' }: { pick: Pick; isPro: boo
     : null;
 
   return (
-    <article className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 tracking-wide h-full flex flex-col">
+    <article className="group relative bg-[#FFF3E0] rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 tracking-wide h-full flex flex-col">
       {/* Top Badge - Glass deep purple */}
       <div className="bg-gradient-to-r from-purple-900/90 via-purple-800/80 to-purple-900/90 backdrop-blur-sm px-4 py-2.5 flex items-center justify-between border-b border-purple-500/20">
         <div className="flex items-center gap-2">
@@ -273,7 +273,7 @@ function PickCard({ pick, isPro, rank, locale = 'en' }: { pick: Pick; isPro: boo
           {/* Home Team */}
           <div className="flex-1 flex flex-col items-center text-center">
             <TeamLogo name={pick.homeTeam} sport={pick.sport} size={52} />
-            <p className="font-semibold text-[#000000] text-sm mt-2 leading-tight">{pick.homeTeam}</p>
+            <p className="font-semibold text-[#000000] text-sm mt-2 leading-tight min-h-[2.5rem] flex items-center justify-center">{pick.homeTeam}</p>
             {/* Hide probabilities for locked picks */}
             {!pick.locked && homeProb !== null && (
               <p className="text-xs text-[#000000] mt-0.5">{homeProb}%</p>
@@ -289,7 +289,7 @@ function PickCard({ pick, isPro, rank, locale = 'en' }: { pick: Pick; isPro: boo
           {/* Away Team */}
           <div className="flex-1 flex flex-col items-center text-center">
             <TeamLogo name={pick.awayTeam} sport={pick.sport} size={52} />
-            <p className="font-semibold text-[#000000] text-sm mt-2 leading-tight">{pick.awayTeam}</p>
+            <p className="font-semibold text-[#000000] text-sm mt-2 leading-tight min-h-[2.5rem] flex items-center justify-center">{pick.awayTeam}</p>
             {/* Hide probabilities for locked picks */}
             {!pick.locked && awayProb !== null && (
               <p className="text-xs text-[#000000] mt-0.5">{awayProb}%</p>
@@ -312,7 +312,7 @@ function PickCard({ pick, isPro, rank, locale = 'en' }: { pick: Pick; isPro: boo
         {!pick.locked && pick.selection ? (
           <>
             {/* Our Pick - Clean typography */}
-            <div className="text-center mb-4">
+            <div className="text-center mb-4 min-h-[3.5rem] flex flex-col justify-center">
               <p className="text-lg font-bold text-[#000000]">{pick.selection}</p>
               {pick.odds && (
                 <p className="text-purple-700 text-sm font-semibold">@ {pick.odds.toFixed(2)}</p>
@@ -320,11 +320,13 @@ function PickCard({ pick, isPro, rank, locale = 'en' }: { pick: Pick; isPro: boo
             </div>
             
             {/* Headline */}
-            {analysis?.headlines?.[0] && (
-              <p className="text-[#000000] text-sm text-center leading-relaxed mb-4 line-clamp-2">
-                &ldquo;{safeString(analysis.headlines[0])}&rdquo;
-              </p>
-            )}
+            <div className="min-h-[3rem] flex items-center justify-center mb-4">
+              {analysis?.headlines?.[0] && (
+                <p className="text-[#000000] text-sm text-center leading-relaxed line-clamp-2">
+                  &ldquo;{safeString(analysis.headlines[0])}&rdquo;
+                </p>
+              )}
+            </div>
             
             {/* Spacer to push button down */}
             <div className="flex-1" />
@@ -402,7 +404,7 @@ function TrackRecord() {
   }
 
   return (
-    <article className="bg-zinc-100 rounded-2xl shadow-lg overflow-hidden mb-8 tracking-wide">
+    <article className="bg-[#FFFBF5] rounded-2xl shadow-lg overflow-hidden mb-8 tracking-wide">
       {/* Ultraviolet header strip */}
       <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 px-4 py-3 flex items-center justify-between relative overflow-hidden">
         {/* Subtle gradient glow */}
@@ -424,7 +426,7 @@ function TrackRecord() {
       {/* Content - gray background */}
       <div className="p-5">
         <div className="grid grid-cols-2 gap-4">
-          <div className="text-center py-3 px-4 bg-white rounded-xl border border-zinc-200">
+          <div className="text-center py-3 px-4 bg-[#FFF3E0] rounded-xl border border-amber-200">
             <div className="flex items-center justify-center gap-1.5 mb-2">
               <TrendingUp className="w-4 h-4 text-emerald-600" />
               <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-medium">ROI</span>
@@ -433,7 +435,7 @@ function TrackRecord() {
               {stats.roi >= 0 ? '+' : ''}{stats.roi}%
             </p>
           </div>
-          <div className="text-center py-3 px-4 bg-white rounded-xl border border-zinc-200">
+          <div className="text-center py-3 px-4 bg-[#FFF3E0] rounded-xl border border-amber-200">
             <div className="flex items-center justify-center gap-1.5 mb-2">
               <Zap className="w-4 h-4 text-violet-500" />
               <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-medium">Analyzed</span>

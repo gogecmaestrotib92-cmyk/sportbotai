@@ -137,7 +137,7 @@ function PickCard({ pick, isPro }: { pick: Pick; isPro: boolean }) {
   const isLocked = pick.locked || !isPro;
   
   return (
-    <div className="group relative bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full">
+    <div className="group relative bg-[#FFF3E0] rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full">
       {/* Header with league logo and edge */}
       <div className="bg-gradient-to-r from-purple-900/95 via-purple-800/90 to-purple-900/95 px-3 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2 bg-white/10 px-2 py-1 rounded-lg">
@@ -229,7 +229,7 @@ function PickCard({ pick, isPro }: { pick: Pick; isPro: boolean }) {
 
 function PickCardSkeleton() {
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow-md animate-pulse">
+    <div className="bg-[#FFF3E0] rounded-xl overflow-hidden shadow-md animate-pulse">
       <div className="h-10 bg-purple-900/50" />
       <div className="p-4">
         <div className="flex items-center gap-3 mb-3">
