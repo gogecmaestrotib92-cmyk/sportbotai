@@ -1018,10 +1018,11 @@ IMPORTANT: SportBot ONLY handles sports-related questions. Classify non-sports q
 - INJURY_NEWS: Player availability/injuries/health status
 - FORM_CHECK: How a team/player is doing recently
 - HEAD_TO_HEAD: Historical matchups between teams
-- BETTING_ANALYSIS: Odds, betting advice, over/under
+- BETTING_ANALYSIS: Odds, value bets, over/under, BTTS, where is value today
 - SCHEDULE: When a game is
 - GENERAL_INFO: General sports questions (rules, who is X)
-- OUR_ANALYSIS: Asking about SportBot's prediction
+- OUR_ANALYSIS: Asking about SportBot's prediction, recommendations, daily picks, tips
+- EXPLAIN_UI: Questions about SportBot features (what is edge, confidence, how does it work)
 - OFF_TOPIC: Not about sports
 - UNCLEAR: Cannot determine intent
 
@@ -1040,6 +1041,31 @@ IMPORTANT: Multi-word team names are ONE team, not multiple:
 - "New York Knicks Brooklyn Nets" = 2 teams (Knicks vs Nets)
 
 These are shorthand for "analyze the match between team1 and team2".
+
+## CRITICAL: DAILY PICKS / RECOMMENDATIONS
+When user asks for recommendations WITHOUT specifying a match, classify as OUR_ANALYSIS:
+- "what do you have today" = OUR_ANALYSIS
+- "any picks for today" = OUR_ANALYSIS
+- "what are your recommendations" = OUR_ANALYSIS
+- "best bets today" = OUR_ANALYSIS
+- "where is the value" = OUR_ANALYSIS (if no specific match)
+- "šta imaš za danas" (Serbian) = OUR_ANALYSIS
+- "daj mi pikove" (Serbian) = OUR_ANALYSIS
+
+## CRITICAL: SPECIFIC MARKET QUESTIONS
+Questions about specific betting markets for a match = MATCH_PREDICTION (we'll include that data):
+- "will there be goals in Liverpool Arsenal" = MATCH_PREDICTION (over/under context)
+- "BTTS Liverpool Arsenal" = MATCH_PREDICTION (both teams to score context)
+- "over 2.5 in the Chelsea game" = MATCH_PREDICTION
+- "clean sheet for City" = MATCH_PREDICTION
+
+## CRITICAL: EXPLAIN_UI INTENT
+When user asks about SportBot features, terminology, or how it works:
+- "what is edge" = EXPLAIN_UI
+- "how does confidence work" = EXPLAIN_UI
+- "what does the percentage mean" = EXPLAIN_UI
+- "how do you calculate predictions" = EXPLAIN_UI
+- "šta znači edge" (Serbian) = EXPLAIN_UI
 
 ## ENTITY EXTRACTION (CRITICAL)
 For EVERY sports entity mentioned, extract with full context:
@@ -1072,17 +1098,35 @@ Query: "Celta Osasuna"
   "reasoning": "Two La Liga teams mentioned together = match prediction request"
 }
 
-Query: "Roma Sassuolo"
+Query: "what do you have today"
+{
+  "intent": "OUR_ANALYSIS",
+  "confidence": 0.95,
+  "entities": [],
+  "timeFrame": "LIVE",
+  "reasoning": "Asking for SportBot's daily picks/recommendations"
+}
+
+Query: "over 2.5 Liverpool Chelsea"
 {
   "intent": "MATCH_PREDICTION",
   "confidence": 0.95,
   "entities": [
-    {"type": "TEAM", "name": "AS Roma", "sport": "soccer", "league": "Serie A"},
-    {"type": "TEAM", "name": "Sassuolo", "sport": "soccer", "league": "Serie A"},
-    {"type": "MATCH", "name": "Roma vs Sassuolo", "sport": "soccer", "league": "Serie A"}
+    {"type": "TEAM", "name": "Liverpool", "sport": "soccer", "league": "Premier League"},
+    {"type": "TEAM", "name": "Chelsea", "sport": "soccer", "league": "Premier League"},
+    {"type": "MATCH", "name": "Liverpool vs Chelsea", "sport": "soccer", "league": "Premier League"}
   ],
   "timeFrame": "UPCOMING",
-  "reasoning": "Two Serie A teams mentioned together = match prediction request"
+  "reasoning": "Asking about over/under for specific match"
+}
+
+Query: "what is edge"
+{
+  "intent": "EXPLAIN_UI",
+  "confidence": 0.95,
+  "entities": [],
+  "timeFrame": "SEASON",
+  "reasoning": "Asking about SportBot terminology/features"
 }
 
 Query: "is jokic still injured"
