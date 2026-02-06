@@ -1011,7 +1011,7 @@ IMPORTANT: SportBot ONLY handles sports-related questions. Classify non-sports q
 ## INTENTS
 - PLAYER_STATS: Player statistics (points, goals, assists, averages)
 - TEAM_STATS: Team performance, form, xG, clean sheets
-- MATCH_PREDICTION: Who will win an upcoming match
+- MATCH_PREDICTION: Who will win an upcoming match (CRITICAL: Two team names together = MATCH_PREDICTION)
 - MATCH_RESULT: Score/result of a past match
 - STANDINGS: League table/rankings
 - LINEUP: Starting XI or roster
@@ -1025,6 +1025,16 @@ IMPORTANT: SportBot ONLY handles sports-related questions. Classify non-sports q
 - OFF_TOPIC: Not about sports
 - UNCLEAR: Cannot determine intent
 
+## CRITICAL: SHORT MATCH QUERIES
+When user types just two team names together (with or without "vs"), it's ALWAYS a match prediction request:
+- "Celta Osasuna" = MATCH_PREDICTION
+- "Roma Sassuolo" = MATCH_PREDICTION  
+- "Liverpool Arsenal" = MATCH_PREDICTION
+- "Lakers Celtics" = MATCH_PREDICTION
+- "Chiefs Bills" = MATCH_PREDICTION
+
+These are shorthand for "analyze the match between team1 and team2".
+
 ## ENTITY EXTRACTION (CRITICAL)
 For EVERY sports entity mentioned, extract with full context:
 
@@ -1037,10 +1047,37 @@ PLAYER entities - include full name even from nicknames:
 TEAM entities:
 - {"type": "TEAM", "name": "Denver Nuggets", "sport": "basketball", "league": "NBA"}
 
-MATCH entities (when two teams mentioned):
+MATCH entities (when two teams mentioned - WITH OR WITHOUT "vs"):
 - {"type": "MATCH", "name": "Lakers vs Celtics", "sport": "basketball", "league": "NBA"}
+- {"type": "MATCH", "name": "Celta vs Osasuna", "sport": "soccer", "league": "La Liga"}
 
 ## EXAMPLES
+
+Query: "Celta Osasuna"
+{
+  "intent": "MATCH_PREDICTION",
+  "confidence": 0.95,
+  "entities": [
+    {"type": "TEAM", "name": "Celta Vigo", "sport": "soccer", "league": "La Liga"},
+    {"type": "TEAM", "name": "Osasuna", "sport": "soccer", "league": "La Liga"},
+    {"type": "MATCH", "name": "Celta Vigo vs Osasuna", "sport": "soccer", "league": "La Liga"}
+  ],
+  "timeFrame": "UPCOMING",
+  "reasoning": "Two La Liga teams mentioned together = match prediction request"
+}
+
+Query: "Roma Sassuolo"
+{
+  "intent": "MATCH_PREDICTION",
+  "confidence": 0.95,
+  "entities": [
+    {"type": "TEAM", "name": "AS Roma", "sport": "soccer", "league": "Serie A"},
+    {"type": "TEAM", "name": "Sassuolo", "sport": "soccer", "league": "Serie A"},
+    {"type": "MATCH", "name": "Roma vs Sassuolo", "sport": "soccer", "league": "Serie A"}
+  ],
+  "timeFrame": "UPCOMING",
+  "reasoning": "Two Serie A teams mentioned together = match prediction request"
+}
 
 Query: "is jokic still injured"
 {
