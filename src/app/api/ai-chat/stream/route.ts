@@ -3038,15 +3038,59 @@ If their favorite team has a match today/tonight, lead with that information.`;
             // This returns instantly for pre-analyzed matches, skipping ALL slow HTTP calls
             // =====================================================
             try {
-              // Quick regex to extract team names for DB lookup
+              let homeWord = '';
+              let awayWord = '';
+              
+              // Method 1: Try traditional "vs" pattern first
               const quickTeamMatch = searchMessage.match(/(?:analyze|analyse|preview)?\s*([a-zA-Z\s]+?)\s+(?:vs\.?|versus|against|@)\s+([a-zA-Z\s]+)/i);
               if (quickTeamMatch) {
                 const [, rawHome, rawAway] = quickTeamMatch;
-                const homeWord = rawHome.trim().split(/\s+/).pop() || '';
-                const awayWord = rawAway.trim().split(/\s+/).pop() || '';
+                homeWord = rawHome.trim().split(/\s+/).pop() || '';
+                awayWord = rawAway.trim().split(/\s+/).pop() || '';
+                console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST: Found teams via 'vs' pattern: ${homeWord} vs ${awayWord}`);
+              }
+              
+              // Method 2: Short match query detection (no "vs" needed)
+              if (!homeWord || !awayWord) {
+                const msgLower = searchMessage.toLowerCase().trim();
+                const footballTeamPatterns = [
+                  /\b(real madrid|barcelona|barca|atletico|atletico madrid|sevilla|villarreal|real sociedad|sociedad|real betis|betis|athletic bilbao|athletic|celta|celta vigo|osasuna|getafe|rayo vallecano|rayo|mallorca|alaves|las palmas|leganes|valladolid|espanyol|girona|valencia)\b/gi,
+                  /\b(arsenal|chelsea|liverpool|man united|manchester united|man city|manchester city|tottenham|spurs|newcastle|west ham|aston villa|brighton|crystal palace|fulham|brentford|everton|wolves|wolverhampton|bournemouth|nottingham forest|forest|burnley|sheffield|luton|ipswich|leicester|leeds|sunderland)\b/gi,
+                  /\b(roma|as roma|lazio|napoli|juventus|juve|inter|ac milan|milan|atalanta|fiorentina|torino|bologna|sassuolo|udinese|cagliari|verona|monza|empoli|lecce|genoa|parma|como|venezia)\b/gi,
+                  /\b(bayern|bayern munich|dortmund|borussia dortmund|bvb|rb leipzig|leipzig|leverkusen|bayer leverkusen|frankfurt|eintracht|wolfsburg|freiburg|hoffenheim|mainz|augsburg|werder bremen|bremen|koln|cologne|union berlin|bochum|heidenheim|st pauli|monchengladbach|gladbach|stuttgart|hertha)\b/gi,
+                  /\b(psg|paris saint-germain|paris|marseille|lyon|monaco|lille|nice|lens|rennes|strasbourg|nantes|montpellier|toulouse|reims|brest|lorient|clermont|metz|le havre|auxerre|angers|saint-etienne)\b/gi,
+                  /\b(benfica|porto|sporting|ajax|psv|feyenoord|club brugge|anderlecht|genk|galatasaray|fenerbahce|besiktas|celtic|rangers|salzburg|young boys|olympiacos|panathinaikos|aek|paok)\b/gi,
+                ];
+                
+                const foundTeams: string[] = [];
+                for (const pattern of footballTeamPatterns) {
+                  let match: RegExpExecArray | null;
+                  while ((match = pattern.exec(msgLower)) !== null) {
+                    if (!foundTeams.some(t => t.toLowerCase() === match![0].toLowerCase())) {
+                      foundTeams.push(match[0]);
+                    }
+                  }
+                }
+                
+                if (foundTeams.length >= 2) {
+                  homeWord = foundTeams[0];
+                  awayWord = foundTeams[1];
+                  console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST: Found teams via pattern detection: ${homeWord} vs ${awayWord}`);
+                }
+              }
+              
+              // Method 3: Use LLM entities from query understanding
+              if (!homeWord || !awayWord) {
+                const teamEntities = queryUnderstanding?.entities?.filter(e => e.type === 'TEAM' || e.type === 'MATCH') || [];
+                if (teamEntities.length >= 2) {
+                  homeWord = teamEntities[0].name.split(/\s+/).pop() || '';
+                  awayWord = teamEntities[1].name.split(/\s+/).pop() || '';
+                  console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST: Found teams via LLM entities: ${homeWord} vs ${awayWord}`);
+                }
+              }
 
-                if (homeWord && awayWord) {
-                  console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST: Checking Prediction table for ${homeWord} vs ${awayWord}...`);
+              if (homeWord && awayWord) {
+                console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST: Checking Prediction table for ${homeWord} vs ${awayWord}...`);
 
                   const prediction = await prisma.prediction.findFirst({
                     where: {
@@ -3106,8 +3150,8 @@ If their favorite team has a match today/tonight, lead with that information.`;
                     const structuredData = {
                       matchInfo: {
                         id: prediction.matchName?.toLowerCase().replace(/\s+/g, '-') || '',
-                        homeTeam: fullData.matchInfo?.homeTeam || rawHome.trim(),
-                        awayTeam: fullData.matchInfo?.awayTeam || rawAway.trim(),
+                        homeTeam: fullData.matchInfo?.homeTeam || homeWord,
+                        awayTeam: fullData.matchInfo?.awayTeam || awayWord,
                         league: fullData.matchInfo?.league || '',
                         sport: fullData.matchInfo?.sport || 'basketball_nba',
                         kickoff: prediction.kickoff?.toISOString() || '',
@@ -3120,7 +3164,7 @@ If their favorite team has a match today/tonight, lead with that information.`;
                       },
                       universalSignals: fullData.universalSignals,
                       expectedScores: fullData.expectedScores,
-                      matchUrl: `/match/${rawHome.trim().toLowerCase().replace(/\s+/g, '-')}-vs-${rawAway.trim().toLowerCase().replace(/\s+/g, '-')}-nba-${new Date().toISOString().split('T')[0]}`,
+                      matchUrl: `/match/${homeWord.toLowerCase().replace(/\s+/g, '-')}-vs-${awayWord.toLowerCase().replace(/\s+/g, '-')}-nba-${new Date().toISOString().split('T')[0]}`,
                     };
 
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({
@@ -3133,7 +3177,6 @@ If their favorite team has a match today/tonight, lead with that information.`;
                   }
                   console.log(`[AI-Chat-Stream] ⚡ ULTRA-FAST MISS: No cached prediction, continuing to slow path...`);
                 }
-              }
             } catch (ultraFastError) {
               console.log(`[AI-Chat-Stream] Ultra-fast path error, continuing:`, ultraFastError);
             }
