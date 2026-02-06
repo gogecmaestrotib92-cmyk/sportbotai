@@ -166,7 +166,7 @@ const TEAM_PATTERNS: Record<string, RegExp> = {
   nba: /\b(lakers|celtics|warriors|heat|bucks|nets|knicks|76ers|sixers|clippers|suns|nuggets|mavericks?|mavs|grizzlies|timberwolves|wolves|cavaliers?|cavs|bulls|hawks|raptors|pacers|magic|hornets|wizards|pistons|thunder|trail ?blazers|blazers|jazz|kings|spurs|pelicans|rockets|los angeles|boston|golden state|miami|milwaukee|brooklyn|new york|phoenix|denver|dallas|memphis|minnesota|cleveland|chicago|atlanta|toronto|indiana|orlando|charlotte|washington|detroit|oklahoma|portland|utah|sacramento|san antonio|new orleans|houston)\b/i,
   nhl: /\b(maple leafs|leafs|canadiens|habs|bruins|rangers|penguins|pens|blackhawks|hawks|red wings|oilers|flames|canucks|jets|senators|sens|lightning|bolts|panthers|avalanche|avs|golden knights|knights|kraken|stars|blues|wild|predators|preds|hurricanes|canes|devils|toronto|montreal|boston|new york|pittsburgh|chicago|detroit|edmonton|calgary|vancouver|winnipeg|ottawa|tampa|florida|colorado|vegas|seattle|dallas|st louis|minnesota|nashville|carolina|new jersey)\b/i,
   nfl: /\b(chiefs|eagles|bills|cowboys|dolphins|ravens|bengals|49ers|niners|lions|seahawks|packers|vikings|steelers|chargers|broncos|raiders|commanders|giants|jets|patriots|pats|titans|jaguars|jags|colts|texans|browns|bears|saints|buccaneers|bucs|falcons|panthers|cardinals|cards|rams|kansas city|philadelphia|buffalo|dallas|miami|baltimore|cincinnati|san francisco|detroit|seattle|green bay|minnesota|pittsburgh|los angeles|denver|las vegas|washington|new york|new england|tennessee|jacksonville|indianapolis|houston|cleveland|chicago|new orleans|tampa|atlanta|carolina|arizona)\b/i,
-  soccer: /\b(manchester united|man united|man utd|mufc|liverpool|arsenal|chelsea|man city|manchester city|tottenham|spurs|newcastle|west ham|aston villa|brighton|real madrid|barcelona|barca|atletico|bayern|dortmund|psg|juventus|juve|inter|milan|napoli|sunderland|leeds|leicester|everton|wolves|fulham|bournemouth|brentford|crystal palace|nottingham forest|roma|lazio|atalanta|fiorentina|sassuolo|bologna|torino)\b/i,
+  soccer: /\b(manchester united|man united|man utd|mufc|liverpool|arsenal|chelsea|man city|manchester city|tottenham|spurs|newcastle|west ham|aston villa|brighton|real madrid|barcelona|barca|atletico|atletico madrid|sevilla|villarreal|real sociedad|real betis|athletic bilbao|athletic|celta|celta vigo|osasuna|getafe|rayo vallecano|rayo|mallorca|alaves|las palmas|leganes|valladolid|espanyol|girona|valencia|bayern|dortmund|psg|juventus|juve|inter|milan|napoli|sunderland|leeds|leicester|everton|wolves|fulham|bournemouth|brentford|crystal palace|nottingham forest|roma|lazio|atalanta|fiorentina|sassuolo|bologna|torino)\b/i,
   euroleague: /\b(real madrid|barcelona|fenerbahce|olympiacos|panathinaikos|maccabi|cska|efes|milan|bayern|partizan|virtus|monaco|zalgiris|baskonia|valencia)\b/i,
 };
 
@@ -553,6 +553,24 @@ function isShortMatchQuery(query: string): { isMatch: boolean; teams: string[] }
       while ((serieAMatch = serieATeams.exec(lower)) !== null) {
         if (!foundTeams.some(t => t.toLowerCase() === serieAMatch![0].toLowerCase())) {
           foundTeams.push(serieAMatch[0]);
+        }
+      }
+
+      // Also check La Liga teams
+      const laLigaTeams = /\b(real madrid|barcelona|barca|atletico|atletico madrid|sevilla|villarreal|real sociedad|sociedad|real betis|betis|athletic bilbao|athletic|celta|celta vigo|osasuna|getafe|rayo vallecano|rayo|mallorca|alaves|las palmas|leganes|valladolid|espanyol|girona|valencia)\b/gi;
+      let laLigaMatch;
+      while ((laLigaMatch = laLigaTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === laLigaMatch![0].toLowerCase())) {
+          foundTeams.push(laLigaMatch[0]);
+        }
+      }
+
+      // Also check Bundesliga teams
+      const bundesligaTeams = /\b(bayern|bayern munich|dortmund|borussia dortmund|bvb|rb leipzig|leipzig|leverkusen|bayer leverkusen|frankfurt|eintracht|wolfsburg|freiburg|hoffenheim|mainz|augsburg|werder bremen|bremen|koln|cologne|union berlin|bochum|heidenheim|st pauli|monchengladbach|gladbach|stuttgart|hertha)\b/gi;
+      let bundesligaMatch;
+      while ((bundesligaMatch = bundesligaTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === bundesligaMatch![0].toLowerCase())) {
+          foundTeams.push(bundesligaMatch[0]);
         }
       }
 
