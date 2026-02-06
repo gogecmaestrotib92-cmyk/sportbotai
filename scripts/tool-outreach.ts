@@ -29,13 +29,12 @@ const prisma = new PrismaClient();
 // TOOLS TO PROCESS - EDIT THIS ARRAY
 // ============================================
 const TOOLS: ToolConfig[] = [
-  // Example:
-  // {
-  //   name: 'Tool Name',
-  //   url: 'https://example.com',
-  //   email: 'contact@example.com',
-  //   description: 'What the tool does...'
-  // },
+  {
+    name: 'Bet Hero',
+    url: 'https://betherosports.com/',
+    email: 'juan@betherosports.com',
+    description: 'Bet Hero is a sports betting analytics platform offering AI-powered picks and predictions across major US sports including NFL, NBA, MLB, and NHL. The platform provides data-driven betting recommendations with transparent track records, bankroll management tools, and educational content for both beginner and advanced bettors. Features include daily picks, props analysis, and live betting insights.',
+  },
 ];
 
 interface ToolConfig {

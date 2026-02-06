@@ -24,6 +24,18 @@ interface ToolToProcess {
 
 const TOOLS_TO_PROCESS: ToolToProcess[] = [
   {
+    toolName: 'Bet Hero',
+    toolUrl: 'https://betherosports.com/',
+    contactEmail: 'juan@betherosports.com',
+    description: 'Bet Hero is a sports betting analytics platform offering AI-powered picks and predictions across major US sports including NFL, NBA, MLB, and NHL. The platform provides data-driven betting recommendations with transparent track records, bankroll management tools, and educational content for both beginner and advanced bettors. Features include daily picks, props analysis, and live betting insights.',
+  },
+  {
+    toolName: 'RebelBetting',
+    toolUrl: 'https://www.rebelbetting.com',
+    contactEmail: 'support@rebelbetting.com',
+    description: 'RebelBetting is a leading value betting and sure betting software that helps bettors find profitable opportunities by comparing odds across 90+ bookmakers worldwide. Founded in Sweden, it offers a proven system for consistent profits through both value betting (beating bookmaker odds) and arbitrage betting (risk-free guaranteed profits). The platform includes bankroll management, a bet tracker, mobile apps, and educational resources. Plans include Starter, Pro, and Elite tiers.',
+  },
+  {
     toolName: 'StatSalt',
     toolUrl: 'https://statsalt.com/',
     contactEmail: null, // No direct email, contact form only

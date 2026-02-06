@@ -2056,6 +2056,7 @@ export async function GET(request: NextRequest) {
                 valueBetEdge: bestEdge.edge,
               },
               update: {
+                kickoff: new Date(event.commence_time), // FIX: Always update kickoff time
                 homeWin: pipelineProbabilitiesForUI.home,
                 awayWin: pipelineProbabilitiesForUI.away,
                 draw: pipelineProbabilitiesForUI.draw || null,
@@ -2234,6 +2235,7 @@ export async function GET(request: NextRequest) {
                 predictionTimestamp: new Date(),
               },
               update: {
+                kickoff: matchDate, // FIX: Always update kickoff time
                 conviction,
                 odds: valueBetOdds,
                 reasoning,
