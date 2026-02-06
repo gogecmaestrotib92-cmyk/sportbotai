@@ -1027,11 +1027,17 @@ IMPORTANT: SportBot ONLY handles sports-related questions. Classify non-sports q
 
 ## CRITICAL: SHORT MATCH QUERIES
 When user types just two team names together (with or without "vs"), it's ALWAYS a match prediction request:
-- "Celta Osasuna" = MATCH_PREDICTION
-- "Roma Sassuolo" = MATCH_PREDICTION  
-- "Liverpool Arsenal" = MATCH_PREDICTION
-- "Lakers Celtics" = MATCH_PREDICTION
-- "Chiefs Bills" = MATCH_PREDICTION
+- "Celta Osasuna" = MATCH_PREDICTION (2 teams: Celta, Osasuna)
+- "Roma Sassuolo" = MATCH_PREDICTION (2 teams: Roma, Sassuolo)
+- "Liverpool Arsenal" = MATCH_PREDICTION (2 teams: Liverpool, Arsenal)
+- "Lakers Celtics" = MATCH_PREDICTION (2 teams: Lakers, Celtics)
+- "Chiefs Bills" = MATCH_PREDICTION (2 teams: Chiefs, Bills)
+
+IMPORTANT: Multi-word team names are ONE team, not multiple:
+- "Washington Wizards Los Angeles Lakers" = 2 teams (Wizards vs Lakers), NOT 4 teams
+- "Real Madrid Barcelona" = 2 teams (Real Madrid vs Barcelona)
+- "Manchester United Manchester City" = 2 teams (Man United vs Man City)
+- "New York Knicks Brooklyn Nets" = 2 teams (Knicks vs Nets)
 
 These are shorthand for "analyze the match between team1 and team2".
 
