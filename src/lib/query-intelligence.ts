@@ -574,6 +574,123 @@ function isShortMatchQuery(query: string): { isMatch: boolean; teams: string[] }
         }
       }
 
+      // Premier League & EFL Championship
+      const eplTeams = /\b(arsenal|chelsea|liverpool|man united|manchester united|man city|manchester city|tottenham|spurs|newcastle|west ham|aston villa|brighton|crystal palace|fulham|brentford|everton|wolves|wolverhampton|bournemouth|nottingham forest|forest|burnley|sheffield|luton|ipswich|leicester|leeds|sunderland|middlesbrough|west brom|blackburn|norwich|coventry|hull|stoke|swansea|millwall|plymouth|qpr|watford|bristol city|cardiff|preston|birmingham|derby)\b/gi;
+      let eplMatch;
+      while ((eplMatch = eplTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === eplMatch![0].toLowerCase())) {
+          foundTeams.push(eplMatch[0]);
+        }
+      }
+
+      // Ligue 1 (France)
+      const ligue1Teams = /\b(psg|paris saint-germain|paris|marseille|lyon|monaco|lille|nice|lens|rennes|strasbourg|nantes|montpellier|toulouse|reims|brest|lorient|clermont|metz|le havre|auxerre|angers|saint-etienne)\b/gi;
+      let ligue1Match;
+      while ((ligue1Match = ligue1Teams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === ligue1Match![0].toLowerCase())) {
+          foundTeams.push(ligue1Match[0]);
+        }
+      }
+
+      // Primeira Liga (Portugal)
+      const primeiraTeams = /\b(benfica|porto|sporting|sporting cp|braga|vitoria guimaraes|boavista|famalicao|rio ave|gil vicente|santa clara|arouca|estoril|casa pia|vizela|moreirense|farense|estrela amadora|nacional)\b/gi;
+      let primeiraMatch;
+      while ((primeiraMatch = primeiraTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === primeiraMatch![0].toLowerCase())) {
+          foundTeams.push(primeiraMatch[0]);
+        }
+      }
+
+      // Eredivisie (Netherlands)
+      const eredivisieTeams = /\b(ajax|psv|psv eindhoven|feyenoord|az|az alkmaar|twente|utrecht|vitesse|heerenveen|groningen|sparta rotterdam|nec|rkc waalwijk|go ahead eagles|fortuna sittard|volendam|excelsior|cambuur|heracles|willem ii|almere city)\b/gi;
+      let eredivisieMatch;
+      while ((eredivisieMatch = eredivisieTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === eredivisieMatch![0].toLowerCase())) {
+          foundTeams.push(eredivisieMatch[0]);
+        }
+      }
+
+      // Belgian Pro League
+      const belgianTeams = /\b(club brugge|anderlecht|genk|standard liege|gent|antwerp|union saint-gilloise|union sg|cercle brugge|mechelen|oostende|charleroi|westerlo|oud-heverlee leuven|kortrijk|sint-truiden|eupen)\b/gi;
+      let belgianMatch;
+      while ((belgianMatch = belgianTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === belgianMatch![0].toLowerCase())) {
+          foundTeams.push(belgianMatch[0]);
+        }
+      }
+
+      // Turkish Super Lig
+      const turkishTeams = /\b(galatasaray|fenerbahce|besiktas|trabzonspor|basaksehir|konyaspor|antalyaspor|sivasspor|alanyaspor|kasimpasa|gaziantep|hatayspor|kayserispor|adana demirspor|rizespor|samsunspor|pendikspor)\b/gi;
+      let turkishMatch;
+      while ((turkishMatch = turkishTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === turkishMatch![0].toLowerCase())) {
+          foundTeams.push(turkishMatch[0]);
+        }
+      }
+
+      // Scottish Premiership
+      const scottishTeams = /\b(celtic|rangers|hearts|hibernian|hibs|aberdeen|dundee|dundee united|motherwell|st mirren|kilmarnock|livingston|ross county|st johnstone)\b/gi;
+      let scottishMatch;
+      while ((scottishMatch = scottishTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === scottishMatch![0].toLowerCase())) {
+          foundTeams.push(scottishMatch[0]);
+        }
+      }
+
+      // Austrian Bundesliga
+      const austrianTeams = /\b(salzburg|red bull salzburg|rapid vienna|rapid wien|sturm graz|austria vienna|austria wien|lask|wolfsberger|hartberg|altach|ried|wsg tirol|blau weiss linz)\b/gi;
+      let austrianMatch;
+      while ((austrianMatch = austrianTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === austrianMatch![0].toLowerCase())) {
+          foundTeams.push(austrianMatch[0]);
+        }
+      }
+
+      // Swiss Super League
+      const swissTeams = /\b(young boys|basel|zurich|servette|lugano|st gallen|lausanne|winterthur|grasshoppers|sion|luzern|yverdon)\b/gi;
+      let swissMatch;
+      while ((swissMatch = swissTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === swissMatch![0].toLowerCase())) {
+          foundTeams.push(swissMatch[0]);
+        }
+      }
+
+      // Greek Super League
+      const greekTeams = /\b(olympiacos|panathinaikos|aek athens|aek|paok|aris thessaloniki|aris|volos|asteras tripolis|ofi crete|atromitos|ionikos|lamia|panserraikos)\b/gi;
+      let greekMatch;
+      while ((greekMatch = greekTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === greekMatch![0].toLowerCase())) {
+          foundTeams.push(greekMatch[0]);
+        }
+      }
+
+      // MLS (USA)
+      const mlsTeams = /\b(inter miami|la galaxy|lafc|los angeles fc|seattle sounders|atlanta united|new york red bulls|nyfc|new york city fc|portland timbers|columbus crew|philadelphia union|austin fc|fc dallas|houston dynamo|nashville sc|orlando city|charlotte fc|chicago fire|toronto fc|cf montreal|vancouver whitecaps|minnesota united|sporting kansas city|real salt lake|colorado rapids|san jose earthquakes|dc united|new england revolution)\b/gi;
+      let mlsMatch;
+      while ((mlsMatch = mlsTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === mlsMatch![0].toLowerCase())) {
+          foundTeams.push(mlsMatch[0]);
+        }
+      }
+
+      // Brazilian Serie A
+      const brazilTeams = /\b(flamengo|palmeiras|gremio|internacional|inter|atletico mineiro|sao paulo|corinthians|santos|fluminense|botafogo|cruzeiro|vasco|bahia|fortaleza|bragantino|athletico paranaense|cuiaba|goias|coritiba|america mineiro)\b/gi;
+      let brazilMatch;
+      while ((brazilMatch = brazilTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === brazilMatch![0].toLowerCase())) {
+          foundTeams.push(brazilMatch[0]);
+        }
+      }
+
+      // Argentine Primera Division
+      const argentinaTeams = /\b(boca juniors|boca|river plate|river|racing club|racing|independiente|san lorenzo|velez sarsfield|velez|estudiantes|lanus|argentinos juniors|banfield|huracan|talleres|godoy cruz|union santa fe|colon|central cordoba|newell'?s old boys|rosario central|defensa y justicia|platense|tigre|belgrano|barracas central|sarmiento|gimnasia)\b/gi;
+      let argentinaMatch;
+      while ((argentinaMatch = argentinaTeams.exec(lower)) !== null) {
+        if (!foundTeams.some(t => t.toLowerCase() === argentinaMatch![0].toLowerCase())) {
+          foundTeams.push(argentinaMatch[0]);
+        }
+      }
+
       if (foundTeams.length >= 2) {
         return { isMatch: true, teams: foundTeams.slice(0, 2) };
       }
