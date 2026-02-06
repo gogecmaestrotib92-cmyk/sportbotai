@@ -76,11 +76,13 @@ function MobileNavLink({
   children,
   onClick,
   className = '',
+  isHighlighted = false,
 }: {
   href: string;
   children: React.ReactNode;
   onClick?: () => void;
   className?: string;
+  isHighlighted?: boolean;
 }) {
   const pathname = usePathname();
   const normalizedPathname = pathname?.replace(/^\/sr/, '') || '/';
@@ -88,10 +90,13 @@ function MobileNavLink({
   const isActive = normalizedPathname === normalizedHref ||
     (normalizedHref !== '/' && normalizedPathname?.startsWith(normalizedHref));
 
+  // Highlighted = always show accent styling (for featured items like Analyze)
+  const showAccent = isActive || isHighlighted;
+
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 font-medium px-4 py-3.5 rounded-btn transition-all duration-300 active:scale-[0.98] ${isActive
+      className={`flex items-center gap-3 font-medium px-4 py-3.5 rounded-btn transition-all duration-300 active:scale-[0.98] ${showAccent
         ? 'text-accent bg-accent/10 border-l-2 border-accent shadow-[inset_0_0_20px_rgba(16,185,129,0.1)]'
         : 'text-text-secondary hover:text-text-primary hover:bg-bg-hover'
         } ${className}`}
@@ -270,6 +275,7 @@ export default function HeaderI18n({ locale: propLocale }: HeaderI18nProps) {
                 <MobileNavLink
                   href={localePath('/matches')}
                   onClick={() => setIsMobileMenuOpen(false)}
+                  isHighlighted={true}
                 >
                   <BoltIcon className="w-5 h-5 text-accent" />
                   {t.header.analyzeMatch}
