@@ -116,7 +116,9 @@ export default function TrendingSectionServer({ maxMatches = 6, locale = 'en' }:
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-xl">🔥</span>
+              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.35 0-6-2.57-6-6.2 0-2.34 1.95-5.44 6-9.14 4.05 3.7 6 6.79 6 9.14 0 3.63-2.65 6.2-6 6.2zm-1-8.3c-1.79 1.87-2 3.62-2 4.5 0 1.77 1.45 3.3 3 3.3s3-1.53 3-3.3c0-.88-.21-2.63-2-4.5l-1-1-1 1z"/>
+              </svg>
             </div>
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-white">{locale === 'sr' ? 'Popularni Mečevi' : 'Trending Matches'}</h2>
