@@ -2024,57 +2024,55 @@ export async function GET(request: NextRequest) {
               return 'NO_EDGE';
             };
 
-            await prisma.prediction.upsert({
-              where: { id: chatPredictionId },
-              create: {
-                id: chatPredictionId,
-                matchId: event.id,
-                matchName: matchRef,
-                sport: sport.key,
-                league: sport.league,
-                kickoff: new Date(event.commence_time),
-                type: 'MATCH_RESULT',
-                prediction: `${event.home_team} vs ${event.away_team}`,
-                reasoning: analysis.story?.narrative || 'AI-generated match analysis',
-                conviction: 5,
-                source: 'PRE_ANALYZE',
-                outcome: 'PENDING',
-                homeWin: pipelineProbabilitiesForUI.home,
-                awayWin: pipelineProbabilitiesForUI.away,
-                draw: pipelineProbabilitiesForUI.draw || null,
-                predictedScore: `${expectedScores.home}-${expectedScores.away}`,
-                fullResponse: JSON.parse(JSON.stringify(cacheResponse)),
-                // Edge data for daily picks
-                selection: bestEdge.side === 'HOME' ? event.home_team : bestEdge.side === 'AWAY' ? event.away_team : 'Draw',
-                modelProbability: bestEdge.prob * 100,
-                marketOddsAtPrediction: bestEdge.odds,
-                edgeValue: bestEdge.edge,
-                edgeBucket: getEdgeBucket(bestEdge.edge),
-                odds: bestEdge.odds,
-                valueBetSide: bestEdge.side,
-                valueBetOdds: bestEdge.odds,
-                valueBetEdge: bestEdge.edge,
-              },
-              update: {
-                kickoff: new Date(event.commence_time), // FIX: Always update kickoff time
-                homeWin: pipelineProbabilitiesForUI.home,
-                awayWin: pipelineProbabilitiesForUI.away,
-                draw: pipelineProbabilitiesForUI.draw || null,
-                predictedScore: `${expectedScores.home}-${expectedScores.away}`,
-                fullResponse: JSON.parse(JSON.stringify(cacheResponse)),
-                // Edge data for daily picks
-                selection: bestEdge.side === 'HOME' ? event.home_team : bestEdge.side === 'AWAY' ? event.away_team : 'Draw',
-                modelProbability: bestEdge.prob * 100,
-                marketOddsAtPrediction: bestEdge.odds,
-                edgeValue: bestEdge.edge,
-                edgeBucket: getEdgeBucket(bestEdge.edge),
-                odds: bestEdge.odds,
-                valueBetSide: bestEdge.side,
-                valueBetOdds: bestEdge.odds,
-                valueBetEdge: bestEdge.edge,
-              },
+            // Check if a better MATCH_ANALYSIS record already exists - don't overwrite it!
+            const existingPrediction = await prisma.prediction.findFirst({
+              where: { matchName: matchRef },
+              orderBy: { edgeValue: 'desc' },
             });
-            console.log(`[Pre-Analyze] ✅ Stored fullResponse for chat: ${matchRef} (edge: ${bestEdge.edge.toFixed(1)}%, selection: ${bestEdge.side})`);
+            
+            if (existingPrediction && existingPrediction.source === 'MATCH_ANALYSIS' && 
+                existingPrediction.edgeValue && existingPrediction.edgeValue >= bestEdge.edge) {
+              console.log(`[Pre-Analyze] ⏭️ Skipping ${matchRef} - better MATCH_ANALYSIS exists (edge: ${existingPrediction.edgeValue?.toFixed(1)}% vs ${bestEdge.edge.toFixed(1)}%)`);
+            } else {
+              // Either no existing record, or PRE_ANALYZE has better edge - upsert
+              // Delete any existing record with same matchName first to avoid duplicates
+              await prisma.prediction.deleteMany({
+                where: { matchName: matchRef }
+              });
+              
+              await prisma.prediction.create({
+                data: {
+                  id: chatPredictionId,
+                  matchId: event.id,
+                  matchName: matchRef,
+                  sport: sport.key,
+                  league: sport.league,
+                  kickoff: new Date(event.commence_time),
+                  type: 'MATCH_RESULT',
+                  prediction: `${event.home_team} vs ${event.away_team}`,
+                  reasoning: analysis.story?.narrative || 'AI-generated match analysis',
+                  conviction: 5,
+                  source: 'PRE_ANALYZE',
+                  outcome: 'PENDING',
+                  homeWin: pipelineProbabilitiesForUI.home,
+                  awayWin: pipelineProbabilitiesForUI.away,
+                  draw: pipelineProbabilitiesForUI.draw || null,
+                  predictedScore: `${expectedScores.home}-${expectedScores.away}`,
+                  fullResponse: JSON.parse(JSON.stringify(cacheResponse)),
+                  // Edge data for daily picks
+                  selection: bestEdge.side === 'HOME' ? event.home_team : bestEdge.side === 'AWAY' ? event.away_team : 'Draw',
+                  modelProbability: bestEdge.prob * 100,
+                  marketOddsAtPrediction: bestEdge.odds,
+                  edgeValue: bestEdge.edge,
+                  edgeBucket: getEdgeBucket(bestEdge.edge),
+                  odds: bestEdge.odds,
+                  valueBetSide: bestEdge.side,
+                  valueBetOdds: bestEdge.odds,
+                  valueBetEdge: bestEdge.edge,
+                },
+              });
+              console.log(`[Pre-Analyze] ✅ Stored prediction for: ${matchRef} (edge: ${bestEdge.edge.toFixed(1)}%, selection: ${bestEdge.side})`);
+            }
           } catch (fullResponseError) {
             console.error(`[Pre-Analyze] Failed to store fullResponse:`, fullResponseError);
           }
@@ -2187,83 +2185,73 @@ export async function GET(request: NextRequest) {
             const selectionText = valueBetSide === 'HOME' ? event.home_team :
               valueBetSide === 'AWAY' ? event.away_team : 'Draw';
 
-            await prisma.prediction.upsert({
-              where: { id: predictionId },
-              create: {
-                id: predictionId,
-                matchId: event.id,
-                matchName: matchRef,
-                sport: sport.key,
-                league: sport.league,
-                kickoff: matchDate,
-                type: 'MATCH_RESULT',
-                prediction: predictionText,
-                reasoning,
-                conviction,
-                odds: valueBetOdds,
-                impliedProb: storedImpliedProb * 100,
-                source: 'PRE_ANALYZE',
-                outcome: 'PENDING',
-                // ============ CRITICAL: Probabilities for AI Chat ============
-                // Without these, AI chat makes up probabilities!
-                homeWin: pipelineProbabilitiesForUI.home,
-                awayWin: pipelineProbabilitiesForUI.away,
-                draw: pipelineProbabilitiesForUI.draw || null,
-                predictedScore: `${expectedScores.home}-${expectedScores.away}`,
-                // ============ FULL RESPONSE FOR AI CHAT ============
-                // Store the complete analysis so AI chat can display same data as match page
-                fullResponse: JSON.parse(JSON.stringify(cacheResponse)),
-                // ============================================================
-                // Value bet IS the prediction now
-                valueBetSide,
-                valueBetOdds,
-                valueBetEdge,
-                valueBetOutcome: 'PENDING',
-                // CLV Tracking: Store opening odds at prediction time
-                openingOdds: valueBetOdds,
-                clvFetched: false,
-                // V2 Edge Tracking fields for admin dashboard
-                modelVersion: 'v2',
-                selection: selectionText,
-                modelProbability: valueBetProb * 100, // Store as percentage
-                marketProbabilityRaw: storedImpliedProb * 100, // Raw implied prob
-                marketProbabilityFair: storedImpliedProb * 100, // For now same as raw
-                marketOddsAtPrediction: valueBetOdds,
-                edgeValue: valueBetEdge,
-                edgeBucket,
-                marketType: 'MONEYLINE',
-                predictionTimestamp: new Date(),
-              },
-              update: {
-                kickoff: matchDate, // FIX: Always update kickoff time
-                conviction,
-                odds: valueBetOdds,
-                reasoning,
-                valueBetSide,
-                valueBetOdds,
-                valueBetEdge,
-                openingOdds: valueBetOdds,
-                // ============ CRITICAL: Probabilities for AI Chat ============
-                homeWin: pipelineProbabilitiesForUI.home,
-                awayWin: pipelineProbabilitiesForUI.away,
-                draw: pipelineProbabilitiesForUI.draw || null,
-                predictedScore: `${expectedScores.home}-${expectedScores.away}`,
-                // ============ FULL RESPONSE FOR AI CHAT ============
-                fullResponse: JSON.parse(JSON.stringify(cacheResponse)),
-                // ============================================================
-                // Also update v2 fields on re-run
-                selection: selectionText,
-                modelProbability: valueBetProb * 100,
-                marketProbabilityRaw: storedImpliedProb * 100,
-                marketProbabilityFair: storedImpliedProb * 100,
-                marketOddsAtPrediction: valueBetOdds,
-                edgeValue: valueBetEdge,
-                edgeBucket,
-              },
+            // Check if a better MATCH_ANALYSIS record already exists - don't overwrite it!
+            const existingPrediction = await prisma.prediction.findFirst({
+              where: { matchName: matchRef },
+              orderBy: { edgeValue: 'desc' },
             });
+            
+            if (existingPrediction && existingPrediction.source === 'MATCH_ANALYSIS' && 
+                existingPrediction.edgeValue && existingPrediction.edgeValue >= valueBetEdge) {
+              console.log(`[Pre-Analyze] ⏭️ Skipping value bet ${matchRef} - better MATCH_ANALYSIS exists (edge: ${existingPrediction.edgeValue?.toFixed(1)}% vs ${valueBetEdge.toFixed(1)}%)`);
+            } else {
+              // Either no existing record, or PRE_ANALYZE has better edge - create fresh
+              // Delete any existing record with same matchName first to avoid duplicates
+              await prisma.prediction.deleteMany({
+                where: { matchName: matchRef }
+              });
+              
+              await prisma.prediction.create({
+                data: {
+                  id: predictionId,
+                  matchId: event.id,
+                  matchName: matchRef,
+                  sport: sport.key,
+                  league: sport.league,
+                  kickoff: matchDate,
+                  type: 'MATCH_RESULT',
+                  prediction: predictionText,
+                  reasoning,
+                  conviction,
+                  odds: valueBetOdds,
+                  impliedProb: storedImpliedProb * 100,
+                  source: 'PRE_ANALYZE',
+                  outcome: 'PENDING',
+                  // ============ CRITICAL: Probabilities for AI Chat ============
+                  // Without these, AI chat makes up probabilities!
+                  homeWin: pipelineProbabilitiesForUI.home,
+                  awayWin: pipelineProbabilitiesForUI.away,
+                  draw: pipelineProbabilitiesForUI.draw || null,
+                  predictedScore: `${expectedScores.home}-${expectedScores.away}`,
+                  // ============ FULL RESPONSE FOR AI CHAT ============
+                  // Store the complete analysis so AI chat can display same data as match page
+                  fullResponse: JSON.parse(JSON.stringify(cacheResponse)),
+                  // ============================================================
+                  // Value bet IS the prediction now
+                  valueBetSide,
+                  valueBetOdds,
+                  valueBetEdge,
+                  valueBetOutcome: 'PENDING',
+                  // CLV Tracking: Store opening odds at prediction time
+                  openingOdds: valueBetOdds,
+                  clvFetched: false,
+                  // V2 Edge Tracking fields for admin dashboard
+                  modelVersion: 'v2',
+                  selection: selectionText,
+                  modelProbability: valueBetProb * 100, // Store as percentage
+                  marketProbabilityRaw: storedImpliedProb * 100, // Raw implied prob
+                  marketProbabilityFair: storedImpliedProb * 100, // For now same as raw
+                  marketOddsAtPrediction: valueBetOdds,
+                  edgeValue: valueBetEdge,
+                  edgeBucket,
+                  marketType: 'MONEYLINE',
+                  predictionTimestamp: new Date(),
+                },
+              });
 
-            stats.predictionsCreated++;
-            console.log(`[Pre-Analyze] VALUE BET: ${matchRef} → ${valueTeam} @ ${valueBetOdds.toFixed(2)} (+${valueBetEdge.toFixed(1)}% edge, ${(valueBetProb * 100).toFixed(0)}% model prob)`);
+              stats.predictionsCreated++;
+              console.log(`[Pre-Analyze] VALUE BET: ${matchRef} → ${valueTeam} @ ${valueBetOdds.toFixed(2)} (+${valueBetEdge.toFixed(1)}% edge, ${(valueBetProb * 100).toFixed(0)}% model prob)`);
+            }
             // Note: Blog post is now generated earlier for ALL matches (not just value bets)
           } catch (predError) {
             console.error(`[Pre-Analyze] Prediction creation failed:`, predError);
