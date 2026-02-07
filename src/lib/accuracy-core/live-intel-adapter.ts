@@ -120,15 +120,20 @@ export function runQuickAnalysis(match: MinimalMatchData): QuickAnalysisResult {
   }
   
   // Step 4: Determine favored team from market probs
+  // CRITICAL: For sports without draws (basketball, NFL, hockey), NEVER return 'even'
   const { home, away, draw } = marketProbs.impliedProbabilitiesNoVig;
+  const hasDraw = draw !== undefined && draw > 0;
   let favored: 'home' | 'away' | 'draw' | 'even' = 'even';
   
-  if (draw !== undefined && draw > home && draw > away) {
+  if (hasDraw && draw > home && draw > away) {
     favored = 'draw';
   } else if (home > away && home - away > 0.05) {
     favored = 'home';
   } else if (away > home && away - home > 0.05) {
     favored = 'away';
+  } else if (!hasDraw) {
+    // For non-draw sports with close probabilities, pick the higher side
+    favored = home >= away ? 'home' : 'away';
   }
   
   // Step 5: Calculate edge (market vs our estimate)

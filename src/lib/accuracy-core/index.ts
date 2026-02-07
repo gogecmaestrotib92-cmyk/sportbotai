@@ -422,19 +422,24 @@ function buildPipelineOutput(
   trapWarning: string | null = null
 ): PipelineOutput {
   // Determine favored outcome
+  // CRITICAL: For sports without draws (basketball, NFL, hockey), NEVER return 'even'
+  // Always pick the side with higher probability
   let favored: 'home' | 'away' | 'draw' | 'even';
   const probDiff = Math.abs(calibrated.home - calibrated.away);
 
-  if (probDiff < 0.05) {
+  if (probDiff < 0.05 && hasDraw) {
+    // Only allow 'even' for sports WITH draws (soccer) when probabilities are close
     favored = 'even';
-  } else if (calibrated.home > calibrated.away && calibrated.home > (calibrated.draw || 0)) {
+  } else if (calibrated.home >= calibrated.away && calibrated.home >= (calibrated.draw || 0)) {
+    // Home favored (use >= to ensure we always pick a side for non-draw sports)
     favored = 'home';
-  } else if (calibrated.away > calibrated.home && calibrated.away > (calibrated.draw || 0)) {
+  } else if (calibrated.away > calibrated.home && calibrated.away >= (calibrated.draw || 0)) {
     favored = 'away';
   } else if (hasDraw && (calibrated.draw || 0) > calibrated.home && (calibrated.draw || 0) > calibrated.away) {
     favored = 'draw';
   } else {
-    favored = 'even';
+    // Fallback: pick the side with higher probability (for non-draw sports)
+    favored = calibrated.home >= calibrated.away ? 'home' : 'away';
   }
 
   // Determine confidence

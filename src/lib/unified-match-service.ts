@@ -323,8 +323,12 @@ function computeAnalysis(
     Math.abs(strengthEdge.percentage) >= 5 ? 'MEDIUM' : 'LOW';
   
   // Determine favored
+  // CRITICAL: For sports without draws (basketball, NFL, hockey), NEVER use 'even'
+  // Always pick a side based on probability
+  const hasDraw = matchInfo.hasDraw !== false; // Default to true for soccer
   let favored: 'home' | 'away' | 'draw' | 'even' = 'even';
   const probDiff = Math.abs(homeProb - awayProb);
+  
   if (probDiff >= 5) {
     if (homeProb > awayProb && homeProb > (drawProb || 0)) {
       favored = 'home';
@@ -333,6 +337,9 @@ function computeAnalysis(
     } else if (drawProb && drawProb > homeProb && drawProb > awayProb) {
       favored = 'draw';
     }
+  } else if (!hasDraw) {
+    // For non-draw sports with close probabilities, still pick the higher side
+    favored = homeProb >= awayProb ? 'home' : 'away';
   }
   
   // Derive narrative angle (for Data-3 LLM)
