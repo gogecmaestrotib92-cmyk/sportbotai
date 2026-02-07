@@ -353,6 +353,11 @@ interface MatchPreviewData {
   daysUntilKickoff?: number;
   availableDate?: string;
   reason?: string;
+  // Live match response
+  isLive?: boolean;
+  matchStarted?: boolean;
+  minutesSinceKickoff?: number;
+  message?: string;
   matchInfo: {
     id: string;
     homeTeam: string;
