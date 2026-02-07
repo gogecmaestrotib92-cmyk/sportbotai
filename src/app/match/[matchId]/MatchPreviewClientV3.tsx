@@ -1039,6 +1039,107 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
     );
   }
 
+  // Match is LIVE or has started - show message that analysis is not available for live matches
+  // BUT if we have pre-analyzed data, show that instead
+  const isMatchLive = data?.isLive || data?.matchStarted;
+  const hasPreMatchData = isMatchLive && data?.story; // If we have story, we have pre-analyzed data
+
+  if (isMatchLive && !hasPreMatchData && (parsedMatch || data?.matchInfo)) {
+    const matchForHeader = data?.matchInfo || parsedMatch;
+    return (
+      <div className="min-h-screen bg-bg relative overflow-x-hidden">
+        {/* Ambient Background Glows */}
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-red-500/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed inset-0 bg-gradient-to-b from-white/[0.01] via-transparent to-transparent pointer-events-none" />
+
+        <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
+          {/* Back navigation */}
+          <Link
+            href={backUrl}
+            className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="text-sm">{t.allMatches}</span>
+          </Link>
+
+          {/* Match header */}
+          {matchForHeader && (
+            <PremiumMatchHeader
+              homeTeam={matchForHeader.homeTeam}
+              awayTeam={matchForHeader.awayTeam}
+              league={matchForHeader.league}
+              sport={matchForHeader.sport}
+              kickoff={matchForHeader.kickoff}
+            />
+          )}
+
+          {/* Live match message */}
+          <div className="mt-8 p-5 rounded-xl card-glass border-red-500/20">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-red-400 uppercase tracking-wider">
+                  {locale === 'sr' ? 'UŽIVO' : 'LIVE'}
+                </span>
+                <h3 className="text-base font-medium text-white">
+                  {locale === 'sr' ? 'Utakmica je u toku' : 'Match In Progress'}
+                </h3>
+              </div>
+            </div>
+
+            <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+              {locale === 'sr'
+                ? <>Naša AI analiza je dizajnirana za <span className="text-zinc-300">pripremu pre meča</span>. Analiza u toku utakmice nije dostupna.</>
+                : <>Our AI analysis is designed for <span className="text-zinc-300">pre-match preparation</span>. Live match analysis is not available.</>}
+            </p>
+
+            <div className="flex items-center gap-2 text-zinc-500 text-xs">
+              <svg className="w-3.5 h-3.5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{locale === 'sr' ? 'Pre-meč analiza mora biti generisana pre početka' : 'Pre-match analysis must be generated before kickoff'}</span>
+            </div>
+          </div>
+
+          {/* Tip about future matches */}
+          <div className="mt-4 p-4 rounded-xl card-glass">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-sm">💡</span>
+              <span className="text-[10px] text-zinc-500 uppercase tracking-wider">
+                {locale === 'sr' ? 'Savet' : 'Tip'}
+              </span>
+            </div>
+            <p className="text-xs text-zinc-500">
+              {locale === 'sr'
+                ? 'Za buduće mečeve, analizirajte ih unapred dok su kvote još dostupne. Naši uvidi su najtačniji 24-48 sati pre početka.'
+                : 'For future matches, analyze them in advance while odds are still available. Our insights are most accurate 24-48 hours before kickoff.'}
+            </p>
+          </div>
+
+          {/* CTA to browse other matches */}
+          <div className="mt-6 text-center">
+            <Link
+              href={backUrl}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] rounded-lg text-sm text-zinc-300 hover:text-white transition-colors"
+            >
+              <span>{locale === 'sr' ? 'Pregledaj Predstojeće Mečeve' : 'Browse Upcoming Matches'}</span>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Usage limit reached - show upgrade card with match info
   if (usageLimit) {
     const matchForHeader = usageLimit.matchInfo || parsedMatch;

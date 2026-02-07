@@ -222,6 +222,91 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           reason: 'Our AI analysis becomes available 48 hours before kickoff when we have the most accurate data (injuries, lineups, latest odds).',
         });
       }
+
+      // ==========================================
+      // CHECK IF MATCH IS LIVE OR FINISHED (kickoff in the past)
+      // Return early with "match in progress" response - don't generate new analysis
+      // ==========================================
+      if (hoursUntilKickoff < 0) {
+        const minutesSinceKickoff = Math.abs(hoursUntilKickoff * 60);
+        console.log(`[Match-Preview] Match is LIVE/FINISHED (started ${minutesSinceKickoff.toFixed(0)} min ago) - returning cached pre-match analysis if available`);
+
+        // Try to find cached/pre-analyzed data for this match
+        const homeWord = matchInfo.homeTeam.split(/\s+/)[0];
+        const awayWord = matchInfo.awayTeam.split(/\s+/)[0];
+
+        // First check for pre-analyzed data from cron
+        const preAnalyzedLive = await prisma.prediction.findFirst({
+          where: {
+            AND: [
+              { matchName: { contains: homeWord, mode: 'insensitive' } },
+              { matchName: { contains: awayWord, mode: 'insensitive' } },
+            ],
+            // Allow past matches (already started)
+            kickoff: { 
+              gte: new Date(Date.now() - 6 * 60 * 60 * 1000), // Started within last 6 hours
+            },
+            NOT: { fullResponse: { equals: Prisma.DbNull } },
+          },
+          orderBy: { kickoff: 'desc' },
+        });
+
+        if (preAnalyzedLive?.fullResponse) {
+          const fullData = preAnalyzedLive.fullResponse as any;
+          console.log(`[Match-Preview] 🔴 Returning pre-analyzed data for live match: ${preAnalyzedLive.matchName}`);
+
+          return NextResponse.json({
+            // Core match info
+            matchInfo: fullData.matchInfo || {
+              id: matchId,
+              homeTeam: matchInfo.homeTeam,
+              awayTeam: matchInfo.awayTeam,
+              league: matchInfo.league,
+              sport: matchInfo.sport,
+              kickoff: matchInfo.kickoff,
+            },
+            // All pre-analyzed data
+            ...fullData,
+            // Mark as live match
+            isLive: true,
+            matchStarted: true,
+            minutesSinceKickoff: Math.round(minutesSinceKickoff),
+            preAnalyzed: true,
+            creditUsed: false,
+            message: 'This analysis was generated before the match started. Live analysis is not available.',
+            responseTime: Date.now() - startTime,
+          }, {
+            headers: {
+              'Cache-Control': 'public, max-age=60', // Short cache for live
+              'X-SportBot-Live': 'true',
+            },
+          });
+        }
+
+        // No pre-analyzed data found - return minimal response
+        console.log(`[Match-Preview] 🔴 No pre-analyzed data for live match - returning minimal response`);
+        return NextResponse.json({
+          isLive: true,
+          matchStarted: true,
+          minutesSinceKickoff: Math.round(minutesSinceKickoff),
+          matchInfo: {
+            id: matchId,
+            homeTeam: matchInfo.homeTeam,
+            awayTeam: matchInfo.awayTeam,
+            league: matchInfo.league,
+            sport: matchInfo.sport,
+            kickoff: matchInfo.kickoff,
+          },
+          message: 'Match has already started. Pre-match analysis is not available.',
+          reason: 'Our AI analysis is designed for pre-match preparation. Live match analysis is not supported.',
+          creditUsed: false,
+        }, {
+          headers: {
+            'Cache-Control': 'public, max-age=60',
+            'X-SportBot-Live': 'true',
+          },
+        });
+      }
     }
 
     // ==========================================

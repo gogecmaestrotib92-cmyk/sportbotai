@@ -910,3 +910,13 @@ enum EngagementType {
   ACCOUNT_REPLY
   QUOTE_TWEET
 }
+
+// Daily Picks Cache - stores pick IDs for each day so they persist all day
+model DailyPicksCache {
+  id          String   @id @default(cuid())
+  date        String   @unique // Format: "YYYY-MM-DD"
+  pickIds     String[] // Array of Prediction IDs
+  generatedAt DateTime @default(now())
+  
+  @@index([date])
+}

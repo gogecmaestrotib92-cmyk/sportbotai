@@ -37,6 +37,8 @@ const matchCardTranslations = {
     viewRecap: 'View Recap',
     viewInsights: 'View Insights',
     tomorrow: 'Tomorrow',
+    inProgress: 'In Progress',
+    finished: 'Finished',
   },
   sr: {
     live: 'UŽIVO',
@@ -47,6 +49,8 @@ const matchCardTranslations = {
     viewRecap: 'Pogledaj Rezime',
     viewInsights: 'Pogledaj',
     tomorrow: 'Sutra',
+    inProgress: 'U toku',
+    finished: 'Završeno',
   },
 };
 
@@ -168,13 +172,15 @@ export default function MatchCardI18n({
     setFormattedDate(formatMatchDate(commenceTime));
   }, [commenceTime, locale, t.tomorrow]);
 
-  return (
-    <Link
-      href={`${localePath}/match/${matchSlug}`}
-      scroll={false}
-      className={`group relative card-glass rounded-xl ${isLive ? 'border-red-500/40 ring-1 ring-red-500/20' : isFinished ? 'border-gray-600/40' : 'border-white/10'} p-3 sm:p-4 hover:border-accent/40 hover:bg-white/[0.08] transition-all duration-300 ease-out block hover:scale-[1.02] hover:shadow-xl hover:shadow-accent/5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg touch-manipulation ${isFinished ? 'opacity-80' : ''}`}
-      data-card
-    >
+  // Determine if match is clickable (only upcoming matches can be analyzed)
+  const isClickable = !isLive && !isFinished;
+
+  // Common card styles
+  const cardClassName = `group relative card-glass rounded-xl ${isLive ? 'border-red-500/40 ring-1 ring-red-500/20' : isFinished ? 'border-gray-600/40' : 'border-white/10'} p-3 sm:p-4 ${isClickable ? 'hover:border-accent/40 hover:bg-white/[0.08] hover:scale-[1.02] hover:shadow-xl hover:shadow-accent/5 active:scale-[0.98] cursor-pointer' : 'cursor-default'} transition-all duration-300 ease-out block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg touch-manipulation ${isFinished ? 'opacity-80' : ''}`;
+
+  // Card content (shared between Link and div)
+  const cardContent = (
+    <>
       {/* Live Badge */}
       {isLive && (
         <div className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-red-500 to-red-600 rounded-full text-[10px] font-bold text-white shadow-lg shadow-red-500/30">
@@ -230,7 +236,7 @@ export default function MatchCardI18n({
       <div className="flex items-center justify-between">
         {/* Home Team */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
+          <div className={`flex-shrink-0 transition-transform duration-300 ${isClickable ? 'group-hover:scale-110' : ''}`}>
             <TeamLogo teamName={homeTeam} sport={sportKey} league={league} size="md" />
           </div>
           <span className="text-xs sm:text-sm font-bold text-white truncate" title={homeTeam}>{homeTeam}</span>
@@ -256,13 +262,13 @@ export default function MatchCardI18n({
             </span>
           </div>
         ) : (
-          <span className="text-gray-400 text-sm font-medium px-2 group-hover:text-gray-300 transition-colors">vs</span>
+          <span className={`text-gray-400 text-sm font-medium px-2 ${isClickable ? 'group-hover:text-gray-300' : ''} transition-colors`}>vs</span>
         )}
 
         {/* Away Team */}
         <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
           <span className="text-xs sm:text-sm font-bold text-white truncate text-right" title={awayTeam}>{awayTeam}</span>
-          <div className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
+          <div className={`flex-shrink-0 transition-transform duration-300 ${isClickable ? 'group-hover:scale-110' : ''}`}>
             <TeamLogo teamName={awayTeam} sport={sportKey} league={league} size="md" />
           </div>
         </div>
@@ -291,29 +297,28 @@ export default function MatchCardI18n({
         </div>
       )}
 
-      {/* Match time + Analyze CTA */}
+      {/* Match time + Status/CTA */}
       <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
         <span className="text-xs text-text-muted" suppressHydrationWarning>{formattedDate}</span>
         {isLive ? (
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-red-500/15 text-red-400 border border-red-500/30 rounded-full group-hover:bg-red-500 group-hover:text-white group-hover:border-red-500 transition-all">
+          // LIVE: Show status indicator (not clickable)
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-red-500/15 text-red-400 border border-red-500/30 rounded-full">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 group-hover:bg-white"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-400 group-hover:bg-white"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-400"></span>
             </span>
-            {t.watchLive}
-            <svg className="w-3 h-3 opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
+            {t.inProgress}
           </span>
         ) : isFinished ? (
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-gray-500/15 text-gray-400 border border-gray-500/30 rounded-full group-hover:bg-gray-500 group-hover:text-white group-hover:border-gray-500 transition-all">
-            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full group-hover:bg-white"></span>
-            {t.viewRecap}
-            <svg className="w-3 h-3 opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          // FINISHED: Show finished status (not clickable)
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-gray-500/15 text-gray-400 border border-gray-500/30 rounded-full">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
+            {t.finished}
           </span>
         ) : (
+          // UPCOMING: Show clickable CTA
           <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-accent/15 text-accent border border-accent/30 rounded-full group-hover:bg-accent group-hover:text-white group-hover:border-accent transition-all">
             <span className="w-1.5 h-1.5 bg-accent rounded-full group-hover:bg-white animate-pulse"></span>
             {t.viewInsights}
@@ -323,6 +328,27 @@ export default function MatchCardI18n({
           </span>
         )}
       </div>
-    </Link>
+    </>
+  );
+
+  // Render as Link for upcoming matches, div for live/finished
+  if (isClickable) {
+    return (
+      <Link
+        href={`${localePath}/match/${matchSlug}`}
+        scroll={false}
+        className={cardClassName}
+        data-card
+      >
+        {cardContent}
+      </Link>
+    );
+  }
+
+  // Non-clickable card for live/finished matches
+  return (
+    <div className={cardClassName} data-card>
+      {cardContent}
+    </div>
   );
 }
