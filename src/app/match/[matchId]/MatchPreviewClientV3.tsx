@@ -357,7 +357,6 @@ interface MatchPreviewData {
   isLive?: boolean;
   matchStarted?: boolean;
   minutesSinceKickoff?: number;
-  message?: string;
   matchInfo: {
     id: string;
     homeTeam: string;
