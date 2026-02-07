@@ -325,7 +325,7 @@ function computeAnalysis(
   // Determine favored
   // CRITICAL: For sports without draws (basketball, NFL, hockey), NEVER use 'even'
   // Always pick a side based on probability
-  const hasDraw = matchInfo.hasDraw !== false; // Default to true for soccer
+  const sportHasDraw = matchInfo.hasDraw !== false; // Default to true for soccer
   let favored: 'home' | 'away' | 'draw' | 'even' = 'even';
   const probDiff = Math.abs(homeProb - awayProb);
   
@@ -337,7 +337,7 @@ function computeAnalysis(
     } else if (drawProb && drawProb > homeProb && drawProb > awayProb) {
       favored = 'draw';
     }
-  } else if (!hasDraw) {
+  } else if (!sportHasDraw) {
     // For non-draw sports with close probabilities, still pick the higher side
     favored = homeProb >= awayProb ? 'home' : 'away';
   }
