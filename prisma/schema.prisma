@@ -786,6 +786,15 @@ model LearnedResponse {
   @@index([feedbackScore])
 }
 
+model DailyPicksCache {
+  id          String   @id @default(cuid())
+  date        String   @unique
+  pickIds     String[]
+  generatedAt DateTime @default(now())
+
+  @@index([date])
+}
+
 enum EdgeBucket {
   NO_EDGE
   SMALL
@@ -909,14 +918,4 @@ enum EngagementType {
   MENTION_REPLY
   ACCOUNT_REPLY
   QUOTE_TWEET
-}
-
-// Daily Picks Cache - stores pick IDs for each day so they persist all day
-model DailyPicksCache {
-  id          String   @id @default(cuid())
-  date        String   @unique // Format: "YYYY-MM-DD"
-  pickIds     String[] // Array of Prediction IDs
-  generatedAt DateTime @default(now())
-  
-  @@index([date])
 }

@@ -537,18 +537,20 @@ function evaluatePrediction(
   homeScore: number,
   awayScore: number
 ): { wasAccurate: boolean; actualResult: string } {
-  const predicted = predictedScenario.toLowerCase();
+  const predicted = predictedScenario.toLowerCase().trim();
   const totalGoals = homeScore + awayScore;
   const actualResult = homeScore > awayScore ? 'Home Win' : awayScore > homeScore ? 'Away Win' : 'Draw';
 
   // Check various prediction types
-  if (predicted.includes('home win') || predicted.includes('home victory')) {
+  // CRITICAL: Check for exact "home" or "away" FIRST (from analysis predictions)
+  // These are simple values like "home", "away", "draw" stored by match analysis
+  if (predicted === 'home' || predicted.includes('home win') || predicted.includes('home victory')) {
     return { wasAccurate: homeScore > awayScore, actualResult };
   }
-  if (predicted.includes('away win') || predicted.includes('away victory')) {
+  if (predicted === 'away' || predicted.includes('away win') || predicted.includes('away victory')) {
     return { wasAccurate: awayScore > homeScore, actualResult };
   }
-  if (predicted.includes('draw')) {
+  if (predicted === 'draw' || predicted.includes('draw')) {
     return { wasAccurate: homeScore === awayScore, actualResult };
   }
   if (predicted.includes('over 2.5') || predicted.includes('over2.5')) {
@@ -564,6 +566,9 @@ function evaluatePrediction(
     return { wasAccurate: homeScore > 0 && awayScore > 0, actualResult: `${homeScore}-${awayScore}` };
   }
 
+  // Log unrecognized prediction format for debugging
+  console.warn(`[evaluatePrediction] Unrecognized prediction format: "${predicted}" - defaulting to false`);
+  
   // Default: can't evaluate
   return { wasAccurate: false, actualResult };
 }
