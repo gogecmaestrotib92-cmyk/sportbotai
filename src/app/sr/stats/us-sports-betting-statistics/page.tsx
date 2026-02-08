@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import Header from '@/components/HeaderI18n';
-import Footer from '@/components/FooterI18n';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Area, AreaChart
@@ -198,7 +196,6 @@ export default function USBettingStatisticsPageSr() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      <Header />
       
       <main className="max-w-7xl mx-auto px-4 py-12">
         {/* Hero Section */}
@@ -932,8 +929,6 @@ export default function USBettingStatisticsPageSr() {
           </div>
         </div>
       </main>
-
-      <Footer />
 
       {/* Schema.org structured data - Article */}
       <script

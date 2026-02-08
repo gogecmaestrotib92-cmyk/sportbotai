@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import Header from '@/components/HeaderI18n';
-import Footer from '@/components/FooterI18n';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, Legend, Area, AreaChart
@@ -212,7 +210,6 @@ export default function USBettingStatisticsPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      <Header />
       
       {/* Hero Section with Background */}
       <section className="relative overflow-hidden">
@@ -1467,8 +1464,6 @@ export default function USBettingStatisticsPage() {
           </div>
         </div>
       </main>
-
-      <Footer />
 
       {/* Schema.org structured data - Article */}
       <script
