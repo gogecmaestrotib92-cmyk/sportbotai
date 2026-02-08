@@ -29,6 +29,7 @@ const STATIC_PAGES = [
 
   // Statistics Hub (SEO authority pages)
   { path: '/stats/traditional-betting-vs-ai-predictions', priority: 0.85, changeFreq: 'monthly' as const },
+  { path: '/stats/us-sports-betting-statistics', priority: 0.9, changeFreq: 'monthly' as const },
 
   // Content & Conversion
   { path: '/blog', priority: 0.85, changeFreq: 'daily' as const },
@@ -55,6 +56,7 @@ const SERBIAN_STATIC_PAGES = [
   { path: '/sr/analyzer', priority: 0.8, changeFreq: 'weekly' as const },
   { path: '/sr/market-alerts', priority: 0.75, changeFreq: 'daily' as const },
   { path: '/sr/stats/tradicionalno-kladjenje-vs-ai-predikcije', priority: 0.8, changeFreq: 'monthly' as const },
+  { path: '/sr/stats/us-sports-betting-statistics', priority: 0.85, changeFreq: 'monthly' as const },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

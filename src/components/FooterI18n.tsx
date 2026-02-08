@@ -161,6 +161,11 @@ export default function FooterI18n({ locale: localeProp }: FooterI18nProps) {
                   {locale === 'sr' ? 'AI vs Tradicionalno' : 'AI vs Traditional Betting'}
                 </Link>
               </li>
+              <li>
+                <Link href={locale === 'sr' ? '/sr/stats/us-sports-betting-statistics' : '/stats/us-sports-betting-statistics'} className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
+                  {locale === 'sr' ? 'US Statistika Klađenja' : 'US Betting Statistics'}
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -30,10 +30,10 @@ const prisma = new PrismaClient();
 // ============================================
 const TOOLS: ToolConfig[] = [
   {
-    name: 'Bet Hero',
-    url: 'https://betherosports.com/',
-    email: 'juan@betherosports.com',
-    description: 'Bet Hero is a sports betting analytics platform offering AI-powered picks and predictions across major US sports including NFL, NBA, MLB, and NHL. The platform provides data-driven betting recommendations with transparent track records, bankroll management tools, and educational content for both beginner and advanced bettors. Features include daily picks, props analysis, and live betting insights.',
+    name: 'Smart Sports Trader',
+    url: 'https://smartsportstrader.com/',
+    email: 'smartsportstrader@gmail.com',
+    description: 'Smart Sports Trader is a sports betting blog run by Ryan, who has documented his "Making A Million" challenge since April 2017, earning over £200,000 in verified profits. The site offers comprehensive guides on matched betting, value betting, Betfair trading, arbitrage, and sports betting strategies. Top-rated reviews include OddsMonkey (10/10), Profit Maximiser (10/10), Smart Betting Club (9.5/10), and WinnerOdds (9/10). Categories cover football betting, horse racing, greyhound betting, casino offers, and betting tipster reviews. Known for transparent monthly profit/loss tracking and honest reviews of betting systems and tipsters.',
   },
 ];
 
