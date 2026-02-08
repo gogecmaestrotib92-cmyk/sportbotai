@@ -175,17 +175,17 @@ export default function FooterI18n({ locale: localeProp }: FooterI18nProps) {
               </li>
               <li>
                 <Link href={`${localePath}/nba`} className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
-                  NBA
+                  {locale === 'sr' ? 'AI NBA Prognoze' : 'AI NBA Predictions'}
                 </Link>
               </li>
               <li>
                 <Link href={`${localePath}/nfl`} className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
-                  NFL
+                  {locale === 'sr' ? 'AI NFL Prognoze' : 'AI NFL Predictions'}
                 </Link>
               </li>
               <li>
                 <Link href={`${localePath}/nhl`} className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
-                  NHL
+                  {locale === 'sr' ? 'AI NHL Prognoze' : 'AI NHL Predictions'}
                 </Link>
               </li>
             </ul>
