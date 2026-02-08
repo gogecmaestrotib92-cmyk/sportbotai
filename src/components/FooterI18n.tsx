@@ -156,6 +156,11 @@ export default function FooterI18n({ locale: localeProp }: FooterI18nProps) {
                   Blog
                 </Link>
               </li>
+              <li>
+                <Link href={locale === 'sr' ? '/sr/stats/tradicionalno-kladjenje-vs-ai-predikcije' : '/stats/traditional-betting-vs-ai-predictions'} className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
+                  {locale === 'sr' ? 'AI vs Tradicionalno' : 'AI vs Traditional Betting'}
+                </Link>
+              </li>
             </ul>
           </div>
 
