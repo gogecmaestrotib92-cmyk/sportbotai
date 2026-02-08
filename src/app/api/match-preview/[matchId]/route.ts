@@ -192,8 +192,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // ==========================================
     // CHECK IF MATCH IS TOO FAR AWAY (>48 HOURS)
     // Return early with "coming soon" response instead of mock/fallback analysis
+    // NOTE: If kickoff time is midnight (T00:00:00Z), it's likely just a date without time
+    // In that case, skip the "too far away" and "live" checks - we'll get real time from DB
     // ==========================================
-    if (matchInfo.kickoff) {
+    const hasRealKickoffTime = matchInfo.kickoff && !matchInfo.kickoff.endsWith('T00:00:00Z');
+    
+    if (hasRealKickoffTime && matchInfo.kickoff) {
       const kickoffDate = new Date(matchInfo.kickoff);
       const now = new Date();
       const hoursUntilKickoff = (kickoffDate.getTime() - now.getTime()) / (1000 * 60 * 60);
