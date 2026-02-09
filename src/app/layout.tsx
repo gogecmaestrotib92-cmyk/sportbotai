@@ -24,6 +24,7 @@ import { KeyboardShortcutsProvider } from '@/components/CommandPalette';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 import UTMTracker from '@/components/UTMTracker';
+import AffiliateTracker from '@/components/AffiliateTracker';
 import ReferralSync from '@/components/ReferralSync';
 import ActivityTracker from '@/components/ActivityTracker';
 import { SITE_CONFIG, META, OG_DEFAULTS, getOrganizationSchema, getWebsiteSchema } from '@/lib/seo';
@@ -293,6 +294,11 @@ export default async function RootLayout({
                 {/* UTM Attribution Tracker */}
                 <Suspense fallback={null}>
                   <UTMTracker />
+                </Suspense>
+
+                {/* Affiliate Referral Tracker - saves ?ref= to cookie */}
+                <Suspense fallback={null}>
+                  <AffiliateTracker />
                 </Suspense>
 
                 {/* Sync referral source for OAuth users */}

@@ -113,8 +113,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const customerEmail = session.customer_email || session.metadata?.userEmail;
   const rawPlanName = session.metadata?.planName || 'Pro';
   const planType = extractPlanType(rawPlanName);
+  const affiliateRef = session.metadata?.affiliateRef;
   
   console.log(`[Stripe Webhook] Raw plan name: ${rawPlanName}, Extracted plan type: ${planType}`);
+  if (affiliateRef) {
+    console.log(`[Stripe Webhook] Affiliate referral: ${affiliateRef}`);
+  }
   
   if (!customerEmail) {
     console.error('[Stripe Webhook] No customer email found');
@@ -122,15 +126,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   try {
-    // Get subscription details to find billing period end
+    // Get subscription details to find billing period end and amount
     let periodEnd: Date | undefined;
+    let subscriptionAmount = 0;
     if (session.subscription) {
       const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
       periodEnd = new Date(subscription.current_period_end * 1000);
+      // Get the subscription amount
+      if (subscription.items.data[0]?.price?.unit_amount) {
+        subscriptionAmount = subscription.items.data[0].price.unit_amount / 100;
+      }
     }
     
     // Update user's plan in database with credit reset
-    await prisma.user.update({
+    const user = await prisma.user.update({
       where: { email: customerEmail },
       data: {
         plan: planType,
@@ -146,6 +155,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     });
     
     console.log(`[Stripe Webhook] User ${customerEmail} upgraded to ${planType}, credits reset`);
+    
+    // Track affiliate conversion if ref exists
+    if (affiliateRef) {
+      await trackAffiliateConversion(
+        affiliateRef,
+        user.id,
+        session.subscription as string,
+        rawPlanName,
+        subscriptionAmount
+      );
+    }
     
     // Send welcome email to customer
     await sendWelcomeEmail(customerEmail, planType);
@@ -233,6 +253,50 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     console.log(`[Stripe Webhook] User ${customer.email} downgraded to FREE`);
   } catch (error) {
     console.error('[Stripe Webhook] Error handling cancellation:', error);
+  }
+}
+
+/**
+ * Track affiliate conversion when a referred user subscribes
+ */
+async function trackAffiliateConversion(
+  affiliateCode: string,
+  userId: string,
+  stripeSubscriptionId: string,
+  planName: string,
+  amount: number
+) {
+  try {
+    // Find affiliate by code
+    const affiliate = await prisma.affiliate.findUnique({
+      where: { code: affiliateCode },
+    });
+
+    if (!affiliate || affiliate.status !== 'ACTIVE') {
+      console.log(`[Affiliate] Invalid or inactive affiliate code: ${affiliateCode}`);
+      return;
+    }
+
+    // Calculate commission
+    const commission = amount * affiliate.commissionRate;
+
+    // Create conversion record
+    await prisma.affiliateConversion.create({
+      data: {
+        affiliateId: affiliate.id,
+        userId,
+        stripeSubscriptionId,
+        planName,
+        amount,
+        commission,
+        status: 'PENDING', // Will be APPROVED after 30-day refund period
+      },
+    });
+
+    console.log(`[Affiliate] Conversion tracked: ${affiliateCode} - $${commission.toFixed(2)} commission for ${planName}`);
+  } catch (error) {
+    console.error('[Affiliate] Error tracking conversion:', error);
+    // Don't throw - we don't want to fail the webhook
   }
 }
 

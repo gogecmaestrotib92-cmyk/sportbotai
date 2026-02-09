@@ -134,6 +134,11 @@ export default function FooterI18n({ locale: localeProp }: FooterI18nProps) {
                   {t.contact}
                 </Link>
               </li>
+              <li>
+                <Link href={`${localePath}/affiliate`} className="text-text-muted hover:text-accent transition-colors text-sm py-2 inline-block touch-manipulation">
+                  {locale === 'sr' ? 'Affiliate Program' : 'Affiliate Program'}
+                </Link>
+              </li>
             </ul>
           </div>
 

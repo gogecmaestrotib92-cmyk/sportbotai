@@ -679,3 +679,109 @@ export async function sendDailyTopMatchesEmail(
 
   return sent;
 }
+
+// ============================================
+// AFFILIATE PROGRAM EMAILS
+// ============================================
+
+/**
+ * Email to admin when someone applies for affiliate program
+ */
+export async function sendAffiliateApplicationNotification(
+  applicantName: string,
+  applicantEmail: string,
+  website: string | null,
+  promotionPlan: string
+): Promise<boolean> {
+  const html = emailWrapper(`
+    <h2 style="color: #10B981; margin-bottom: 20px;">New Affiliate Application 🤝</h2>
+    
+    <p>Someone has applied to become an affiliate partner!</p>
+    
+    <div style="background: #1e293b; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0;"><strong>Name:</strong> ${applicantName}</p>
+      <p style="margin: 0 0 10px 0;"><strong>Email:</strong> ${applicantEmail}</p>
+      <p style="margin: 0 0 10px 0;"><strong>Website:</strong> ${website || 'Not provided'}</p>
+      <p style="margin: 0;"><strong>Promotion Plan:</strong></p>
+      <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">${promotionPlan}</p>
+    </div>
+    
+    <div style="text-align: center;">
+      <a href="https://${SITE_CONFIG.domain}/admin/affiliates" style="${buttonStyle}">
+        Review Application →
+      </a>
+    </div>
+  `);
+
+  // Send to all admin emails
+  const adminEmails = ['gogecmaestrotib92@gmail.com', 'aiinstamarketing@gmail.com'];
+  
+  for (const adminEmail of adminEmails) {
+    await sendEmail({
+      to: adminEmail,
+      subject: `🤝 New Affiliate Application: ${applicantName}`,
+      html,
+    });
+  }
+
+  return true;
+}
+
+/**
+ * Email to affiliate when their application is approved
+ */
+export async function sendAffiliateApprovalEmail(
+  email: string,
+  name: string,
+  password: string,
+  referralCode: string
+): Promise<boolean> {
+  const dashboardUrl = `https://${SITE_CONFIG.domain}/affiliate/dashboard`;
+  const referralLink = `https://${SITE_CONFIG.domain}/?ref=${referralCode}`;
+
+  const html = emailWrapper(`
+    <h2 style="color: #10B981; margin-bottom: 20px;">Welcome to SportBot AI Affiliate Program! 🎉</h2>
+    
+    <p>Hi ${name},</p>
+    
+    <p>Great news! Your affiliate application has been approved. You can now start earning <strong>30% recurring commission</strong> on every referral!</p>
+    
+    <div style="background: #1e293b; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h3 style="color: #f8fafc; margin: 0 0 15px 0;">Your Login Details</h3>
+      <p style="margin: 0 0 10px 0;"><strong>Email:</strong> ${email}</p>
+      <p style="margin: 0 0 10px 0;"><strong>Password:</strong> <code style="background: #334155; padding: 2px 8px; border-radius: 4px;">${password}</code></p>
+      <p style="margin: 0; font-size: 12px; color: #94a3b8;">Please change your password after first login.</p>
+    </div>
+    
+    <div style="background: #064e3b; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h3 style="color: #10B981; margin: 0 0 10px 0;">Your Referral Link</h3>
+      <p style="margin: 0; word-break: break-all;">
+        <a href="${referralLink}" style="color: #34d399;">${referralLink}</a>
+      </p>
+    </div>
+    
+    <h3 style="color: #f8fafc; margin-top: 30px;">Commission Structure</h3>
+    <ul style="color: #cbd5e1; line-height: 1.8;">
+      <li>💰 <strong>30%</strong> recurring commission on all plans</li>
+      <li>🍪 <strong>90-day</strong> cookie duration</li>
+      <li>💵 <strong>$50</strong> minimum payout</li>
+      <li>📅 Monthly payouts (Net-30)</li>
+    </ul>
+    
+    <div style="text-align: center;">
+      <a href="${dashboardUrl}" style="${buttonStyle}">
+        Access Your Dashboard →
+      </a>
+    </div>
+    
+    <p style="color: #94a3b8; font-size: 14px; margin-top: 30px;">
+      If you have any questions, reply to this email or contact us at ${SUPPORT_EMAIL}
+    </p>
+  `);
+
+  return sendEmail({
+    to: email,
+    subject: '🎉 Welcome to SportBot AI Affiliate Program!',
+    html,
+  });
+}

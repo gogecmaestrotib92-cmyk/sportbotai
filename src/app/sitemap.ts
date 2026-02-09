@@ -34,6 +34,7 @@ const STATIC_PAGES = [
   // Content & Conversion
   { path: '/blog', priority: 0.85, changeFreq: 'daily' as const },
   { path: '/partners', priority: 0.7, changeFreq: 'weekly' as const },
+  { path: '/affiliate', priority: 0.75, changeFreq: 'monthly' as const },
   { path: '/pricing', priority: 0.8, changeFreq: 'monthly' as const },
   { path: '/contact', priority: 0.6, changeFreq: 'monthly' as const },
 
@@ -57,6 +58,7 @@ const SERBIAN_STATIC_PAGES = [
   { path: '/sr/market-alerts', priority: 0.75, changeFreq: 'daily' as const },
   { path: '/sr/stats/tradicionalno-kladjenje-vs-ai-predikcije', priority: 0.8, changeFreq: 'monthly' as const },
   { path: '/sr/stats/us-sports-betting-statistics', priority: 0.85, changeFreq: 'monthly' as const },
+  { path: '/sr/affiliate', priority: 0.7, changeFreq: 'monthly' as const },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

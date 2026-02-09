@@ -10,6 +10,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { getAffiliateCookie } from './AffiliateTracker';
 import { trackCheckoutStart, trackUpgradeIntent } from '@/lib/analytics';
 
 // Types for pricing plans
@@ -152,6 +153,11 @@ export default function PricingCards() {
         ? '/api/paypal/create-subscription'
         : '/api/stripe/create-checkout-session';
 
+      // Get affiliate ref from cookie
+      const affiliateRef = typeof document !== 'undefined' 
+        ? getAffiliateCookie() 
+        : null;
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -160,6 +166,7 @@ export default function PricingCards() {
         body: JSON.stringify({
           priceId: priceId,
           planName: `${plan.name} ${yearly ? 'Yearly' : 'Monthly'}`,
+          affiliateRef: affiliateRef,
         }),
       });
 

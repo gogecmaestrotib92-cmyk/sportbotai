@@ -919,3 +919,103 @@ enum EngagementType {
   ACCOUNT_REPLY
   QUOTE_TWEET
 }
+
+// ============================================
+// AFFILIATE PROGRAM
+// ============================================
+
+model Affiliate {
+  id              String               @id @default(cuid())
+  email           String               @unique
+  password        String               // Hashed password for affiliate login
+  name            String
+  code            String               @unique // Unique referral code (e.g., "john123")
+  status          AffiliateStatus      @default(PENDING)
+  paypalEmail     String?              // For payouts
+  website         String?              // Their website/social
+  notes           String?              // Internal notes
+  commissionRate  Float                @default(0.30) // 30% default
+  cookieDays      Int                  @default(90)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  approvedAt      DateTime?
+  clicks          AffiliateClick[]
+  conversions     AffiliateConversion[]
+  payouts         AffiliatePayout[]
+
+  @@index([code])
+  @@index([email])
+}
+
+model AffiliateClick {
+  id          String    @id @default(cuid())
+  affiliateId String
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  ipHash      String?   // Hashed IP for uniqueness (privacy)
+  userAgent   String?
+  referer     String?   // Where they came from
+  landingPage String?   // Which page they landed on
+  createdAt   DateTime  @default(now())
+  convertedAt DateTime? // When/if they converted
+
+  @@index([affiliateId])
+  @@index([createdAt])
+}
+
+model AffiliateConversion {
+  id                   String          @id @default(cuid())
+  affiliateId          String
+  affiliate            Affiliate       @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  userId               String?         // The user who subscribed (optional link)
+  stripeSubscriptionId String?         @unique
+  planName             String          // "Pro Monthly", "Premium Yearly", etc.
+  amount               Float           // Subscription amount in USD
+  commission           Float           // Commission amount in USD
+  status               ConversionStatus @default(PENDING)
+  createdAt            DateTime        @default(now())
+  paidAt               DateTime?       // When commission was paid
+  payoutId             String?
+  payout               AffiliatePayout? @relation(fields: [payoutId], references: [id])
+
+  @@index([affiliateId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AffiliatePayout {
+  id          String               @id @default(cuid())
+  affiliateId String
+  affiliate   Affiliate            @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  amount      Float                // Total payout amount
+  method      String               @default("paypal") // paypal, wire, crypto
+  reference   String?              // PayPal transaction ID, etc.
+  status      PayoutStatus         @default(PENDING)
+  createdAt   DateTime             @default(now())
+  paidAt      DateTime?
+  conversions AffiliateConversion[]
+
+  @@index([affiliateId])
+  @@index([status])
+}
+
+enum AffiliateStatus {
+  PENDING    // Applied, waiting approval
+  ACTIVE     // Approved and active
+  SUSPENDED  // Temporarily suspended
+  REJECTED   // Application rejected
+}
+
+enum ConversionStatus {
+  PENDING    // Waiting for subscription confirmation
+  APPROVED   // Confirmed, waiting for payout
+  PAID       // Commission paid out
+  REFUNDED   // Subscription was refunded
+  CANCELLED  // Subscription cancelled before payout
+}
+
+enum PayoutStatus {
+  PENDING    // Scheduled for payout
+  PROCESSING // Being processed
+  COMPLETED  // Successfully paid
+  FAILED     // Payout failed
+}

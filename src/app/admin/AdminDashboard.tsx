@@ -259,12 +259,20 @@ export default function AdminDashboard({
             <h1 className="text-3xl font-bold text-text-primary">Admin Dashboard</h1>
             <p className="text-text-secondary mt-1">SportBot AI analytics</p>
           </div>
-          <Link
-            href="/admin/blog"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/80 rounded-lg text-white font-medium transition-colors"
-          >
-            📝 Blog Admin
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/admin/affiliates"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white font-medium transition-colors"
+            >
+              🤝 Affiliates
+            </Link>
+            <Link
+              href="/admin/blog"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/80 rounded-lg text-white font-medium transition-colors"
+            >
+              📝 Blog Admin
+            </Link>
+          </div>
         </div>
 
         {/* Quick Stats - Compact Grid */}

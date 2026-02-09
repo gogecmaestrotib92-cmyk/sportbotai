@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { priceId: planKey, planName } = body;
+    const { priceId: planKey, planName, affiliateRef } = body;
 
     // Get price IDs at request time
     const PRICE_IDS = getPriceIds();
@@ -95,12 +95,14 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
         userEmail: session.user.email,
         planName: planName,
+        ...(affiliateRef && { affiliateRef }),
       },
       subscription_data: {
         metadata: {
           userId: session.user.id,
           userEmail: session.user.email,
           planName: planName,
+          ...(affiliateRef && { affiliateRef }),
         },
       },
       billing_address_collection: 'auto',

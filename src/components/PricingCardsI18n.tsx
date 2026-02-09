@@ -235,6 +235,11 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
     trackCheckoutStart({ plan: plan.id, price });
 
     try {
+      // Get affiliate ref from cookie if exists
+      const affiliateRef = typeof document !== 'undefined' 
+        ? document.cookie.match(/affiliate_ref=([^;]+)/)?.[1] || null
+        : null;
+
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: {
@@ -243,6 +248,7 @@ export default function PricingCardsI18n({ locale }: PricingCardsI18nProps) {
         body: JSON.stringify({
           priceId: priceId,
           planName: `${plan.name} ${yearly ? 'Yearly' : 'Monthly'}`,
+          affiliateRef: affiliateRef,
         }),
       });
 
