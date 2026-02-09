@@ -101,7 +101,7 @@ export default function AffiliateDashboard() {
 
   const copyLink = () => {
     if (!data) return;
-    const link = `https://sportbot.ai/?ref=${data.affiliate.code}`;
+    const link = `https://www.sportbotai.com/?ref=${data.affiliate.code}`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -134,7 +134,7 @@ export default function AffiliateDashboard() {
   }
 
   const { affiliate, stats, recentConversions, recentClicks, topLandingPages, topReferrers, monthlyStats, dailyStats } = data;
-  const referralLink = `https://sportbot.ai/?ref=${affiliate.code}`;
+  const referralLink = `https://www.sportbotai.com/?ref=${affiliate.code}`;
 
   // Calculate max for chart scaling
   const maxDailyClicks = Math.max(...dailyStats.map(d => d.clicks), 1);
@@ -495,7 +495,7 @@ export default function AffiliateDashboard() {
 
         {/* Help Section */}
         <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Need help? Contact us at <a href="mailto:affiliates@sportbot.ai" className="text-emerald-400 hover:underline">affiliates@sportbot.ai</a></p>
+          <p>Need help? Contact us at <a href="mailto:affiliates@sportbotai.com" className="text-emerald-400 hover:underline">affiliates@sportbotai.com</a></p>
         </div>
       </main>
     </div>
