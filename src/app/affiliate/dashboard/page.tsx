@@ -495,7 +495,7 @@ export default function AffiliateDashboard() {
 
         {/* Help Section */}
         <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Need help? Contact us at <a href="mailto:affiliates@sportbotai.com" className="text-emerald-400 hover:underline">affiliates@sportbotai.com</a></p>
+          <p>Need help? Contact us at <a href="mailto:contact@sportbotai.com" className="text-emerald-400 hover:underline">contact@sportbotai.com</a></p>
         </div>
       </main>
     </div>
