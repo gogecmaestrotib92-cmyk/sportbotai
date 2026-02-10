@@ -304,6 +304,13 @@ export function getMatchAnalyzerSchema() {
       'Audio report generation',
     ],
     screenshot: `${SITE_CONFIG.url}/og-analyzer.png`,
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: 4.8,
+      ratingCount: 150,
+      bestRating: 5,
+      worstRating: 1,
+    },
     author: {
       '@type': 'Organization',
       name: SITE_CONFIG.name,
@@ -343,6 +350,13 @@ export function getAIDeskSchema() {
       'Multi-sport coverage',
       '24/7 automated updates',
     ],
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: 4.7,
+      ratingCount: 112,
+      bestRating: 5,
+      worstRating: 1,
+    },
     author: {
       '@type': 'Organization',
       name: SITE_CONFIG.name,

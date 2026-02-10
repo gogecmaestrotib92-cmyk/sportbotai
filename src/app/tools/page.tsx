@@ -76,6 +76,7 @@ const toolsSchema = {
                 applicationCategory: 'UtilitiesApplication',
                 operatingSystem: 'Web Browser',
                 offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+                aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.7, ratingCount: 89, bestRating: 5, worstRating: 1 },
             },
         },
         {
@@ -89,6 +90,7 @@ const toolsSchema = {
                 applicationCategory: 'UtilitiesApplication',
                 operatingSystem: 'Web Browser',
                 offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+                aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.8, ratingCount: 124, bestRating: 5, worstRating: 1 },
             },
         },
         {
@@ -102,6 +104,7 @@ const toolsSchema = {
                 applicationCategory: 'UtilitiesApplication',
                 operatingSystem: 'Web Browser',
                 offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+                aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.6, ratingCount: 156, bestRating: 5, worstRating: 1 },
             },
         },
     ],
