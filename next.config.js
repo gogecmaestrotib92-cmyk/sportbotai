@@ -139,6 +139,17 @@ const nextConfig = {
   // Redirect non-www to www (critical for SEO - consolidates ranking signals)
   async redirects() {
     return [
+      // Signup -> Register redirects (common URL variations)
+      {
+        source: '/signup',
+        destination: '/register',
+        permanent: true,
+      },
+      {
+        source: '/sr/signup',
+        destination: '/sr/register',
+        permanent: true,
+      },
       // Non-www to www redirect
       {
         source: '/:path*',
