@@ -79,7 +79,7 @@ export const META = {
   },
   
   matches: {
-    title: 'AI Sports Predictions & Picks Today – Free Analysis | SportBot AI',
+    title: 'AI Sports Predictions & Picks Today – Free Analysis',
     description: 'Free AI sports predictions for today\'s matches. Get AI-powered picks for soccer, NBA, NFL, NHL with probability analysis. Data-driven sports betting predictions you can trust.',
     keywords: [
       // Primary: AI sports picks/predictions (HIGH VOLUME)
@@ -110,7 +110,7 @@ export const META = {
   },
   
   aiDesk: {
-    title: 'AI Sports Chat – Free Predictions & Analysis | SportBot AI',
+    title: 'AI Sports Chat – Free Predictions & Analysis',
     description: 'Free AI sports chat for instant match analysis. Ask any question about soccer, NBA, NFL, NHL - get AI predictions, injury updates, and insights in seconds.',
     keywords: [
       // Primary: AI sports chat/predictor

@@ -634,7 +634,7 @@ Return JSON:
   "slug": "${toolName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-review",
   "excerpt": "Compelling 2-3 sentence excerpt that makes readers want to click and read the full review.",
   "content": "<h2>Introduction</h2><p>...</p>...FULL 5000-6000 word HTML content with all sections...",
-  "metaTitle": "${toolName} Review 2026: Features, Pricing & Honest Verdict",
+  "metaTitle": "${toolName} Review 2026 – Is It Worth It?",
   "metaDescription": "Complete ${toolName} review with features, pricing, pros & cons. See if it's worth it for your betting strategy.",
   "tags": ["tool-review", "sports-betting", "analytics", "${toolName.toLowerCase()}", "betting-tools"]
 }`;
