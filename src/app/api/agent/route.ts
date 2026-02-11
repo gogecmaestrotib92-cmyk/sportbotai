@@ -31,6 +31,7 @@ import {
   type MatchIdentifier,
   type OddsInfo,
 } from '@/lib/unified-match-service';
+import { prisma } from '@/lib/prisma';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -124,7 +125,38 @@ export async function POST(request: NextRequest) {
     // Try unified service first for consistent data
     const unifiedAnalysis = odds ? await getQuickAnalysis(matchIdentifier, odds) : null;
     
-    // Fallback to quick analysis if unified service fails
+    // PRIORITY 2: Try Prediction table for pipeline-computed probabilities
+    // This ensures agent posts use the same Poisson/Elo data as daily-picks and chat
+    let dbPrediction: { homeWin: number; awayWin: number; draw: number | null; edgeValue: number | null; conviction: number | null } | null = null;
+    if (!unifiedAnalysis) {
+      try {
+        const homeKeyword = matchContext.homeTeam.split(' ')[0];
+        const awayKeyword = matchContext.awayTeam.split(' ')[0];
+        
+        const prediction = await prisma.prediction.findFirst({
+          where: {
+            AND: [
+              { matchName: { contains: homeKeyword, mode: 'insensitive' } },
+              { matchName: { contains: awayKeyword, mode: 'insensitive' } },
+            ],
+            kickoff: { gte: new Date(new Date().getTime() - 48 * 60 * 60 * 1000) },
+            homeWin: { not: null },
+            awayWin: { not: null },
+          },
+          select: { homeWin: true, awayWin: true, draw: true, edgeValue: true, conviction: true },
+          orderBy: { kickoff: 'asc' },
+        });
+        
+        if (prediction?.homeWin && prediction?.awayWin) {
+          dbPrediction = prediction as { homeWin: number; awayWin: number; draw: number | null; edgeValue: number | null; conviction: number | null };
+          console.log(`[SportBot Agent] Using Prediction table data: H=${dbPrediction.homeWin}% A=${dbPrediction.awayWin}% edge=${dbPrediction.edgeValue}%`);
+        }
+      } catch (dbError) {
+        console.warn('[SportBot Agent] Prediction table lookup failed:', dbError);
+      }
+    }
+    
+    // Fallback to quick analysis (vig-only) if no better source available
     // Convert odds to match MinimalMatchData interface (draw can't be null)
     const safeOdds = odds ? {
       home: odds.home,
@@ -144,11 +176,15 @@ export async function POST(request: NextRequest) {
     const quickAnalysis = runQuickAnalysis(analysisInput);
     console.log(`[SportBot Agent] Analysis: ${quickAnalysis.narrativeAngle}, favored: ${quickAnalysis.favored}`);
     
-    // Merge unified and quick analysis - unified takes priority
+    // Merge probabilities: unified > DB prediction > quick analysis (vig-only)
     const mergedProbabilities = unifiedAnalysis ? {
       home: unifiedAnalysis.probabilities.home,
       away: unifiedAnalysis.probabilities.away,
       draw: unifiedAnalysis.probabilities.draw || quickAnalysis.probabilities.draw,
+    } : dbPrediction ? {
+      home: dbPrediction.homeWin,
+      away: dbPrediction.awayWin,
+      draw: dbPrediction.draw || quickAnalysis.probabilities.draw,
     } : quickAnalysis.probabilities;
     
     // ============================================
@@ -193,11 +229,17 @@ export async function POST(request: NextRequest) {
         ? (unifiedAnalysis.confidence >= 0.7 ? 'high' : unifiedAnalysis.confidence >= 0.4 ? 'medium' : 'low')
         : undefined;
     
+    // DB prediction confidence from conviction score (1-10)
+    const dbConfidenceStr: 'high' | 'medium' | 'low' | undefined = 
+      dbPrediction?.conviction !== undefined && dbPrediction.conviction !== null
+        ? (dbPrediction.conviction >= 7 ? 'high' : dbPrediction.conviction >= 4 ? 'medium' : 'low')
+        : undefined;
+    
     const computedAnalysis: ComputedAnalysis = {
       probabilities: mergedProbabilities,
       favored: unifiedAnalysis?.favored || quickAnalysis.favored,
-      confidence: unifiedConfidenceStr || quickAnalysis.confidence,
-      dataQuality: unifiedAnalysis?.dataQuality || quickAnalysis.dataQuality,
+      confidence: unifiedConfidenceStr || dbConfidenceStr || quickAnalysis.confidence,
+      dataQuality: unifiedAnalysis?.dataQuality || (dbPrediction ? 'MEDIUM' : quickAnalysis.dataQuality),
       volatility: quickAnalysis.volatility,
       narrativeAngle: unifiedAnalysis?.narrativeAngle || quickAnalysis.narrativeAngle,
       catchphrase: quickAnalysis.catchphrase,

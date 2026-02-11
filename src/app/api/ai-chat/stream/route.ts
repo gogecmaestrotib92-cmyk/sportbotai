@@ -146,14 +146,19 @@ function formatLiveAnalysisForChat(analysis: any, homeTeam: string, awayTeam: st
   // Probabilities
   if (probabilities) {
     context += `📊 AI PROBABILITY ESTIMATES:\n`;
+    // Scale detection: if any probability > 1, they're already in percentage (0-100)
+    // Otherwise they're in decimal (0-1) and need ×100
+    const isPercentageScale = (probabilities.homeWin > 1 || probabilities.awayWin > 1);
+    const fmt = (v: number) => isPercentageScale ? Math.round(v) : Math.round(v * 100);
+    
     if (probabilities.homeWin) {
-      context += `• ${homeTeam} win: ${Math.round(probabilities.homeWin * 100)}%\n`;
+      context += `• ${homeTeam} win: ${fmt(probabilities.homeWin)}%\n`;
     }
     if (probabilities.draw !== null && probabilities.draw !== undefined) {
-      context += `• Draw: ${Math.round(probabilities.draw * 100)}%\n`;
+      context += `• Draw: ${fmt(probabilities.draw)}%\n`;
     }
     if (probabilities.awayWin) {
-      context += `• ${awayTeam} win: ${Math.round(probabilities.awayWin * 100)}%\n`;
+      context += `• ${awayTeam} win: ${fmt(probabilities.awayWin)}%\n`;
     }
     context += '\n';
   }
@@ -2904,7 +2909,104 @@ If their favorite team has a match today/tonight, lead with that information.`;
             const sport = clarificationContext!.resolvedSport || 'basketball_nba';
 
             try {
-              // Call the analyze API directly
+              // STEP 1: Try DB lookup first (same as ultra-fast path) — avoids hardcoded odds
+              const homeKeyword = homeTeam.split(' ')[0];
+              const awayKeyword = awayTeam.split(' ')[0];
+              
+              const cachedPrediction = await prisma.prediction.findFirst({
+                where: {
+                  OR: [
+                    { AND: [
+                      { matchName: { contains: homeKeyword, mode: 'insensitive' } },
+                      { matchName: { contains: awayKeyword, mode: 'insensitive' } },
+                    ]},
+                    { AND: [
+                      { matchName: { contains: awayKeyword, mode: 'insensitive' } },
+                      { matchName: { contains: homeKeyword, mode: 'insensitive' } },
+                    ]},
+                  ],
+                  kickoff: { gte: new Date(new Date().getTime() - 72 * 60 * 60 * 1000) },
+                  NOT: { fullResponse: { equals: undefined } },
+                },
+                orderBy: { kickoff: 'asc' },
+              });
+              
+              if (cachedPrediction?.fullResponse) {
+                console.log(`[AI-Chat-Stream] ✅ Clarification resolved from DB cache: ${cachedPrediction.matchName}`);
+                
+                // Use the same structured data path as ultra-fast lookup
+                const fullResp = cachedPrediction.fullResponse as Record<string, unknown>;
+                const structuredAnalysis = {
+                  matchName: cachedPrediction.matchName,
+                  sport: cachedPrediction.sport,
+                  league: cachedPrediction.league,
+                  kickoff: cachedPrediction.kickoff?.toISOString(),
+                  homeWin: cachedPrediction.homeWin,
+                  draw: cachedPrediction.draw,
+                  awayWin: cachedPrediction.awayWin,
+                  predictedScore: cachedPrediction.predictedScore,
+                  prediction: cachedPrediction.prediction,
+                  reasoning: cachedPrediction.reasoning,
+                  conviction: cachedPrediction.conviction,
+                  edgeValue: cachedPrediction.edgeValue,
+                  valueBetEdge: cachedPrediction.valueBetEdge,
+                  valueBetSide: cachedPrediction.valueBetSide,
+                  selection: cachedPrediction.selection,
+                  headline: cachedPrediction.headline,
+                  fullResponse: fullResp,
+                };
+                
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'structured_analysis', data: structuredAnalysis })}\n\n`));
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', status: '✅ Analysis ready!' })}\n\n`));
+                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                controller.close();
+                return;
+              }
+              
+              console.log(`[AI-Chat-Stream] No DB cache for clarification, trying analyze API with real odds...`);
+              
+              // STEP 2: Try to fetch real odds from The Odds API
+              let realOdds: { home: number; draw: number | null; away: number } | null = null;
+              
+              try {
+                if (theOddsClient.isConfigured()) {
+                  const oddsResponse = await theOddsClient.getOddsForSport(sport, {
+                    regions: ['eu'],
+                    markets: ['h2h'],
+                  });
+                  
+                  if (oddsResponse.data) {
+                    // Find the matching event
+                    const matchingEvent = oddsResponse.data.find(ev => {
+                      const homeMatch = ev.home_team.toLowerCase().includes(homeKeyword.toLowerCase()) || 
+                                       homeTeam.toLowerCase().includes(ev.home_team.toLowerCase().split(' ')[0]);
+                      const awayMatch = ev.away_team.toLowerCase().includes(awayKeyword.toLowerCase()) ||
+                                       awayTeam.toLowerCase().includes(ev.away_team.toLowerCase().split(' ')[0]);
+                      return homeMatch && awayMatch;
+                    });
+                    
+                    if (matchingEvent?.bookmakers?.[0]?.markets?.[0]?.outcomes) {
+                      const outcomes = matchingEvent.bookmakers[0].markets[0].outcomes;
+                      const homeOutcome = outcomes.find((o: { name: string; price: number }) => o.name === matchingEvent.home_team);
+                      const awayOutcome = outcomes.find((o: { name: string; price: number }) => o.name === matchingEvent.away_team);
+                      const drawOutcome = outcomes.find((o: { name: string; price: number }) => o.name === 'Draw');
+                      
+                      if (homeOutcome && awayOutcome) {
+                        realOdds = {
+                          home: homeOutcome.price,
+                          away: awayOutcome.price,
+                          draw: drawOutcome?.price ?? null,
+                        };
+                        console.log(`[AI-Chat-Stream] Found real odds: H=${realOdds.home} D=${realOdds.draw} A=${realOdds.away}`);
+                      }
+                    }
+                  }
+                }
+              } catch (oddsError) {
+                console.warn(`[AI-Chat-Stream] Could not fetch real odds, will use fallback:`, oddsError);
+              }
+
+              // Call the analyze API with real odds (or conservative defaults that won't create fake edges)
               const protocol = request.headers.get('x-forwarded-proto') || 'https';
               const host = request.headers.get('host') || 'www.sportbotai.com';
               const baseUrl = `${protocol}://${host}`;
@@ -2918,13 +3020,23 @@ If their favorite team has a match today/tonight, lead with that information.`;
                   awayTeam: awayTeam,
                   matchDate: new Date().toISOString(),
                   sourceType: 'chat-clarification',
-                  odds: {
+                  odds: realOdds ? {
+                    home: realOdds.home,
+                    draw: realOdds.draw,
+                    away: realOdds.away,
+                  } : {
+                    // Fallback: use even odds — pipeline will still produce model-based probs,
+                    // but edges will be ~0 since market = 50/50, which is honest
                     home: 2.0,
                     draw: sport.includes('soccer') ? 3.5 : null,
                     away: 2.0,
                   },
                 },
               };
+
+              if (!realOdds) {
+                console.warn(`[AI-Chat-Stream] ⚠️ Using fallback odds for ${homeTeam} vs ${awayTeam} — edges will be approximate`);
+              }
 
               console.log(`[AI-Chat-Stream] Calling analyze API for clarified query: ${homeTeam} vs ${awayTeam} (${sport})`);
 

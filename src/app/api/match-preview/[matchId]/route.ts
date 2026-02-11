@@ -2001,12 +2001,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             const modelProb = marketIntel.modelProbability;
             const valueEdge = marketIntel.valueEdge;
 
-            // Calculate individual edges
-            const homeEdge = modelProb.home - (marketIntel.impliedProbability?.home || 0);
-            const awayEdge = modelProb.away - (marketIntel.impliedProbability?.away || 0);
-            const drawEdge = modelProb.draw && marketIntel.impliedProbability?.draw
-              ? modelProb.draw - marketIntel.impliedProbability.draw
-              : null;
+            // Calculate edges using shared utility for consistency
+            const { computeEdges } = await import('@/lib/accuracy-core/prob-validation');
+            const edgeResult = computeEdges(
+              { home: modelProb.home, away: modelProb.away, draw: modelProb.draw ?? null },
+              { 
+                home: marketIntel.impliedProbability?.home || 0, 
+                away: marketIntel.impliedProbability?.away || 0, 
+                draw: marketIntel.impliedProbability?.draw ?? null 
+              }
+            );
+            const homeEdge = edgeResult.homeEdge;
+            const awayEdge = edgeResult.awayEdge;
+            const drawEdge = edgeResult.drawEdge;
 
             // Determine alert level based on edge
             const bestEdgePercent = valueEdge?.edgePercent || Math.max(homeEdge, awayEdge, drawEdge || 0);

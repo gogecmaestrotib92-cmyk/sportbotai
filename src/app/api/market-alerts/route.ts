@@ -169,139 +169,29 @@ function getConsensusOdds(event: OddsApiEvent): { home: number; away: number; dr
 /**
  * Generate model probability based on market patterns
  * 
- * This is calibrated to produce edges SIMILAR to the full AI model.
- * Uses deterministic calculations (no randomness) for consistency.
+ * DEPRECATED: This heuristic fallback manufactured artificial edges by adding
+ * hardcoded adjustments (home advantage +3-5%, underdog boost +3-6%, etc.)
+ * that guaranteed fake edges even when the market was perfectly efficient.
  * 
- * Key insight: The full AI model typically finds 5-15% edges because:
- * - It incorporates form, injuries, head-to-head
- * - Markets don't fully price in recent news
- * - Home advantage is often underpriced
+ * NOW: Returns null when no pipeline data available, signaling the caller
+ * to skip edge display rather than show manufactured edges.
  * 
- * We replicate this by being more aggressive with adjustments.
+ * The full Poisson/Elo pipeline data should always be available via:
+ * 1. OddsSnapshot.modelHomeProb (from pre-analyze cron)
+ * 2. Redis cached analysis
+ * 3. Prediction table (new fallback)
  */
 function calculateQuickModelProbability(
   consensus: { home: number; away: number; draw?: number },
   prevSnapshot: { homeOdds: number; awayOdds: number; drawOdds?: number | null } | null,
   hasDraw: boolean,
   matchRef?: string
-): { home: number; away: number; draw?: number; confidence: number } {
-  // Get implied probabilities
-  const homeImplied = oddsToImpliedProb(consensus.home);
-  const awayImplied = oddsToImpliedProb(consensus.away);
-  const drawImplied = consensus.draw ? oddsToImpliedProb(consensus.draw) : 0;
-  
-  // Remove margin (bookmaker's edge)
-  const total = homeImplied + awayImplied + drawImplied;
-  const margin = total - 100;
-  const adj = margin / (hasDraw ? 3 : 2);
-  
-  let homeProb = homeImplied - adj;
-  let awayProb = awayImplied - adj;
-  let drawProb = hasDraw ? drawImplied - adj : undefined;
-  
-  // === MARKET INEFFICIENCY ADJUSTMENTS ===
-  // These are calibrated to match what the full AI model typically finds
-  
-  // 1. Home advantage boost (3-5% based on odds gap)
-  // Tighter games have stronger home advantage effect
-  const oddsGap = Math.abs(consensus.home - consensus.away);
-  const homeAdvantageBonus = oddsGap < 0.5 ? 5 : oddsGap < 1.0 ? 4 : 3;
-  homeProb += homeAdvantageBonus;
-  awayProb -= homeAdvantageBonus * 0.6;
-  if (drawProb) drawProb -= homeAdvantageBonus * 0.4;
-  
-  // 2. Heavy favorites are overpriced - underdog value
-  // AI model often finds 8-12% edge on underdogs against heavy favorites
-  if (homeImplied > 65) {
-    const overFavAdj = (homeImplied - 65) * 0.25; // More aggressive
-    homeProb -= overFavAdj;
-    awayProb += overFavAdj * 0.8;
-    if (drawProb) drawProb += overFavAdj * 0.2;
-  }
-  if (awayImplied > 65) {
-    const overFavAdj = (awayImplied - 65) * 0.25;
-    awayProb -= overFavAdj;
-    homeProb += overFavAdj * 0.8;
-    if (drawProb) drawProb += overFavAdj * 0.2;
-  }
-  
-  // 3. Moderate underdogs (15-35% implied) often underpriced
-  // The "sweet spot" for value - teams that can pull off upset
-  if (homeImplied >= 15 && homeImplied <= 35) {
-    const underdogBoost = 6 - Math.abs(homeImplied - 25) * 0.2; // Max 6% at 25% implied
-    homeProb += Math.max(3, underdogBoost);
-  }
-  if (awayImplied >= 15 && awayImplied <= 35) {
-    const underdogBoost = 6 - Math.abs(awayImplied - 25) * 0.2;
-    awayProb += Math.max(3, underdogBoost);
-  }
-  
-  // 4. In soccer, draws are systematically underpriced in close matches
-  if (hasDraw && drawProb) {
-    if (oddsGap < 0.3) {
-      // Very close match - draw highly likely underpriced
-      drawProb += 7;
-      homeProb -= 3.5;
-      awayProb -= 3.5;
-    } else if (oddsGap < 0.6) {
-      drawProb += 5;
-      homeProb -= 2.5;
-      awayProb -= 2.5;
-    } else if (oddsGap < 1.0) {
-      drawProb += 3;
-      homeProb -= 1.5;
-      awayProb -= 1.5;
-    }
-  }
-  
-  // 5. Steam moves - follow sharp money (significant signal)
-  if (prevSnapshot) {
-    const homeChange = ((consensus.home - prevSnapshot.homeOdds) / prevSnapshot.homeOdds) * 100;
-    const awayChange = ((consensus.away - prevSnapshot.awayOdds) / prevSnapshot.awayOdds) * 100;
-    
-    // Sharp action = odds shortening (negative change = money coming in)
-    if (homeChange < -2) {
-      const steamBoost = Math.min(5, Math.abs(homeChange) * 1.5);
-      homeProb += steamBoost;
-      awayProb -= steamBoost * 0.7;
-    }
-    if (awayChange < -2) {
-      const steamBoost = Math.min(5, Math.abs(awayChange) * 1.5);
-      awayProb += steamBoost;
-      homeProb -= steamBoost * 0.7;
-    }
-  }
-  
-  // Normalize to 100%
-  const newTotal = homeProb + awayProb + (drawProb || 0);
-  homeProb = Math.round((homeProb / newTotal) * 100);
-  awayProb = Math.round((awayProb / newTotal) * 100);
-  if (drawProb !== undefined) {
-    drawProb = 100 - homeProb - awayProb;
-  }
-  
-  // Clamp to reasonable ranges
-  homeProb = Math.max(10, Math.min(85, homeProb));
-  awayProb = Math.max(10, Math.min(85, awayProb));
-  if (drawProb !== undefined) {
-    drawProb = Math.max(10, Math.min(40, drawProb));
-    // Re-normalize after clamping
-    const clampTotal = homeProb + awayProb + drawProb;
-    homeProb = Math.round((homeProb / clampTotal) * 100);
-    awayProb = Math.round((awayProb / clampTotal) * 100);
-    drawProb = 100 - homeProb - awayProb;
-  }
-  
-  // Confidence based on how clear the edge is
-  const maxProb = Math.max(homeProb, awayProb, drawProb || 0);
-  const confidence = Math.min(80, 55 + (maxProb - 40) * 0.5);
-  
-  return {
-    home: homeProb,
-    away: awayProb,
-    draw: drawProb,
-    confidence,
-  };
+): { home: number; away: number; draw?: number; confidence: number } | null {
+  // Instead of manufacturing fake probabilities with hardcoded adjustments,
+  // return null to signal "no real model data available"
+  // The caller should display "analysis pending" rather than fake edges
+  console.warn(`[Market-Alerts] No pipeline data for ${matchRef || 'unknown match'} — skipping edge calculation (no heuristic fallback)`);
+  return null;
 }
 
 /**
@@ -643,21 +533,49 @@ export async function GET(request: NextRequest) {
         drawEdge = modelDrawProb && noVigProbs.draw ? modelDrawProb - noVigProbs.draw : undefined;
         valueEdgeLabel = cachedAnalysis.marketIntel.valueEdge?.label;
       } else {
-        // FALLBACK: No cached pipeline data, use heuristic approximation
-        // This should be rare after pre-analyze runs - log for monitoring
-        console.warn(`[Market-Alerts] No cached pipeline data for ${matchRef} - using heuristic fallback (less accurate)`);
-        const modelProb = calculateQuickModelProbability(consensus, prevSnapshot ?? null, sport.hasDraw);
-        modelHomeProb = modelProb.home;
-        modelAwayProb = modelProb.away;
-        modelDrawProb = modelProb.draw;
+        // FALLBACK: No cached pipeline data — try Prediction table as last resort
+        // This queries the same DB that daily-picks/editorial-picks use
+        const predictionFallback = await prisma.prediction.findFirst({
+          where: {
+            matchName: { contains: event.home_team.split(' ')[0], mode: 'insensitive' },
+            sport: { contains: sport.key.split('_')[0], mode: 'insensitive' },
+            kickoff: { gte: new Date(new Date().getTime() - 48 * 60 * 60 * 1000) },
+            homeWin: { not: null },
+            awayWin: { not: null },
+          },
+          orderBy: { kickoff: 'asc' },
+        });
         
-        // Use removeVig - only pass draw for sports with real draws
-        const drawForVig = sport.hasDraw ? consensus.draw : undefined;
-        const noVigProbs = removeVig(consensus.home, consensus.away, drawForVig);
-        
-        homeEdge = modelHomeProb - noVigProbs.home;
-        awayEdge = modelAwayProb - noVigProbs.away;
-        drawEdge = modelDrawProb && noVigProbs.draw ? modelDrawProb - noVigProbs.draw : undefined;
+        if (predictionFallback?.homeWin && predictionFallback?.awayWin) {
+          // Found pipeline data in Prediction table
+          modelHomeProb = predictionFallback.homeWin;
+          modelAwayProb = predictionFallback.awayWin;
+          modelDrawProb = predictionFallback.draw ?? undefined;
+          usingPipelineProbs = true;
+          
+          const drawForVig = sport.hasDraw ? consensus.draw : undefined;
+          const noVigProbs = removeVig(consensus.home, consensus.away, drawForVig);
+          
+          homeEdge = modelHomeProb - noVigProbs.home;
+          awayEdge = modelAwayProb - noVigProbs.away;
+          drawEdge = modelDrawProb && noVigProbs.draw ? modelDrawProb - noVigProbs.draw : undefined;
+          console.log(`[Market-Alerts] Used Prediction table fallback for ${matchRef}`);
+        } else {
+          // No pipeline data available anywhere — use market-implied (zero edge)
+          // This is honest: we don't have model data, so we show no edge
+          console.warn(`[Market-Alerts] No pipeline data for ${matchRef} — showing market-implied (no edge)`);
+          const drawForVig = sport.hasDraw ? consensus.draw : undefined;
+          const noVigProbs = removeVig(consensus.home, consensus.away, drawForVig);
+          
+          modelHomeProb = noVigProbs.home;
+          modelAwayProb = noVigProbs.away;
+          modelDrawProb = noVigProbs.draw;
+          
+          // Edges are ~0 since model = market (honest representation)
+          homeEdge = 0;
+          awayEdge = 0;
+          drawEdge = sport.hasDraw ? 0 : undefined;
+        }
       }
       
       // Determine best edge

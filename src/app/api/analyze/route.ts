@@ -1916,12 +1916,17 @@ function normalizeProbabilities(probs: ProbabilitySet): ProbabilitySet {
 /**
  * Build neutral odds comparison data
  * Shows AI vs Market probabilities without recommendations
+ * 
+ * IMPORTANT: Uses pipeline-computed probabilities (Data-2 layer) when available,
+ * NOT the LLM's raw probability output. This ensures edges shown in oddsComparison
+ * are consistent with the probabilities field (both from the same pipeline source).
  */
-function buildOddsComparison(raw: any, request: AnalyzeRequest): OddsComparison {
-  // Get AI estimates from response
-  const aiHome = raw.probabilities?.homeWin ?? raw.oddsComparison?.aiEstimate?.homeWin ?? null;
-  const aiDraw = raw.probabilities?.draw ?? raw.oddsComparison?.aiEstimate?.draw ?? null;
-  const aiAway = raw.probabilities?.awayWin ?? raw.oddsComparison?.aiEstimate?.awayWin ?? null;
+function buildOddsComparison(raw: any, request: AnalyzeRequest, pipelineProbs?: { homeWin: number; draw: number | null; awayWin: number }): OddsComparison {
+  // FIXED: Use pipeline probabilities when available (Data-2 layer)
+  // Previously used raw.probabilities (LLM output) which could diverge from pipeline
+  const aiHome = pipelineProbs?.homeWin ?? raw.probabilities?.homeWin ?? raw.oddsComparison?.aiEstimate?.homeWin ?? null;
+  const aiDraw = pipelineProbs?.draw ?? raw.probabilities?.draw ?? raw.oddsComparison?.aiEstimate?.draw ?? null;
+  const aiAway = pipelineProbs?.awayWin ?? raw.probabilities?.awayWin ?? raw.oddsComparison?.aiEstimate?.awayWin ?? null;
   
   // Calculate market-implied from odds
   const odds = request.matchData.odds;
@@ -2096,7 +2101,12 @@ function validateAndSanitizeResponse(
     probabilities: finalProbabilities,
     
     // NEW: Neutral odds comparison (educational, not recommendations)
-    oddsComparison: buildOddsComparison(raw, request),
+    // FIXED: Pass pipeline probs so edges match probabilities field
+    oddsComparison: buildOddsComparison(raw, request, computedProbs ? {
+      homeWin: computedProbs.homeWin,
+      draw: computedProbs.draw,
+      awayWin: computedProbs.awayWin,
+    } : undefined),
     
     // DEPRECATED: Keep for backward compatibility but don't generate new Kelly/value data
     valueAnalysis: {
