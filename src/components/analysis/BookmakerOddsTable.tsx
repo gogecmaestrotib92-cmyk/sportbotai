@@ -260,10 +260,22 @@ export default function BookmakerOddsTable({
   })();
 
   // ── Market tabs config ──
-  const marketTabs: { key: MarketTab; label: string; available: boolean; icon: string }[] = [
-    { key: 'moneyline', label: t.moneyline, available: true, icon: '⚡' },
-    { key: 'spread', label: t.spread, available: hasSpread, icon: '↔' },
-    { key: 'totals', label: t.overUnder, available: hasTotals, icon: '📊' },
+  const marketTabs: { key: MarketTab; label: string; available: boolean; icon: React.ReactNode }[] = [
+    { key: 'moneyline', label: t.moneyline, available: true, icon: (
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    )},
+    { key: 'spread', label: t.spread, available: hasSpread, icon: (
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+      </svg>
+    )},
+    { key: 'totals', label: t.overUnder, available: hasTotals, icon: (
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+      </svg>
+    )},
   ];
 
   return (
@@ -298,7 +310,7 @@ export default function BookmakerOddsTable({
                   : 'bg-zinc-800/50 text-zinc-500 border border-zinc-700/30 hover:text-zinc-400 hover:border-zinc-600/40'
               }`}
             >
-              <span className="text-[13px]">{tab.icon}</span>
+              {tab.icon}
               {tab.label}
             </button>
           ))}
