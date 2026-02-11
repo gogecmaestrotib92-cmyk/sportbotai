@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { isBase64, parseMatchSlug, decodeBase64MatchId } from '@/lib/match-utils';
 import { findMatchingDemo } from '@/lib/demo-matches';
+import { getDataLayer } from '@/lib/data-layer';
+import { normalizeSport } from '@/lib/data-layer/bridge';
 
 export type FastMatchPreviewData = any;
 
@@ -76,6 +78,72 @@ function parseMatchIdServer(matchId: string) {
   return null;
 }
 
+/**
+ * Quick bookmaker odds fetch for enriching pre-analyzed data that lacks odds.
+ */
+async function fetchBookmakerOddsForSSR(
+  homeTeam: string,
+  awayTeam: string,
+  sport: string
+): Promise<Array<{
+  bookmaker: string;
+  homeOdds: number;
+  drawOdds?: number | null;
+  awayOdds: number;
+  lastUpdate?: string;
+  spread?: { home: { line: number; odds: number }; away: { line: number; odds: number } };
+  total?: { over: { line: number; odds: number }; under: { line: number; odds: number } };
+}>> {
+  try {
+    const dataLayer = getDataLayer();
+    const normalizedSport = normalizeSport(sport) as 'soccer' | 'basketball' | 'hockey' | 'american_football' | 'baseball' | 'mma' | 'tennis';
+
+    const oddsResult = await dataLayer.getOdds(normalizedSport, homeTeam, awayTeam, {
+      markets: ['h2h', 'spreads', 'totals'],
+      sportKey: sport,
+    });
+
+    if (!oddsResult.success || !oddsResult.data || oddsResult.data.length === 0) {
+      return [];
+    }
+
+    const bookmakerOdds: Array<{
+      bookmaker: string;
+      homeOdds: number;
+      drawOdds?: number | null;
+      awayOdds: number;
+      lastUpdate?: string;
+      spread?: { home: { line: number; odds: number }; away: { line: number; odds: number } };
+      total?: { over: { line: number; odds: number }; under: { line: number; odds: number } };
+    }> = [];
+
+    for (const bm of oddsResult.data) {
+      if (bm.moneyline) {
+        bookmakerOdds.push({
+          bookmaker: bm.bookmaker,
+          homeOdds: bm.moneyline.home,
+          drawOdds: bm.moneyline.draw ?? null,
+          awayOdds: bm.moneyline.away,
+          lastUpdate: bm.lastUpdate?.toISOString(),
+          spread: bm.spread ? {
+            home: { line: bm.spread.home.line, odds: bm.spread.home.odds },
+            away: { line: bm.spread.away.line, odds: bm.spread.away.odds },
+          } : undefined,
+          total: bm.total ? {
+            over: { line: bm.total.over.line, odds: bm.total.over.odds },
+            under: { line: bm.total.under.line, odds: bm.total.under.odds },
+          } : undefined,
+        });
+      }
+    }
+
+    return bookmakerOdds;
+  } catch (error) {
+    console.error('[Match-Preview-Server] Failed to fetch bookmaker odds:', error);
+    return [];
+  }
+}
+
 export async function getFastMatchData(matchId: string, isAnonymous: boolean): Promise<FastMatchPreviewData | null> {
     const matchInfo = parseMatchIdServer(matchId);
     if (!matchInfo) return null;
@@ -128,6 +196,24 @@ export async function getFastMatchData(matchId: string, isAnonymous: boolean): P
 
       if (preAnalyzed?.fullResponse) {
           const fullData = preAnalyzed.fullResponse as any;
+
+          // Enrich with bookmaker odds if missing (pre-analyzed before this feature)
+          if (!fullData.bookmakerOdds || fullData.bookmakerOdds.length === 0) {
+            try {
+              const freshOdds = await fetchBookmakerOddsForSSR(
+                fullData.matchInfo?.homeTeam || matchInfo.homeTeam,
+                fullData.matchInfo?.awayTeam || matchInfo.awayTeam,
+                fullData.matchInfo?.sport || matchInfo.sport
+              );
+              if (freshOdds.length > 0) {
+                fullData.bookmakerOdds = freshOdds;
+                console.log(`[Match-Preview-Server] Enriched pre-analyzed data with ${freshOdds.length} bookmaker odds`);
+              }
+            } catch (e) {
+              console.error('[Match-Preview-Server] Failed to enrich with bookmaker odds:', e);
+            }
+          }
+
           return {
               matchInfo: fullData.matchInfo || { id: matchId, ...matchInfo },
               ...fullData,

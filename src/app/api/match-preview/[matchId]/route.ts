@@ -101,6 +101,77 @@ async function findMatchingBlogArticle(homeTeam: string, awayTeam: string): Prom
 }
 
 /**
+ * Quick bookmaker odds fetch for enriching cached/stored responses that lack odds data.
+ * Lightweight: just fetches odds from data layer, no AI or analysis.
+ */
+async function fetchBookmakerOddsQuick(
+  homeTeam: string,
+  awayTeam: string,
+  sport: string
+): Promise<Array<{
+  bookmaker: string;
+  homeOdds: number;
+  drawOdds?: number | null;
+  awayOdds: number;
+  lastUpdate?: string;
+  spread?: { home: { line: number; odds: number }; away: { line: number; odds: number } };
+  total?: { over: { line: number; odds: number }; under: { line: number; odds: number } };
+}>> {
+  const dataLayer = getDataLayer();
+  const normalizedSport = normalizeSport(sport) as 'soccer' | 'basketball' | 'hockey' | 'american_football' | 'baseball' | 'mma' | 'tennis';
+
+  console.log(`[Match-Preview] fetchBookmakerOddsQuick: Fetching odds for ${homeTeam} vs ${awayTeam} (${sport})`);
+
+  const oddsResult = await dataLayer.getOdds(
+    normalizedSport,
+    homeTeam,
+    awayTeam,
+    {
+      markets: ['h2h', 'spreads', 'totals'],
+      sportKey: sport,
+    }
+  );
+
+  if (!oddsResult.success || !oddsResult.data || oddsResult.data.length === 0) {
+    console.log(`[Match-Preview] fetchBookmakerOddsQuick: No odds found`);
+    return [];
+  }
+
+  const bookmakerOdds: Array<{
+    bookmaker: string;
+    homeOdds: number;
+    drawOdds?: number | null;
+    awayOdds: number;
+    lastUpdate?: string;
+    spread?: { home: { line: number; odds: number }; away: { line: number; odds: number } };
+    total?: { over: { line: number; odds: number }; under: { line: number; odds: number } };
+  }> = [];
+
+  for (const bm of oddsResult.data) {
+    if (bm.moneyline) {
+      bookmakerOdds.push({
+        bookmaker: bm.bookmaker,
+        homeOdds: bm.moneyline.home,
+        drawOdds: bm.moneyline.draw ?? null,
+        awayOdds: bm.moneyline.away,
+        lastUpdate: bm.lastUpdate?.toISOString(),
+        spread: bm.spread ? {
+          home: { line: bm.spread.home.line, odds: bm.spread.home.odds },
+          away: { line: bm.spread.away.line, odds: bm.spread.away.odds },
+        } : undefined,
+        total: bm.total ? {
+          over: { line: bm.total.over.line, odds: bm.total.over.odds },
+          under: { line: bm.total.under.line, odds: bm.total.under.odds },
+        } : undefined,
+      });
+    }
+  }
+
+  console.log(`[Match-Preview] fetchBookmakerOddsQuick: Found ${bookmakerOdds.length} bookmakers`);
+  return bookmakerOdds;
+}
+
+/**
  * Fetch injuries using hybrid approach:
  * - Perplexity as PRIMARY (real-time news, accurate team assignments)
  * - API-Sports as FALLBACK (structured but sometimes has data quality issues)
@@ -452,6 +523,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
       if (cachedPreview) {
         console.log(`[Match-Preview] Returning cached analysis for repeat view (no credit used)`);
+
+        // If cached response lacks bookmakerOdds (cached before this feature), fetch fresh odds
+        if (!cachedPreview.bookmakerOdds || cachedPreview.bookmakerOdds.length === 0) {
+          try {
+            const freshOdds = await fetchBookmakerOddsQuick(matchInfo.homeTeam, matchInfo.awayTeam, matchInfo.sport);
+            if (freshOdds.length > 0) {
+              cachedPreview.bookmakerOdds = freshOdds;
+              console.log(`[Match-Preview] Enriched cached response with ${freshOdds.length} bookmaker odds`);
+            }
+          } catch (e) {
+            console.error('[Match-Preview] Failed to enrich cached response with bookmaker odds:', e);
+          }
+        }
+
         return NextResponse.json({
           ...cachedPreview,
           creditUsed: false,
@@ -572,6 +657,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           if (favored === 'away') return { home: 1.1, away: 1.8 };
           return { home: 1.3, away: 1.3 }; // Draw or unknown
         })();
+
+        // If stored response lacks bookmakerOdds (saved before this feature), fetch fresh odds
+        if (!responseData.bookmakerOdds || responseData.bookmakerOdds.length === 0) {
+          try {
+            const freshOdds = await fetchBookmakerOddsQuick(matchInfo.homeTeam, matchInfo.awayTeam, matchInfo.sport);
+            if (freshOdds.length > 0) {
+              responseData.bookmakerOdds = freshOdds;
+              console.log(`[Match-Preview] Enriched DB response with ${freshOdds.length} bookmaker odds`);
+            }
+          } catch (e) {
+            console.error('[Match-Preview] Failed to enrich DB response with bookmaker odds:', e);
+          }
+        }
 
         return NextResponse.json({
           ...responseData,
@@ -1535,7 +1633,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           matchInfo.homeTeam,
           matchInfo.awayTeam,
           {
-            markets: ['h2h', 'totals'],
+            markets: ['h2h', 'spreads', 'totals'],
             sportKey: matchInfo.sport,
           }
         );
