@@ -8,19 +8,22 @@
  */
 
 import { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import HeroI18n from '@/components/HeroI18n';
 import TrendingSectionServer from '@/components/TrendingSectionServer';
-import DailyPicksSection from '@/components/DailyPicksSection';
-import ValueBettingExplainer from '@/components/ValueBettingExplainer';
-import HowItWorksVideo from '@/components/HowItWorksVideo';
-import PricingTeaserI18n from '@/components/PricingTeaserI18n';
-import ResponsibleGamblingBlockI18n from '@/components/ResponsibleGamblingBlockI18n';
-import FAQI18n from '@/components/FAQI18n';
 import { TrustBadgesI18n } from '@/components/SocialProofI18n';
 import LeagueScroll from '@/components/LeagueScroll';
-import VideoTestimonialsCarousel from '@/components/VideoTestimonialsCarousel';
 import { getTranslations } from '@/lib/i18n';
 import { getOrganizationSchema, getWebsiteSchema, getMatchAnalyzerSchema, getAIDeskSchema, getHomepageFAQSchema, getHomeBreadcrumb } from '@/lib/seo';
+
+// Below-fold components - dynamic imports for better TBT/LCP
+const DailyPicksSection = dynamic(() => import('@/components/DailyPicksSection'), { ssr: true });
+const VideoTestimonialsCarousel = dynamic(() => import('@/components/VideoTestimonialsCarousel'), { ssr: true });
+const HowItWorksVideo = dynamic(() => import('@/components/HowItWorksVideo'), { ssr: true });
+const PricingTeaserI18n = dynamic(() => import('@/components/PricingTeaserI18n'), { ssr: true });
+const ValueBettingExplainer = dynamic(() => import('@/components/ValueBettingExplainer'), { ssr: true });
+const FAQI18n = dynamic(() => import('@/components/FAQI18n'), { ssr: true });
+const ResponsibleGamblingBlockI18n = dynamic(() => import('@/components/ResponsibleGamblingBlockI18n'), { ssr: true });
 
 // Homepage metadata with canonical for Serbian
 export const metadata: Metadata = {

@@ -200,6 +200,16 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="//media-cdn.incrowdsports.com" />
         <link rel="dns-prefetch" href="//upload.wikimedia.org" />
         <link rel="dns-prefetch" href="//flagcdn.com" />
+        
+        {/* LCP Optimization: Preload hero background image */}
+        <link
+          rel="preload"
+          href="/images/turf-bg.webp"
+          as="image"
+          type="image/webp"
+          fetchPriority="high"
+        />
+        
         {/* Preconnect to top 4 origins for LCP improvement */}
         <link rel="preconnect" href="https://a.espncdn.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://media.api-sports.io" crossOrigin="anonymous" />

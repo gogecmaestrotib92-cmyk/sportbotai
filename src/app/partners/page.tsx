@@ -143,6 +143,8 @@ export default async function PartnersPage() {
                         src={review.featuredImage}
                         alt={review.toolName}
                         fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        loading="lazy"
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
@@ -247,12 +249,13 @@ export default async function PartnersPage() {
             </p>
             <div className="flex items-center gap-4">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src="/favicon.svg"
                   alt="SportBot AI"
                   width={24}
                   height={24}
-                  className="rounded"
+                  className="rounded w-6 h-6"
                 />
                 <span className="text-white text-sm font-medium">Featured on SportBot AI</span>
               </div>

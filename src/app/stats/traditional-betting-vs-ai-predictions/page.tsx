@@ -1212,7 +1212,7 @@ export default function TraditionalVsAIStatsPage() {
                   href="/about" 
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-medium rounded-xl border border-white/10 transition-colors"
                 >
-                  Learn More
+                  About SportBot AI
                 </Link>
               </div>
             </section>

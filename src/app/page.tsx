@@ -16,11 +16,14 @@ import dynamic from 'next/dynamic';
 import Hero from '@/components/Hero';
 import LeagueScroll from '@/components/LeagueScroll';
 import TrendingSectionServer from '@/components/TrendingSectionServer';
-import DailyPicksSection from '@/components/DailyPicksSection';
 import { TrustBadges } from '@/components/SocialProof';
 import { getOrganizationSchema, getWebsiteSchema, getMatchAnalyzerSchema, getAIDeskSchema, getHomepageFAQSchema, getHomeBreadcrumb } from '@/lib/seo';
 
-// Below-fold components - dynamic imports for better TBT
+// Below-fold components - dynamic imports for better TBT/LCP
+const DailyPicksSection = dynamic(
+  () => import('@/components/DailyPicksSection'),
+  { ssr: true }
+);
 const VideoTestimonialsCarousel = dynamic(
   () => import('@/components/VideoTestimonialsCarousel'),
   { ssr: true }

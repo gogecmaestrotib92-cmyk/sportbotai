@@ -46,7 +46,7 @@ const translations = {
         formulaNote: 'Positive EV means the bet has value',
 
         cta: 'Browse Matches',
-        ctaSecondary: 'Learn More',
+        ctaSecondary: 'Value Betting Guide',
     },
     sr: {
         title: 'Šta su Value Betovi?',
@@ -79,7 +79,7 @@ const translations = {
         formulaNote: 'Pozitivna EV znači da opklada ima vrednost',
 
         cta: 'Pregledaj Utakmice',
-        ctaSecondary: 'Saznaj Više',
+        ctaSecondary: 'Vodič za Value Klađenje',
     },
 };
 
