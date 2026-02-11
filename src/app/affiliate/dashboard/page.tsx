@@ -143,20 +143,20 @@ export default function AffiliateDashboard() {
     <div className="min-h-screen bg-gray-950">
       {/* Header */}
       <header className="border-b border-gray-800 bg-gray-900/50 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">Affiliate Dashboard</h1>
-                <p className="text-sm text-gray-400">Welcome, {affiliate.name}</p>
+                <h1 className="text-base sm:text-xl font-bold text-white">Dashboard</h1>
+                <p className="text-xs sm:text-sm text-gray-400 truncate max-w-[120px] sm:max-w-none">Welcome, {affiliate.name}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={fetchDashboard}
                 className="text-gray-400 hover:text-white text-sm flex items-center gap-1"
@@ -181,51 +181,51 @@ export default function AffiliateDashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Referral Link Card */}
-        <div className="bg-gradient-to-r from-emerald-900/30 to-blue-900/30 rounded-2xl p-6 mb-8 border border-emerald-800/30">
-          <h2 className="text-lg font-semibold text-white mb-2">Your Referral Link</h2>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="bg-gradient-to-r from-emerald-900/30 to-blue-900/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-8 border border-emerald-800/30">
+          <h2 className="text-base sm:text-lg font-semibold text-white mb-2">Your Referral Link</h2>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <input
               type="text"
               readOnly
               value={referralLink}
-              className="flex-1 bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-3 text-white font-mono text-sm"
+              className="flex-1 bg-gray-900/50 border border-gray-700 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 text-white font-mono text-xs sm:text-sm"
             />
             <button
               onClick={copyLink}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors whitespace-nowrap"
+              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors whitespace-nowrap text-sm sm:text-base"
             >
               {copied ? '✓ Copied!' : 'Copy Link'}
             </button>
           </div>
-          <p className="text-gray-400 text-sm mt-2">
-            Commission: <span className="text-emerald-400 font-semibold">{(affiliate.commissionRate * 100).toFixed(0)}% recurring</span> • 
-            Cookie: <span className="text-emerald-400 font-semibold">{affiliate.cookieDays} days</span>
+          <p className="text-gray-400 text-xs sm:text-sm mt-2">
+            <span className="text-emerald-400 font-semibold">{(affiliate.commissionRate * 100).toFixed(0)}%</span> recurring • 
+            <span className="text-emerald-400 font-semibold">{affiliate.cookieDays}d</span> cookie
           </p>
         </div>
 
         {/* Today's Quick Stats */}
-        <div className="bg-gray-900/30 rounded-xl border border-gray-800/50 p-4 mb-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-6">
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Today</p>
-                <p className="text-2xl font-bold text-white">{stats.todayClicks} <span className="text-sm text-gray-400 font-normal">clicks</span></p>
+        <div className="bg-gray-900/30 rounded-xl border border-gray-800/50 p-3 sm:p-4 mb-4 sm:mb-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3 sm:gap-6 flex-1">
+              <div className="flex-1 sm:flex-none">
+                <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">Today</p>
+                <p className="text-lg sm:text-2xl font-bold text-white">{stats.todayClicks} <span className="text-xs sm:text-sm text-gray-400 font-normal">clicks</span></p>
               </div>
               <div className="h-8 w-px bg-gray-700"></div>
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Today</p>
-                <p className="text-2xl font-bold text-emerald-400">{stats.todayConversions} <span className="text-sm text-gray-400 font-normal">conversions</span></p>
+              <div className="flex-1 sm:flex-none">
+                <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">Today</p>
+                <p className="text-lg sm:text-2xl font-bold text-emerald-400">{stats.todayConversions} <span className="text-xs sm:text-sm text-gray-400 font-normal">conv.</span></p>
               </div>
-              <div className="h-8 w-px bg-gray-700 hidden sm:block"></div>
-              <div className="hidden sm:block">
+              <div className="h-8 w-px bg-gray-700 hidden md:block"></div>
+              <div className="hidden md:block">
                 <p className="text-xs text-gray-500 uppercase tracking-wide">This Week</p>
                 <p className="text-lg font-semibold text-white">{stats.weekClicks} clicks • {stats.weekConversions} conv.</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+            <div className="flex items-center">
+              <span className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${
                 affiliate.status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-400' :
                 affiliate.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-400' :
                 'bg-gray-500/20 text-gray-400'
@@ -237,7 +237,7 @@ export default function AffiliateDashboard() {
         </div>
 
         {/* Main Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
           <StatCard
             label="Total Clicks"
             value={stats.totalClicks.toLocaleString()}
@@ -269,8 +269,8 @@ export default function AffiliateDashboard() {
         </div>
 
         {/* 7-Day Performance Chart */}
-        <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6 mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4">Last 7 Days Performance</h3>
+        <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4 sm:p-6 mb-4 sm:mb-8">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Last 7 Days</h3>
           <div className="flex items-end gap-2 h-32">
             {dailyStats.map((day, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
@@ -299,12 +299,12 @@ export default function AffiliateDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-gray-800">
+        <div className="flex gap-1 sm:gap-2 mb-4 sm:mb-6 border-b border-gray-800 overflow-x-auto">
           {(['overview', 'clicks', 'conversions'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === tab 
                   ? 'text-emerald-400 border-b-2 border-emerald-400' 
                   : 'text-gray-400 hover:text-white'
@@ -317,9 +317,9 @@ export default function AffiliateDashboard() {
 
         {/* Tab Content */}
         {activeTab === 'overview' && (
-          <div className="grid lg:grid-cols-2 gap-8">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-8">
             {/* Top Sources */}
-            <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
+            <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-white mb-4">Top Traffic Sources</h3>
               {topReferrers.length === 0 ? (
                 <p className="text-gray-400 text-center py-4">No traffic data yet</p>
@@ -336,8 +336,8 @@ export default function AffiliateDashboard() {
             </div>
 
             {/* Top Landing Pages */}
-            <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Top Landing Pages</h3>
+            <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Top Landing Pages</h3>
               {topLandingPages.length === 0 ? (
                 <p className="text-gray-400 text-center py-4">No landing page data yet</p>
               ) : (
@@ -353,27 +353,27 @@ export default function AffiliateDashboard() {
             </div>
 
             {/* Monthly Performance */}
-            <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6 lg:col-span-2">
-              <h3 className="text-lg font-semibold text-white mb-4">Monthly Performance</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+            <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4 sm:p-6 lg:col-span-2">
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Monthly Performance</h3>
+              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                <table className="w-full text-xs sm:text-sm min-w-[400px]">
                   <thead>
                     <tr className="text-gray-400 text-left">
-                      <th className="pb-3 font-medium">Month</th>
-                      <th className="pb-3 font-medium text-right">Clicks</th>
-                      <th className="pb-3 font-medium text-right">Conversions</th>
-                      <th className="pb-3 font-medium text-right">Revenue</th>
-                      <th className="pb-3 font-medium text-right">Commission</th>
+                      <th className="pb-2 sm:pb-3 font-medium">Month</th>
+                      <th className="pb-2 sm:pb-3 font-medium text-right">Clicks</th>
+                      <th className="pb-2 sm:pb-3 font-medium text-right">Conv.</th>
+                      <th className="pb-2 sm:pb-3 font-medium text-right hidden sm:table-cell">Revenue</th>
+                      <th className="pb-2 sm:pb-3 font-medium text-right">Comm.</th>
                     </tr>
                   </thead>
                   <tbody>
                     {monthlyStats.map((month) => (
                       <tr key={month.month} className="border-t border-gray-800">
-                        <td className="py-3 text-white font-medium">{month.month}</td>
-                        <td className="py-3 text-right text-gray-300">{month.clicks}</td>
-                        <td className="py-3 text-right text-gray-300">{month.conversions}</td>
-                        <td className="py-3 text-right text-gray-300">${month.revenue.toFixed(2)}</td>
-                        <td className="py-3 text-right text-emerald-400 font-semibold">${month.commission.toFixed(2)}</td>
+                        <td className="py-2 sm:py-3 text-white font-medium">{month.month}</td>
+                        <td className="py-2 sm:py-3 text-right text-gray-300">{month.clicks}</td>
+                        <td className="py-2 sm:py-3 text-right text-gray-300">{month.conversions}</td>
+                        <td className="py-2 sm:py-3 text-right text-gray-300 hidden sm:table-cell">${month.revenue.toFixed(2)}</td>
+                        <td className="py-2 sm:py-3 text-right text-emerald-400 font-semibold">${month.commission.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -384,12 +384,31 @@ export default function AffiliateDashboard() {
         )}
 
         {activeTab === 'clicks' && (
-          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Recent Clicks</h3>
+          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Recent Clicks</h3>
             {recentClicks.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">No clicks recorded yet. Share your link to get started!</p>
+              <p className="text-gray-400 text-center py-6 sm:py-8 text-sm">No clicks recorded yet. Share your link to get started!</p>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+                {/* Mobile Card View */}
+                <div className="sm:hidden space-y-3">
+                  {recentClicks.map((click) => (
+                    <div key={click.id} className="bg-gray-800/50 rounded-lg p-3 text-xs">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-gray-400">{new Date(click.createdAt).toLocaleString()}</span>
+                        {click.converted ? (
+                          <span className="text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded text-[10px]">Converted ✓</span>
+                        ) : (
+                          <span className="text-gray-500 text-[10px]">Pending</span>
+                        )}
+                      </div>
+                      <p className="text-white font-mono text-[10px] truncate mb-1">{click.landingPage}</p>
+                      <p className="text-gray-500 text-[10px] truncate">{click.referer || 'Direct'}</p>
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop Table View */}
+                <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-gray-400 text-left">
@@ -422,18 +441,39 @@ export default function AffiliateDashboard() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+                </div>
+              </>
             )}
           </div>
         )}
 
         {activeTab === 'conversions' && (
-          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Conversion History</h3>
+          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Conversion History</h3>
             {recentConversions.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">No conversions yet. Share your link to get started!</p>
+              <p className="text-gray-400 text-center py-6 sm:py-8 text-sm">No conversions yet. Share your link to get started!</p>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+                {/* Mobile Card View */}
+                <div className="sm:hidden space-y-3">
+                  {recentConversions.map((conv) => (
+                    <div key={conv.id} className="bg-gray-800/50 rounded-lg p-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="text-white font-medium text-sm">{conv.planName}</p>
+                          <p className="text-gray-500 text-xs">{new Date(conv.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <StatusBadge status={conv.status} />
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-400">Sale: ${conv.amount.toFixed(2)}</span>
+                        <span className="text-emerald-400 font-semibold">+${conv.commission.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop Table View */}
+                <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-gray-400 text-left">
@@ -460,15 +500,16 @@ export default function AffiliateDashboard() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+                </div>
+              </>
             )}
           </div>
         )}
 
         {/* Payout Info */}
-        <div className="mt-8 bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Payout Information</h3>
-          <div className="grid md:grid-cols-4 gap-6 text-sm">
+        <div className="mt-4 sm:mt-8 bg-gray-900/50 rounded-xl border border-gray-800 p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Payout Information</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-xs sm:text-sm">
             <div>
               <p className="text-gray-400">Minimum Payout</p>
               <p className="text-white font-semibold">$50.00</p>
@@ -486,9 +527,9 @@ export default function AffiliateDashboard() {
               <p className="text-white font-semibold">${stats.avgOrderValue.toFixed(2)}</p>
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-gray-800">
-            <p className="text-gray-500 text-xs">
-              💡 Commissions are approved after the 30-day refund period. Payouts are processed on the 1st of each month for all approved commissions over $50.
+          <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-800">
+            <p className="text-gray-500 text-[10px] sm:text-xs leading-relaxed">
+              💡 Commissions approved after 30-day refund period. Payouts on 1st of month for $50+ balances.
             </p>
           </div>
         </div>
@@ -518,15 +559,15 @@ function StatCard({ label, value, subtext, icon, color }: {
   };
 
   return (
-    <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
-      <div className="flex items-center gap-3 mb-2">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colors[color]}`}>
+    <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-3 sm:p-4">
+      <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${colors[color]}`}>
           {icon}
         </div>
       </div>
-      <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-gray-400 text-sm">{label}</p>
-      {subtext && <p className="text-gray-500 text-xs mt-1">{subtext}</p>}
+      <p className="text-lg sm:text-2xl font-bold text-white truncate">{value}</p>
+      <p className="text-gray-400 text-xs sm:text-sm">{label}</p>
+      {subtext && <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 sm:mt-1 truncate">{subtext}</p>}
     </div>
   );
 }
