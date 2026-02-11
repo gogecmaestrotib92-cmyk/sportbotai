@@ -41,3 +41,7 @@ export { default as SnapshotList } from './SnapshotList';
 
 // Predicted Score Display
 export { default as PredictedScoreDisplay } from './PredictedScoreDisplay';
+
+// Bookmaker Odds Comparison / Line Shopping
+export { default as BookmakerOddsTable } from './BookmakerOddsTable';
+export type { BookmakerOddsEntry } from './BookmakerOddsTable';

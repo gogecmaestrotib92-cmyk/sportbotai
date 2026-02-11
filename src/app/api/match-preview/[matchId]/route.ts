@@ -1513,7 +1513,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // ========================================
 
     // Prepare odds fetch function
-    const fetchOddsAsync = async (): Promise<{ odds: OddsData | null; overUnder: { line: number; overOdds?: number; underOdds?: number } | null }> => {
+    const fetchOddsAsync = async (): Promise<{
+      odds: OddsData | null;
+      overUnder: { line: number; overOdds?: number; underOdds?: number } | null;
+      bookmakerOdds: Array<{
+        bookmaker: string;
+        homeOdds: number;
+        drawOdds?: number | null;
+        awayOdds: number;
+        lastUpdate?: string;
+        spread?: { home: { line: number; odds: number }; away: { line: number; odds: number } };
+        total?: { over: { line: number; odds: number }; under: { line: number; odds: number } };
+      }>;
+    }> => {
       try {
         const dataLayer = getDataLayer();
         console.log(`[Match-Preview] Fetching odds for ${matchInfo.homeTeam} vs ${matchInfo.awayTeam}, sport: ${matchInfo.sport}`);
@@ -1530,6 +1542,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
         let oddsData: OddsData | null = null;
         let overUnderData: { line: number; overOdds?: number; underOdds?: number } | null = null;
+        const allBookmakerOdds: Array<{
+          bookmaker: string;
+          homeOdds: number;
+          drawOdds?: number | null;
+          awayOdds: number;
+          lastUpdate?: string;
+          spread?: { home: { line: number; odds: number }; away: { line: number; odds: number } };
+          total?: { over: { line: number; odds: number }; under: { line: number; odds: number } };
+        }> = [];
 
         if (oddsResult.success && oddsResult.data && oddsResult.data.length > 0) {
           // Find first bookmaker with moneyline for main odds
@@ -1544,6 +1565,29 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
               lastUpdate: bookmakerWithMoneyline.lastUpdate?.toISOString(),
             };
           }
+
+          // Collect ALL bookmaker odds for odds comparison table
+          for (const bm of oddsResult.data) {
+            if (bm.moneyline) {
+              allBookmakerOdds.push({
+                bookmaker: bm.bookmaker,
+                homeOdds: bm.moneyline.home,
+                drawOdds: bm.moneyline.draw ?? null,
+                awayOdds: bm.moneyline.away,
+                lastUpdate: bm.lastUpdate?.toISOString(),
+                spread: bm.spread ? {
+                  home: { line: bm.spread.home.line, odds: bm.spread.home.odds },
+                  away: { line: bm.spread.away.line, odds: bm.spread.away.odds },
+                } : undefined,
+                total: bm.total ? {
+                  over: { line: bm.total.over.line, odds: bm.total.over.odds },
+                  under: { line: bm.total.under.line, odds: bm.total.under.odds },
+                } : undefined,
+              });
+            }
+          }
+
+          console.log(`[Match-Preview] Collected odds from ${allBookmakerOdds.length} bookmakers for comparison`);
 
           // Find first bookmaker with totals for O/U - may be different from moneyline bookmaker
           const bookmakerWithTotals = oddsResult.data.find(bm => bm.total?.over?.line);
@@ -1561,10 +1605,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         if (!oddsData) {
           console.log(`[Match-Preview] No odds available: ${oddsResult.error?.message || 'no data'}`);
         }
-        return { odds: oddsData, overUnder: overUnderData };
+        return { odds: oddsData, overUnder: overUnderData, bookmakerOdds: allBookmakerOdds };
       } catch (error) {
         console.error('[Match-Preview] Odds fetch failed:', error);
-        return { odds: null, overUnder: null };
+        return { odds: null, overUnder: null, bookmakerOdds: [] };
       }
     };
 
@@ -1626,9 +1670,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       fetchOddsAsync(),
     ]);
 
-    // Extract odds and overUnder from result
+    // Extract odds, overUnder, and bookmaker odds from result
     const odds = oddsResult.odds;
     const overUnder = oddsResult.overUnder;
+    const bookmakerOdds = oddsResult.bookmakerOdds;
 
     console.log(`[Match-Preview] Parallel fetch complete in ${Date.now() - startTime}ms - AI: ${aiAnalysis?.story?.favored || 'unknown'}, Odds: ${odds ? 'yes' : 'no'}, O/U: ${overUnder ? overUnder.line : 'no'}`);
 
@@ -1844,6 +1889,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       // Premium Edge Features
       marketIntel: marketIntel,
       odds: odds,
+      // All bookmaker odds for line shopping / odds comparison
+      bookmakerOdds: bookmakerOdds.length > 0 ? bookmakerOdds : undefined,
       // Predicted scores from Poisson/Elo model
       // FIX: For soccer with missing stats, use odds-based expected scores instead of 1:1
       // FIX2: For US sports without stats, use league averages + odds-based adjustments
