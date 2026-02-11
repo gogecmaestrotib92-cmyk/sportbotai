@@ -1773,6 +1773,28 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const overUnder = oddsResult.overUnder;
     const bookmakerOdds = oddsResult.bookmakerOdds;
 
+    // Compute CONSENSUS AVERAGE odds from ALL bookmakers
+    // Used for edge calculation (analyzeMarket + pipeline) to match market-alerts methodology
+    // Individual bookmaker odds (first bookmaker) are kept in `odds` for display purposes
+    let consensusOdds: OddsData | null = null;
+    if (bookmakerOdds.length > 0) {
+      const homeArr = bookmakerOdds.map(bm => bm.homeOdds);
+      const awayArr = bookmakerOdds.map(bm => bm.awayOdds);
+      const drawArr = bookmakerOdds.filter(bm => bm.drawOdds != null).map(bm => bm.drawOdds!);
+      const avgHome = homeArr.reduce((a, b) => a + b, 0) / homeArr.length;
+      const avgAway = awayArr.reduce((a, b) => a + b, 0) / awayArr.length;
+      const avgDraw = drawArr.length > 0 ? drawArr.reduce((a, b) => a + b, 0) / drawArr.length : undefined;
+      consensusOdds = {
+        homeOdds: Math.round(avgHome * 100) / 100,
+        awayOdds: Math.round(avgAway * 100) / 100,
+        drawOdds: avgDraw ? Math.round(avgDraw * 100) / 100 : undefined,
+        bookmaker: 'consensus',
+      };
+      console.log(`[Match-Preview] Consensus odds (${bookmakerOdds.length} bookmakers): H:${consensusOdds.homeOdds} A:${consensusOdds.awayOdds}${consensusOdds.drawOdds ? ` D:${consensusOdds.drawOdds}` : ''} (vs first-bm: H:${odds?.homeOdds} A:${odds?.awayOdds})`);
+    }
+    // Use consensus for edge calc, fall back to single bookmaker if insufficient data
+    const oddsForEdge = consensusOdds || odds;
+
     console.log(`[Match-Preview] Parallel fetch complete in ${Date.now() - startTime}ms - AI: ${aiAnalysis?.story?.favored || 'unknown'}, Odds: ${odds ? 'yes' : 'no'}, O/U: ${overUnder ? overUnder.line : 'no'}`);
 
     // Try to fetch opening odds from existing prediction for steam/RLM detection
@@ -1813,16 +1835,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Consistent probability calculations across ALL entry points
     let pipelineProbabilities: { home: number; away: number; draw?: number | null } | undefined;
     
-    if (odds) {
+    if (oddsForEdge) {
       try {
         const sportConfig = getSportConfig(matchInfo.sport);
         
-        // Format odds for pipeline (BookmakerOdds format)
+        // Format odds for pipeline using CONSENSUS odds (consistent with market-alerts)
         const pipelineOdds = [{
           bookmaker: 'consensus',
-          homeOdds: odds.homeOdds,
-          awayOdds: odds.awayOdds,
-          drawOdds: sportConfig.hasDraw ? (odds.drawOdds || 3.5) : undefined,
+          homeOdds: oddsForEdge.homeOdds,
+          awayOdds: oddsForEdge.awayOdds,
+          drawOdds: sportConfig.hasDraw ? (oddsForEdge.drawOdds || 3.5) : undefined,
         }];
 
         const pipelineInput: PipelineInput = {
@@ -1878,14 +1900,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Calculate market intel using AI signals + odds (only if we have both)
     let marketIntel: MarketIntel | null = null;
-    if (odds && aiAnalysis?.universalSignals) {
+    if (oddsForEdge && aiAnalysis?.universalSignals) {
       try {
         const sportConfig = getSportConfig(matchInfo.sport);
         // Pass league for calibration (convert to key format)
         const leagueKey = matchInfo.league?.toLowerCase().replace(/\s+/g, '_') || matchInfo.sport;
+        // Use CONSENSUS odds for edge calculation — matches market-alerts methodology
         marketIntel = analyzeMarket(
           aiAnalysis.universalSignals,
-          odds,
+          oddsForEdge,
           sportConfig.hasDraw,
           previousOdds,  // Now passing previous odds for steam/RLM detection!
           leagueKey,
@@ -2141,7 +2164,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         // ========================================
         // When we have marketIntel from full AI analysis, update OddsSnapshot
         // so Market Alerts shows consistent edge values
-        if (marketIntel && odds) {
+        if (marketIntel && oddsForEdge) {
           try {
             const modelProb = marketIntel.modelProbability;
             const valueEdge = marketIntel.valueEdge;
@@ -2182,9 +2205,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
                 homeTeam: matchInfo.homeTeam,
                 awayTeam: matchInfo.awayTeam,
                 matchDate,
-                homeOdds: odds.homeOdds,
-                awayOdds: odds.awayOdds,
-                drawOdds: odds.drawOdds,
+                homeOdds: oddsForEdge.homeOdds,
+                awayOdds: oddsForEdge.awayOdds,
+                drawOdds: oddsForEdge.drawOdds,
                 modelHomeProb: modelProb.home,
                 modelAwayProb: modelProb.away,
                 modelDrawProb: modelProb.draw,
