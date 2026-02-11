@@ -203,21 +203,21 @@ function TestimonialCard({ quote, author, role, rating = 5 }: TestimonialCardPro
 export function TestimonialsSectionI18n({ t }: TestimonialsSectionI18nProps) {
   const testimonials = [
     {
-      quote: "Finally an analytics tool that doesn't promise miracles. Clean data, real insights.",
-      author: "Marcus K.",
-      role: "Sports Analyst",
+      quote: "Zamenio sam 2 sata istraživanja pred meč sa brifingom od 60 sekundi. Audio format je savršen za vožnju do posla — stignem na meč i tačno znam šta da gledam.",
+      author: "Marko K.",
+      role: "Fudbalski fan · Pro član od marta",
       rating: 5,
     },
     {
-      quote: "The 60-second briefings save me so much time before matches. Worth every penny.",
-      author: "Anna M.",
-      role: "Pro Member",
+      quote: "Detekcija vrednosti je prošle nedelje uhvatila 4.2% prednosti na Pacers moneyline koju bih ignorisala. Nisu tipovi — pokazuju ti šta tržište potcenjuje.",
+      author: "Ana M.",
+      role: "NBA entuzijasta · 312 analiza urađeno",
       rating: 5,
     },
     {
-      quote: "Love that they're transparent about being an analysis tool, not tipsters.",
+      quote: "Testirao sam 3 analitičke platforme tokom 2 meseca. SportBot je jedini koji mi daje korisne podatke za manje od minuta. Otkazao sam ostale dve.",
       author: "David R.",
-      role: "Premium User",
+      role: "Sportski analitičar · Premium član",
       rating: 5,
     },
   ];

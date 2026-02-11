@@ -40,19 +40,19 @@ export const metadata: Metadata = {
 const pricingFAQs = [
   {
     question: 'Can I cancel my subscription?',
-    answer: 'Yes, you can cancel your subscription at any time. There are no fixed-term contracts. Access remains active until the end of the paid period.',
+    answer: 'One click from your account settings. No contracts, no cancellation fees. You keep access until your billing period ends.',
   },
   {
     question: 'Is SportBot AI a tipster service?',
-    answer: 'No. SportBot AI is an analytics tool that provides probability models and statistical insights. We do not provide betting tips, picks, or guaranteed outcomes.',
+    answer: 'No. We show you data, probabilities, and where the odds look off — then you decide what to do with that information.',
   },
   {
     question: 'What sports are covered?',
-    answer: 'SportBot AI covers Soccer (Premier League, La Liga, UCL, Serie A, Bundesliga, Ligue 1), NBA, NFL, NHL, and UFC/MMA with real-time data integration.',
+    answer: '4 sports across 20+ leagues: Soccer (Premier League, La Liga, Serie A, Champions League & more), Basketball (NBA, EuroLeague), American Football (NFL, NCAA), and Hockey (NHL).',
   },
   {
-    question: 'How accurate are the probability models?',
-    answer: 'Our AI models provide estimated probabilities based on statistical analysis. No prediction system is 100% accurate. We focus on transparency and helping users understand the data.',
+    question: "What's the difference between Pro and Premium?",
+    answer: 'Pro ($0.66/day) gives you 10 analyses and 50 AI questions daily — enough for a full weekend of matches. Premium ($1.66/day) removes all limits and adds Edge Alerts that notify you when our AI spots value in real time.',
   },
 ];
 
@@ -87,10 +87,10 @@ export default function PricingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Pricing</p>
           <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
-            Simple, <span className="text-gradient-accent">Transparent Pricing</span>
+            Smarter Analysis, <span className="text-gradient-accent">Less Than a Coffee</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            No hidden fees. Cancel anytime. Start free and upgrade when you&apos;re ready.
+            One bad decision costs more than a year of Pro. Start free, cancel anytime.
           </p>
         </div>
       </section>

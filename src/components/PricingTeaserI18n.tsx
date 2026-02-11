@@ -31,9 +31,9 @@ export default function PricingTeaserI18n({ t, locale }: PricingTeaserI18nProps)
         <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">{t.pricing.label}</p>
         <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">
           {locale === 'sr' ? (
-            <>Jednostavne, <span className="text-gradient-accent">transparentne cene</span></>
+            <>Pametnija analiza <span className="text-gradient-accent">jeftinije od kafe</span></>
           ) : (
-            <>Simple, <span className="text-gradient-accent">transparent pricing</span></>
+            <>Smarter analysis <span className="text-gradient-accent">for less than a coffee</span></>
           )}
         </h2>
         <p className="text-lg text-gray-400 max-w-2xl mx-auto">

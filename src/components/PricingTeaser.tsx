@@ -36,17 +36,17 @@ const plans: PricingPlan[] = [
     description: 'Analysis + Edge Detection',
     yearlyDescription: 'Save $90/year',
     features: [
-      '10 analyses per day',
-      '50 AI chat messages per day',
-      'All sports',
-      'Advanced AI analysis',
-      'Pre-match insights & streaks',
-      'Priority support',
-      'Analysis history (30 days)',
-      'My Teams favorites',
+      '10 matches analyzed daily — cover your whole weekend slate',
+      '50 AI questions/day — ask anything about any match',
+      'Soccer, NBA, NFL & NHL covered',
+      'Advanced edge detection — see what the market misses',
+      'Form streaks & injury alerts before kickoff',
+      'Priority support — real humans, fast replies',
+      '30-day analysis history — track your research',
+      'My Teams — one click to your favorite clubs',
     ],
     highlighted: true,
-    buttonText: 'Upgrade to Pro',
+    buttonText: 'Start Finding Edges',
   },
   {
     id: 'premium',
@@ -58,14 +58,14 @@ const plans: PricingPlan[] = [
     description: 'Unlimited Analysis + Edge Alerts',
     yearlyDescription: 'Save $310/year (52% off)',
     features: [
-      'Unlimited analyses',
-      'Unlimited AI chat messages',
-      'All sports',
-      'Edge Alerts (value detection)',
-      'Advanced statistics & trends',
-      'Unlimited analysis history',
-      'My Teams favorites',
-      'Priority support 24/7',
+      'Unlimited analyses — no daily cap, ever',
+      'Unlimited AI chat — deep-dive any match or player',
+      'Soccer, NBA, NFL & NHL covered',
+      'Edge Alerts — get notified when value appears',
+      'Advanced stats & trend tracking',
+      'Full analysis history — your complete research log',
+      'My Teams — instant updates on clubs you follow',
+      '24/7 priority support',
     ],
     buttonText: 'Go Premium',
   },
@@ -89,10 +89,10 @@ export default function PricingTeaser() {
       <div className="text-center mb-8 relative">
         <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Pricing</p>
         <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">
-          Simple, <span className="text-gradient-accent">transparent pricing</span>
+          Smarter analysis <span className="text-gradient-accent">for less than a coffee</span>
         </h2>
         <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-          Start free, upgrade when you need more. No hidden fees.
+          One bad decision costs more than a year of Pro. Start free, upgrade when you see the edge.
         </p>
       </div>
 

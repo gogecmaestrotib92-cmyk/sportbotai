@@ -17,6 +17,7 @@ import { getTranslations } from '@/lib/i18n';
 import { getOrganizationSchema, getWebsiteSchema, getMatchAnalyzerSchema, getAIDeskSchema, getHomepageFAQSchema, getHomeBreadcrumb } from '@/lib/seo';
 
 // Below-fold components - dynamic imports for better TBT/LCP
+const PainQuantification = dynamic(() => import('@/components/PainQuantification'), { ssr: false });
 const DailyPicksSection = dynamic(() => import('@/components/DailyPicksSection'), { ssr: true });
 const VideoTestimonialsCarousel = dynamic(() => import('@/components/VideoTestimonialsCarousel'), { ssr: true });
 const HowItWorksVideo = dynamic(() => import('@/components/HowItWorksVideo'), { ssr: true });
@@ -84,6 +85,9 @@ export default function SerbianHomePage() {
 
       {/* Hero section */}
       <HeroI18n t={t} locale="sr" />
+
+      {/* Pain Quantification - "2+ sata vs 60 sekundi" */}
+      <PainQuantification locale="sr" />
 
       {/* League logos - infinite scroll */}
       <LeagueScroll />

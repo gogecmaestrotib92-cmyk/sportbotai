@@ -20,6 +20,10 @@ import { TrustBadges } from '@/components/SocialProof';
 import { getOrganizationSchema, getWebsiteSchema, getMatchAnalyzerSchema, getAIDeskSchema, getHomepageFAQSchema, getHomeBreadcrumb } from '@/lib/seo';
 
 // Below-fold components - dynamic imports for better TBT/LCP
+const PainQuantification = dynamic(
+  () => import('@/components/PainQuantification'),
+  { ssr: false }
+);
 const DailyPicksSection = dynamic(
   () => import('@/components/DailyPicksSection'),
   { ssr: true }
@@ -101,6 +105,9 @@ export default function HomePage() {
 
       {/* Hero section */}
       <Hero />
+
+      {/* Pain Quantification - "2 hours vs 60 seconds" */}
+      <PainQuantification locale="en" />
 
       {/* League logos - infinite scroll */}
       <LeagueScroll />

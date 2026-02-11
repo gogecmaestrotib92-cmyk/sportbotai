@@ -19,27 +19,27 @@ export interface FAQItem {
 export const defaultFAQData: FAQItem[] = [
   {
     question: "What is SportBot AI?",
-    answer: "SportBot AI is an AI-powered sports analytics platform that helps you find where the market is wrong. We provide real-time analysis including team form, injuries, key stats, and probability estimates — so you can spot edges and make smarter decisions."
+    answer: "SportBot AI turns 2 hours of pre-match research into 60 seconds. Our AI cross-references team form, injuries, odds from 50+ bookmakers, and historical data — then tells you exactly where the market might be wrong."
   },
   {
     question: "How will it help me?",
-    answer: "Whether you're a casual fan wanting to understand a match before watching, a content creator needing quick research, or someone who wants deeper sports insights — SportBot AI saves you hours of research by delivering AI-curated analysis instantly."
+    answer: "If you've ever spent your Saturday morning reading injury reports, checking lineups, and comparing odds across sites — that's what our AI does in one click. Fans use it to prep for matches. Content creators use it for instant research. Analysts use it to spot edges faster."
   },
   {
     question: "Is this a tipster service?",
-    answer: "No. We don't give picks or tell you what to bet. SportBot AI is an educational tool that gives you understanding and context. You see the data, the analysis, and the insights — then you decide what it means for you."
+    answer: "No. We don't give picks or tell you what to bet. SportBot AI is an analytical tool that shows you data, probabilities, and where the odds look off — then you decide what to do with that information."
   },
   {
     question: "What sports do you cover?",
-    answer: "We cover all major sports including Premier League, La Liga, Serie A, Champions League, NBA, NFL, NHL, MLB, Euroleague Basketball, and many more. Our AI works across soccer, basketball, American football, hockey, and other popular leagues."
+    answer: "4 sports across 20+ leagues: Soccer (Premier League, La Liga, Serie A, Bundesliga, Champions League & more), Basketball (NBA, EuroLeague), American Football (NFL, NCAA), and Hockey (NHL). If there's a match with odds, our AI can analyze it."
   },
   {
-    question: "How much does SportBot AI cost?",
-    answer: "We offer a free tier with basic match analysis, plus Pro and Premium plans for power users who want unlimited AI chat, market alerts, and advanced features. Check our pricing page for current plans."
+    question: "How much does it cost?",
+    answer: "Free to try (1 analysis). Pro is $0.66/day ($19.99/month) for 10 daily analyses and 50 AI questions. Premium is $1.66/day for unlimited everything plus Edge Alerts. Cancel anytime, no contracts."
   },
   {
     question: "How do I cancel my plan?",
-    answer: "You can cancel anytime from your account settings. There are no long-term contracts — cancel whenever you want and you'll retain access until the end of your billing period."
+    answer: "One click from your account settings. No contracts, no cancellation fees, no hoops to jump through. You keep access until your billing period ends."
   },
 ];
 
@@ -59,11 +59,11 @@ export const pricingFAQData: FAQItem[] = [
   },
   {
     question: "What do I get with the Free plan?",
-    answer: "The Free plan includes 1 match analysis and 1 AI chat message to try out the platform before deciding to upgrade."
+    answer: "One full match analysis and one AI chat message — enough to see exactly what you'd get with Pro, no credit card needed."
   },
   {
     question: "What's the difference between Pro and Premium?",
-    answer: "Pro gives you unlimited match analyses and AI chat. Premium adds Market Alerts — our AI-powered system that detects value opportunities and market edges in real-time."
+    answer: "Pro ($0.66/day) gives you 10 analyses and 50 AI questions daily — enough for a full weekend of matches. Premium ($1.66/day) removes all limits and adds Edge Alerts that notify you when our AI spots a value opportunity in real time."
   },
   {
     question: "Is there a refund policy?",

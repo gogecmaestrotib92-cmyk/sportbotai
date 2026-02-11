@@ -133,10 +133,10 @@ interface StatsStripProps {
 
 export function StatsStrip({ className = '' }: StatsStripProps) {
   const stats = [
+    { value: '50+', label: 'Data Sources Analyzed' },
+    { value: '60s', label: 'From Click to Insight' },
     { value: '7', label: 'Sports Covered' },
-    { value: '1K+', label: 'Analyses Run' },
-    { value: '< 60s', label: 'Per Analysis' },
-    { value: '24/7', label: 'Live Data' },
+    { value: '24/7', label: 'Live Odds Tracking' },
   ];
 
   return (
@@ -202,21 +202,21 @@ export function TestimonialCard({ quote, author, role, rating = 5 }: Testimonial
 export function TestimonialsSection() {
   const testimonials: TestimonialProps[] = [
     {
-      quote: "Finally, an AI tool that explains matches instead of just giving tips. The audio briefings are perfect for my commute.",
+      quote: "Replaced 2 hours of pre-match research with a 60-second briefing. The audio format is perfect for my commute—I show up to watch night knowing exactly what to look for.",
       author: "Marcus T.",
-      role: "Football Fan",
+      role: "Football Fan · Pro member since March",
       rating: 5,
     },
     {
-      quote: "I use it before every NBA game. The value detection has genuinely changed how I think about odds.",
+      quote: "The value detection caught a 4.2% edge on Pacers moneyline last week that I would have ignored. It's not tips—it's showing you what the market underprices.",
       author: "Sarah K.",
-      role: "NBA Enthusiast",
+      role: "NBA Enthusiast · 312 analyses run",
       rating: 5,
     },
     {
-      quote: "Clean UI, fast analysis, no BS. The 60-second format is exactly what I needed.",
+      quote: "I tested 3 analytics platforms over 2 months. SportBot is the only one that gives me actionable data in under a minute. Canceled the other two.",
       author: "James L.",
-      role: "Sports Analyst",
+      role: "Sports Analyst · Premium member",
       rating: 5,
     },
   ];

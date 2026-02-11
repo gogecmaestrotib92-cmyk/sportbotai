@@ -32,7 +32,7 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row items-center gap-3 mb-4 sm:mb-6 justify-center lg:justify-start">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-xl rounded-full text-xs sm:text-sm font-medium text-gray-200 border border-white/10 shadow-glass">
                 <span className="w-2 h-2 bg-accent rounded-full animate-pulse shadow-glow-accent" />
-                Know any match before it happens
+                2 hours of research → 60 seconds
               </div>
               <LiveStatsCounter className="hidden sm:flex" />
             </div>
@@ -46,13 +46,13 @@ export default function Hero() {
 
             {/* Explainer - One line to clarify meaning */}
             <p className="text-sm sm:text-base text-white/70 mb-4 sm:mb-6 max-w-lg mx-auto lg:mx-0">
-              Compare AI probabilities vs market prices—then decide for yourself.
+              Our AI crunches injuries, form, H2H &amp; odds from 50+ sources—you get the edge, not guesses.
             </p>
 
-            {/* Subheadline - Glassmorphism card */}
+            {/* Subheadline - Pain quantification */}
             <p className="text-base sm:text-lg text-white/90 leading-relaxed mb-6 sm:mb-8 max-w-xl mx-auto lg:mx-0 card-glass px-5 py-4">
-              AI Sports Predictions: free picks, analysis & insights for Soccer, NBA, NFL & NHL.
-              <strong className="text-accent"> Soccer, NBA, NFL & NHL—all in 60 seconds.</strong>
+              Stop spending hours on research that still leaves you guessing.
+              <strong className="text-accent"> Soccer, NBA, NFL, NHL &amp; UFC—analyzed in 60 seconds.</strong>
             </p>
 
             {/* CTA Buttons - Stack on mobile */}
@@ -61,14 +61,14 @@ export default function Hero() {
                 href="/matches"
                 className="btn-primary text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto glow-accent-strong"
               >
-                Browse Matches
+                Get Free Match Analysis
               </Link>
               <Link
                 href="/ai-desk"
                 className="btn-secondary inline-flex items-center justify-center gap-2 text-center text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto"
               >
                 <span>🧠</span>
-                Ask AI Agent
+                Ask Any Sports Question
               </Link>
             </div>
 

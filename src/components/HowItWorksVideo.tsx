@@ -18,14 +18,14 @@ const YOUTUBE_VIDEO_ID = 'dEIjEJDLX70';
 
 const translations = {
     en: {
-        title: 'How It Works',
-        subtitle: 'See our AI analyze a real match in 90 seconds',
-        watchButton: 'Watch Demo',
+        title: 'See It In Action',
+        subtitle: 'Watch our AI break down a real NBA match — and spot an edge the market missed',
+        watchButton: 'Watch the 90s Demo',
     },
     sr: {
-        title: 'Kako Funkcioniše',
-        subtitle: 'Pogledajte AI analizu prave utakmice za 90 sekundi',
-        watchButton: 'Pogledaj Demo',
+        title: 'Pogledaj Kako Radi',
+        subtitle: 'Pogledajte kako naš AI rastavlja pravu NBA utakmicu — i pronalazi prednost koju je tržište propustilo',
+        watchButton: 'Pogledaj Demo (90s)',
     },
 };
 

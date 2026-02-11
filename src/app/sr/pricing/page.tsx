@@ -46,15 +46,15 @@ const pricingFAQs = [
   },
   {
     question: 'Da li je SportBot AI tipsterski servis?',
-    answer: 'Ne. SportBot AI je analitički alat koji pruža modele verovatnoće i statističke uvide. Ne pružamo tipove, pikove ili garantovane ishode.',
+    answer: 'Ne. SportBot AI je analitički alat koji ti pokazuje podatke, verovatnoće i gde kvote izgledaju pogrešno — a ti odlučuješ šta ćeš s tim.',
   },
   {
     question: 'Koji sportovi su pokriveni?',
-    answer: 'SportBot AI pokriva Fudbal (Premier Liga, La Liga, Liga Šampiona, Serie A, Bundesliga, Ligue 1), NBA, NFL, NHL i UFC/MMA sa integracijom podataka u realnom vremenu.',
+    answer: '4 sporta u 20+ liga: Fudbal (Premijer Liga, La Liga, Serija A, Liga Šampiona i više), Košarka (NBA, Evroliga), Američki Fudbal (NFL, NCAA) i Hokej (NHL).',
   },
   {
-    question: 'Koliko su tačni modeli verovatnoće?',
-    answer: 'Naši AI modeli pružaju procenjene verovatnoće bazirane na statističkoj analizi. Nijedan sistem predikcije nije 100% tačan. Fokusiramo se na transparentnost i pomoć korisnicima da razumeju podatke.',
+    question: 'Koja je razlika između Pro i Premium?',
+    answer: 'Pro ($0.66/dan) daje ti 10 analiza i 50 AI pitanja dnevno — dovoljno za ceo vikend. Premium ($1.66/dan) uklanja sve limite i dodaje Alarme za Prednosti koji te obaveštavaju kad naš AI uoči vrednost u realnom vremenu.',
   },
 ];
 
@@ -89,10 +89,10 @@ export default function PricingPageSR() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Cene</p>
           <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
-            Jednostavne, <span className="text-gradient-accent">Transparentne Cene</span>
+            Pametnija Analiza, <span className="text-gradient-accent">Jeftinije od Kafe</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Bez skrivenih troškova. Otkaži bilo kada. Počni besplatno i nadogradi kada budeš spreman.
+            Jedna loša odluka košta više od godinu dana Pro plana. Počni besplatno, otkaži kad hoćeš.
           </p>
         </div>
       </section>

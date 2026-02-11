@@ -15,7 +15,7 @@ export default function Features() {
       title: 'Multi-Sport Coverage',
       description: 'Soccer, NBA, NFL, NHL, MMA/UFC—all in one platform with real-time data.',
       icon: '🌍',
-      badge: '7 Sports',
+      badge: '4 Sports',
     },
     {
       title: 'Team Intelligence',

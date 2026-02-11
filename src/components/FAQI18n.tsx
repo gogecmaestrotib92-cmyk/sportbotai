@@ -18,27 +18,27 @@ export default function FAQI18n({ t }: FAQI18nProps) {
   const faqItems: FAQItem[] = [
     {
       question: "Šta je SportBot AI?",
-      answer: "SportBot AI je AI platforma za sportsku analitiku koja ti pomaže da razumeš bilo koji meč za 60 sekundi. Pružamo analizu u realnom vremenu uključujući formu timova, povrede, ključne statistike i kontekstualne uvide — tako da možeš doneti pametnije odluke kao navijač, kreator sadržaja ili analitičar."
+      answer: "SportBot AI pretvara 2 sata istraživanja pre meča u 60 sekundi. Naš AI ukršta formu timova, povrede, kvote od 50+ kladionica i istorijske podatke — pa ti kaže tačno gde tržište možda greši."
     },
     {
       question: "Kako će mi pomoći?",
-      answer: "Bilo da si obični navijač koji želi da razume meč pre gledanja, kreator sadržaja kojem je potrebno brzo istraživanje, ili neko ko želi dublje sportske uvide — SportBot AI ti štedi sate istraživanja pružajući AI kuriranu analizu trenutno."
+      answer: "Ako si ikad proveo subotnje jutro čitajući izveštaje o povredama, proveravajući postave i upoređujući kvote po sajtovima — to je ono što naš AI radi jednim klikom. Navijači ga koriste za pripremu pre meča. Kreatori sadržaja za instant istraživanje. Analitičari za brže pronalaženje prednosti."
     },
     {
       question: "Da li je ovo tipster servis?",
-      answer: "Ne. Ne dajemo tikete niti ti govorimo šta da igraš. SportBot AI je edukativni alat koji ti daje razumevanje i kontekst. Vidiš podatke, analizu i uvide — zatim ti odlučuješ šta to znači za tebe."
+      answer: "Ne. Ne dajemo tikete niti ti govorimo šta da igraš. SportBot AI je analitički alat koji ti pokazuje podatke, verovatnoće i gde kvote izgledaju pogrešno — a ti odlučuješ šta ćeš s tim."
     },
     {
       question: "Koje sportove pokrivate?",
-      answer: "Pokrivamo sve glavne sportove uključujući Premijer Ligu, La Ligu, Seriju A, Ligu Šampiona, NBA, NFL, NHL, MLB, Evroligu Košarku i mnoge druge. Naš AI radi preko fudbala, košarke, američkog fudbala, hokeja i drugih popularnih liga."
+      answer: "4 sporta u 20+ liga: Fudbal (Premijer Liga, La Liga, Serija A, Bundesliga, Liga Šampiona i više), Košarka (NBA, Evroliga), Američki Fudbal (NFL, NCAA) i Hokej (NHL). Ako postoji meč sa kvotama, naš AI ga može analizirati."
     },
     {
-      question: "Koliko košta SportBot AI?",
-      answer: "Nudimo besplatan plan sa osnovnom analizom meča, plus Pro i Premium planove za napredne korisnike koji žele neograničen AI chat, market alarme i napredne funkcije. Pogledaj stranicu sa cenama za trenutne planove."
+      question: "Koliko košta?",
+      answer: "Besplatno za probu (1 analiza). Pro je $0.66/dan ($19.99/mesečno) za 10 dnevnih analiza i 50 AI pitanja. Premium je $1.66/dan za neograničeno sve plus Alarme za Prednosti. Otkaži kad hoćeš, bez ugovora."
     },
     {
       question: "Kako da otkažem svoj plan?",
-      answer: "Možeš otkazati bilo kada iz postavki naloga. Nema dugoročnih ugovora — otkaži kad god želiš i zadržaćeš pristup do kraja perioda naplate."
+      answer: "Jedan klik iz postavki naloga. Bez ugovora, bez naknada za otkazivanje, bez komplikacija. Zadržavaš pristup do kraja perioda naplate."
     },
   ];
 

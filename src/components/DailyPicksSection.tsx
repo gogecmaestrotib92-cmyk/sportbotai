@@ -438,17 +438,17 @@ export default function DailyPicksSection({ locale = 'en' }: DailyPicksSectionPr
             <div className="flex flex-col items-center gap-3 bg-black border border-zinc-800 rounded-xl px-5 py-4">
               <div className="text-center">
                 <p className="text-white font-medium">
-                  {locale === 'sr' ? 'Otključaj sve pikove i detalje' : 'Unlock all picks & full details'}
+                  {locale === 'sr' ? 'Vidiš mečeve — ali propuštaš prednosti' : 'You see the matches — but you\'re missing the edges'}
                 </p>
                 <p className="text-sm text-zinc-400">
-                  {locale === 'sr' ? 'Edge %, confidence, i selekciju' : 'Edge %, confidence, and selection'}
+                  {locale === 'sr' ? 'Edge %, selekcija, i predviđeni skor — za manje od kafe dnevno' : 'Edge %, selection, and predicted score — for less than a coffee per day'}
                 </p>
               </div>
               <Link
                 href="/pricing#pro"
                 className="w-full bg-accent hover:bg-accent/90 text-black font-semibold px-4 py-1.5 rounded-none transition-colors text-center text-sm"
               >
-                {locale === 'sr' ? 'Idi na Pro' : 'Go Pro'}
+                {locale === 'sr' ? 'Otključaj za $0.66/dan' : 'Unlock for $0.66/day'}
               </Link>
             </div>
           </div>

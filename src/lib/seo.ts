@@ -133,7 +133,7 @@ export const META = {
   
   analyzer: {
     title: 'AI Match Analyzer – Instant Sports Analysis',
-    description: 'Analyze any match with AI in 60 seconds. Get probability estimates, value detection, risk assessment, and expert-level breakdowns. Soccer, NBA, NFL, Tennis, UFC & more.',
+    description: 'Analyze any match with AI in 60 seconds. Get probability estimates, value detection, risk assessment, and expert-level breakdowns. Soccer, NBA, NFL & NHL.',
     keywords: [
       'match analyzer',
       'sports analysis tool',
@@ -507,15 +507,15 @@ export function getHomepageFAQSchema() {
         name: 'What is SportBot AI?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'SportBot AI is a free AI-powered sports analysis platform that helps you find where the market is wrong. It provides probability estimates, value detection, and edge identification for Soccer, NBA, NFL, Tennis, UFC and more.'
+          text: 'SportBot AI turns 2 hours of pre-match research into 60 seconds. Our AI cross-references team form, injuries, odds from 50+ bookmakers, and historical data — then tells you exactly where the market might be wrong.'
         },
       },
       {
         '@type': 'Question',
-        name: 'Is SportBot AI free to use?',
+        name: 'How much does SportBot AI cost?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Yes! SportBot AI offers a free tier with 1 match analysis per day. Pro and Premium plans are available for users who need more analyses and advanced features.',
+          text: 'Free to try (1 analysis). Pro is $0.66/day ($19.99/month) for 10 daily analyses and 50 AI questions. Premium is $1.66/day for unlimited everything plus Edge Alerts. Cancel anytime, no contracts.',
         },
       },
       {
@@ -523,7 +523,7 @@ export function getHomepageFAQSchema() {
         name: 'How does AI sports analysis work?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'SportBot AI uses machine learning models trained on historical match data, team form, injuries, head-to-head records, and real-time odds from 40+ bookmakers to generate probability estimates and identify value opportunities.',
+          text: 'SportBot AI cross-references team form, head-to-head records, injury reports, and real-time odds from 50+ bookmakers. It calculates expected value by comparing our probability model against the market — and flags every edge above 2%.',
         },
       },
       {
@@ -531,7 +531,7 @@ export function getHomepageFAQSchema() {
         name: 'What sports does SportBot AI cover?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'SportBot AI covers 7+ major sports including Soccer (Premier League, La Liga, Champions League, etc.), NBA, NFL, NHL, Tennis, UFC/MMA, and more. We analyze matches from leagues worldwide.',
+          text: '4 sports across 20+ leagues: Soccer (Premier League, La Liga, Serie A, Champions League & more), Basketball (NBA, EuroLeague), American Football (NFL, NCAA), and Hockey (NHL).',
         },
       },
       {
@@ -539,15 +539,15 @@ export function getHomepageFAQSchema() {
         name: 'Is SportBot AI a tipster service?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'No. SportBot AI is an educational analytics tool, not a tipster service. We provide data-driven insights and probability models to help you understand matches better - we don\'t guarantee outcomes or tell you what to bet.',
+          text: 'No. SportBot AI is an analytical tool that shows you data, probabilities, and where the odds look off — then you decide what to do with that information. We don\'t give picks or guarantee outcomes.',
         },
       },
       {
         '@type': 'Question',
-        name: 'How accurate is SportBot AI?',
+        name: "What's the difference between Pro and Premium?",
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'SportBot AI provides probability estimates based on statistical models and real-time data. Like any analytical tool, accuracy varies. We focus on helping you understand the factors that influence match outcomes rather than guaranteeing predictions.',
+          text: 'Pro ($0.66/day) gives you 10 analyses and 50 AI questions daily — enough for a full weekend of matches. Premium ($1.66/day) removes all limits and adds Edge Alerts that notify you when our AI spots a value opportunity in real time.',
         },
       },
     ],

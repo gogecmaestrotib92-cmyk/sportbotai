@@ -16,69 +16,69 @@ interface ValueBettingExplainerProps {
 
 const translations = {
     en: {
-        title: 'What Are Value Bets?',
-        subtitle: 'Sports betting analytics powered by AI probability modeling',
+        title: 'Why the Odds Are Wrong (And How to Spot It)',
+        subtitle: 'Bookmakers make mistakes every day. Here\'s exactly where — and why.',
 
-        intro: 'Value bets occur when bookmaker odds imply a lower probability than the actual chance of an outcome. This mispricing creates an edge for informed bettors.',
+        intro: 'Every day, bookmakers set thousands of odds under time pressure. They can\'t watch every match, track every injury, or react to every lineup leak. That gap between their price and reality? That\'s where edge lives — and our AI finds it in 60 seconds.',
 
         sources: [
             {
                 icon: 'target' as const,
-                title: 'Market Inefficiency',
-                desc: 'Bookmakers react slowly to lineup changes, injuries, and form shifts—creating temporary mispricings.',
+                title: 'Slow Reactions',
+                desc: 'A star player gets injured at 6pm. The odds don\'t move until 7pm. That hour is free money for anyone paying attention.',
             },
             {
                 icon: 'chart' as const,
-                title: 'Data Blind Spots',
-                desc: 'Lower leagues and less popular sports receive less attention, leading to inaccurate odds.',
+                title: 'Ignored Leagues',
+                desc: 'Bookmakers spend 90% of their effort on the Premier League. Eredivisie? Serie B? Their odds are often 3-5% off.',
             },
             {
                 icon: 'bolt' as const,
-                title: 'Line Movement Lag',
-                desc: 'When one bookmaker adjusts odds, others lag behind—opening value windows.',
+                title: 'Cross-Book Gaps',
+                desc: 'One bookmaker adjusts, the rest lag behind. Our AI compares 50+ sources in real time to catch these windows.',
             },
         ],
 
-        howWeWork: 'How SportBot AI Finds Value',
-        howWeWorkDesc: 'Our AI analyzes team form, head-to-head records, and real-time odds across multiple bookmakers. We calculate expected value by comparing our model probability with implied market odds—surfacing edges you can act on.',
+        howWeWork: 'How We Find What They Miss',
+        howWeWorkDesc: 'Our AI cross-references team form, head-to-head records, injury reports, and real-time odds from 50+ bookmakers. It calculates expected value by comparing our probability model against the market — and flags every edge above 2%.',
 
         formula: 'Expected Value = (Odds × AI Probability) − 100%',
-        formulaNote: 'Positive EV means the bet has value',
+        formulaNote: 'Positive EV = the market is underpricing this outcome',
 
-        cta: 'Browse Matches',
+        cta: 'Find Today\'s Edges',
         ctaSecondary: 'Value Betting Guide',
     },
     sr: {
-        title: 'Šta su Value Betovi?',
-        subtitle: 'Sportska analitika klađenja pokretana AI modeliranjem verovatnoće',
+        title: 'Zašto su Kvote Pogrešne (I Kako to Primetiti)',
+        subtitle: 'Kladionice prave greške svaki dan. Evo gde tačno — i zašto.',
 
-        intro: 'Value betovi nastaju kada kvote kladionica impliciraju nižu verovatnoću od stvarne šanse ishoda. Ovo pogrešno cenjenje stvara prednost za informisane kladioničare.',
+        intro: 'Svaki dan, kladionice postavljaju hiljade kvota pod pritiskom vremena. Ne mogu da gledaju svaki meč, prate svaku povredu, niti da reaguju na svaki procure postave. Taj jaz između njihove cene i stvarnosti? Tu živi prednost — a naš AI je pronalazi za 60 sekundi.',
 
         sources: [
             {
                 icon: 'target' as const,
-                title: 'Neefikasnost Tržišta',
-                desc: 'Kladionice sporo reaguju na promene postave, povrede i formu—stvarajući privremena pogrešna cenjenja.',
+                title: 'Spore Reakcije',
+                desc: 'Zvezda tima se povredi u 18h. Kvote se ne pomeraju do 19h. Taj sat je besplatan novac za svakoga ko obraća pažnju.',
             },
             {
                 icon: 'chart' as const,
-                title: 'Slepe Tačke Podataka',
-                desc: 'Niže lige i manje popularni sportovi dobijaju manje pažnje, što dovodi do netačnih kvota.',
+                title: 'Zanemarene Lige',
+                desc: 'Kladionice troše 90% truda na Premijer Ligu. Eredivize? Serija B? Njihove kvote su često 3-5% netačne.',
             },
             {
                 icon: 'bolt' as const,
-                title: 'Kašnjenje Pomeranja Linija',
-                desc: 'Kada jedna kladionica prilagodi kvote, druge kasne—otvarajući prozore vrednosti.',
+                title: 'Razlike Između Kladionica',
+                desc: 'Jedna kladionica koriguje, ostale kasne. Naš AI upoređuje 50+ izvora u realnom vremenu da uhvati ove prozore.',
             },
         ],
 
-        howWeWork: 'Kako SportBot AI Pronalazi Vrednost',
-        howWeWorkDesc: 'Naš AI analizira formu timova, međusobne rezultate i kvote u realnom vremenu kod više kladionica. Računamo očekivanu vrednost upoređujući verovatnoću našeg modela sa impliciranim tržišnim kvotama—otkrivajući prednosti na koje možete delovati.',
+        howWeWork: 'Kako Nalazimo Ono Što Oni Propuštaju',
+        howWeWorkDesc: 'Naš AI ukršta formu timova, međusobne rezultate, izveštaje o povredama i kvote u realnom vremenu od 50+ kladionica. Računa očekivanu vrednost upoređujući naš model verovatnoće sa tržištem — i označava svaku prednost iznad 2%.',
 
         formula: 'Očekivana Vrednost = (Kvota × AI Verovatnoća) − 100%',
-        formulaNote: 'Pozitivna EV znači da opklada ima vrednost',
+        formulaNote: 'Pozitivna EV = tržište potcenjuje ovaj ishod',
 
-        cta: 'Pregledaj Utakmice',
+        cta: 'Pronađi Današnje Prednosti',
         ctaSecondary: 'Vodič za Value Klađenje',
     },
 };

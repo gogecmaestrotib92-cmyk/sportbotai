@@ -70,7 +70,7 @@ const cardTranslations = {
     proFeatures: [
       '10 analyses per day',
       '50 AI chat messages per day',
-      'All sports',
+      'Soccer, NBA, NFL & NHL',
       'Advanced AI analysis',
       'Pre-match insights & streaks',
       'Priority support',
@@ -80,7 +80,7 @@ const cardTranslations = {
     premiumFeatures: [
       'Unlimited analyses',
       'Unlimited AI chat messages',
-      'All sports',
+      'Soccer, NBA, NFL & NHL',
       'Edge Alerts (value detection)',
       'Advanced statistics & trends',
       'Unlimited analysis history',
@@ -120,7 +120,7 @@ const cardTranslations = {
     proFeatures: [
       '10 analiza dnevno',
       '50 AI chat poruka dnevno',
-      'Svi sportovi',
+      'Fudbal, NBA, NFL i NHL',
       'Napredna AI analiza',
       'Pred-utakmični uvidi i nizovi',
       'Prioritetna podrška',
@@ -130,7 +130,7 @@ const cardTranslations = {
     premiumFeatures: [
       'Neograničene analize',
       'Neograničene AI chat poruke',
-      'Svi sportovi',
+      'Fudbal, NBA, NFL i NHL',
       'Edge Alarmi (detekcija vrednosti)',
       'Napredna statistika i trendovi',
       'Neograničena istorija analiza',
