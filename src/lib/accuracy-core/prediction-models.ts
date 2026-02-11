@@ -734,6 +734,13 @@ export function getExpectedScores(
     const homeAdv = 'homeAdvantage' in config ? config.homeAdvantage : 3;
     homeExpected += homeAdv;
 
+    // Apply form adjustment (synced with Elo model logic)
+    const homeFormFactor = calculateFormStrength(input.homeForm, false);
+    const awayFormFactor = calculateFormStrength(input.awayForm, false);
+    const formWeight = 'formWeight' in config ? config.formWeight : 0.35;
+    homeExpected *= (1 + formWeight * (homeFormFactor - 0.5));
+    awayExpected *= (1 + formWeight * (awayFormFactor - 0.5));
+
     // Clamp to reasonable ranges (NBA: 90-140, NFL: 10-45)
     if (input.sport.includes('basketball')) {
       homeExpected = Math.max(90, Math.min(140, homeExpected));
@@ -744,12 +751,35 @@ export function getExpectedScores(
     }
   } else {
     // For soccer/hockey: Poisson-style calculation
+    // SYNCED with soccerDixonColesModel / soccerPoissonModel lambda calculation
     homeExpected = homeStrength.attack * (2 - awayStrength.defense) * leagueAvgPerTeam;
     awayExpected = awayStrength.attack * (2 - homeStrength.defense) * leagueAvgPerTeam;
 
     // Apply home advantage as percentage boost
     const homeAdv = 'homeAdvantage' in config ? config.homeAdvantage : 0.25;
     homeExpected *= (1 + homeAdv);
+
+    // Apply form adjustment (synced with Dixon-Coles/Poisson model)
+    const hasDraw = isSoccer || isHockey;
+    const homeFormFactor = calculateFormStrength(input.homeForm, hasDraw);
+    const awayFormFactor = calculateFormStrength(input.awayForm, hasDraw);
+    const formWeight = 'formWeight' in config ? config.formWeight : 0.3;
+    homeExpected *= (1 + formWeight * (homeFormFactor - 0.5));
+    awayExpected *= (1 + formWeight * (awayFormFactor - 0.5));
+
+    // H2H adjustment (synced with Dixon-Coles/Poisson model)
+    if (input.h2h && input.h2h.total >= 3) {
+      const h2hHomeWinRate = input.h2h.homeWins / input.h2h.total;
+      const h2hAwayWinRate = input.h2h.awayWins / input.h2h.total;
+      if (h2hHomeWinRate > 0.6) homeExpected *= 1.05;
+      else if (h2hAwayWinRate > 0.6) awayExpected *= 1.05;
+    }
+
+    // Clamp to match Dixon-Coles ranges
+    if (isSoccer) {
+      homeExpected = Math.max(0.3, Math.min(4.0, homeExpected));
+      awayExpected = Math.max(0.3, Math.min(4.0, awayExpected));
+    }
 
     // Hockey-specific: Clamp to realistic NHL ranges (2-5 goals typical)
     if (input.sport.includes('hockey') || input.sport.includes('nhl')) {
@@ -761,5 +791,76 @@ export function getExpectedScores(
   return {
     home: Math.round(homeExpected * 10) / 10,
     away: Math.round(awayExpected * 10) / 10,
+  };
+}
+
+/**
+ * Validate consistency between predicted score and model probabilities.
+ * 
+ * For soccer: derives implied home win % from predicted score lambdas
+ * using the same Poisson grid, then checks divergence from pipeline probabilities.
+ * 
+ * Returns a warning string if divergence exceeds threshold, null otherwise.
+ */
+export function validateScoreProbabilityConsistency(
+  expectedScores: { home: number; away: number },
+  probabilities: { home: number; away: number; draw?: number },
+  sport: string,
+  threshold: number = 10 // percentage points
+): { consistent: boolean; warning: string | null; impliedHomeWin: number; impliedAwayWin: number; impliedDraw: number } {
+  const isSoccer = !sport.includes('basketball') && !sport.includes('football') &&
+                   !sport.includes('hockey') && !sport.includes('nhl');
+
+  if (isSoccer) {
+    // Derive implied probabilities from expected score lambdas via Poisson
+    const lambdaHome = expectedScores.home;
+    const lambdaAway = expectedScores.away;
+    let homeWin = 0, awayWin = 0, draw = 0;
+
+    for (let h = 0; h <= 10; h++) {
+      for (let a = 0; a <= 10; a++) {
+        const prob = poissonPMF(lambdaHome, h) * poissonPMF(lambdaAway, a);
+        if (h > a) homeWin += prob;
+        else if (a > h) awayWin += prob;
+        else draw += prob;
+      }
+    }
+
+    const total = homeWin + awayWin + draw;
+    const impliedHomeWin = (homeWin / total) * 100;
+    const impliedAwayWin = (awayWin / total) * 100;
+    const impliedDraw = (draw / total) * 100;
+
+    // Compare with pipeline probabilities (already in percentage)
+    const homeDiv = Math.abs(impliedHomeWin - probabilities.home);
+    const awayDiv = Math.abs(impliedAwayWin - probabilities.away);
+    const maxDiv = Math.max(homeDiv, awayDiv);
+
+    if (maxDiv > threshold) {
+      return {
+        consistent: false,
+        warning: `Score ${expectedScores.home}-${expectedScores.away} implies ${impliedHomeWin.toFixed(1)}%/${impliedDraw.toFixed(1)}%/${impliedAwayWin.toFixed(1)}% but model says ${probabilities.home.toFixed(1)}%/${(probabilities.draw || 0).toFixed(1)}%/${probabilities.away.toFixed(1)}% (divergence: ${maxDiv.toFixed(1)}pp)`,
+        impliedHomeWin,
+        impliedAwayWin,
+        impliedDraw,
+      };
+    }
+    return { consistent: true, warning: null, impliedHomeWin, impliedAwayWin, impliedDraw };
+  }
+
+  // For non-soccer: simple score differential consistency
+  const scoreDiff = expectedScores.home - expectedScores.away;
+  const probDiff = probabilities.home - probabilities.away;
+  // Score difference and probability difference should have the same sign
+  const signMismatch = (scoreDiff > 0.5 && probDiff < -5) || (scoreDiff < -0.5 && probDiff > 5);
+
+  return {
+    consistent: !signMismatch,
+    warning: signMismatch
+      ? `Score ${expectedScores.home}-${expectedScores.away} (diff ${scoreDiff > 0 ? '+' : ''}${scoreDiff.toFixed(1)}) conflicts with prob diff (${probDiff > 0 ? '+' : ''}${probDiff.toFixed(1)}%)`
+      : null,
+    impliedHomeWin: probabilities.home,
+    impliedAwayWin: probabilities.away,
+    impliedDraw: probabilities.draw || 0,
   };
 }

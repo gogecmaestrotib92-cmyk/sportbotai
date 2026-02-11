@@ -40,7 +40,7 @@ import {
 } from '@/lib/unified-match-service';
 import { applyConvictionCap, type BookmakerOdds } from '@/lib/accuracy-core/types';
 import { runAccuracyPipeline, type PipelineInput } from '@/lib/accuracy-core';
-import { getExpectedScores, type ModelInput } from '@/lib/accuracy-core/prediction-models';
+import { getExpectedScores, validateScoreProbabilityConsistency, type ModelInput } from '@/lib/accuracy-core/prediction-models';
 import OpenAI from 'openai';
 
 export const maxDuration = 300; // 5 minute timeout for batch processing
@@ -1694,6 +1694,16 @@ export async function GET(request: NextRequest) {
             drawOdds: consensus.draw,
           });
           console.log(`[Pre-Analyze] Expected scores: ${event.home_team} ${expectedScores.home} - ${expectedScores.away} ${event.away_team}`);
+
+          // Validate score ↔ probability consistency
+          const consistency = validateScoreProbabilityConsistency(
+            expectedScores,
+            pipelineProbabilitiesForUI,
+            sportType,
+          );
+          if (!consistency.consistent) {
+            console.warn(`[Pre-Analyze] ⚠️ Score-Probability DIVERGENCE for ${event.home_team} vs ${event.away_team}: ${consistency.warning}`);
+          }
 
           const cacheResponse = {
             // matchInfo wrapper - required by client!
