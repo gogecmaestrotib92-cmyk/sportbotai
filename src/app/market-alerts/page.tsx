@@ -218,9 +218,9 @@ function EdgeStrengthBar({ percent, alertLevel, noBorder = false }: { percent: n
                    'bg-emerald-600/60';
   
   return (
-    <div className={`flex items-center justify-between gap-3 flex-1 ${noBorder ? '' : 'pt-2 border-t border-white/5'}`}>
+    <div className={`flex items-center justify-between gap-2 flex-1 min-w-0 ${noBorder ? '' : 'pt-2 border-t border-white/5'}`}>
       {/* Edge Strength */}
-      <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-center gap-1.5 min-w-0">
         <span className="text-[10px] text-text-muted uppercase shrink-0">Strength</span>
         <div className="flex gap-0.5 w-12 sm:w-[60px] shrink-0">
           {[1, 2, 3, 4, 5].map(i => (
@@ -292,12 +292,12 @@ function EdgeMatchCard({ alert }: { alert: MarketAlert }) {
                     'text-emerald-500';
   
   return (
-    <div className="group card-glass rounded-lg p-3.5 hover:border-emerald-500/40 transition-all">
+    <div className="group card-glass rounded-lg p-3.5 hover:border-emerald-500/40 transition-all overflow-hidden">
       {/* Context row - ultra compact */}
       <LeagueHeader sport={alert.sport} sportTitle={alert.sportTitle} time={matchTime} />
       
       {/* Main content: Edge highlight */}
-      <div className="flex items-center justify-between mt-2.5 mb-2">
+      <div className="flex items-center justify-between gap-2 mt-2.5 mb-2 min-w-0">
         <div className="flex-1 min-w-0">
           <div className={`font-semibold text-base truncate ${edgeOutcome === 'home' ? 'text-emerald-400' : edgeOutcome === 'away' ? 'text-text-primary' : 'text-text-primary'}`}>
             {alert.homeTeam}
@@ -308,7 +308,7 @@ function EdgeMatchCard({ alert }: { alert: MarketAlert }) {
         </div>
         
         {/* Big Edge % */}
-        <div className="text-right pl-3">
+        <div className="text-right pl-2 shrink-0">
           <div className={`text-2xl font-black ${edgeColor}`}>
             +{edgePercent.toFixed(1)}%
           </div>
@@ -317,7 +317,7 @@ function EdgeMatchCard({ alert }: { alert: MarketAlert }) {
       </div>
       
       {/* Compact odds row - responsive for mobile */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs mb-2.5 bg-emerald-500/5 rounded px-2 py-1.5">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs mb-2.5 bg-emerald-500/5 rounded px-2 py-1.5 overflow-hidden">
         <div className="flex items-center gap-1.5">
           <span className="text-text-muted">Odds</span>
           <span className="font-mono text-text-secondary">
@@ -395,7 +395,7 @@ function BlurredEdgeCard({ alert }: { alert: MarketAlert }) {
         <LeagueHeader sport={alert.sport} sportTitle={alert.sportTitle} time={matchTime} />
         
         {/* Main content: Teams visible */}
-        <div className="flex items-center justify-between mt-2.5 mb-2">
+        <div className="flex items-center justify-between gap-2 mt-2.5 mb-2 min-w-0">
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-base truncate text-text-primary">
               {alert.homeTeam}
@@ -406,7 +406,7 @@ function BlurredEdgeCard({ alert }: { alert: MarketAlert }) {
           </div>
           
           {/* Blurred Edge % with gradient tease */}
-          <div className="text-right pl-3 relative">
+          <div className="text-right pl-2 relative shrink-0">
             <div className={`text-2xl font-black bg-gradient-to-r ${hintColor} bg-clip-text text-transparent blur-[2px] select-none`}>
               {edgeHint}
             </div>
@@ -483,13 +483,13 @@ function BlurredSteamCard({ alert }: { alert: MarketAlert }) {
         </div>
         
         {/* Teams visible */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between text-sm">
-            <span className="truncate flex-1 text-text-primary font-medium">{alert.homeTeam}</span>
+        <div className="space-y-1 min-w-0">
+          <div className="flex items-center justify-between gap-2 text-sm min-w-0">
+            <span className="truncate min-w-0 flex-1 text-text-primary font-medium">{alert.homeTeam}</span>
             <span className="font-mono text-xs text-text-muted/50 blur-sm select-none">?.?? → ?.??</span>
           </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="truncate flex-1 text-text-secondary">{alert.awayTeam}</span>
+          <div className="flex items-center justify-between gap-2 text-sm min-w-0">
+            <span className="truncate min-w-0 flex-1 text-text-secondary">{alert.awayTeam}</span>
             <span className="font-mono text-xs text-text-muted/50 blur-sm select-none">?.?? → ?.??</span>
           </div>
         </div>
@@ -540,7 +540,7 @@ function SteamMoveCard({ alert }: { alert: MarketAlert }) {
   };
   
   return (
-    <div className="group card-glass border-amber-500/15 rounded-lg p-3 hover:border-amber-500/30 transition-all">
+    <div className="group card-glass border-amber-500/15 rounded-lg p-3 hover:border-amber-500/30 transition-all overflow-hidden">
       {/* Top row: League + Signal pill + Time */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -555,12 +555,12 @@ function SteamMoveCard({ alert }: { alert: MarketAlert }) {
       {/* Teams with inline odds movement */}
       <div className="space-y-1">
         {/* Home Team */}
-        <div className="flex items-center justify-between text-sm">
-          <span className={`truncate flex-1 ${homeHasMove ? 'text-text-primary font-medium' : 'text-text-secondary'}`}>
+        <div className="flex items-center justify-between gap-2 text-sm min-w-0">
+          <span className={`truncate min-w-0 flex-1 ${homeHasMove ? 'text-text-primary font-medium' : 'text-text-secondary'}`}>
             {alert.homeTeam}
           </span>
           {homeHasMove ? (
-            <div className="flex items-center gap-1.5 font-mono text-xs">
+            <div className="flex items-center gap-1 font-mono text-xs shrink-0">
               <span className="text-text-muted/50">{homePrevOdds!.toFixed(2)}</span>
               <span className="text-text-muted/30">→</span>
               <span className={`font-semibold ${alert.homeChange! < 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -576,12 +576,12 @@ function SteamMoveCard({ alert }: { alert: MarketAlert }) {
         </div>
         
         {/* Away Team */}
-        <div className="flex items-center justify-between text-sm">
-          <span className={`truncate flex-1 ${awayHasMove ? 'text-text-primary font-medium' : 'text-text-secondary'}`}>
+        <div className="flex items-center justify-between gap-2 text-sm min-w-0">
+          <span className={`truncate min-w-0 flex-1 ${awayHasMove ? 'text-text-primary font-medium' : 'text-text-secondary'}`}>
             {alert.awayTeam}
           </span>
           {awayHasMove ? (
-            <div className="flex items-center gap-1.5 font-mono text-xs">
+            <div className="flex items-center gap-1 font-mono text-xs shrink-0">
               <span className="text-text-muted/50">{awayPrevOdds!.toFixed(2)}</span>
               <span className="text-text-muted/30">→</span>
               <span className={`font-semibold ${alert.awayChange! < 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -813,7 +813,7 @@ export default function MarketAlertsPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Upgrade Banner for non-premium users */}
         {!isPremium && (
-          <div className="mb-6 card-glass border-violet/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="mb-6 card-glass border-violet/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 overflow-hidden">
             <div className="flex items-center gap-3">
               <span className="text-2xl">🔓</span>
               <div>
