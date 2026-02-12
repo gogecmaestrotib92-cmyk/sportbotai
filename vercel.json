@@ -74,6 +74,10 @@
     {
       "path": "/api/cron/daily-picks",
       "schedule": "0 9 * * 5,6"
+    },
+    {
+      "path": "/api/cron/weekly-edge-report",
+      "schedule": "0 9 * * 2"
     }
   ]
 }

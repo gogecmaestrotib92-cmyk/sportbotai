@@ -613,43 +613,110 @@ export async function sendDailyTopMatchesEmail(
   userName: string | null,
   matches: TopMatch[]
 ): Promise<boolean> {
-  const greeting = userName ? `Hey ${userName.split(' ')[0]}` : 'Hey';
+  const greeting = userName ? userName.split(' ')[0] : 'there';
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     month: 'short', 
     day: 'numeric' 
   });
   
-  const subject = `🎯 Weekend Top Picks - ${today}`;
+  const subject = `Weekend Picks · ${today}`;
   
-  // Build match cards HTML
-  // Sort by confidence DESC, take only 2 matches, show lowest confidence unlocked
+  // Sort by confidence DESC, take top 2
   const sortedMatches = [...matches].sort((a, b) => b.confidence - a.confidence).slice(0, 2);
+  const freePick = sortedMatches[sortedMatches.length - 1]; // lowest confidence = free
+  const proPick = sortedMatches.length > 1 ? sortedMatches[0] : null; // highest = locked
   
-  // Common styles as short variables to reduce HTML size
-  const S = { // Styles
-    card: 'background:#1e293b;border-radius:8px;padding:14px;margin-bottom:10px',
-    title: 'font-size:16px;font-weight:600;color:#f8fafc;margin-bottom:8px',
-    sub: 'font-size:11px;color:#64748b;margin-bottom:6px',
-    txt: 'font-size:13px;color:#94a3b8',
-    g: '#10B981', // green
-    p: '#6366f1', // purple
-  };
+  // --- Free pick row ---
+  const freePickHtml = freePick ? `<tr>
+      <td style="padding:16px 0;border-bottom:1px solid #1e293b">
+        <div style="font-size:15px;font-weight:600;color:#f8fafc;letter-spacing:-0.3px">${freePick.homeTeam} v ${freePick.awayTeam}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:3px">${freePick.league} · ${freePick.kickoff}</div>
+      </td>
+      <td style="padding:16px 0;border-bottom:1px solid #1e293b;text-align:right;white-space:nowrap">
+        <div style="font-size:14px;font-weight:600;color:#10B981">${freePick.prediction}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:3px">${freePick.confidence}%${freePick.edge ? ` · ${freePick.edge}` : ''}</div>
+      </td>
+    </tr>` : '';
   
-  const matchCardsHtml = sortedMatches.map((match, i) => {
-    const isLastMatch = i === sortedMatches.length - 1;
-    
-    if (isLastMatch) {
-      // UNLOCKED - lowest confidence pick (but still good!)
-      return `<div style="${S.card};border-left:3px solid ${S.g}"><div style="${S.sub}">✅ FREE PICK · ${match.league}</div><div style="${S.title}">${match.homeTeam} vs ${match.awayTeam}</div><div style="margin-bottom:8px"><span style="background:${S.g};color:#0f172a;padding:4px 10px;border-radius:4px;font-size:13px;font-weight:700">${match.confidence}%</span> <span style="color:${S.g};font-weight:700;font-size:14px">${match.prediction}</span>${match.edge ? ` <span style="color:#fbbf24;font-size:13px">⚡${match.edge}</span>` : ''}</div><p style="margin:0;${S.txt};line-height:1.4">${match.headline}</p><p style="margin:8px 0 0;font-size:11px;color:#64748b">🕐 Kickoff: ${match.kickoff}</p></div>`;
-    } else {
-      // LOCKED - the premium pick they're missing
-      const edge = ((match.confidence - 50) * 0.1).toFixed(1);
-      return `<div style="${S.card};border-left:3px solid ${S.p};background:linear-gradient(135deg,#1e293b,#312e81)"><div style="font-size:11px;color:#a5b4fc;margin-bottom:6px">🔒 PRO PICK · ${match.league}</div><div style="${S.title}">${match.homeTeam} vs ${match.awayTeam}</div><div style="background:rgba(99,102,241,.2);border-radius:6px;padding:12px;text-align:center"><p style="margin:0 0 4px;color:#e0e7ff;font-size:14px;font-weight:600">🎯 ${match.confidence}% confidence pick</p><p style="margin:0;color:#a5b4fc;font-size:12px">Our AI found <b>+${edge}% edge</b> on this match</p></div><p style="margin:10px 0 0;font-size:11px;color:#64748b;text-align:center"><a href="https://sportbotai.com/pricing" style="color:${S.g};font-weight:600">Unlock this pick →</a></p></div>`;
-    }
-  }).join('');
+  // --- Pro pick row (locked) ---
+  const proPickHtml = proPick ? `<tr>
+    <td style="padding:16px 0" colspan="2">
+      <div style="background:#111827;border:1px solid #1e293b;border-radius:8px;padding:16px;text-align:center">
+        <div style="font-size:14px;color:#94a3b8;letter-spacing:-0.3px">${proPick.homeTeam} v ${proPick.awayTeam} <span style="color:#64748b">·</span> <span style="color:#475569">███ ███</span></div>
+        <div style="margin-top:8px"><a href="https://www.sportbotai.com/pricing" style="font-size:13px;color:#10B981;text-decoration:none;font-weight:500">Unlock with Pro →</a></div>
+      </div>
+    </td>
+  </tr>` : '';
   
-  const html = `<!DOCTYPE html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif"><div style="max-width:600px;margin:0 auto;padding:20px 16px;background:#0f172a;color:#e2e8f0"><div style="text-align:center;margin-bottom:20px"><img src=https://sportbotai.com/logo-icon.png width=40 height=40 alt="SportBot AI"><h1 style="color:#f8fafc;margin:8px 0 4px;font-size:20px">Today's Top Picks</h1><p style="color:#64748b;margin:0;font-size:13px">${today}</p></div><p style="font-size:15px;margin:0 0 6px;line-height:1.5">${greeting}!</p><p style="font-size:14px;margin:0 0 16px;color:#94a3b8;line-height:1.5">Our AI analyzed 50+ matches today. Here's what stood out:</p>${matchCardsHtml}<div style="background:#1e293b;border-radius:8px;padding:16px;margin:16px 0;text-align:center"><p style="margin:0 0 4px;font-size:14px;color:#f8fafc">Want all daily picks + full analysis?</p><p style="margin:0 0 12px;font-size:12px;color:#64748b">Pro members get 10 analyses/day, AI chat, and edge detection.</p><a href=https://sportbotai.com/pricing style="display:inline-block;background:#10B981;color:#0f172a;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;font-size:14px">Try Pro · $0.66/day →</a></div><p style="font-size:14px;margin:16px 0 0;color:#94a3b8">Good luck today! 🍀</p><p style="font-size:13px;margin:4px 0 0;color:#64748b">— Stefan, SportBot AI</p><div style="margin-top:20px;padding-top:12px;border-top:1px solid #334155;font-size:10px;color:#64748b;text-align:center">© 2026 SportBot AI · <a href=https://sportbotai.com style="color:#10B981">Website</a> · 18+ only<br><a href="https://sportbotai.com/unsubscribe?email=${encodeURIComponent(email)}" style="color:#64748b">Unsubscribe</a></div></div></body></html>`;
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background:#080a0e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#080a0e">
+<tr><td align="center" style="padding:32px 16px">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px">
+
+  <!-- Header -->
+  <tr><td style="padding:0 0 32px;text-align:center">
+    <div style="font-size:11px;font-weight:600;color:#10B981;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px">SportBot AI</div>
+    <h1 style="margin:0;font-size:24px;font-weight:300;color:#f8fafc;letter-spacing:-0.5px">Weekend Picks</h1>
+    <div style="width:40px;height:1px;background:#10B981;margin:16px auto 0"></div>
+  </td></tr>
+
+  <!-- Greeting -->
+  <tr><td style="padding:0 0 28px">
+    <p style="margin:0;font-size:15px;color:#f1f5f9;line-height:1.7">Hey ${greeting},</p>
+    <p style="margin:12px 0 0;font-size:15px;color:#cbd5e1;line-height:1.7">Here's what stood out from today's matches.</p>
+  </td></tr>
+
+  <!-- Divider label -->
+  <tr><td style="padding:0 0 12px">
+    <div style="font-size:11px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:1.5px">Today's picks</div>
+  </td></tr>
+
+  <!-- Picks table -->
+  <tr><td style="padding:0 0 8px">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${freePickHtml}
+      ${proPickHtml}
+    </table>
+  </td></tr>
+
+  <!-- CTA -->
+  <tr><td style="padding:28px 0;text-align:center">
+    <a href="https://www.sportbotai.com/matches" style="display:inline-block;background:#10B981;color:#0a0a0b;padding:14px 40px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;letter-spacing:-0.2px">View full analysis</a>
+  </td></tr>
+
+  <!-- Thin divider -->
+  <tr><td style="padding:0"><div style="height:1px;background:#1e293b"></div></td></tr>
+
+  <!-- Pro nudge -->
+  <tr><td style="padding:24px 0;text-align:center">
+    <p style="margin:0;font-size:13px;color:#94a3b8">Want all picks + edge detection daily? <a href="https://www.sportbotai.com/pricing" style="color:#10B981;text-decoration:none;font-weight:500">Try Pro →</a></p>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="padding:20px 0 0;border-top:1px solid #1e293b;text-align:center">
+    <p style="margin:0;font-size:12px;color:#64748b;line-height:1.8">
+      Stefan · <a href="https://www.sportbotai.com" style="color:#64748b;text-decoration:none">sportbotai.com</a>
+    </p>
+    <p style="margin:8px 0 0;font-size:11px;color:#475569;line-height:1.6">
+      For analytical purposes only · Not financial advice · 18+<br>
+      <a href="https://www.sportbotai.com/api/unsubscribe?email=${encodeURIComponent(email)}" style="color:#475569;text-decoration:underline">Unsubscribe</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+
+</body>
+</html>`;
 
   const sent = await sendEmail({
     to: email,
@@ -725,6 +792,217 @@ export async function sendAffiliateApplicationNotification(
   }
 
   return true;
+}
+
+// ============================================
+// WEEKLY EDGE REPORT EMAIL
+// ============================================
+
+interface WeeklyPick {
+  homeTeam: string;
+  awayTeam: string;
+  league: string;
+  kickoff: string;
+  prediction: string;
+  confidence: number;
+  edge: string;
+  insight: string;
+}
+
+interface TrackRecord {
+  totalPicks: number;
+  correct: number;
+  hitRate: number;
+  streak?: string; // e.g. "W3" or "L1"
+}
+
+interface WeeklyEdgeReportData {
+  picks: WeeklyPick[];
+  trackRecord: TrackRecord;
+  weeklyInsight: {
+    title: string;
+    body: string;
+  };
+  proPick?: {
+    homeTeam: string;
+    awayTeam: string;
+    league: string;
+    confidence: number;
+  };
+}
+
+/**
+ * Weekly Edge Report email for FREE users
+ * 
+ * "The Edge Report" — sent every Tuesday at 10:00 CET
+ * Structure: Track Record → 3 Free Picks → Weekly Insight → Pro Preview
+ */
+export async function sendWeeklyEdgeReport(
+  userId: string,
+  email: string,
+  userName: string | null,
+  data: WeeklyEdgeReportData
+): Promise<boolean> {
+  const greeting = userName ? userName.split(' ')[0] : 'there';
+  const today = new Date().toLocaleDateString('en-US', { 
+    month: 'long', 
+    day: 'numeric', 
+    year: 'numeric',
+  });
+  
+  const subject = `The Edge Report · ${today}`;
+  
+  // --- Pick rows (clean table) ---
+  const pickRowsHtml = data.picks.map((pick) => {
+    return `<tr>
+      <td style="padding:16px 0;border-bottom:1px solid #1e293b">
+        <div style="font-size:15px;font-weight:600;color:#f8fafc;letter-spacing:-0.3px">${pick.homeTeam} v ${pick.awayTeam}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:3px">${pick.league} · ${pick.kickoff}</div>
+      </td>
+      <td style="padding:16px 0;border-bottom:1px solid #1e293b;text-align:right;white-space:nowrap">
+        <div style="font-size:14px;font-weight:600;color:#10B981">${pick.prediction}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:3px">${pick.confidence}% · ${pick.edge}</div>
+      </td>
+    </tr>`;
+  }).join('');
+  
+  // --- Pro Preview row (blurred/locked) ---
+  const proRowHtml = data.proPick ? `<tr>
+    <td style="padding:16px 0" colspan="2">
+      <div style="background:#111827;border:1px solid #1e293b;border-radius:8px;padding:16px;text-align:center">
+        <div style="font-size:14px;color:#94a3b8;letter-spacing:-0.3px">${data.proPick.homeTeam} v ${data.proPick.awayTeam} <span style="color:#64748b">·</span> <span style="color:#475569">███ ███</span></div>
+        <div style="margin-top:8px"><a href="https://www.sportbotai.com/pricing" style="font-size:13px;color:#10B981;text-decoration:none;font-weight:500">Unlock with Pro →</a></div>
+      </div>
+    </td>
+  </tr>` : '';
+  
+  // --- Full Email ---
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background:#080a0e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#080a0e">
+<tr><td align="center" style="padding:32px 16px">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px">
+
+  <!-- Header -->
+  <tr><td style="padding:0 0 32px;text-align:center">
+    <div style="font-size:11px;font-weight:600;color:#10B981;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px">SportBot AI</div>
+    <h1 style="margin:0;font-size:24px;font-weight:300;color:#f8fafc;letter-spacing:-0.5px">The Edge Report</h1>
+    <div style="width:40px;height:1px;background:#10B981;margin:16px auto 0"></div>
+  </td></tr>
+
+  <!-- Greeting -->
+  <tr><td style="padding:0 0 28px">
+    <p style="margin:0;font-size:15px;color:#f1f5f9;line-height:1.7">Hey ${greeting},</p>
+    <p style="margin:12px 0 0;font-size:15px;color:#cbd5e1;line-height:1.7">3 picks this week. Here's where we see value.</p>
+  </td></tr>
+
+  <!-- Track Record (minimal) -->
+  <tr><td style="padding:0 0 28px">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;border-radius:8px">
+      <tr>
+        <td style="padding:20px;text-align:center;width:33%">
+          <div style="font-size:24px;font-weight:600;color:#f8fafc">${data.trackRecord.hitRate.toFixed(0)}%</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px">Hit rate</div>
+        </td>
+        <td style="padding:20px;text-align:center;width:34%;border-left:1px solid #1e293b;border-right:1px solid #1e293b">
+          <div style="font-size:24px;font-weight:600;color:#f8fafc">${data.trackRecord.correct}<span style="color:#64748b;font-weight:300">/${data.trackRecord.totalPicks}</span></div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px">Last 7 days</div>
+        </td>
+        <td style="padding:20px;text-align:center;width:33%">
+          <div style="font-size:24px;font-weight:600;color:#10B981">${data.trackRecord.streak || '—'}</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px">Streak</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- Divider label -->
+  <tr><td style="padding:0 0 12px">
+    <div style="font-size:11px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:1.5px">This week's picks</div>
+  </td></tr>
+
+  <!-- Picks table -->
+  <tr><td style="padding:0 0 8px">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${pickRowsHtml}
+      ${proRowHtml}
+    </table>
+  </td></tr>
+
+  <!-- CTA -->
+  <tr><td style="padding:28px 0;text-align:center">
+    <a href="https://www.sportbotai.com/matches" style="display:inline-block;background:#10B981;color:#0a0a0b;padding:14px 40px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;letter-spacing:-0.2px">View full analysis</a>
+  </td></tr>
+
+  <!-- Thin divider -->
+  <tr><td style="padding:0"><div style="height:1px;background:#1e293b"></div></td></tr>
+
+  <!-- Insight -->
+  <tr><td style="padding:28px 0">
+    <div style="font-size:11px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px">Weekly insight</div>
+    <div style="font-size:16px;font-weight:600;color:#f8fafc;letter-spacing:-0.3px;line-height:1.4;margin-bottom:10px">${data.weeklyInsight.title}</div>
+    <p style="margin:0;font-size:14px;color:#cbd5e1;line-height:1.7">${data.weeklyInsight.body}</p>
+  </td></tr>
+
+  <!-- Thin divider -->
+  <tr><td style="padding:0"><div style="height:1px;background:#1e293b"></div></td></tr>
+
+  <!-- Pro nudge (one line, subtle) -->
+  <tr><td style="padding:24px 0;text-align:center">
+    <p style="margin:0;font-size:13px;color:#94a3b8">Want all picks + edge detection daily? <a href="https://www.sportbotai.com/pricing" style="color:#10B981;text-decoration:none;font-weight:500">Try Pro →</a></p>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="padding:20px 0 0;border-top:1px solid #1e293b;text-align:center">
+    <p style="margin:0;font-size:12px;color:#64748b;line-height:1.8">
+      Stefan · <a href="https://www.sportbotai.com" style="color:#64748b;text-decoration:none">sportbotai.com</a>
+    </p>
+    <p style="margin:8px 0 0;font-size:11px;color:#475569;line-height:1.6">
+      For analytical purposes only · Not financial advice · 18+<br>
+      <a href="https://www.sportbotai.com/api/unsubscribe?email=${encodeURIComponent(email)}" style="color:#475569;text-decoration:underline">Unsubscribe</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+
+</body>
+</html>`;
+  
+  const sent = await sendEmail({
+    to: email,
+    subject,
+    html,
+  });
+  
+  // Track in database
+  if (sent) {
+    try {
+      await prisma.emailCampaign.create({
+        data: {
+          type: 'WEEKLY_EDGE_REPORT',
+          subject,
+          userId,
+          userEmail: email,
+          userName,
+          matchesData: JSON.parse(JSON.stringify(data.picks)),
+          status: 'SENT',
+          sentAt: new Date(),
+        },
+      });
+    } catch (error) {
+      console.error('[Email] Failed to track Edge Report campaign:', error);
+    }
+  }
+  
+  return sent;
 }
 
 /**
