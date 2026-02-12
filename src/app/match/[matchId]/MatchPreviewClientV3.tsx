@@ -1399,7 +1399,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
             isAuthenticated={!!session}
             canSeeExactNumbers={canSeeExactNumbers}
             locale={locale}
-            sport={parsedMatch.sport}
+            sport={parsedMatch?.sport || ''}
             overUnder={data.overUnder}
             expectedScores={data.expectedScores}
           />
