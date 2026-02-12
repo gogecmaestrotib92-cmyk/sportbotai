@@ -183,7 +183,7 @@ export default async function RootLayout({
         {/* Critical inline CSS - fallback for slow networks/JS failures */}
         <style dangerouslySetInnerHTML={{
           __html: `
-          html{background:#0D0D12;color:#fff;font-family:system-ui,-apple-system,sans-serif}
+          html,body{background:#0D0D12;color:#fff;font-family:system-ui,-apple-system,sans-serif;max-width:100vw;overflow-x:hidden}
           body{margin:0;min-height:100vh}
           a{color:#8B5CF6}
           .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
