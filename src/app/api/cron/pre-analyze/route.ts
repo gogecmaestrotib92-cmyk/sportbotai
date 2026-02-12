@@ -31,7 +31,7 @@ import { normalizeSport, getMatchRostersV2 } from '@/lib/data-layer/bridge';
 import { getMatchInjuriesViaPerplexity } from '@/lib/perplexity';
 import { getESPNInjuriesForTeam, getESPNH2H } from '@/lib/data-layer/providers/espn-injuries';
 import { getEnrichedMatchData, getMatchInjuries, getMatchGoalTiming, getMatchKeyPlayers, getFixtureReferee, getMatchFixtureInfo } from '@/lib/football-api';
-import { normalizeToUniversalSignals, formatSignalsForAI, getSignalSummary, type RawMatchInput } from '@/lib/universal-signals';
+import { normalizeToUniversalSignals, formatSignalsForAI, formatPipelineDigest, getSignalSummary, type RawMatchInput } from '@/lib/universal-signals';
 import { ANALYSIS_PERSONALITY } from '@/lib/sportbot-brain';
 import {
   getUnifiedMatchData,
@@ -1047,22 +1047,29 @@ async function runQuickAnalysis(
     const edgeTeam = edgeDirection === 'home' ? homeTeam : edgeDirection === 'away' ? awayTeam : 'Neither';
     const edgePercentage = signals.display?.edge?.percentage || 0;
 
-    // Build AIXBT-style prompt - sharp, opinionated, data-backed
+    // Build AIXBT-style prompt - sharp, opinionated, pipeline-backed
+    const pipelineDigest = formatPipelineDigest(signals, homeTeam, awayTeam);
+    
     const prompt = `${homeTeam} (HOME) vs ${awayTeam} (AWAY) | ${league}
 
 ⚠️ VENUE: ${homeTeam} is playing at HOME. ${awayTeam} is the AWAY team traveling.
 
+=== PIPELINE COMPUTED VALUES (cite these exact numbers) ===
+${pipelineDigest}
+
 MARKET: ${odds.home} / ${odds.away}${odds.draw ? ` / ${odds.draw}` : ''}
 FORM: ${homeTeam} ${homeFormStr} | ${awayTeam} ${awayFormStr}${splitsContext ? `\nSPLITS: ${splitsContext}` : ''}${h2hContext ? `\n${h2hContext}` : ''}
-SIGNALS: ${signalsSummary}
-COMPUTED EDGE: ${edgeTeam} ${edgePercentage > 0 ? `+${edgePercentage}%` : '(even)'}
 ${injuryContext}${restContext ? `\nREST FACTOR: ${restContext}` : ''}${refereeContext ? `\n${refereeContext}` : ''}${rosterContext ? `\n\n${rosterContext}` : ''}
 ${leagueHint ? `\n${leagueHint}\n` : ''}
-Be AIXBT. Sharp takes. Back them with numbers FROM THE DATA ABOVE ONLY.
 
-IMPORTANT: Your analysis MUST align with the COMPUTED EDGE above.
-- If COMPUTED EDGE shows "${homeTeam}" → your snapshot should favor ${homeTeam}
-- If COMPUTED EDGE shows "${awayTeam}" → your snapshot should favor ${awayTeam}
+PIPELINE VERDICT: ${edgeTeam} ${edgePercentage > 0 ? `+${edgePercentage}%` : '(even)'} | Clarity: ${signals.clarity_score}% | Confidence: ${signals.confidence.toUpperCase()}
+FORM GAP: ${signals.display.form.homeRating}/100 vs ${signals.display.form.awayRating}/100 (${Math.abs(signals.display.form.homeRating - signals.display.form.awayRating)}-point gap)
+
+INSTRUCTIONS:
+- Your analysis MUST align with the pipeline verdict above.
+- ${edgePercentage >= 4 ? `Edge is clear (${edgePercentage}%). Be confident. State why.` : edgePercentage > 0 ? `Edge is thin (${edgePercentage}%). Acknowledge the lean, flag the uncertainty.` : 'Edge is even. Acknowledge uncertainty. Find the nuance.'}
+- EVERY snapshot bullet must include at least one NUMBER from the pipeline or match data.
+- Be AIXBT: sharp, opinionated, quotable. No hedging. No filler.
 
 JSON output:
 {
@@ -1070,13 +1077,13 @@ JSON output:
   "favored": ${favoredOptions},
   "confidence": "high" | "medium" | "low",
   "snapshot": [
-    "THE EDGE: [use team NAME not home/away] because [stat]. Not close.",
-    "MARKET MISS: [what odds undervalue - remember ${homeTeam} is HOME, ${awayTeam} is AWAY]. The data screams [X].",
-    "THE PATTERN: [H2H/streak with numbers]. This isn't random.",
-    "THE RISK: [caveat based on form/market data${restContext ? '/fatigue' : ''}${injuryInfo ? ' and listed injuries' : ''}]. Don't ignore this."
+    "THE EDGE: [team] +[X]%. [Primary driver from pipeline]. [Sharp take].",
+    "MARKET MISS: [What the numbers expose]. [Edge % or form gap]. [One-liner verdict].",
+    "THE PATTERN: [H2H or streak number]. [What it means]. [Why it matters now].",
+    "THE RISK: [Weakest signal or uncertainty]. [Specific number]. [What could flip this]."
   ],
-  "gameFlow": "Sharp take on how this plays out. Cite the numbers. Remember: ${homeTeam} is at HOME.",
-  "riskFactors": ["Risk based on form/market/H2H${injuryInfo ? '/injury' : ''}${restContext ? '/rest' : ''} data only", "Secondary if relevant"]
+  "gameFlow": "How this match plays out based on tempo and efficiency data. 2-3 sentences. Cite scoring rates.",
+  "riskFactors": ["Specific risk with a number", "Second risk if relevant"]
 }
 
 CRITICAL RULES:
@@ -1087,12 +1094,16 @@ ${injuryInfo ? '- FACTOR IN INJURIES: The listed injuries are real and current. 
 - AVOID HOME BIAS: Modern football home advantage is only ~5%. Don't favor home teams without strong statistical evidence.
 - RESPECT THE MARKET: Odds reflect wisdom of millions. Only call an edge when form/H2H data clearly contradicts implied probabilities.
 - BE CONTRARIAN: Your accuracy is better on away picks. Look harder for away value.
+- Every snapshot bullet MUST contain at least one specific number from the pipeline data.
 
-SNAPSHOT VIBE:
-- First bullet: State your pick (should align with COMPUTED EDGE: ${edgeTeam}). Give the stat.
-- Second bullet: What's the market sleeping on? If home edge, talk about ${homeTeam}'s home form. If away edge, talk about ${awayTeam}'s away form.
-- Third bullet: Pattern recognition. H2H, streaks, momentum.
-- Fourth bullet: What could wreck this thesis? Use form/momentum risks, not imagined injuries.
+EXAMPLES OF GOOD SNAPSHOT BULLETS:
+✅ "THE EDGE: Arsenal +8%. Form rating 82/100 vs 51/100. A 31-point gap the market hasn't priced in."
+✅ "MARKET MISS: Pipeline says 58% win probability. Bookies have it at 48%. That's a 10-point blind spot."
+✅ "THE PATTERN: 4 wins in last 6 H2H meetings. Goals in 5 of those. This fixture has a direction."
+
+BANNED:
+❌ "clinical finishing" / "capitalize on weaknesses" / "will look to exploit"
+❌ Any sentence without a number. Every bullet earns its place with data.
 
 NO GENERIC TAKES. If you can't find an edge, say so.
 ${!hasDraw ? 'NO DRAWS in this sport. Pick a winner.' : ''}`;

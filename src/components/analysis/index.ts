@@ -45,3 +45,6 @@ export { default as PredictedScoreDisplay } from './PredictedScoreDisplay';
 // Bookmaker Odds Comparison / Line Shopping
 export { default as BookmakerOddsTable } from './BookmakerOddsTable';
 export type { BookmakerOddsEntry } from './BookmakerOddsTable';
+
+// Unified analysis block
+export { default as WhyThisEdgeExists } from './WhyThisEdgeExists';

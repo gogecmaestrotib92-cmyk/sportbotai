@@ -31,7 +31,7 @@ import { getMatchInjuriesViaPerplexity } from '@/lib/perplexity';
 import { getESPNH2H } from '@/lib/data-layer/providers/espn-injuries';
 import { normalizeSport } from '@/lib/data-layer/bridge';
 import { getUnifiedMatchData, type MatchIdentifier } from '@/lib/unified-match-service';
-import { normalizeToUniversalSignals, formatSignalsForAI, getSignalSummary, type RawMatchInput } from '@/lib/universal-signals';
+import { normalizeToUniversalSignals, formatSignalsForAI, formatPipelineDigest, getSignalSummary, type RawMatchInput } from '@/lib/universal-signals';
 import { analyzeMarket, type MarketIntel, type OddsData } from '@/lib/value-detection';
 import { getDataLayer } from '@/lib/data-layer';
 import { findMatchingDemo, getRandomFeaturedDemo, type DemoMatch } from '@/lib/demo-matches';
@@ -430,6 +430,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           preAnalyzed: true,
           creditUsed: false,
           responseTime: Date.now() - startTime,
+          generatedAt: preAnalyzed.createdAt?.toISOString() || new Date().toISOString(),
         };
         
         console.log(`[Match-Preview] ⚡ Returning pre-analyzed response in ${Date.now() - startTime}ms`);
@@ -677,6 +678,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           overUnder: responseData.overUnder || null,
           creditUsed: false,
           repeatView: true,
+          generatedAt: responseData.generatedAt || new Date().toISOString(),
         });
       }
     }
@@ -2121,6 +2123,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       })(),
       // Over/Under market data
       overUnder: overUnder,
+      // Freshness timestamp — when this analysis was generated
+      generatedAt: new Date().toISOString(),
     };
 
     // ========================================
@@ -2805,50 +2809,50 @@ async function generateAIAnalysis(data: {
   });
 
   // SportBot AIXBT-style System Prompt with data requirements
+  const pipelineDigest = formatPipelineDigest(universalSignals, data.homeTeam, data.awayTeam);
+  
   const systemPrompt = `${ANALYSIS_PERSONALITY}
 
-=== MATCH DATA FOR THIS ANALYSIS ===
+=== PIPELINE COMPUTED VALUES (cite these exact numbers) ===
 
-NORMALIZED SIGNALS (your analytical framework):
+${pipelineDigest}
+
+=== RAW SIGNALS ===
 ${formatSignalsForAI(universalSignals)}
 
-MATCH CONTEXT (cite these numbers in your analysis):
+=== MATCH DATA ===
 ${enrichedContextStr}
 
-=== OUTPUT REQUIREMENTS ===
+=== YOUR TASK: WRITE LIKE AIXBT, BACKED BY PIPELINE ===
 
-DATA CITATION RULES:
-- EVERY snapshot bullet must include a specific number from the context above
-- Reference W-D-L records (e.g., "8W-2D-1L this season")
-- Cite scoring rates (e.g., "averaging 2.3 goals per game")
-- Include H2H records when available (e.g., "5-2 in last 7 meetings")
-- If data is limited, say so directly: "Limited data available"
+You have TWO data layers above:
+1. PIPELINE COMPUTED VALUES — our model's actual numbers (form ratings, edge breakdown, factor weights)
+2. MATCH DATA — raw stats, form results, H2H, injuries
+
+YOUR JOB: Weave pipeline numbers INTO sharp, quotable AIXBT takes.
+
+SNAPSHOT WRITING RULES:
+- THE EDGE bullet: Must cite the edge % AND the primary driver. Example: "Arsenal +8%. Form gap is 30 points. The model isn't guessing — it's reading the trend."
+- MARKET MISS bullet: Must cite what the market undervalues using efficiency or form data. Example: "Market has this at 50/50. Our pipeline says 58% away. That 8-point gap is where the value lives."
+- THE PATTERN bullet: Must cite H2H or streak data with actual numbers. Example: "4 wins in last 5 H2H. Both teams scored in 3 of those. The pattern repeats."
+- THE RISK bullet: Must cite the weakest signal or biggest uncertainty. Example: "Availability at High — 3 absences in midfield. This could flip the form advantage."
+
+STYLE:
+- Pipeline numbers make you sound smart. Generic takes make you sound like ChatGPT.
+- Don't drown in numbers — pick the 1-2 that HIT hardest per bullet.
+- No filler: "clinical finishing", "capitalize on weaknesses" = BANNED.
+- You're not explaining the model. You're delivering the verdict the model computed.
 
 CRITICAL - INJURIES RULE:
-- ONLY mention injuries/absences that are explicitly listed in the MATCH CONTEXT above
-- If context says "injuries: None reported" → do NOT mention injuries in riskFactors or snapshot
-- Do NOT invent injury information based on your general knowledge
-- riskFactors should focus on form trends, market odds, H2H patterns - NOT imagined absences
-
-NEVER:
-- Give betting advice or tips
-- Make generic claims without data backing
-- Use hollow phrases: "capitalize on weaknesses", "clinical finishing", "likely to dominate"
-- Say "expected to be fast-paced" without citing scoring rates
-- Mention injuries that aren't in the provided data
-
-ALWAYS:
-- Lead with the strongest statistical edge
-- Be the analyst who spots what others miss
-- Short, punchy observations - no walls of text
-- If confidence is low, state WHY clearly
+- ONLY mention injuries that appear in MATCH DATA or PIPELINE above
+- If context says "0 absent" → do NOT mention injuries
+- Do NOT invent injury information
+- riskFactors should focus on form trends, market odds, H2H — NOT imagined absences
 
 CRITICAL - HOME/AWAY RULES:
 - The FIRST team listed is ALWAYS the HOME team playing AT HOME
 - The SECOND team listed is ALWAYS the AWAY team playing ON THE ROAD
-- When signals show "Home +X%" → that refers to the FIRST team listed
-- When signals show "Away +X%" → that refers to the SECOND team listed
-- NEVER say an away team has "home advantage" - they are playing AWAY`;
+- NEVER say an away team has "home advantage"`;
 
   // Determine which team has the computed edge for AI alignment
   const edgeDirection = universalSignals.display?.edge?.direction || 'even';
@@ -2859,16 +2863,15 @@ CRITICAL - HOME/AWAY RULES:
 
 ⚠️ VENUE: ${data.homeTeam} is playing at HOME. ${data.awayTeam} is the AWAY team traveling.
 
-COMPUTED SIGNALS: ${getSignalSummary(universalSignals)}
-COMPUTED EDGE: ${edgeTeam} ${edgePercentage > 0 ? `+${edgePercentage}%` : '(even)'}
-CLARITY: ${universalSignals.clarity_score}% | CONFIDENCE: ${universalSignals.confidence.toUpperCase()}
+PIPELINE VERDICT: ${edgeTeam} ${edgePercentage > 0 ? `+${edgePercentage}%` : '(even)'} | Clarity: ${universalSignals.clarity_score}% | Confidence: ${universalSignals.confidence.toUpperCase()}
+FORM GAP: ${universalSignals.display.form.homeRating}/100 vs ${universalSignals.display.form.awayRating}/100 (${Math.abs(universalSignals.display.form.homeRating - universalSignals.display.form.awayRating)}-point gap)
+SIGNALS: ${getSignalSummary(universalSignals)}
 
-Be AIXBT. Sharp takes. Back them with numbers. Find the edge.
-
-IMPORTANT: Your analysis MUST align with the computed signals above.
-- If COMPUTED EDGE shows "${data.homeTeam}" → your snapshot should favor ${data.homeTeam} (unless you have strong contrarian data)
-- If COMPUTED EDGE shows "${data.awayTeam}" → your snapshot should favor ${data.awayTeam}
-- If edge is "even" or small (<3%) → acknowledge uncertainty
+INSTRUCTIONS:
+- Your analysis MUST align with the pipeline verdict above.
+- ${edgePercentage >= 4 ? `Edge is clear (${edgePercentage}%). Be confident. State why.` : edgePercentage > 0 ? `Edge is thin (${edgePercentage}%). Acknowledge the lean, flag the uncertainty.` : 'Edge is even. Acknowledge uncertainty. Find the nuance.'}
+- EVERY snapshot bullet must include at least one NUMBER from the pipeline or match data.
+- Be AIXBT: sharp, opinionated, quotable. No hedging. No filler.
 
 JSON:
 {
@@ -2876,26 +2879,30 @@ JSON:
     "favored": ${favoredOptions},
     "confidence": "${universalSignals.confidence}",
     "snapshot": [
-      "THE EDGE: [team name] because [stat]. Not close.",
-      "MARKET MISS: [what odds undervalue - use correct home/away context]. The data screams [X].",
-      "THE PATTERN: [H2H/streak]. This isn't random.",
-      "THE RISK: [caveat]. Don't ignore this."
+      "THE EDGE: [team] +[X]%. [Primary driver from pipeline]. [Sharp take].",
+      "MARKET MISS: [What the numbers expose]. [Edge % or form gap]. [One-liner verdict].",
+      "THE PATTERN: [H2H or streak number]. [What it means]. [Why it matters now].",
+      "THE RISK: [Weakest signal or uncertainty]. [Specific number]. [What could flip this]."
     ],
-    "gameFlow": "Sharp take on how this unfolds. Cite the numbers. Remember: ${data.homeTeam} is at HOME.",
-    "riskFactors": ["Primary risk", "Secondary if relevant"]
+    "gameFlow": "How this match plays out based on tempo (${universalSignals.display.tempo.label}) and efficiency data. 2-3 sentences. Cite scoring rates.",
+    "riskFactors": ["Specific risk with a number", "Second risk if relevant"]
   },
-  "headline": "One punchy line with a stat. Make it quotable."
+  "headline": "One punchy line with the edge number. Screenshot-worthy."
 }
 
-SNAPSHOT VIBE:
-- First bullet: State your pick (should align with COMPUTED EDGE: ${edgeTeam}). Give the stat that matters.
-- Second bullet: What's the market sleeping on? If home edge, talk about ${data.homeTeam}'s home form. If away edge, talk about ${data.awayTeam}'s away form.
-- Third bullet: Pattern recognition. H2H, streaks, momentum. Numbers.
-- Fourth bullet: What could wreck this thesis? Be honest.
+EXAMPLES OF GOOD SNAPSHOT BULLETS:
+✅ "THE EDGE: Arsenal +8%. Form rating 82/100 vs 51/100. A 31-point gap the market hasn't priced in."
+✅ "MARKET MISS: Pipeline says 58% win probability. Bookies have it at 48%. That's a 10-point blind spot."
+✅ "THE PATTERN: 4 wins in last 6 H2H meetings. Goals in 5 of those. This fixture has a direction."
+✅ "THE RISK: Availability at High — 3 midfield absences. Form says one thing, the bench depth says another."
 
-NO GENERIC TAKES. "Clinical finishing" = banned. "Capitalize on weaknesses" = banned.
+EXAMPLES OF BAD SNAPSHOT BULLETS (BANNED):
+❌ "THE EDGE: Arsenal because they have strong form and clinical finishing."
+❌ "MARKET MISS: The odds undervalue Arsenal's potential to capitalize."
+❌ "THE PATTERN: Arsenal have historically dominated this fixture."
+❌ "THE RISK: Injuries could play a part in the outcome."
+
 NEVER say "${data.awayTeam} has home advantage" - they are AWAY.
-If you can't find an edge, say "No clear edge here."
 ${!sportConfig.hasDraw ? 'NO DRAWS in this sport. Pick a winner.' : 'Draw is valid if form + H2H support it.'}`;
 
   try {

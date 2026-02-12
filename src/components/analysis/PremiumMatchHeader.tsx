@@ -48,6 +48,65 @@ export default function PremiumMatchHeader({
   kickoff,
   venue,
 }: PremiumMatchHeaderProps) {
+  // Format ugly league keys like "GERMANY_BUNDESLIGA" → "Bundesliga"
+  const formatLeagueName = (raw: string): string => {
+    // Already nicely formatted
+    if (!raw.includes('_') && raw !== raw.toUpperCase()) return raw;
+    
+    const leagueMap: Record<string, string> = {
+      'soccer_epl': 'Premier League',
+      'soccer_england_epl': 'Premier League',
+      'soccer_germany_bundesliga': 'Bundesliga',
+      'soccer_spain_la_liga': 'La Liga',
+      'soccer_italy_serie_a': 'Serie A',
+      'soccer_france_ligue_one': 'Ligue 1',
+      'soccer_netherlands_eredivisie': 'Eredivisie',
+      'soccer_portugal_primeira_liga': 'Primeira Liga',
+      'soccer_turkey_super_league': 'Süper Lig',
+      'soccer_belgium_first_div': 'Belgian Pro League',
+      'soccer_spl': 'Scottish Premiership',
+      'soccer_uefa_champs_league': 'Champions League',
+      'soccer_uefa_europa_league': 'Europa League',
+      'soccer_uefa_europa_conference_league': 'Conference League',
+      'basketball_nba': 'NBA',
+      'americanfootball_nfl': 'NFL',
+      'icehockey_nhl': 'NHL',
+    };
+    
+    const lower = raw.toLowerCase();
+    if (leagueMap[lower]) return leagueMap[lower];
+    
+    // Fallback: "GERMANY_BUNDESLIGA" → "Bundesliga", "SPAIN_LA_LIGA" → "La Liga"
+    const parts = raw.replace(/^soccer_/i, '').split('_');
+    // Remove country prefix (first part) if more than one segment
+    const leagueParts = parts.length > 1 ? parts.slice(1) : parts;
+    return leagueParts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+  };
+
+  // Fix team name casing: "Fsv Mainz 05" → "FSV Mainz 05"
+  const fixTeamName = (name: string): string => {
+    return name.replace(/\b(Fsv|Vfb|Vfl|Vfr|Bsc|Bvb|Fc|Sc|Sv|Sg|Tsv|Tsg|Rb|Afc|Rcd|Ssc|Ac|As|Us|Cd|Ud|Cf|Sd|Ss)\b/gi, 
+      (match) => match.toUpperCase()
+    );
+  };
+
+  // Get short team name for save label: "FSV Mainz 05" → "Mainz", "Borussia Dortmund" → "Dortmund"
+  const getShortName = (name: string): string => {
+    const prefixes = /^(fc|sc|sv|sg|rb|ac|as|us|cd|ud|cf|sd|ss|afc|bsc|bvb|fsv|vfb|vfl|vfr|tsv|tsg|rcd|ssc|1\.|borussia|real|sporting|atletico|dynamo|inter)\b/i;
+    const suffixes = /\b(fc|sc|sv|cf|united|city|town|wanderers|rovers|county|athletic|albion|hotspur|\d{2,4})$/i;
+    const words = name.trim().split(/\s+/);
+    // Filter out prefix/suffix words to find the core name
+    const core = words.filter(w => !prefixes.test(w) && !suffixes.test(w));
+    // If we have a core name, use the last meaningful word
+    if (core.length > 0) return core[core.length - 1];
+    // Fallback: return last non-number word
+    const nonNum = words.filter(w => !/^\d+$/.test(w));
+    return nonNum.length > 0 ? nonNum[nonNum.length - 1] : words[0];
+  };
+
+  const displayLeague = formatLeagueName(league);
+  const displayHome = fixTeamName(homeTeam);
+  const displayAway = fixTeamName(awayTeam);
   const [liveScore, setLiveScore] = useState<LiveScoreData | null>(null);
   const [matchStatus, setMatchStatus] = useState<'upcoming' | 'live' | 'finished' | 'not_found'>('upcoming');
   const [timeLabel, setTimeLabel] = useState<string>('');
@@ -186,10 +245,10 @@ export default function PremiumMatchHeader({
           sportKey={sport}
           size="sm"
         />
-        <span className="text-[10px] text-zinc-600 hidden sm:inline">Save {homeTeam.split(' ').pop()}</span>
+        <span className="text-[10px] text-zinc-600 hidden sm:inline">Save {getShortName(displayHome)}</span>
       </div>
       <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5">
-        <span className="text-[10px] text-zinc-600 hidden sm:inline">Save {awayTeam.split(' ').pop()}</span>
+        <span className="text-[10px] text-zinc-600 hidden sm:inline">Save {getShortName(displayAway)}</span>
         <FavoriteButton 
           teamName={awayTeam}
           sport={sport}
@@ -199,14 +258,14 @@ export default function PremiumMatchHeader({
         />
       </div>
 
-      <div className="relative p-5 sm:p-6 pb-12">
+      <div className="relative p-4 sm:p-6 pb-14">
         {/* League and Time Row */}
-        <div className="flex items-center justify-between mb-5 sm:mb-6">
-          <div className="flex items-center gap-3">
-            <LeagueLogo leagueName={league} sport={sport} size="sm" className="opacity-70" />
-            <span className="text-sm font-medium text-zinc-400">{league}</span>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-5 sm:mb-6">
+          <div className="flex items-center gap-2">
+            <LeagueLogo leagueName={displayLeague} sport={sport} size="sm" className="opacity-70" />
+            <span className="text-xs sm:text-sm font-medium text-zinc-400">{displayLeague}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
             {isLive ? (
               /* Live indicator */
               <div className="flex items-center gap-2">
@@ -227,13 +286,13 @@ export default function PremiumMatchHeader({
               </span>
             ) : (
               <>
-                <span className="text-zinc-500">{formattedDate}</span>
+                <span className="text-zinc-500 whitespace-nowrap">{formattedDate}</span>
                 <span className="text-zinc-600">·</span>
-                <span className="text-zinc-400">{formattedTime}</span>
+                <span className="text-zinc-400 whitespace-nowrap">{formattedTime}</span>
                 {isUpcoming && (
                   <>
                     <span className="text-zinc-600">·</span>
-                    <span className="px-2 py-0.5 rounded-full bg-white/[0.04] text-zinc-400 text-xs">
+                    <span className="px-2 py-0.5 rounded-full bg-white/[0.04] text-zinc-400 text-xs whitespace-nowrap">
                       {timeLabel}
                     </span>
                   </>
@@ -251,7 +310,7 @@ export default function PremiumMatchHeader({
               <TeamLogo teamName={homeTeam} sport={sport} league={league} size="xl" className="object-contain" priority={true} />
             </div>
             <h2 className="text-lg sm:text-xl font-bold text-white leading-tight">
-              {homeTeam}
+              {displayHome}
             </h2>
             <span className="matrix-dim mt-1.5">Home</span>
           </div>
@@ -292,7 +351,7 @@ export default function PremiumMatchHeader({
               <TeamLogo teamName={awayTeam} sport={sport} league={league} size="xl" className="object-contain" priority={true} />
             </div>
             <h2 className="text-lg sm:text-xl font-bold text-white leading-tight">
-              {awayTeam}
+              {displayAway}
             </h2>
             <span className="matrix-dim mt-1.5">Away</span>
           </div>

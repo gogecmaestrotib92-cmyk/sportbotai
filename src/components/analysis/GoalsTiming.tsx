@@ -83,15 +83,15 @@ export default function GoalsTiming({
             </div>
             <div>
               <h3 className="text-base font-bold text-white">Goals Timing</h3>
-              <p className="text-xs text-text-muted">When teams score their goals</p>
+              <p className="text-xs text-zinc-500">When teams score their goals</p>
             </div>
           </div>
         </div>
         <div className="p-8 text-center">
-          <p className="text-sm text-text-muted">
+          <p className="text-sm text-zinc-500">
             Goals timing data will be available once the season progresses.
           </p>
-          <p className="text-xs text-text-muted mt-2 opacity-60">
+          <p className="text-xs text-zinc-600 mt-2">
             Watch for patterns as more matches are played.
           </p>
         </div>
@@ -109,22 +109,22 @@ export default function GoalsTiming({
           </div>
           <div>
             <h3 className="text-base font-bold text-white">Goals Timing</h3>
-            <p className="text-xs text-text-muted">When teams score their goals</p>
+            <p className="text-xs text-zinc-500">When teams score their goals</p>
           </div>
         </div>
       </div>
 
       {/* Peak Times Highlight */}
-      <div className="px-5 py-3 bg-white/[0.02] border-b border-white/5 grid grid-cols-2 gap-4">
+      <div className="px-5 py-3 bg-white/[0.02] border-b border-white/[0.06] grid grid-cols-2 gap-4">
         <div className="text-center">
-          <p className="text-xs text-text-muted mb-1">{homeTeam} most dangerous</p>
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-accent/20 text-accent text-sm font-bold rounded">
+          <p className="text-xs text-zinc-500 mb-1">{homeTeam} most dangerous</p>
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/15 text-emerald-400 text-sm font-bold rounded">
             <PremiumIcon name="bolt" size="sm" /> {homePeak.period}&apos;
           </span>
         </div>
         <div className="text-center">
-          <p className="text-xs text-text-muted mb-1">{awayTeam} most dangerous</p>
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/20 text-primary text-sm font-bold rounded">
+          <p className="text-xs text-zinc-500 mb-1">{awayTeam} most dangerous</p>
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/15 text-blue-400 text-sm font-bold rounded">
             <PremiumIcon name="bolt" size="sm" /> {awayPeak.period}&apos;
           </span>
         </div>
@@ -134,7 +134,7 @@ export default function GoalsTiming({
       <div className="p-5 space-y-6">
         {/* Home Team */}
         <div>
-          <p className="text-xs text-text-muted mb-2 flex items-center gap-1"><PremiumIcon name="home" size="xs" /> {homeTeam} scoring by period</p>
+          <p className="text-xs text-zinc-500 mb-2 flex items-center gap-1"><PremiumIcon name="home" size="xs" /> {homeTeam} scoring by period</p>
           <div className="flex items-end gap-1 h-16">
             {periods.map((period, index) => {
               const goals = homeTiming.scoring[period];
@@ -144,11 +144,11 @@ export default function GoalsTiming({
               return (
                 <div key={period} className="flex-1 flex flex-col items-center gap-1">
                   <div 
-                    className="w-full bg-accent/60 rounded-t transition-all hover:bg-accent"
+                    className="w-full bg-emerald-500/60 rounded-t transition-all hover:bg-emerald-500"
                     style={{ height: `${height}%` }}
                     title={`${goals} goals (${Math.round(percent)}%)`}
                   />
-                  <span className="text-[9px] text-text-muted">{periodLabels[index]}</span>
+                  <span className="text-[9px] text-zinc-600">{periodLabels[index]}</span>
                 </div>
               );
             })}
@@ -157,7 +157,7 @@ export default function GoalsTiming({
 
         {/* Away Team */}
         <div>
-          <p className="text-xs text-text-muted mb-2 flex items-center gap-1"><PremiumIcon name="plane" size="xs" /> {awayTeam} scoring by period</p>
+          <p className="text-xs text-zinc-500 mb-2 flex items-center gap-1"><PremiumIcon name="plane" size="xs" /> {awayTeam} scoring by period</p>
           <div className="flex items-end gap-1 h-16">
             {periods.map((period, index) => {
               const goals = awayTiming.scoring[period];
@@ -167,11 +167,11 @@ export default function GoalsTiming({
               return (
                 <div key={period} className="flex-1 flex flex-col items-center gap-1">
                   <div 
-                    className="w-full bg-primary/60 rounded-t transition-all hover:bg-primary"
+                    className="w-full bg-blue-500/60 rounded-t transition-all hover:bg-blue-500"
                     style={{ height: `${height}%` }}
                     title={`${goals} goals (${Math.round(percent)}%)`}
                   />
-                  <span className="text-[9px] text-text-muted">{periodLabels[index]}</span>
+                  <span className="text-[9px] text-zinc-600">{periodLabels[index]}</span>
                 </div>
               );
             })}
@@ -181,8 +181,8 @@ export default function GoalsTiming({
 
       {/* Insights */}
       {(homeTiming.insight || awayTiming.insight) && (
-        <div className="px-5 py-3 bg-white/[0.02] border-t border-white/5">
-          <p className="text-xs text-text-secondary flex items-center gap-1.5">
+        <div className="px-5 py-3 bg-white/[0.02] border-t border-white/[0.06]">
+          <p className="text-xs text-zinc-500 flex items-center gap-1.5">
             <PremiumIcon name="lightbulb" size="sm" className="text-amber-400" /> {homeTiming.insight || awayTiming.insight}
           </p>
         </div>

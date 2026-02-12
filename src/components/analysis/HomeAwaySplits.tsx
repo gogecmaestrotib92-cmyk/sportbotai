@@ -74,13 +74,13 @@ export default function HomeAwaySplits({
             </div>
             <div>
               <h3 className="text-base font-bold text-white">Home & Away Form</h3>
-              <p className="text-xs text-text-muted">This season&apos;s venue-specific records</p>
+              <p className="text-xs text-zinc-500">This season&apos;s venue-specific records</p>
             </div>
           </div>
         </div>
         <div className="p-8 text-center">
-          <p className="text-text-muted text-sm">Home/away data not available yet</p>
-          <p className="text-text-muted/60 text-xs mt-1">Check back closer to kickoff</p>
+          <p className="text-zinc-500 text-sm">Home/away data not available yet</p>
+          <p className="text-zinc-600 text-xs mt-1">Check back closer to kickoff</p>
         </div>
       </div>
     );
@@ -105,17 +105,17 @@ export default function HomeAwaySplits({
           </div>
           <div>
             <h3 className="text-base font-bold text-white">Home & Away Form</h3>
-            <p className="text-xs text-text-muted">This season&apos;s venue-specific records</p>
+            <p className="text-xs text-zinc-500">This season&apos;s venue-specific records</p>
           </div>
         </div>
       </div>
 
       {/* Splits Comparison */}
-      <div className="grid grid-cols-2 divide-x divide-white/5">
+      <div className="grid grid-cols-2 divide-x divide-white/[0.06]">
         {/* Home Team at Home */}
         <div className="p-4">
           <div className="text-center mb-4">
-            <span className="text-xs text-text-muted flex items-center justify-center gap-1"><PremiumIcon name="home" size="xs" /> {homeTeam}</span>
+            <span className="text-xs text-zinc-500 flex items-center justify-center gap-1"><PremiumIcon name="home" size="xs" /> {homeTeam}</span>
             <p className="text-lg font-bold text-white">At Home</p>
           </div>
 
@@ -125,12 +125,12 @@ export default function HomeAwaySplits({
               <svg className="w-20 h-20 -rotate-90">
                 <circle
                   cx="40" cy="40" r="36"
-                  className="fill-none stroke-white/10"
+                  className="fill-none stroke-zinc-800"
                   strokeWidth="6"
                 />
                 <circle
                   cx="40" cy="40" r="36"
-                  className="fill-none stroke-accent"
+                  className="fill-none stroke-emerald-500"
                   strokeWidth="6"
                   strokeDasharray={`${homeWinRate * 2.26} 226`}
                   strokeLinecap="round"
@@ -145,25 +145,25 @@ export default function HomeAwaySplits({
           {/* Stats */}
           <div className="space-y-2 text-center">
             <div className="flex justify-between text-xs">
-              <span className="text-text-muted">Record</span>
+              <span className="text-zinc-500">Record</span>
               <span className="text-white font-medium">
                 {formatRecord(homeTeamAtHome)}
               </span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-text-muted">{labels.perGame}</span>
+              <span className="text-zinc-500">{labels.perGame}</span>
               <span className="text-white font-medium">{calcGoalsPerGame(homeTeamAtHome)}</span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-text-muted">{labels.cleanSheet}</span>
+              <span className="text-zinc-500">{labels.cleanSheet}</span>
               <span className="text-white font-medium">{homeTeamAtHome.cleanSheets}</span>
             </div>
           </div>
 
           {/* Highlight */}
           {homeTeamAtHome.highlight && (
-            <div className="mt-3 p-2 bg-accent/10 rounded-lg text-center">
-              <p className="text-[10px] text-accent font-medium">{homeTeamAtHome.highlight}</p>
+            <div className="mt-3 p-2 bg-emerald-500/10 rounded-lg text-center">
+              <p className="text-[10px] text-emerald-400 font-medium">{homeTeamAtHome.highlight}</p>
             </div>
           )}
         </div>
@@ -171,7 +171,7 @@ export default function HomeAwaySplits({
         {/* Away Team Away */}
         <div className="p-4">
           <div className="text-center mb-4">
-            <span className="text-xs text-text-muted flex items-center justify-center gap-1"><PremiumIcon name="plane" size="xs" /> {awayTeam}</span>
+            <span className="text-xs text-zinc-500 flex items-center justify-center gap-1"><PremiumIcon name="plane" size="xs" /> {awayTeam}</span>
             <p className="text-lg font-bold text-white">Away</p>
           </div>
 
@@ -181,12 +181,12 @@ export default function HomeAwaySplits({
               <svg className="w-20 h-20 -rotate-90">
                 <circle
                   cx="40" cy="40" r="36"
-                  className="fill-none stroke-white/10"
+                  className="fill-none stroke-zinc-800"
                   strokeWidth="6"
                 />
                 <circle
                   cx="40" cy="40" r="36"
-                  className="fill-none stroke-primary"
+                  className="fill-none stroke-blue-500"
                   strokeWidth="6"
                   strokeDasharray={`${awayWinRate * 2.26} 226`}
                   strokeLinecap="round"
@@ -201,25 +201,25 @@ export default function HomeAwaySplits({
           {/* Stats */}
           <div className="space-y-2 text-center">
             <div className="flex justify-between text-xs">
-              <span className="text-text-muted">Record</span>
+              <span className="text-zinc-500">Record</span>
               <span className="text-white font-medium">
                 {formatRecord(awayTeamAway)}
               </span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-text-muted">{labels.perGame}</span>
+              <span className="text-zinc-500">{labels.perGame}</span>
               <span className="text-white font-medium">{calcGoalsPerGame(awayTeamAway)}</span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-text-muted">{labels.cleanSheet}</span>
+              <span className="text-zinc-500">{labels.cleanSheet}</span>
               <span className="text-white font-medium">{awayTeamAway.cleanSheets}</span>
             </div>
           </div>
 
           {/* Highlight */}
           {awayTeamAway.highlight && (
-            <div className="mt-3 p-2 bg-primary/10 rounded-lg text-center">
-              <p className="text-[10px] text-primary font-medium">{awayTeamAway.highlight}</p>
+            <div className="mt-3 p-2 bg-blue-500/10 rounded-lg text-center">
+              <p className="text-[10px] text-blue-400 font-medium">{awayTeamAway.highlight}</p>
             </div>
           )}
         </div>

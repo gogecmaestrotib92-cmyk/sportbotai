@@ -34,7 +34,7 @@ const StatBar = ({
   value, 
   max, 
   label, 
-  color = 'bg-accent' 
+  color = 'bg-zinc-500' 
 }: { 
   value: number; 
   max: number; 
@@ -45,10 +45,10 @@ const StatBar = ({
   return (
     <div>
       <div className="flex justify-between items-center mb-2">
-        <span className="text-sm text-text-muted font-medium">{label}</span>
+        <span className="text-sm text-zinc-500 font-medium">{label}</span>
         <span className="text-sm font-bold text-white">{value.toFixed(1)}</span>
       </div>
-      <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
         <div 
           className={`h-full ${color} rounded-full transition-all`}
           style={{ width: `${pct}%` }}
@@ -87,7 +87,7 @@ export default function RefereeProfile({
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold text-white">Match Official</h3>
-            <p className="text-sm text-text-muted">Referee stats this season</p>
+            <p className="text-sm text-zinc-500">Referee stats this season</p>
           </div>
         </div>
       </div>
@@ -96,7 +96,7 @@ export default function RefereeProfile({
       <div className="p-6">
         <div className="flex items-center gap-4 mb-6">
           {/* Referee avatar */}
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+          <div className="w-16 h-16 rounded-full bg-zinc-800/50 border border-white/[0.06] flex items-center justify-center overflow-hidden">
             {referee.photo ? (
               <img src={referee.photo} alt={referee.name} className="w-full h-full object-cover" />
             ) : (
@@ -105,41 +105,41 @@ export default function RefereeProfile({
           </div>
           <div>
             <h4 className="font-bold text-white text-xl">{referee.name}</h4>
-            <p className="text-sm text-text-muted">{referee.matchesThisSeason} matches this season</p>
+            <p className="text-sm text-zinc-500">{referee.matchesThisSeason} matches this season</p>
           </div>
         </div>
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
+          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
             <div className="flex items-center gap-2 mb-2">
               <PremiumIcon name="card-yellow" size="md" className="text-amber-400" />
-              <span className="text-sm text-text-muted font-medium">Yellows/game</span>
+              <span className="text-sm text-zinc-500 font-medium">Yellows/game</span>
             </div>
             <p className={`text-2xl font-bold ${referee.avgYellowCards >= 4.5 ? 'text-amber-400' : 'text-white'}`}>
               {referee.avgYellowCards.toFixed(1)}
             </p>
           </div>
-          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
+          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
             <div className="flex items-center gap-2 mb-2">
               <PremiumIcon name="card-red" size="md" className="text-rose-400" />
-              <span className="text-sm text-text-muted font-medium">Reds/game</span>
+              <span className="text-sm text-zinc-500 font-medium">Reds/game</span>
             </div>
             <p className={`text-2xl font-bold ${referee.avgRedCards >= 0.3 ? 'text-rose-400' : 'text-white'}`}>
               {referee.avgRedCards.toFixed(2)}
             </p>
           </div>
-          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
+          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
             <div className="flex items-center gap-2 mb-2">
               <PremiumIcon name="soccer" size="md" className="text-white" />
-              <span className="text-sm text-text-muted font-medium">Penalties</span>
+              <span className="text-sm text-zinc-500 font-medium">Penalties</span>
             </div>
             <p className="text-2xl font-bold text-white">{referee.penaltiesAwarded}</p>
           </div>
-          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
+          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
             <div className="flex items-center gap-2 mb-2">
               <PremiumIcon name="home" size="md" className="text-white" />
-              <span className="text-sm text-text-muted font-medium">Home win %</span>
+              <span className="text-sm text-zinc-500 font-medium">Home win %</span>
             </div>
             <p className={`text-2xl font-bold ${referee.homeWinRate >= 55 ? 'text-emerald-400' : 'text-white'}`}>
               {referee.homeWinRate.toFixed(0)}%
@@ -153,7 +153,7 @@ export default function RefereeProfile({
             value={referee.avgYellowCards} 
             max={6} 
             label="Cards tendency" 
-            color={referee.avgYellowCards >= 4.5 ? 'bg-amber-500' : 'bg-white/30'}
+            color={referee.avgYellowCards >= 4.5 ? 'bg-amber-500' : 'bg-zinc-600'}
           />
           <StatBar 
             value={referee.avgFouls} 
@@ -175,8 +175,8 @@ export default function RefereeProfile({
             <h5 className="matrix-header">Key Insights</h5>
             <div className="space-y-2">
               {insights.map((insight, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-text-secondary">
-                  <span className="text-accent mt-0.5">•</span>
+                <div key={i} className="flex items-start gap-2 text-sm text-zinc-400">
+                  <span className="text-zinc-600 mt-0.5">•</span>
                   <span>{insight}</span>
                 </div>
               ))}
@@ -186,8 +186,8 @@ export default function RefereeProfile({
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-4 bg-white/[0.02] border-t border-white/5">
-        <p className="text-xs text-text-muted text-center">
+      <div className="px-6 py-4 bg-white/[0.02] border-t border-white/[0.06]">
+        <p className="text-xs text-zinc-600 text-center">
           Stats from {referee.matchesThisSeason} matches officiated this season
         </p>
       </div>

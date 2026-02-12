@@ -16,6 +16,7 @@ import Link from 'next/link';
 import PremiumIcon from '@/components/ui/PremiumIcon';
 import type { MarketIntel } from '@/lib/value-detection';
 import { colors, getEdgeStyle, getOverpricedStyle } from '@/lib/design-system';
+import { BarChart, Bar, Tooltip, ResponsiveContainer } from 'recharts';
 
 type Locale = 'en' | 'sr';
 
@@ -89,6 +90,9 @@ interface AIvsMarketHeroProps {
   isAuthenticated: boolean;
   canSeeExactNumbers: boolean; // true only for PRO
   locale?: Locale;
+  // O/U analysis data (optional)
+  overUnder?: { line: number; overOdds?: number; underOdds?: number } | null;
+  expectedScores?: { home: number; away: number } | null;
 }
 
 export function AIvsMarketHero({
@@ -99,6 +103,8 @@ export function AIvsMarketHero({
   isAuthenticated,
   canSeeExactNumbers,
   locale = 'en',
+  overUnder,
+  expectedScores,
 }: AIvsMarketHeroProps) {
   const t = translations[locale];
   const localePath = locale === 'sr' ? '/sr' : '';
@@ -283,6 +289,9 @@ export function AIvsMarketHero({
         modelProbability={modelProbability}
         impliedProbability={impliedProbability}
         hasDraw={hasDraw}
+        overUnder={overUnder}
+        expectedScores={expectedScores}
+        locale={locale}
       />
     </div>
   );
@@ -305,6 +314,9 @@ interface HeroContentProps {
   modelProbability?: { home: number; away: number; draw?: number };
   impliedProbability?: { home: number; away: number; draw?: number };
   hasDraw?: boolean;
+  overUnder?: { line: number; overOdds?: number; underOdds?: number } | null;
+  expectedScores?: { home: number; away: number } | null;
+  locale?: Locale;
 }
 
 function HeroContent({
@@ -320,6 +332,9 @@ function HeroContent({
   modelProbability,
   impliedProbability,
   hasDraw,
+  overUnder,
+  expectedScores,
+  locale = 'en',
 }: HeroContentProps) {
   // Use unified design system - emerald for ALL edges, intensity via opacity
   const edgeStyle = getEdgeStyle(edgeMagnitude, true);
@@ -406,7 +421,7 @@ function HeroContent({
           : null;
         
         return (
-          <div className={`grid gap-3 mt-4 ${hasDraw && modelProbability.draw !== undefined ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <div className={`grid gap-2 sm:gap-3 mt-4 ${hasDraw && modelProbability.draw !== undefined ? 'grid-cols-3' : 'grid-cols-2'}`}>
             {/* Home */}
             <ProbabilityCard
               label={homeTeam || 'Home'}
@@ -438,6 +453,51 @@ function HeroContent({
           </div>
         );
       })()}
+
+      {/* O/U Value Line — shows model total vs market line for PRO */}
+      {canSeeExactNumbers && overUnder && expectedScores && (() => {
+        const modelTotal = Math.round((expectedScores.home + expectedScores.away) * 10) / 10;
+        const line = overUnder.line;
+        const diff = modelTotal - line;
+        const absDiff = Math.abs(diff);
+        if (absDiff < 0.3) return null; // No meaningful edge
+        const direction = diff > 0 ? 'OVER' : 'UNDER';
+        const isSignificant = absDiff >= 0.5;
+        return (
+          <div className={`mt-4 p-3 rounded-xl border ${isSignificant ? 'border-emerald-500/15 bg-emerald-500/5' : 'border-white/[0.06] bg-white/[0.02]'}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5-3L16.5 18m0 0L12 13.5m4.5 4.5V6" />
+                </svg>
+                <span className="text-xs text-zinc-400 uppercase tracking-wider font-medium">
+                  {locale === 'sr' ? 'Ukupni Golovi' : 'Total Goals'}
+                </span>
+              </div>
+              {isSignificant && (
+                <span className="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20 font-semibold">
+                  {locale === 'sr' ? 'Vrednost' : 'Value'}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-4 mt-2">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xs text-zinc-500">Model:</span>
+                <span className="text-sm font-bold text-white tabular-nums">{modelTotal}</span>
+              </div>
+              <span className="text-zinc-600">vs</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xs text-zinc-500">Line:</span>
+                <span className="text-sm font-medium text-zinc-300 tabular-nums">{line}</span>
+              </div>
+              <span className="text-zinc-600">→</span>
+              <span className={`text-sm font-bold ${isSignificant ? 'text-emerald-400' : 'text-zinc-300'}`}>
+                {direction} {absDiff >= 0.5 ? `(+${absDiff.toFixed(1)})` : ''}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -463,6 +523,29 @@ function ProbabilityCard({ label, modelProb, marketProb, t, isBestValue = false 
   const hasEdge = edgeStyle.tier !== 'none';
   const isOverpriced = diff < -3;
   const isNeutral = !hasEdge && !isOverpriced;
+
+  // Bar colors — industry standard: Blue = market benchmark, Green = value, Red = overpriced, Amber = fair
+  const marketColor = '#3b82f6'; // blue-500 — market/bookmaker benchmark
+  const modelColor = hasEdge ? '#10b981' : isOverpriced ? '#ef4444' : '#f59e0b'; // emerald / red / amber
+
+  // Recharts data — two separate bars side by side
+  const chartData = [{ market: marketProb, model: modelProb }];
+
+  // Custom tooltip
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }> }) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 shadow-xl">
+        {payload.map((entry, idx) => (
+          <div key={idx} className="flex items-center gap-2 text-xs">
+            <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: entry.color }} />
+            <span className="text-zinc-400">{entry.name}:</span>
+            <span className="text-white font-semibold tabular-nums">{entry.value.toFixed(1)}%</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
   
   // Edge badge styling - all edges use emerald now
   const edgeBadgeClass = hasEdge 
@@ -477,64 +560,50 @@ function ProbabilityCard({ label, modelProb, marketProb, t, isBestValue = false 
     : 'bg-[#0a0a0b] border-white/[0.04] opacity-[0.65]';
   
   return (
-    <div className={`flex flex-col min-h-[200px] p-3 sm:p-4 rounded-xl border ${cardClass}`}>
+    <div className={`flex flex-col min-h-[200px] p-2 sm:p-4 rounded-xl border ${cardClass}`}>
       {/* Team/Outcome Name - Header */}
-      <div className="h-10 sm:h-11 mb-2 flex items-center justify-center">
+      <div className="min-h-[36px] sm:min-h-[44px] mb-1 flex items-center justify-center">
         <p 
-          className="text-sm sm:text-base font-semibold text-white leading-tight line-clamp-2 text-center"
+          className="text-xs sm:text-base font-semibold text-white leading-tight line-clamp-2 text-center"
           title={label}
         >
           {label}
         </p>
       </div>
+
+      {/* Percentage Numbers — stacked on mobile for 3-col */}
+      <div className="flex flex-col items-center gap-0 mb-0.5">
+        <span className="text-[10px] sm:text-xs font-medium tabular-nums" style={{ color: marketColor }}>{marketProb.toFixed(1)}%</span>
+        <span className="text-xs sm:text-sm font-bold tabular-nums text-gradient-gold">{modelProb.toFixed(1)}%</span>
+      </div>
       
-      {/* Bar Chart with Percentages Above Each Bar */}
-      <div className="flex-1 flex flex-col justify-center">
-        {/* Percentages row - aligned with bars below */}
-        <div className="flex justify-center gap-3 mb-1">
-          <div className="w-12 text-center">
-            <span className="text-xs font-medium tabular-nums text-white whitespace-nowrap">
-              {marketProb.toFixed(1)}%
-            </span>
-          </div>
-          <div className="w-12 text-center">
-            <span className="text-sm font-bold tabular-nums text-gradient-gold whitespace-nowrap">
-              {modelProb.toFixed(1)}%
-            </span>
-          </div>
+      {/* Recharts Bar Chart — thick bars, no wasted space */}
+      <div className="flex-1 min-h-[70px] sm:min-h-[80px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} margin={{ top: 2, right: 2, left: 2, bottom: 0 }} barGap={2} barCategoryGap="10%">
+            <Tooltip content={<CustomTooltip />} cursor={false} />
+            <Bar dataKey="market" name="Market" fill={marketColor} radius={[4, 4, 0, 0]} maxBarSize={48} animationDuration={800} animationEasing="ease-out" />
+            <Bar dataKey="model" name="Model" fill={modelColor} radius={[4, 4, 0, 0]} maxBarSize={48} animationDuration={800} animationEasing="ease-out" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Legend row — compact, colored dots only on mobile */}
+      <div className="flex justify-center gap-2 sm:gap-3 mt-0.5 mb-1.5">
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-sm" style={{ backgroundColor: marketColor }} />
+          <span className="text-zinc-500 text-[8px] sm:text-[10px] uppercase tracking-wide">Mkt</span>
         </div>
-        
-        {/* Bars row - contained within fixed height, scaled to max 100% */}
-        <div className="flex justify-center items-end gap-3 h-16">
-          {/* Market Bar - height scaled: max bar = 64px when prob = 100% */}
-          <div 
-            className="w-12 bg-zinc-700/50 rounded-t-sm transition-all duration-300 ease-out"
-            style={{ height: `${Math.max((marketProb / 100) * 64, 8)}px` }}
-          />
-          {/* Model Bar - unified emerald for all edges, rose for overpriced */}
-          <div 
-            className={`w-12 rounded-t-sm transition-all duration-300 ease-out ${
-              hasEdge 
-                ? edgeStyle.barColor
-                : isOverpriced 
-                  ? 'bg-rose-400/50'
-                  : 'bg-zinc-400'
-            }`}
-            style={{ height: `${Math.max((modelProb / 100) * 64, 8)}px` }}
-          />
-        </div>
-        
-        {/* Labels row - below bars */}
-        <div className="flex justify-center gap-3 mt-1">
-          <span className="w-12 text-center matrix-dim">Market</span>
-          <span className="w-12 text-center matrix-label">Model</span>
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-sm" style={{ backgroundColor: modelColor }} />
+          <span className="text-zinc-300 text-[8px] sm:text-[10px] uppercase tracking-wide font-medium">Mdl</span>
         </div>
       </div>
       
-      {/* Edge Badge - Footer, contained within card */}
-      <div className="mt-3 pt-2 border-t border-white/5">
+      {/* Edge Badge - Footer */}
+      <div className="pt-1.5 border-t border-white/5">
         <div 
-          className={`px-2 py-1 rounded-md border text-center text-[10px] font-semibold truncate ${edgeBadgeClass}`}
+          className={`px-1.5 py-1 rounded-md border text-center text-[9px] sm:text-[10px] font-semibold truncate ${edgeBadgeClass}`}
           title={isNeutral 
             ? 'Fair price - no significant edge detected' 
             : hasEdge 

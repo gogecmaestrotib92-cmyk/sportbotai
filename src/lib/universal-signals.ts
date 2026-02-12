@@ -18,6 +18,15 @@
 
 export type SportType = 'soccer' | 'basketball' | 'football' | 'hockey' | 'mma';
 
+export interface EdgeFactors {
+  formContribution: number;     // % from form differential
+  winRateContribution: number;  // % from win rate
+  goalDiffContribution: number; // % from scoring differential
+  h2hContribution: number;      // % from head-to-head
+  homeAdvContribution: number;  // % from home advantage
+  dominant: string;             // Which factor dominates: "form" | "winRate" | "goalDiff" | "h2h" | "homeAdv"
+}
+
 export interface UniversalSignals {
   // The 5 core signals - exactly what AI sees
   form: string;                    // "Strong" | "Neutral" | "Weak" | "Trending Up" | "Improving"
@@ -31,6 +40,8 @@ export interface UniversalSignals {
     form: {
       home: 'strong' | 'neutral' | 'weak';
       away: 'strong' | 'neutral' | 'weak';
+      homeRating: number;   // 0-100 numeric form rating
+      awayRating: number;   // 0-100 numeric form rating
       trend: 'home_better' | 'away_better' | 'balanced';
       label: string;
     };
@@ -38,15 +49,21 @@ export interface UniversalSignals {
       direction: 'home' | 'away' | 'even';
       percentage: number;
       label: string;
+      factors?: EdgeFactors;  // Breakdown of what drives the edge
     };
     tempo: {
       level: 'low' | 'medium' | 'high';
       label: string;
+      avgGoals: number;         // Combined avg goals/points per game (used for UI display)
     };
     efficiency: {
       winner: 'home' | 'away' | 'balanced';
       aspect: 'offense' | 'defense' | 'both' | null;
       label: string;
+      homeOffense: number;      // Home scoring per game
+      awayOffense: number;      // Away scoring per game
+      homeDefense: number;      // Home conceding per game
+      awayDefense: number;      // Away conceding per game
     };
     availability: {
       level: 'low' | 'medium' | 'high' | 'critical';
@@ -239,7 +256,7 @@ function _calculateFormTrend(form: string): 'improving' | 'declining' | 'stable'
 function calculateStrengthEdge(
   input: RawMatchInput,
   config: SportConfig
-): { direction: 'home' | 'away' | 'even'; percentage: number } {
+): { direction: 'home' | 'away' | 'even'; percentage: number; factors: EdgeFactors } {
   const { homeStats, awayStats, h2h, homeForm, awayForm } = input;
   
   // 1. FORM DIFFERENTIAL (NEW - weighted heavily: 40% of edge)
@@ -278,13 +295,40 @@ function calculateStrengthEdge(
   const rawEdge = (formFactor + winRateDiff + gdDiff + h2hFactor + homeAdvFactor) * 100;
   const clampedEdge = Math.max(-20, Math.min(20, rawEdge)); // Increased max edge for form
   
+  // Build factor breakdown (absolute contributions in %)
+  const formPct = Math.round(formFactor * 100 * 10) / 10;
+  const winRatePct = Math.round(winRateDiff * 100 * 10) / 10;
+  const gdPct = Math.round(gdDiff * 100 * 10) / 10;
+  const h2hPct = Math.round(h2hFactor * 100 * 10) / 10;
+  const homePct = Math.round(homeAdvFactor * 100 * 10) / 10;
+  
+  // Find dominant factor
+  const absFactors = [
+    { name: 'form', val: Math.abs(formPct) },
+    { name: 'winRate', val: Math.abs(winRatePct) },
+    { name: 'goalDiff', val: Math.abs(gdPct) },
+    { name: 'h2h', val: Math.abs(h2hPct) },
+    { name: 'homeAdv', val: Math.abs(homePct) },
+  ];
+  const dominant = absFactors.sort((a, b) => b.val - a.val)[0].name;
+  
+  const factors: EdgeFactors = {
+    formContribution: formPct,
+    winRateContribution: winRatePct,
+    goalDiffContribution: gdPct,
+    h2hContribution: h2hPct,
+    homeAdvContribution: homePct,
+    dominant,
+  };
+  
   if (Math.abs(clampedEdge) < 2) {
-    return { direction: 'even', percentage: 0 };
+    return { direction: 'even', percentage: 0, factors };
   }
   
   return {
     direction: clampedEdge > 0 ? 'home' : 'away',
     percentage: Math.round(Math.abs(clampedEdge)),
+    factors,
   };
 }
 
@@ -294,7 +338,7 @@ function calculateStrengthEdge(
 function calculateTempo(
   input: RawMatchInput,
   config: SportConfig
-): 'low' | 'medium' | 'high' {
+): { level: 'low' | 'medium' | 'high'; avgGoals: number } {
   const { homeStats, awayStats } = input;
   
   // Average scoring rate
@@ -310,9 +354,11 @@ function calculateTempo(
   
   const { low, high } = config.tempoThresholds;
   
-  if (expectedScoring < low) return 'low';
-  if (expectedScoring > high) return 'high';
-  return 'medium';
+  const level = expectedScoring < low ? 'low' : expectedScoring > high ? 'high' : 'medium';
+  // Round to 1 decimal for display
+  const avgGoals = Math.round(expectedScoring * 10) / 10;
+  
+  return { level, avgGoals };
 }
 
 /**
@@ -321,16 +367,16 @@ function calculateTempo(
 function calculateEfficiencyEdge(
   input: RawMatchInput,
   config: SportConfig
-): { winner: 'home' | 'away' | 'balanced'; aspect: 'offense' | 'defense' | 'both' | null } {
+): { winner: 'home' | 'away' | 'balanced'; aspect: 'offense' | 'defense' | 'both' | null; homeOff: number; awayOff: number; homeDef: number; awayDef: number } {
   const { homeStats, awayStats } = input;
   
   // Offensive efficiency (scoring per game)
-  const homeOff = homeStats.played > 0 ? homeStats.scored / homeStats.played : 0;
-  const awayOff = awayStats.played > 0 ? awayStats.scored / awayStats.played : 0;
+  const homeOff = homeStats.played > 0 ? Math.round((homeStats.scored / homeStats.played) * 10) / 10 : 0;
+  const awayOff = awayStats.played > 0 ? Math.round((awayStats.scored / awayStats.played) * 10) / 10 : 0;
   
   // Defensive efficiency (conceding per game - lower is better)
-  const homeDef = homeStats.played > 0 ? homeStats.conceded / homeStats.played : 999;
-  const awayDef = awayStats.played > 0 ? awayStats.conceded / awayStats.played : 999;
+  const homeDef = homeStats.played > 0 ? Math.round((homeStats.conceded / homeStats.played) * 10) / 10 : 999;
+  const awayDef = awayStats.played > 0 ? Math.round((awayStats.conceded / awayStats.played) * 10) / 10 : 999;
   
   const offEdge = homeOff - awayOff;
   const defEdge = awayDef - homeDef; // Reversed: higher means home is better
@@ -338,7 +384,7 @@ function calculateEfficiencyEdge(
   const totalEdge = offEdge + defEdge;
   
   if (Math.abs(totalEdge) < config.efficiencyThreshold) {
-    return { winner: 'balanced', aspect: null };
+    return { winner: 'balanced', aspect: null, homeOff, awayOff, homeDef, awayDef };
   }
   
   // Determine primary aspect
@@ -354,6 +400,7 @@ function calculateEfficiencyEdge(
   return {
     winner: totalEdge > 0 ? 'home' : 'away',
     aspect,
+    homeOff, awayOff, homeDef, awayDef,
   };
 }
 
@@ -439,7 +486,7 @@ export function normalizeToUniversalSignals(input: RawMatchInput): UniversalSign
     : 'balanced';
   
   const edge = calculateStrengthEdge(input, config);
-  const tempo = calculateTempo(input, config);
+  const tempoResult = calculateTempo(input, config);
   const efficiency = calculateEfficiencyEdge(input, config);
   const availability = calculateAvailabilityImpact(input);
   
@@ -454,8 +501,8 @@ export function normalizeToUniversalSignals(input: RawMatchInput): UniversalSign
     ? 'Even'
     : `${edge.direction === 'home' ? 'Home' : 'Away'} +${edge.percentage}%`;
   
-  const tempoLabel = tempo === 'high' ? 'Fast-Paced' 
-    : tempo === 'low' ? 'Controlled' 
+  const tempoLabel = tempoResult.level === 'high' ? 'Fast-Paced' 
+    : tempoResult.level === 'low' ? 'Controlled' 
     : 'Medium';
   
   const efficiencyLabel = efficiency.winner === 'balanced'
@@ -488,6 +535,8 @@ export function normalizeToUniversalSignals(input: RawMatchInput): UniversalSign
       form: {
         home: homeFormLabel,
         away: awayFormLabel,
+        homeRating: Math.round(homeFormRating),
+        awayRating: Math.round(awayFormRating),
         trend: formTrend,
         label: formLabel,
       },
@@ -495,15 +544,21 @@ export function normalizeToUniversalSignals(input: RawMatchInput): UniversalSign
         direction: edge.direction,
         percentage: edge.percentage,
         label: edgeLabel,
+        factors: edge.factors,
       },
       tempo: {
-        level: tempo,
+        level: tempoResult.level,
         label: tempoLabel,
+        avgGoals: tempoResult.avgGoals,
       },
       efficiency: {
         winner: efficiency.winner,
         aspect: efficiency.aspect,
         label: efficiencyLabel,
+        homeOffense: efficiency.homeOff,
+        awayOffense: efficiency.awayOff,
+        homeDefense: efficiency.homeDef,
+        awayDefense: efficiency.awayDef,
       },
       availability: {
         level: availability.level,
@@ -535,6 +590,59 @@ export function formatSignalsForAI(signals: UniversalSignals): string {
     efficiency_edge: signals.efficiency_edge,
     availability_impact: signals.availability_impact,
   }, null, 2);
+}
+
+/**
+ * Format pipeline-computed numbers as a compact digest for AI.
+ * This gives the AI the ACTUAL numbers behind each signal,
+ * so it can cite them in its narrative instead of writing generic takes.
+ */
+export function formatPipelineDigest(signals: UniversalSignals, homeTeam: string, awayTeam: string): string {
+  const d = signals.display;
+  const lines: string[] = [];
+  
+  // FORM RATINGS (the raw 0-100 scores)
+  lines.push(`FORM RATINGS: ${homeTeam} ${d.form.homeRating}/100 (${d.form.home}) vs ${awayTeam} ${d.form.awayRating}/100 (${d.form.away})`);
+  const formGap = Math.abs(d.form.homeRating - d.form.awayRating);
+  if (formGap >= 20) {
+    lines.push(`→ ${formGap}-point form gap. This is significant.`);
+  } else if (formGap >= 10) {
+    lines.push(`→ ${formGap}-point form gap. Moderate advantage.`);
+  } else {
+    lines.push(`→ ${formGap}-point form gap. Close to evens on form alone.`);
+  }
+  
+  // EDGE BREAKDOWN (what drives the computed edge)
+  if (d.edge.factors) {
+    const f = d.edge.factors;
+    lines.push(`EDGE BREAKDOWN (${d.edge.direction === 'even' ? 'Even' : `${d.edge.direction === 'home' ? homeTeam : awayTeam} +${d.edge.percentage}%`}):`);
+    lines.push(`  Form: ${f.formContribution > 0 ? '+' : ''}${f.formContribution}% | Win rate: ${f.winRateContribution > 0 ? '+' : ''}${f.winRateContribution}% | Goal diff: ${f.goalDiffContribution > 0 ? '+' : ''}${f.goalDiffContribution}% | H2H: ${f.h2hContribution > 0 ? '+' : ''}${f.h2hContribution}% | Home adv: +${f.homeAdvContribution}%`);
+    lines.push(`  Primary driver: ${f.dominant === 'form' ? 'Recent form' : f.dominant === 'winRate' ? 'Season win rate' : f.dominant === 'goalDiff' ? 'Goal difference' : f.dominant === 'h2h' ? 'H2H record' : 'Home advantage'}`);
+  }
+  
+  // TEMPO
+  lines.push(`TEMPO: ${d.tempo.label} (${d.tempo.level})`);
+  
+  // EFFICIENCY
+  lines.push(`EFFICIENCY: ${d.efficiency.label} (${d.efficiency.winner === 'balanced' ? 'no clear winner' : `${d.efficiency.winner === 'home' ? homeTeam : awayTeam} advantage in ${d.efficiency.aspect}`})`);
+  
+  // AVAILABILITY
+  const homeInj = d.availability.homeInjuries || [];
+  const awayInj = d.availability.awayInjuries || [];
+  lines.push(`AVAILABILITY: ${d.availability.label} | ${homeTeam}: ${homeInj.length} absent | ${awayTeam}: ${awayInj.length} absent`);
+  if (homeInj.length > 0) {
+    const injList = homeInj.slice(0, 4).map(i => `${i.player}${i.position ? ` (${i.position})` : ''}${i.reason ? ` - ${i.reason}` : ''}`).join(', ');
+    lines.push(`  ${homeTeam} out: ${injList}`);
+  }
+  if (awayInj.length > 0) {
+    const injList = awayInj.slice(0, 4).map(i => `${i.player}${i.position ? ` (${i.position})` : ''}${i.reason ? ` - ${i.reason}` : ''}`).join(', ');
+    lines.push(`  ${awayTeam} out: ${injList}`);
+  }
+  
+  // CONFIDENCE
+  lines.push(`SIGNAL CONFIDENCE: ${signals.confidence.toUpperCase()} (clarity ${signals.clarity_score}/100)`);
+  
+  return lines.join('\n');
 }
 
 /**

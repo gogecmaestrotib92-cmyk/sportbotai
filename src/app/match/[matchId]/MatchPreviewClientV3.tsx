@@ -25,14 +25,11 @@ import {
   UniversalSignalsDisplay,
   MarketIntelSection,
   RegistrationBlur,
-  PremiumBlur,
   AIvsMarketHero,
-  ProSection,
-  CollapsibleSection,
-  SnapshotList,
   ViralStatsBar,
   PredictedScoreDisplay,
   BookmakerOddsTable,
+  WhyThisEdgeExists,
 } from '@/components/analysis';
 import { isBase64, parseMatchSlug, decodeBase64MatchId } from '@/lib/match-utils';
 import StandingsTable from '@/components/StandingsTable';
@@ -116,17 +113,6 @@ function normalizeSignalsWithInjuries(
   signals: any,
   injuries?: { home: any[]; away: any[] }
 ): any {
-  // Debug log - what are we receiving?
-  console.log('[normalizeSignalsWithInjuries] Input:', {
-    hasSignals: !!signals,
-    hasDisplay: !!signals?.display,
-    hasAvailability: !!signals?.display?.availability,
-    signalsHomeInjuries: signals?.display?.availability?.homeInjuries?.length || 0,
-    signalsAwayInjuries: signals?.display?.availability?.awayInjuries?.length || 0,
-    topLevelHomeInjuries: injuries?.home?.length || 0,
-    topLevelAwayInjuries: injuries?.away?.length || 0,
-  });
-
   // If signals already has display property with proper structure, just merge injuries
   if (signals?.display?.availability) {
     // ALWAYS prefer top-level injuries if they have data (they're fresher)
@@ -136,11 +122,6 @@ function normalizeSignalsWithInjuries(
     const finalAwayInjuries = (injuries?.away?.length || 0) > 0
       ? injuries!.away
       : signals.display.availability.awayInjuries || [];
-
-    console.log('[normalizeSignalsWithInjuries] Using injuries:', {
-      finalHome: finalHomeInjuries.length,
-      finalAway: finalAwayInjuries.length,
-    });
 
     return {
       ...signals,
@@ -188,11 +169,16 @@ function normalizeSignalsWithInjuries(
         tempo: {
           level: signals.tempo?.score >= 75 ? 'high' : signals.tempo?.score <= 40 ? 'low' : 'medium',
           label: signals.tempo?.label || 'Tempo',
+          avgGoals: 0,
         },
         efficiency: {
           winner: signals.efficiency?.direction || null,
           aspect: 'overall',
           label: signals.efficiency?.label || 'Efficiency',
+          homeOffense: 0,
+          awayOffense: 0,
+          homeDefense: 0,
+          awayDefense: 0,
         },
         availability: {
           level: availabilityLevel,
@@ -452,6 +438,8 @@ interface MatchPreviewData {
     sport: string;
   };
   message?: string;
+  // Freshness timestamp — when analysis was generated
+  generatedAt?: string;
 }
 
 // Usage limit data from 429 response
@@ -1280,13 +1268,6 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
     );
   }
 
-  // Map confidence from old format if needed
-  const mapConfidence = (conf: string): 'high' | 'medium' | 'low' => {
-    if (conf === 'strong') return 'high';
-    if (conf === 'slight') return 'low';
-    return 'medium';
-  };
-
   // Build snapshot from old format if not present
   const snapshot = data.story.snapshot || (data.story.supportingStats?.map(s => `${s.stat}: ${s.context}`) || []);
 
@@ -1301,6 +1282,62 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
   const requestedDifferentMatch = data.requestedMatch &&
     (data.requestedMatch.homeTeam !== data.matchInfo.homeTeam ||
       data.requestedMatch.awayTeam !== data.matchInfo.awayTeam);
+
+  // FIX: If anonymous user got a demo for a DIFFERENT match, show correct header + CTA
+  // Never show analysis for wrong match — it's deceptive and causes bounce
+  if (isDemo && requestedDifferentMatch && parsedMatch) {
+    return (
+      <div className="min-h-screen bg-bg relative overflow-x-hidden">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed inset-0 bg-gradient-to-b from-white/[0.01] via-transparent to-transparent pointer-events-none" />
+        <div className="relative max-w-2xl mx-auto px-4 py-6 sm:py-10">
+          <Link href={backUrl} className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-400 transition-colors mb-8">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="text-sm">{t.allMatches}</span>
+          </Link>
+
+          <PremiumMatchHeader
+            homeTeam={parsedMatch.homeTeam}
+            awayTeam={parsedMatch.awayTeam}
+            league={parsedMatch.league}
+            sport={parsedMatch.sport}
+            kickoff={parsedMatch.kickoff}
+          />
+
+          {/* Registration CTA for this specific match */}
+          <div className="mt-8 p-6 rounded-2xl bg-[#0a0a0b] border border-emerald-500/20 text-center">
+            <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+              <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">
+              {locale === 'sr' ? 'Otključaj AI Analizu' : 'Unlock AI Analysis'}
+            </h2>
+            <p className="text-zinc-400 text-sm mb-6 max-w-sm mx-auto">
+              {locale === 'sr'
+                ? `Registruj se besplatno da otključaš AI analizu za ${parsedMatch.homeTeam} vs ${parsedMatch.awayTeam}`
+                : `Sign up free to unlock AI analysis for ${parsedMatch.homeTeam} vs ${parsedMatch.awayTeam}`}
+            </p>
+            <Link
+              href={`${localePath}/register`}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition-colors"
+            >
+              {t.createFreeAccount}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+            <p className="mt-3 text-xs text-zinc-500">
+              {locale === 'sr' ? '3 besplatne analize dnevno' : '3 free analyses per day'}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // 3-TIER ACCESS MODEL:
   // Guest (not logged in): canSeeAnalysis = false, canSeeExactNumbers = false
@@ -1319,9 +1356,6 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
     session?.user?.plan === 'PRO' ||
     session?.user?.plan === 'PREMIUM'
   );
-
-  // Legacy alias for backwards compatibility
-  const hasPremiumAccess = canSeeAnalysis;
 
   return (
     <div className="min-h-screen bg-bg relative overflow-x-hidden">
@@ -1365,63 +1399,9 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
             isAuthenticated={!!session}
             canSeeExactNumbers={canSeeExactNumbers}
             locale={locale}
+            overUnder={data.overUnder}
+            expectedScores={data.expectedScores}
           />
-        )}
-
-        {/* Predicted Score Section - Shows expected score from Poisson/Elo model */}
-        {/* PRO ONLY - This is premium data */}
-        {data.expectedScores && data.dataAvailability?.hasReliableStats !== false && (
-          <div className="mt-6">
-            {canSeeExactNumbers ? (
-              <PredictedScoreDisplay
-                homeTeam={data.matchInfo.homeTeam}
-                awayTeam={data.matchInfo.awayTeam}
-                expectedScores={data.expectedScores}
-                overUnder={data.overUnder}
-                sport={data.matchInfo.sport}
-                locale={locale}
-              />
-            ) : (
-              /* Locked Predicted Score for FREE users */
-              <div className="card-glass p-4 sm:p-5 relative overflow-hidden">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">🎯</span>
-                    <h3 className="text-sm font-semibold text-white">{locale === 'sr' ? 'Predviđeni Rezultat' : 'Predicted Score'}</h3>
-                  </div>
-                  <span className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-violet to-violet-light text-white rounded-full">PRO</span>
-                </div>
-                <div className="flex items-center justify-center gap-4 py-6 blur-sm select-none pointer-events-none">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-white/30">?.?</div>
-                    <div className="text-xs text-zinc-500 mt-1">{data.matchInfo.homeTeam.substring(0, 10)}</div>
-                  </div>
-                  <div className="text-xl text-zinc-600">-</div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-white/30">?.?</div>
-                    <div className="text-xs text-zinc-500 mt-1">{data.matchInfo.awayTeam.substring(0, 10)}</div>
-                  </div>
-                </div>
-                <p className="text-center text-xs text-zinc-500 mt-2">
-                  {locale === 'sr' ? 'Nadogradi na Pro za AI predviđeni rezultat' : 'Upgrade to Pro for AI predicted score'}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Show O/U from market even when predicted score is hidden (for NHL/NBA/NFL) - PRO ONLY */}
-        {data.expectedScores && data.dataAvailability?.hasReliableStats === false && data.overUnder && canSeeExactNumbers && (
-          <div className="mt-6">
-            <PredictedScoreDisplay
-              homeTeam={data.matchInfo.homeTeam}
-              awayTeam={data.matchInfo.awayTeam}
-              expectedScores={{ home: 0, away: 0 }} // Don't show fake prediction
-              overUnder={data.overUnder}
-              sport={data.matchInfo.sport}
-              locale={locale}
-            />
-          </div>
         )}
 
         {/* Data Availability Notice - Only show for truly unavailable data, not for AI analysis */}
@@ -1496,132 +1476,68 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
             </div>
           )}
 
-          {/* Risk Factors - Collapsible for progressive disclosure */}
-          {riskFactors && riskFactors.length > 0 && (
-            <CollapsibleSection
-              title={t.riskFactors}
-              icon="⚠️"
-              defaultExpanded={true}
-              badge={riskFactors.length}
-              className="mt-4 sm:mt-6 !bg-gradient-to-br !from-amber-500/5 !to-transparent !border-amber-500/10"
-            >
-              <ul className="space-y-3">
-                {riskFactors.map((risk, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500/60 mt-2 flex-shrink-0" />
-                    <span className="text-sm text-zinc-300 leading-relaxed">{risk}</span>
-                  </li>
-                ))}
-              </ul>
-            </CollapsibleSection>
-          )}
         </RegistrationBlur>
 
-        {/* LAYER 2: Premium Blur - Match Snapshot, Game Flow, Market Edge */}
-        <PremiumBlur
-          isPro={hasPremiumAccess}
-          title={t.proMatchAnalysis}
-          description={t.proMatchDesc}
-          locale={locale}
-          translations={{
-            whatYouGet: t.whatYouGet,
-            matchSnapshotInsights: t.matchSnapshotInsights,
-            gameFlowPredictions: t.gameFlowPredictions,
-            valueDetection: t.valueDetection,
-            analysesPerDay: t.analysesPerDay,
-            upgradeToProPrice: t.upgradeToProPrice,
-          }}
-        >
-          {/* Match Snapshot - Progressive disclosure with collapsible detail */}
-          {snapshot && snapshot.length > 0 && (
-            <CollapsibleSection
-              title={t.matchSnapshot}
-              icon="📋"
-              defaultExpanded={true}
-              badge="PRO"
-              className="mt-3 sm:mt-4"
-            >
-              {canSeeExactNumbers ? (
-                <SnapshotList snapshot={snapshot} maxItems={4} compact={false} />
-              ) : (
-                <ProSection
-                  isPro={canSeeExactNumbers}
-                  title=""
-                  teaserBullets={
-                    locale === 'sr'
-                      ? ['Rezime AI modela', 'Obrazloženje ivice i analiza', 'Kalibracija rizika']
-                      : ['AI model summary', 'Edge reasoning & pattern analysis', 'Risk calibration']
-                  }
-                  locale={locale}
-                  className="!bg-transparent !border-0 !p-0"
-                >
-                  <SnapshotList snapshot={snapshot} maxItems={4} compact={true} />
-                </ProSection>
-              )}
-            </CollapsibleSection>
-          )}
-
-          {/* Game Flow - Progressive disclosure */}
-          {gameFlow && (
-            <CollapsibleSection
-              title={t.gameFlow}
-              icon="⚡"
-              defaultExpanded={false}
-              badge="PRO"
-              className="mt-3 sm:mt-4"
-            >
-              {canSeeExactNumbers ? (
-                <p className="text-sm text-stone-300 leading-relaxed">
-                  {gameFlow}
-                </p>
-              ) : (
-                <ProSection
-                  isPro={canSeeExactNumbers}
-                  title=""
-                  teaserText={gameFlow.substring(0, 60) + '...'}
-                  locale={locale}
-                  className="!bg-transparent !border-0 !p-0"
-                >
-                  <p className="text-sm text-stone-300 leading-relaxed">
-                    {gameFlow}
-                  </p>
-                </ProSection>
-              )}
-            </CollapsibleSection>
-          )}
-
-          {/* Market Edge - Premium */}
-          {data.marketIntel && data.odds ? (
-            <div className="mt-5">
-              <MarketIntelSection
-                marketIntel={data.marketIntel}
-                odds={data.odds}
+        {/* Predicted Score — moved below Signals for better hierarchy */}
+        {data.expectedScores && data.dataAvailability?.hasReliableStats !== false && (
+          <div className="mt-6">
+            {canSeeExactNumbers ? (
+              <PredictedScoreDisplay
                 homeTeam={data.matchInfo.homeTeam}
                 awayTeam={data.matchInfo.awayTeam}
-                hasDraw={data.matchInfo.hasDraw}
-                canSeeAnalysis={canSeeAnalysis}
-                canSeeExactNumbers={canSeeExactNumbers}
+                expectedScores={data.expectedScores}
+                overUnder={data.overUnder}
+                sport={data.matchInfo.sport}
                 locale={locale}
               />
-            </div>
-          ) : (
-            <div className="mt-5 p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06]">
-              <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span className="text-violet-400">✦</span>
-                {t.marketEdge}
-                <span className="ml-auto text-[9px] px-2 py-0.5 bg-violet-500/10 text-violet-400 rounded-full border border-violet-500/20">PRO</span>
-              </h3>
-              <div className="flex items-center gap-3 text-zinc-400 text-sm">
-                <svg className="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{t.oddsUnavailable}</span>
+            ) : (
+              /* Locked Predicted Score for FREE users — blurred teaser */
+              <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-4 sm:p-5 relative overflow-hidden">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 bg-violet-500/10 rounded-lg flex items-center justify-center">
+                      <svg className="w-3.5 h-3.5 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">{locale === 'sr' ? 'Predviđeni Rezultat' : 'Predicted Score'}</h3>
+                  </div>
+                  <span className="matrix-dim px-2.5 py-0.5 rounded-full border border-violet-500/20">PRO</span>
+                </div>
+                <div className="flex items-center justify-center gap-4 py-6 blur-sm select-none pointer-events-none">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-white/30">?.?</div>
+                    <div className="text-xs text-zinc-500 mt-1">{data.matchInfo.homeTeam.substring(0, 10)}</div>
+                  </div>
+                  <div className="text-xl text-zinc-600">-</div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-white/30">?.?</div>
+                    <div className="text-xs text-zinc-500 mt-1">{data.matchInfo.awayTeam.substring(0, 10)}</div>
+                  </div>
+                </div>
+                <p className="text-center text-xs text-zinc-500 mt-2">
+                  {locale === 'sr' ? 'Nadogradi na Pro za AI predviđeni rezultat' : 'Upgrade to Pro for AI predicted score'}
+                </p>
               </div>
-            </div>
-          )}
-        </PremiumBlur>
+            )}
+          </div>
+        )}
 
-        {/* Odds Comparison - Line Shopping (visible to ALL users) */}
+        {/* Show O/U from market even when predicted score is hidden (for NHL/NBA/NFL) - PRO ONLY */}
+        {data.expectedScores && data.dataAvailability?.hasReliableStats === false && data.overUnder && canSeeExactNumbers && (
+          <div className="mt-6">
+            <PredictedScoreDisplay
+              homeTeam={data.matchInfo.homeTeam}
+              awayTeam={data.matchInfo.awayTeam}
+              expectedScores={{ home: 0, away: 0 }}
+              overUnder={data.overUnder}
+              sport={data.matchInfo.sport}
+              locale={locale}
+            />
+          </div>
+        )}
+
+        {/* Odds Comparison — Line Shopping (visible to ALL users, positioned high for engagement) */}
         {data.bookmakerOdds && data.bookmakerOdds.length > 1 && (
           <BookmakerOddsTable
             bookmakerOdds={data.bookmakerOdds}
@@ -1632,6 +1548,49 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
           />
         )}
 
+        {/* Why This Edge Exists — No PremiumBlur wrapper, component handles its own locked state */}
+        {snapshot && snapshot.length > 0 && (
+          <WhyThisEdgeExists
+            snapshot={snapshot}
+            gameFlow={gameFlow}
+            riskFactors={riskFactors}
+            canSeeExactNumbers={canSeeExactNumbers}
+            locale={locale}
+          />
+        )}
+
+        {/* Market Edge - Component handles its own locked state */}
+        {data.marketIntel && data.odds ? (
+          <div className="mt-5">
+            <MarketIntelSection
+              marketIntel={data.marketIntel}
+              odds={data.odds}
+              homeTeam={data.matchInfo.homeTeam}
+              awayTeam={data.matchInfo.awayTeam}
+              hasDraw={data.matchInfo.hasDraw}
+              canSeeAnalysis={canSeeAnalysis}
+              canSeeExactNumbers={canSeeExactNumbers}
+              locale={locale}
+            />
+          </div>
+        ) : (
+          <div className="mt-5 p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06]">
+            <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <svg className="w-3.5 h-3.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+              </svg>
+              {t.marketEdge}
+              <span className="ml-auto matrix-dim px-2.5 py-0.5 rounded-full border border-violet-500/20">PRO</span>
+            </h3>
+            <div className="flex items-center gap-3 text-zinc-500 text-sm">
+              <svg className="w-4 h-4 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{t.oddsUnavailable}</span>
+            </div>
+          </div>
+        )}
+
         {/* League Standings - Show where teams stand */}
         {(() => {
           const leagueInfo = getLeagueInfo(data.matchInfo.league, data.matchInfo.sport);
@@ -1639,8 +1598,10 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
 
           return (
             <div className="mt-6">
-              <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wide mb-4 flex items-center gap-3">
-                <span className="text-lg">📊</span>
+              <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0l-3.75-3.75M17.25 21L21 17.25" />
+                </svg>
                 {t.whereTheyStand}
               </h3>
               <StandingsTable
@@ -1657,13 +1618,16 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
 
         {/* Headline Quote (if available) */}
         {data.headlines && data.headlines.length > 0 && (
-          <div className="mt-6 p-5 rounded-2xl bg-gradient-to-br from-white/[0.03] to-transparent border border-white/[0.06]">
-            <p className="text-base text-white font-medium leading-relaxed">
-              &ldquo;{data.headlines[0].text}&rdquo;
-            </p>
-            <p className="text-[10px] text-zinc-600 mt-2 uppercase tracking-wider">
-              — SportBot {locale === 'sr' ? 'Analiza' : 'Analysis'}
-            </p>
+          <div className="mt-6 p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-violet-500/50 via-violet-500/20 to-transparent" />
+            <div className="pl-4">
+              <p className="text-base text-zinc-200 font-medium leading-relaxed italic">
+                &ldquo;{data.headlines[0].text}&rdquo;
+              </p>
+              <p className="text-[10px] text-zinc-600 mt-3 uppercase tracking-widest font-medium">
+                — SportBot {locale === 'sr' ? 'Analiza' : 'Analysis'}
+              </p>
+            </div>
           </div>
         )}
 
@@ -1686,28 +1650,32 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
         {(data.matchInfo as { blogSlug?: string }).blogSlug && (
           <Link
             href={`${localePath}/news/${(data.matchInfo as { blogSlug?: string }).blogSlug}`}
-            className="mt-6 flex items-center justify-between px-5 py-4 bg-gradient-to-r from-accent/10 to-accent/5 hover:from-accent/20 hover:to-accent/10 border border-accent/20 hover:border-accent/40 rounded-xl transition-all group"
+            className="mt-6 flex items-center justify-between px-5 py-4 bg-[#0a0a0b] hover:bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.1] rounded-xl transition-all group"
           >
             <div className="flex items-center gap-3">
-              <span className="text-xl">📰</span>
+              <div className="w-9 h-9 bg-violet-500/10 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5" />
+                </svg>
+              </div>
               <div>
                 <p className="text-sm font-medium text-white">
                   {locale === 'sr' ? 'Pročitaj Ceo Pregled Meča' : 'Read Full Match Preview'}
                 </p>
-                <p className="text-xs text-text-muted">
+                <p className="text-xs text-zinc-500">
                   {locale === 'sr' ? 'Detaljna analiza i AI predikcije' : 'In-depth analysis & AI predictions'}
                 </p>
               </div>
             </div>
-            <svg className="w-5 h-5 text-accent group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-zinc-500 group-hover:text-violet-400 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
         )}
 
         {/* Footer */}
-        <div className="mt-12 text-center">
-          <p className="text-[11px] text-zinc-600 max-w-sm mx-auto">
+        <div className="mt-12 pt-6 border-t border-white/[0.04] text-center">
+          <p className="text-[10px] text-zinc-600 max-w-sm mx-auto leading-relaxed">
             {t.disclaimer}
           </p>
         </div>
@@ -1716,22 +1684,26 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
       {/* Sticky Upgrade CTA - Shows for free registered users after scrolling */}
       {session && !canSeeExactNumbers && showStickyCTA && (
         <div className="fixed bottom-0 left-0 right-0 z-50 animate-in slide-in-from-bottom-4 duration-300">
-          <div className="bg-gradient-to-r from-violet-600/95 via-violet-500/95 to-purple-600/95 backdrop-blur-xl border-t border-white/10">
+          <div className="bg-[#0a0a0b]/95 backdrop-blur-xl border-t border-white/[0.08] shadow-[0_-4px_30px_rgba(0,0,0,0.5)]">
             <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <span className="text-xl flex-shrink-0">💎</span>
+                <div className="w-9 h-9 bg-violet-500/15 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                </div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-white truncate">
                     {locale === 'sr' ? 'Otključaj tačne brojeve' : 'Unlock Exact Numbers'}
                   </p>
-                  <p className="text-xs text-white/70 truncate hidden sm:block">
+                  <p className="text-xs text-zinc-500 truncate hidden sm:block">
                     {locale === 'sr' ? 'Vidi tačne % pobede i ivice' : 'See exact win % & edge magnitude'}
                   </p>
                 </div>
               </div>
               <Link
                 href={`${localePath}/pricing#pro`}
-                className="flex-shrink-0 px-4 py-2 bg-white text-violet-700 font-semibold text-sm rounded-lg hover:bg-white/90 transition-colors shadow-lg"
+                className="flex-shrink-0 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm rounded-xl transition-colors shadow-lg shadow-violet-500/20"
               >
                 {locale === 'sr' ? 'Nadogradi' : 'Upgrade'}
               </Link>

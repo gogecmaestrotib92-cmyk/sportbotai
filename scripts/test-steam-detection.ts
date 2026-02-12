@@ -19,8 +19,8 @@ const mockSignals: UniversalSignals = {
   display: {
     edge: { direction: 'home', percentage: 15, label: 'Home +15%' },
     form: { home: 'strong', away: 'neutral', trend: 'home_better', label: 'Home in better form' },
-    tempo: { level: 'medium', label: 'Medium pace' },
-    efficiency: { winner: 'home', aspect: 'offense', label: 'Home more efficient' },
+    tempo: { level: 'medium', label: 'Medium pace', avgGoals: 1.6 },
+    efficiency: { winner: 'home', aspect: 'offense', label: 'Home more efficient', homeOffense: 1.8, awayOffense: 1.2, homeDefense: 0.9, awayDefense: 1.3 },
     availability: { level: 'low', note: null, label: 'Normal availability' },
   },
 };

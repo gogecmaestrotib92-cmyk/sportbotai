@@ -396,31 +396,31 @@ export function MarketIntelSection({
   // Guest: Show teaser skeleton (no real numbers rendered at all)
   if (!canSeeAnalysis) {
     return (
-      <div className="space-y-6 p-7 bg-[#0a1a0a] border border-[#1a3a1a] rounded-2xl">
+      <div className="space-y-5 p-5 sm:p-7 bg-[#0a0a0b] border border-white/[0.06] rounded-2xl">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-white text-lg font-bold flex items-center gap-3">
-            <PremiumIcon name="chart" size="lg" className="text-white" />
+          <h3 className="text-zinc-300 text-sm font-medium flex items-center gap-2">
+            <PremiumIcon name="chart" size="md" className="text-zinc-500" />
             {t.marketEdge}
           </h3>
-          <span className="px-4 py-2 rounded-full bg-[#1a2a1a] text-gray-400 text-sm font-medium flex items-center gap-1.5">
+          <span className="px-3 py-1 rounded-full bg-violet-500/10 text-violet-400 text-xs font-medium flex items-center gap-1.5 border border-violet-500/20">
             <PremiumIcon name="lock" size="sm" /> {locale === 'sr' ? 'Zaključano' : 'Locked'}
           </span>
         </div>
         
         {/* Teaser skeleton - no real data */}
-        <div className="space-y-4">
-          <div className="h-14 bg-[#1a2a1a] rounded-xl animate-pulse" />
-          <div className="h-24 bg-[#1a2a1a] rounded-xl animate-pulse" />
-          <div className="h-20 bg-[#1a2a1a] rounded-xl animate-pulse" />
+        <div className="space-y-3">
+          <div className="h-14 bg-zinc-800/40 rounded-xl animate-pulse" />
+          <div className="h-24 bg-zinc-800/40 rounded-xl animate-pulse" />
+          <div className="h-20 bg-zinc-800/40 rounded-xl animate-pulse" />
         </div>
         
         {/* CTA */}
-        <div className="text-center py-5">
-          <p className="text-gray-300 text-base mb-4">{t.seeWhereMarketWrong}</p>
+        <div className="text-center py-4">
+          <p className="text-zinc-300 text-sm mb-4">{t.seeWhereMarketWrong}</p>
           <a 
             href="/auth/signin" 
-            className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl text-base font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-base font-semibold transition-colors"
           >
             {locale === 'sr' ? 'Prijavi se besplatno' : 'Sign in free'}
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -629,7 +629,7 @@ export function LineMovementIndicator({ lineMovement }: LineMovementProps) {
                 lineMovement.magnitude === 'moderate' ? 'text-amber-400/70' : 'text-zinc-400';
 
   return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1a2a1a] text-sm ${color}`}>
+    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800/50 border border-white/[0.06] text-sm ${color}`}>
       <span className="font-mono">{arrow}</span>
       <span>{lineMovement.interpretation}</span>
       {lineMovement.suspicious && (

@@ -46,7 +46,7 @@ export default function ContextFactors({
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">Context & Factors</h3>
-            <p className="text-sm text-text-muted">Additional intel that could matter</p>
+            <p className="text-sm text-zinc-500">Additional intel that could matter</p>
           </div>
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function ContextFactors({
             )}
             
             {factor.note && (
-              <p className="text-xs text-text-muted mt-2">{factor.note}</p>
+              <p className="text-xs text-zinc-500 mt-2">{factor.note}</p>
             )}
           </div>
         ))}

@@ -127,12 +127,17 @@ export default function ShareCard({
   };
 
   return (
-    <div className="bg-gradient-to-r from-accent/10 via-primary/10 to-accent/10 rounded-2xl border border-white/10 p-5">
+    <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-4 sm:p-5">
       <div className="flex items-center justify-between flex-wrap gap-4">
         {/* Left side - CTA */}
         <div>
-          <h3 className="text-base font-bold text-white mb-1">Share This Analysis</h3>
-          <p className="text-xs text-text-muted">Help your friends prepare for the match</p>
+          <h3 className="text-sm font-semibold text-white mb-1 flex items-center gap-2">
+            <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+            </svg>
+            Share This Analysis
+          </h3>
+          <p className="text-xs text-zinc-500">Help your friends prepare for the match</p>
         </div>
 
         {/* Share buttons */}
@@ -141,7 +146,7 @@ export default function ShareCard({
           {'share' in navigator && (
             <button
               onClick={handleNativeShare}
-              className="p-2.5 bg-white/10 rounded-xl hover:bg-white/20 transition-colors sm:hidden"
+              className="p-2.5 bg-zinc-800/60 border border-white/[0.06] rounded-xl hover:bg-zinc-700/60 transition-colors sm:hidden"
               title="Share"
             >
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -153,7 +158,7 @@ export default function ShareCard({
           {/* Twitter */}
           <button
             onClick={handleShareTwitter}
-            className="p-2.5 bg-white/10 rounded-xl hover:bg-[#1DA1F2]/20 transition-colors hidden sm:block"
+            className="p-2.5 bg-zinc-800/60 border border-white/[0.06] rounded-xl hover:bg-[#1DA1F2]/20 transition-colors hidden sm:block"
             title="Share on Twitter"
           >
             <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -164,7 +169,7 @@ export default function ShareCard({
           {/* WhatsApp */}
           <button
             onClick={handleShareWhatsApp}
-            className="p-2.5 bg-white/10 rounded-xl hover:bg-[#25D366]/20 transition-colors hidden sm:block"
+            className="p-2.5 bg-zinc-800/60 border border-white/[0.06] rounded-xl hover:bg-[#25D366]/20 transition-colors hidden sm:block"
             title="Share on WhatsApp"
           >
             <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -175,10 +180,10 @@ export default function ShareCard({
           {/* Copy link */}
           <button
             onClick={handleCopyLink}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all border ${
               copied 
-                ? 'bg-accent text-white' 
-                : 'bg-white/10 text-white hover:bg-white/20'
+                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
+                : 'bg-zinc-800/60 text-white hover:bg-zinc-700/60 border-white/[0.06]'
             }`}
           >
             {copied ? (

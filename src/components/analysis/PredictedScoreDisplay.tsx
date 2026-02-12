@@ -8,6 +8,8 @@
 
 'use client';
 
+import PremiumIcon from '@/components/ui/PremiumIcon';
+
 // Format O/U line to 1 decimal place (e.g., 226.6153846 → 226.5)
 const formatLine = (line: number): string => {
     // Round to nearest 0.5 for cleaner display (common in betting)
@@ -146,10 +148,12 @@ export default function PredictedScoreDisplay({
     // ===== HIGH-SCORING SPORTS (NBA/NFL) =====
     if (isHighScoring) {
         return (
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-orange-500/10 to-transparent border border-orange-500/20">
+            <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center gap-2 mb-4">
-                    <span className="text-xl">🏀</span>
+                <div className="flex items-center gap-3 px-5 pt-5 pb-3">
+                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                        <PremiumIcon name="basketball" size="md" className="text-orange-400" />
+                    </div>
                     <div>
                         <h3 className="text-sm font-semibold text-white">{t.gameOutlook}</h3>
                         <p className="text-[10px] text-zinc-500">{t.bettingInsight}</p>
@@ -158,11 +162,11 @@ export default function PredictedScoreDisplay({
 
                 {/* Favorite Display */}
                 {favorite && (
-                    <div className="text-center py-3 mb-4 rounded-xl bg-white/5">
-                        <p className="text-xs text-zinc-400 uppercase tracking-wider">{t.favored}</p>
+                    <div className="text-center py-4 mx-5 mb-3 rounded-xl bg-white/[0.03] border border-white/[0.04]">
+                        <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">{t.favored}</p>
                         <p className="text-xl font-bold text-white">{favorite.team}</p>
                         {spread?.line && (
-                            <p className="text-sm text-orange-400">
+                            <p className="text-sm text-orange-400 mt-0.5">
                                 {t.favoredBy} {Math.abs(spread.line).toFixed(1)} pts
                             </p>
                         )}
@@ -170,22 +174,25 @@ export default function PredictedScoreDisplay({
                 )}
 
                 {/* O/U Line Display */}
-                <div className="space-y-3">
+                <div className="px-5 pb-5">
                     {overUnder?.line ? (
-                        <>
-                            <div className="flex items-center justify-between">
-                                <div className="text-center flex-1">
-                                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{t.expectedTotal}</p>
-                                    <p className={`text-lg font-bold ${valueIndicator === 'over' ? 'text-green-400' : valueIndicator === 'under' ? 'text-red-400' : 'text-white'}`}>
+                        <div className="space-y-3">
+                            {/* Model vs Market */}
+                            <div className="flex items-stretch gap-3">
+                                <div className="flex-1 text-center py-3 rounded-xl bg-white/[0.03] border border-white/[0.04]">
+                                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">{t.expectedTotal}</p>
+                                    <p className={`text-2xl font-bold ${valueIndicator === 'over' ? 'text-emerald-400' : valueIndicator === 'under' ? 'text-red-400' : 'text-white'}`}>
                                         {totalExpectedDisplay}
                                     </p>
                                 </div>
 
-                                <span className="text-zinc-600 text-sm px-2">vs</span>
+                                <div className="flex items-center">
+                                    <span className="text-[10px] text-zinc-600 uppercase font-medium">vs</span>
+                                </div>
 
-                                <div className="text-center flex-1">
-                                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{t.marketLine}</p>
-                                    <p className="text-lg font-semibold text-zinc-300">{formatLine(overUnder.line)}</p>
+                                <div className="flex-1 text-center py-3 rounded-xl bg-white/[0.03] border border-white/[0.04]">
+                                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">{t.marketLine}</p>
+                                    <p className="text-2xl font-bold text-zinc-300">{formatLine(overUnder.line)}</p>
                                 </div>
                             </div>
 
@@ -193,17 +200,17 @@ export default function PredictedScoreDisplay({
                             {(overUnder.overOdds || overUnder.underOdds) && (
                                 <div className="flex gap-2">
                                     {overUnder.overOdds && (
-                                        <div className={`flex-1 p-2 rounded-lg text-center ${valueIndicator === 'over' ? 'bg-green-500/20 border border-green-500/30' : 'bg-white/5'}`}>
-                                            <p className="text-[10px] text-zinc-400 uppercase">{t.over} {formatLine(overUnder.line)}</p>
-                                            <p className={`text-base font-bold ${valueIndicator === 'over' ? 'text-green-400' : 'text-white'}`}>
+                                        <div className={`flex-1 py-3 rounded-xl text-center transition-colors ${valueIndicator === 'over' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-white/[0.03] border border-white/[0.04]'}`}>
+                                            <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-0.5">{t.over} {formatLine(overUnder.line)}</p>
+                                            <p className={`text-lg font-bold ${valueIndicator === 'over' ? 'text-emerald-400' : 'text-white'}`}>
                                                 {overUnder.overOdds.toFixed(2)}
                                             </p>
                                         </div>
                                     )}
                                     {overUnder.underOdds && (
-                                        <div className={`flex-1 p-2 rounded-lg text-center ${valueIndicator === 'under' ? 'bg-red-500/20 border border-red-500/30' : 'bg-white/5'}`}>
-                                            <p className="text-[10px] text-zinc-400 uppercase">{t.under} {formatLine(overUnder.line)}</p>
-                                            <p className={`text-base font-bold ${valueIndicator === 'under' ? 'text-red-400' : 'text-white'}`}>
+                                        <div className={`flex-1 py-3 rounded-xl text-center transition-colors ${valueIndicator === 'under' ? 'bg-red-500/10 border border-red-500/20' : 'bg-white/[0.03] border border-white/[0.04]'}`}>
+                                            <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-0.5">{t.under} {formatLine(overUnder.line)}</p>
+                                            <p className={`text-lg font-bold ${valueIndicator === 'under' ? 'text-red-400' : 'text-white'}`}>
                                                 {overUnder.underOdds.toFixed(2)}
                                             </p>
                                         </div>
@@ -213,14 +220,15 @@ export default function PredictedScoreDisplay({
 
                             {/* Value Indicator */}
                             {valueIndicator && (
-                                <div className={`text-center py-1.5 px-3 rounded-lg text-xs font-medium ${valueIndicator === 'over'
-                                    ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                                    : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                <div className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-medium ${valueIndicator === 'over'
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15'
+                                    : 'bg-red-500/10 text-red-400 border border-red-500/15'
                                     }`}>
-                                    {valueIndicator === 'over' ? `📈 ${t.valueOver}` : `📉 ${t.valueUnder}`}
+                                    <PremiumIcon name={valueIndicator === 'over' ? 'trending' : 'trending-down'} size="xs" />
+                                    {valueIndicator === 'over' ? t.valueOver : t.valueUnder}
                                 </div>
                             )}
-                        </>
+                        </div>
                     ) : (
                         <p className="text-center text-sm text-zinc-500">{t.noData}</p>
                     )}
@@ -235,10 +243,12 @@ export default function PredictedScoreDisplay({
     const hasValidScore = homeGoals > 0 || awayGoals > 0;
 
     return (
-        <div className="p-5 rounded-2xl bg-gradient-to-br from-violet-500/10 to-transparent border border-violet-500/20">
+        <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] overflow-hidden">
             {/* Header */}
-            <div className="flex items-center gap-2 mb-4">
-                <span className="text-xl">🎯</span>
+            <div className="flex items-center gap-3 px-5 pt-5 pb-2">
+                <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                    <PremiumIcon name="target" size="md" className="text-violet-400" />
+                </div>
                 <div>
                     <h3 className="text-sm font-semibold text-white">{hasValidScore ? t.predictedScore : t.gameOutlook}</h3>
                     <p className="text-[10px] text-zinc-500">{hasValidScore ? t.basedOnModel : t.bettingInsight}</p>
@@ -247,41 +257,48 @@ export default function PredictedScoreDisplay({
 
             {/* Score Display - Only show when we have valid predicted scores */}
             {hasValidScore && (
-                <div className="flex items-center justify-center gap-6 py-4">
+                <div className="flex items-center justify-center gap-8 py-6 px-5">
                     {/* Home Team */}
-                    <div className="text-center">
-                        <p className="text-xs text-zinc-400 mb-1 truncate max-w-[80px]">{homeTeam}</p>
-                        <span className="text-4xl font-bold text-white">{homeGoals}</span>
+                    <div className="text-center flex-1">
+                        <p className="text-xs text-zinc-500 mb-2 truncate">{homeTeam}</p>
+                        <span className="text-5xl font-bold text-white tracking-tight">{homeGoals}</span>
                     </div>
 
                     {/* Separator */}
-                    <span className="text-2xl text-zinc-600">-</span>
+                    <div className="flex flex-col items-center gap-1">
+                        <div className="w-px h-4 bg-zinc-800" />
+                        <span className="text-sm text-zinc-600 font-medium">:</span>
+                        <div className="w-px h-4 bg-zinc-800" />
+                    </div>
 
                     {/* Away Team */}
-                    <div className="text-center">
-                        <p className="text-xs text-zinc-400 mb-1 truncate max-w-[80px]">{awayTeam}</p>
-                        <span className="text-4xl font-bold text-white">{awayGoals}</span>
+                    <div className="text-center flex-1">
+                        <p className="text-xs text-zinc-500 mb-2 truncate">{awayTeam}</p>
+                        <span className="text-5xl font-bold text-white tracking-tight">{awayGoals}</span>
                     </div>
                 </div>
             )}
 
             {/* O/U Section */}
-            <div className="pt-3 border-t border-white/5">
+            <div className="px-5 pb-5 border-t border-white/[0.04]">
                 {overUnder?.line ? (
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <div className="text-center flex-1">
-                                <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{t.expectedTotal}</p>
-                                <p className={`text-lg font-bold ${valueIndicator === 'over' ? 'text-green-400' : valueIndicator === 'under' ? 'text-red-400' : 'text-white'}`}>
+                    <div className="space-y-3 pt-4">
+                        {/* Model vs Market */}
+                        <div className="flex items-stretch gap-3">
+                            <div className="flex-1 text-center py-3 rounded-xl bg-white/[0.03] border border-white/[0.04]">
+                                <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">{t.expectedTotal}</p>
+                                <p className={`text-2xl font-bold ${valueIndicator === 'over' ? 'text-emerald-400' : valueIndicator === 'under' ? 'text-red-400' : 'text-white'}`}>
                                     {totalExpectedDisplay}
                                 </p>
                             </div>
 
-                            <span className="text-zinc-600 text-sm px-2">vs</span>
+                            <div className="flex items-center">
+                                <span className="text-[10px] text-zinc-600 uppercase font-medium">vs</span>
+                            </div>
 
-                            <div className="text-center flex-1">
-                                <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{t.marketLine}</p>
-                                <p className="text-lg font-semibold text-zinc-300">{formatLine(overUnder.line)}</p>
+                            <div className="flex-1 text-center py-3 rounded-xl bg-white/[0.03] border border-white/[0.04]">
+                                <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">{t.marketLine}</p>
+                                <p className="text-2xl font-bold text-zinc-300">{formatLine(overUnder.line)}</p>
                             </div>
                         </div>
 
@@ -289,17 +306,17 @@ export default function PredictedScoreDisplay({
                         {(overUnder.overOdds || overUnder.underOdds) && (
                             <div className="flex gap-2">
                                 {overUnder.overOdds && (
-                                    <div className={`flex-1 p-2 rounded-lg text-center ${valueIndicator === 'over' ? 'bg-green-500/20 border border-green-500/30' : 'bg-white/5'}`}>
-                                        <p className="text-[10px] text-zinc-400 uppercase">{t.over} {formatLine(overUnder.line)}</p>
-                                        <p className={`text-base font-bold ${valueIndicator === 'over' ? 'text-green-400' : 'text-white'}`}>
+                                    <div className={`flex-1 py-3 rounded-xl text-center transition-colors ${valueIndicator === 'over' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-white/[0.03] border border-white/[0.04]'}`}>
+                                        <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-0.5">{t.over} {formatLine(overUnder.line)}</p>
+                                        <p className={`text-lg font-bold ${valueIndicator === 'over' ? 'text-emerald-400' : 'text-white'}`}>
                                             {overUnder.overOdds.toFixed(2)}
                                         </p>
                                     </div>
                                 )}
                                 {overUnder.underOdds && (
-                                    <div className={`flex-1 p-2 rounded-lg text-center ${valueIndicator === 'under' ? 'bg-red-500/20 border border-red-500/30' : 'bg-white/5'}`}>
-                                        <p className="text-[10px] text-zinc-400 uppercase">{t.under} {formatLine(overUnder.line)}</p>
-                                        <p className={`text-base font-bold ${valueIndicator === 'under' ? 'text-red-400' : 'text-white'}`}>
+                                    <div className={`flex-1 py-3 rounded-xl text-center transition-colors ${valueIndicator === 'under' ? 'bg-red-500/10 border border-red-500/20' : 'bg-white/[0.03] border border-white/[0.04]'}`}>
+                                        <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-0.5">{t.under} {formatLine(overUnder.line)}</p>
+                                        <p className={`text-lg font-bold ${valueIndicator === 'under' ? 'text-red-400' : 'text-white'}`}>
                                             {overUnder.underOdds.toFixed(2)}
                                         </p>
                                     </div>
@@ -309,16 +326,17 @@ export default function PredictedScoreDisplay({
 
                         {/* Value Indicator */}
                         {valueIndicator && (
-                            <div className={`text-center py-1.5 px-3 rounded-lg text-xs font-medium ${valueIndicator === 'over'
-                                ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                                : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                            <div className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-medium ${valueIndicator === 'over'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15'
+                                : 'bg-red-500/10 text-red-400 border border-red-500/15'
                                 }`}>
-                                {valueIndicator === 'over' ? `📈 ${t.valueOver}` : `📉 ${t.valueUnder}`}
+                                <PremiumIcon name={valueIndicator === 'over' ? 'trending' : 'trending-down'} size="xs" />
+                                {valueIndicator === 'over' ? t.valueOver : t.valueUnder}
                             </div>
                         )}
                     </div>
                 ) : (
-                    <div className="text-center">
+                    <div className="text-center pt-4">
                         <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{t.expectedTotal}</p>
                         <p className="text-lg font-semibold text-zinc-200">
                             {totalExpectedDisplay} <span className="text-xs text-zinc-500">goals</span>

@@ -76,27 +76,27 @@ export default function KeyPlayerBattle({
         {/* Player name & position */}
         <div className="text-center mb-3">
           <h4 className="font-bold text-white text-sm truncate">{player.name}</h4>
-          <p className="text-xs text-text-muted">{player.position}</p>
-          <p className="text-[10px] text-text-muted/60 mt-0.5">{team}</p>
+          <p className="text-xs text-zinc-500">{player.position}</p>
+          <p className="text-[10px] text-zinc-600 mt-0.5">{team}</p>
         </div>
 
         {/* Stats */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-xs text-text-muted">Goals</span>
+            <span className="text-xs text-zinc-500">Goals</span>
             <span className="text-sm font-bold text-white">{player.seasonGoals}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-xs text-text-muted">Assists</span>
+            <span className="text-xs text-zinc-500">Assists</span>
             <span className="text-sm font-bold text-white">{player.seasonAssists}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-xs text-text-muted">G+A</span>
-            <span className="text-sm font-bold text-accent">{totalContributions}</span>
+            <span className="text-xs text-zinc-500">G+A</span>
+            <span className="text-sm font-bold text-emerald-400">{totalContributions}</span>
           </div>
           {player.rating && (
             <div className="flex justify-between items-center">
-              <span className="text-xs text-text-muted">Rating</span>
+              <span className="text-xs text-zinc-500">Rating</span>
               <span className={`text-sm font-bold ${player.rating >= 7 ? 'text-emerald-400' : player.rating >= 6 ? 'text-amber-400' : 'text-rose-400'}`}>
                 {player.rating.toFixed(1)}
               </span>
@@ -105,8 +105,8 @@ export default function KeyPlayerBattle({
         </div>
 
         {/* Form */}
-        <div className="mt-3 pt-3 border-t border-white/5">
-          <p className="text-[10px] text-text-muted mb-1.5 text-center">Form (last 5)</p>
+        <div className="mt-3 pt-3 border-t border-white/[0.06]">
+          <p className="text-[10px] text-zinc-600 mb-1.5 text-center">Form (last 5)</p>
           <div className="flex justify-center gap-1">
             {formArray.map((result, i) => (
               <FormBadge key={i} result={result} />
@@ -132,7 +132,7 @@ export default function KeyPlayerBattle({
           </div>
           <div className="flex-1">
             <h3 className="font-bold text-white">{battle.title}</h3>
-            <p className="text-xs text-text-muted">{battle.subtitle}</p>
+            <p className="text-xs text-zinc-500">{battle.subtitle}</p>
           </div>
           {edge !== 'even' && (
             <div className={`px-2 py-1 rounded-lg text-[10px] font-medium ${
@@ -151,7 +151,7 @@ export default function KeyPlayerBattle({
         {/* VS divider */}
         <div className="flex flex-col items-center justify-center px-2">
           <div className="w-px h-8 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-          <span className="text-lg font-bold text-primary my-2">VS</span>
+          <span className="text-lg font-bold text-zinc-500 my-2">VS</span>
           <div className="w-px h-8 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
         </div>
         
@@ -159,8 +159,8 @@ export default function KeyPlayerBattle({
       </div>
 
       {/* Footer insight */}
-      <div className="px-5 py-3 bg-white/[0.02] border-t border-white/5">
-        <p className="text-[10px] text-text-muted text-center">
+      <div className="px-5 py-3 bg-white/[0.02] border-t border-white/[0.06]">
+        <p className="text-[10px] text-zinc-600 text-center">
           Season stats • Form based on team results when player featured
         </p>
       </div>
