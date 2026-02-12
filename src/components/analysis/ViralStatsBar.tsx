@@ -15,6 +15,8 @@ interface ViralStatsBarProps {
   homeTeam: string;
   awayTeam: string;
   hasDraw?: boolean; // Whether this sport has draws
+  canSeeExactNumbers?: boolean; // PRO users see all stats, free see H2H only
+  locale?: 'en' | 'sr';
   stats: {
     h2h: {
       /** e.g., "7 matches unbeaten" or "3 wins in a row" */
@@ -42,6 +44,8 @@ export default function ViralStatsBar({
   homeTeam,
   awayTeam,
   hasDraw = true,
+  canSeeExactNumbers = true,
+  locale = 'en',
   stats,
 }: ViralStatsBarProps) {
   return (
@@ -60,8 +64,28 @@ export default function ViralStatsBar({
         </p>
       </div>
 
-      {/* Key Absence or Streak */}
-      {stats.keyAbsence ? (
+      {/* Key Absence or Streak — Blurred for free users */}
+      {!canSeeExactNumbers ? (
+        <div className="rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-5 relative overflow-hidden">
+          {/* Blurred content preview */}
+          <div className="blur-[6px] select-none pointer-events-none">
+            <div className="flex items-center gap-2 mb-3">
+              <PremiumIcon name={stats.keyAbsence ? 'alert' : 'fire'} size="lg" className={stats.keyAbsence ? 'text-red-400' : 'text-emerald-400'} />
+              <span className="matrix-label">{stats.keyAbsence ? 'Key Absence' : 'Hot Streak'}</span>
+            </div>
+            <p className="text-base font-bold text-white mb-2">
+              {stats.keyAbsence ? `${stats.keyAbsence.player.substring(0, 3)}***` : stats.streak ? stats.streak.text.substring(0, 5) + '...' : 'Full Strength'}
+            </p>
+            <p className="text-sm text-zinc-500">Impact analysis locked</p>
+          </div>
+          {/* Overlay with PRO badge */}
+          <div className="absolute inset-0 flex items-center justify-center bg-[#0a0a0b]/40">
+            <span className="px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-full text-xs font-semibold text-violet-300">
+              🔒 PRO
+            </span>
+          </div>
+        </div>
+      ) : stats.keyAbsence ? (
         <div className="rounded-2xl bg-[#0a0a0b] border border-red-500/20 p-5">
           <div className="flex items-center gap-2 mb-3">
             <PremiumIcon name="alert" size="lg" className="text-red-400" />

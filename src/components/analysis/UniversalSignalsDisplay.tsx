@@ -172,10 +172,25 @@ export default function UniversalSignalsDisplay({
           </div>
           {/* Form rating bars (0-100) */}
           {(display.form.homeRating > 0 || display.form.awayRating > 0) && (
-            <div className="mt-3 pt-3 border-t border-white/[0.06] space-y-2">
-              <FormRatingBar team={homeTeam} rating={display.form.homeRating} />
-              <FormRatingBar team={awayTeam} rating={display.form.awayRating} />
-            </div>
+            canSeeExactNumbers ? (
+              <div className="mt-3 pt-3 border-t border-white/[0.06] space-y-2">
+                <FormRatingBar team={homeTeam} rating={display.form.homeRating} />
+                <FormRatingBar team={awayTeam} rating={display.form.awayRating} />
+              </div>
+            ) : (
+              <div className="relative mt-3 pt-3 border-t border-white/[0.06]">
+                <div className="blur-[6px] pointer-events-none select-none space-y-2">
+                  <FormRatingBar team={homeTeam} rating={72} />
+                  <FormRatingBar team={awayTeam} rating={58} />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                    <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+                    PRO
+                  </span>
+                </div>
+              </div>
+            )
           )}
         </SignalCard>
 
@@ -269,6 +284,7 @@ export default function UniversalSignalsDisplay({
           awayTeam={awayTeam}
           locale={locale}
           tooltip={t.availabilityTooltip}
+          canSeeExactNumbers={canSeeExactNumbers}
         />
       </div>
 
@@ -290,12 +306,14 @@ function ExpandableAvailability({
   awayTeam,
   locale = 'en',
   tooltip,
+  canSeeExactNumbers = true,
 }: {
   display: UniversalSignals['display'];
   homeTeam: string;
   awayTeam: string;
   locale?: 'en' | 'sr';
   tooltip?: string;
+  canSeeExactNumbers?: boolean;
 }) {
   const t = signalTranslations[locale];
   const [showAll, setShowAll] = useState(false);
@@ -374,25 +392,49 @@ function ExpandableAvailability({
                 )}
               </div>
               {homeInjuries.length > 0 ? (
-                <div className="space-y-1">
-                  {homeVisible.map((injury, idx) => {
-                    const severity = getSeverity(injury.reason || '');
-                    const desc = getInjuryDescription(injury);
-                    return (
-                      <div key={idx} className={`p-2 rounded-lg ${severity.bg} transition-colors`}>
-                        <div className="flex items-center gap-2">
-                          <span className={`w-1.5 h-1.5 rounded-full ${severity.dot} flex-shrink-0`} />
-                          <span className="text-[13px] font-medium text-white truncate flex-1">{injury.player}</span>
+                canSeeExactNumbers ? (
+                  <div className="space-y-1">
+                    {homeVisible.map((injury, idx) => {
+                      const severity = getSeverity(injury.reason || '');
+                      const desc = getInjuryDescription(injury);
+                      return (
+                        <div key={idx} className={`p-2 rounded-lg ${severity.bg} transition-colors`}>
+                          <div className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full ${severity.dot} flex-shrink-0`} />
+                            <span className="text-[13px] font-medium text-white truncate flex-1">{injury.player}</span>
+                          </div>
+                          {desc && (
+                            <p className={`text-[10px] ${severity.text} mt-0.5 ml-3.5 leading-tight`}>
+                              {desc}
+                            </p>
+                          )}
                         </div>
-                        {desc && (
-                          <p className={`text-[10px] ${severity.text} mt-0.5 ml-3.5 leading-tight`}>
-                            {desc}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div className="blur-[6px] pointer-events-none select-none space-y-1">
+                      {homeVisible.slice(0, 2).map((injury, idx) => {
+                        const severity = getSeverity(injury.reason || '');
+                        return (
+                          <div key={idx} className={`p-2 rounded-lg ${severity.bg}`}>
+                            <div className="flex items-center gap-2">
+                              <span className={`w-1.5 h-1.5 rounded-full ${severity.dot} flex-shrink-0`} />
+                              <span className="text-[13px] font-medium text-white">██████ ████</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+                        PRO
+                      </span>
+                    </div>
+                  </div>
+                )
               ) : (
                 <div className="py-3 text-center">
                   <span className="text-[10px] text-zinc-600">{locale === 'sr' ? 'Svi dostupni' : 'Full squad'}</span>
@@ -411,25 +453,49 @@ function ExpandableAvailability({
                 )}
               </div>
               {awayInjuries.length > 0 ? (
-                <div className="space-y-1">
-                  {awayVisible.map((injury, idx) => {
-                    const severity = getSeverity(injury.reason || '');
-                    const desc = getInjuryDescription(injury);
-                    return (
-                      <div key={idx} className={`p-2 rounded-lg ${severity.bg} transition-colors`}>
-                        <div className="flex items-center gap-2">
-                          <span className={`w-1.5 h-1.5 rounded-full ${severity.dot} flex-shrink-0`} />
-                          <span className="text-[13px] font-medium text-white truncate flex-1">{injury.player}</span>
+                canSeeExactNumbers ? (
+                  <div className="space-y-1">
+                    {awayVisible.map((injury, idx) => {
+                      const severity = getSeverity(injury.reason || '');
+                      const desc = getInjuryDescription(injury);
+                      return (
+                        <div key={idx} className={`p-2 rounded-lg ${severity.bg} transition-colors`}>
+                          <div className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full ${severity.dot} flex-shrink-0`} />
+                            <span className="text-[13px] font-medium text-white truncate flex-1">{injury.player}</span>
+                          </div>
+                          {desc && (
+                            <p className={`text-[10px] ${severity.text} mt-0.5 ml-3.5 leading-tight`}>
+                              {desc}
+                            </p>
+                          )}
                         </div>
-                        {desc && (
-                          <p className={`text-[10px] ${severity.text} mt-0.5 ml-3.5 leading-tight`}>
-                            {desc}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div className="blur-[6px] pointer-events-none select-none space-y-1">
+                      {awayVisible.slice(0, 2).map((injury, idx) => {
+                        const severity = getSeverity(injury.reason || '');
+                        return (
+                          <div key={idx} className={`p-2 rounded-lg ${severity.bg}`}>
+                            <div className="flex items-center gap-2">
+                              <span className={`w-1.5 h-1.5 rounded-full ${severity.dot} flex-shrink-0`} />
+                              <span className="text-[13px] font-medium text-white">██████ ████</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+                        PRO
+                      </span>
+                    </div>
+                  </div>
+                )
               ) : (
                 <div className="py-3 text-center">
                   <span className="text-[10px] text-zinc-600">{locale === 'sr' ? 'Svi dostupni' : 'Full squad'}</span>
@@ -439,7 +505,7 @@ function ExpandableAvailability({
           </div>
 
           {/* Show More / Less */}
-          {hasMore && (
+          {hasMore && canSeeExactNumbers && (
             <button
               onClick={() => setShowAll(!showAll)}
               className="w-full py-2.5 text-[11px] font-medium text-zinc-500 hover:text-zinc-300 transition-colors flex items-center justify-center gap-1.5 border-t border-white/[0.04]"

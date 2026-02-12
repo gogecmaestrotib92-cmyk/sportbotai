@@ -42,6 +42,10 @@ const translations = {
     exactEdge: 'See exactly where the market is wrong',
     // Discipline hook
     disciplineHook: 'Pro confirms when NOT to bet — avoiding false edges is part of long-term profitability.',
+    // No-edge free teaser (replaces discipline signal for free users)
+    analysisComplete: 'Analysis Complete',
+    seeFullVerdict: 'See the Full Verdict',
+    proRevealsWhether: 'Pro reveals whether this match has hidden value or is a pass',
     // Locked preview
     proWouldShow: 'Pro would show',
     exactProbDiff: 'Exact probability difference',
@@ -71,6 +75,10 @@ const translations = {
     exactEdge: 'Vidi tačno gde tržište greši',
     // Discipline hook
     disciplineHook: 'Pro potvrđuje kada NE kladiti se — izbegavanje lažnih prednosti je deo dugoročne profitabilnosti.',
+    // No-edge free teaser (replaces discipline signal for free users)
+    analysisComplete: 'Analiza Završena',
+    seeFullVerdict: 'Pogledaj Ceo Verdikt',
+    proRevealsWhether: 'Pro otkriva da li ovaj meč ima skrivenu vrednost ili treba preskočiti',
     // Locked preview
     proWouldShow: 'Pro bi pokazao',
     exactProbDiff: 'Tačnu razliku verovatnoća',
@@ -214,20 +222,16 @@ export function AIvsMarketHero({
             </>
           ) : (
             <>
-              {/* No edge - discipline signal with neutral violet (PRO color) */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 mb-3 rounded-full bg-violet-500/10 border border-violet-500/20">
-                <span className="text-violet-400 text-sm">⚖️</span>
-                <span className="text-violet-300 font-semibold text-sm">DISCIPLINE SIGNAL</span>
+              {/* No edge for free — show locked analysis teaser instead of discipline signal */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 mb-3 rounded-full bg-white/[0.04] border border-white/[0.08]">
+                <PremiumIcon name="lock" size="sm" />
+                <span className="text-zinc-400 font-semibold text-sm">{t.analysisComplete}</span>
               </div>
               <p className="text-xl font-bold text-white mb-2">
-                {t.modelAgrees}
+                {t.seeFullVerdict}
               </p>
               <p className="text-base text-zinc-400">
-                {t.fairlyPriced}
-              </p>
-              {/* Discipline hook for no-edge matches */}
-              <p className="text-sm text-zinc-500 mt-4 max-w-md mx-auto leading-relaxed">
-                {t.disciplineHook}
+                {t.proRevealsWhether}
               </p>
             </>
           )}

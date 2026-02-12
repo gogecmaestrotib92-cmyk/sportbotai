@@ -1424,6 +1424,8 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
               homeTeam={data.matchInfo.homeTeam}
               awayTeam={data.matchInfo.awayTeam}
               hasDraw={data.matchInfo.hasDraw}
+              canSeeExactNumbers={canSeeExactNumbers}
+              locale={locale}
               stats={{
                 h2h: data.viralStats.h2h ? {
                   headline: data.viralStats.h2h.headline || 'No H2H data',
@@ -1617,20 +1619,36 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
           );
         })()}
 
-        {/* Headline Quote (if available) */}
-        {data.headlines && data.headlines.length > 0 && (
-          <div className="mt-6 p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-violet-500/50 via-violet-500/20 to-transparent" />
-            <div className="pl-4">
-              <p className="text-base text-zinc-200 font-medium leading-relaxed italic">
-                &ldquo;{data.headlines[0].text}&rdquo;
-              </p>
-              <p className="text-[10px] text-zinc-600 mt-3 uppercase tracking-widest font-medium">
-                — SportBot {locale === 'sr' ? 'Analiza' : 'Analysis'}
-              </p>
+        {/* Headline Quote (if available) — Truncated for free users */}
+        {data.headlines && data.headlines.length > 0 && (() => {
+          const fullText = data.headlines[0].text;
+          // Free users see first sentence only
+          const firstSentence = fullText.split(/(?<=[.!?])\s+/)[0];
+          const isTruncated = !canSeeExactNumbers && fullText.length > firstSentence.length;
+          const displayText = isTruncated ? firstSentence : fullText;
+          
+          return (
+            <div className="mt-6 p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-violet-500/50 via-violet-500/20 to-transparent" />
+              <div className="pl-4">
+                <p className="text-base text-zinc-200 font-medium leading-relaxed italic">
+                  &ldquo;{displayText}{isTruncated ? '...' : ''}&rdquo;
+                </p>
+                {isTruncated && (
+                  <p className="text-xs text-violet-400/70 mt-2 flex items-center gap-1.5">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    {locale === 'sr' ? 'Puna analiza dostupna u Pro' : 'Full analysis available in Pro'}
+                  </p>
+                )}
+                <p className="text-[10px] text-zinc-600 mt-3 uppercase tracking-widest font-medium">
+                  — SportBot {locale === 'sr' ? 'Analiza' : 'Analysis'}
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Share Card */}
         <div className="mt-8">
