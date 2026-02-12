@@ -225,21 +225,29 @@ export default function PricingCards() {
         <span className="text-sm text-gray-400">Pay with:</span>
         <button
           onClick={() => setPaymentMethod('stripe')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${paymentMethod === 'stripe'
-            ? 'bg-accent text-black'
-            : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${paymentMethod === 'stripe'
+            ? 'bg-accent text-black shadow-lg shadow-accent/25 ring-2 ring-accent/50'
+            : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
             }`}
         >
-          💳 Card
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="1" y="4" width="22" height="16" rx="3" ry="3" />
+            <line x1="1" y1="10" x2="23" y2="10" />
+          </svg>
+          Card
         </button>
         <button
           onClick={() => setPaymentMethod('paypal')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${paymentMethod === 'paypal'
-            ? 'bg-[#0070ba] text-white'
-            : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${paymentMethod === 'paypal'
+            ? 'bg-[#0070ba] text-white shadow-lg shadow-[#0070ba]/25 ring-2 ring-[#0070ba]/50'
+            : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
             }`}
         >
-          <span className="font-bold">Pay</span><span className="font-bold text-[#003087]">Pal</span>
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 2.17A.786.786 0 0 1 5.72 1.5h6.467c2.672 0 4.573.92 5.178 3.233.387 1.48.057 2.9-.753 3.882-.886 1.073-2.37 1.746-4.217 1.91l-.08.008H9.86a.786.786 0 0 0-.776.668l-1.007 5.636-.262 1.463-.18 1.007a.641.641 0 0 1-.632.53h-.927z"/>
+            <path d="M18.27 7.468c-.063.425-.154.862-.282 1.322-1.073 3.833-4.233 5.16-8.417 5.16H8.163a1.024 1.024 0 0 0-1.012.866l-.86 5.455-.243 1.543a.54.54 0 0 0 .533.623h3.74c.44 0 .815-.32.884-.755l.036-.19.702-4.448.045-.245a.89.89 0 0 1 .879-.754h.557c3.603 0 6.424-1.463 7.247-5.695.345-1.768.166-3.244-.744-4.282a3.553 3.553 0 0 0-1.017-.84z" opacity="0.7"/>
+          </svg>
+          PayPal
         </button>
       </div>
       {/* Pricing cards grid - min-height prevents CLS during hydration */}
