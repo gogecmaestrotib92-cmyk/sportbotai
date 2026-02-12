@@ -619,10 +619,10 @@ function PremiumGate() {
   return (
     <div className="min-h-screen bg-bg relative w-full overflow-hidden py-12">
       {/* Ambient Background Glows */}
-      <div className="absolute top-0 left-1/4 w-[80vw] sm:w-[600px] h-[80vw] sm:h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute top-1/2 right-0 w-[60vw] sm:w-[500px] h-[60vw] sm:h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute top-0 left-[-20%] sm:left-1/4 w-[200px] sm:w-[600px] h-[200px] sm:h-[600px] bg-violet/5 rounded-full blur-[80px] sm:blur-[150px] pointer-events-none" />
+      <div className="absolute top-1/2 right-[-20%] sm:right-0 w-[150px] sm:w-[500px] h-[150px] sm:h-[500px] bg-accent/5 rounded-full blur-[80px] sm:blur-[150px] pointer-events-none" />
       
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 relative">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 relative z-10">
         <div className="card-glass p-8 text-center">
           <div className="text-6xl mb-6">🔒</div>
           <h1 className="text-3xl font-extrabold text-text-primary mb-4 tracking-tight">Market Alerts</h1>
@@ -670,9 +670,9 @@ function LoadingState() {
   return (
     <div className="min-h-screen bg-bg relative w-full overflow-hidden py-12">
       {/* Ambient Background Glows */}
-      <div className="absolute top-0 left-1/4 w-[80vw] sm:w-[600px] h-[80vw] sm:h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute top-0 left-[-20%] sm:left-1/4 w-[200px] sm:w-[600px] h-[200px] sm:h-[600px] bg-violet/5 rounded-full blur-[80px] sm:blur-[150px] pointer-events-none" />
       
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="animate-pulse space-y-6">
           <div className="h-20 card-glass rounded-xl"></div>
           <div className="grid lg:grid-cols-2 gap-8">
@@ -801,11 +801,11 @@ export default function MarketAlertsPage() {
 
   return (
     <div className="min-h-screen bg-bg relative w-full overflow-hidden py-8 sm:py-10">
-      {/* Ambient Background Glows */}
-      <div className="absolute top-0 left-1/4 w-[80vw] sm:w-[600px] h-[80vw] sm:h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute top-1/2 right-0 w-[60vw] sm:w-[500px] h-[60vw] sm:h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
+      {/* Ambient Background Glows - Reduced size and blur for mobile to prevent layout shift */}
+      <div className="absolute top-0 left-[-20%] sm:left-1/4 w-[200px] sm:w-[600px] h-[200px] sm:h-[600px] bg-violet/5 rounded-full blur-[80px] sm:blur-[150px] pointer-events-none" />
+      <div className="absolute top-1/2 right-[-20%] sm:right-0 w-[150px] sm:w-[500px] h-[150px] sm:h-[500px] bg-accent/5 rounded-full blur-[80px] sm:blur-[150px] pointer-events-none" />
       
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Upgrade Banner for non-premium users */}
         {!isPremium && (
           <div className="mb-6 card-glass border-violet/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 overflow-hidden">
