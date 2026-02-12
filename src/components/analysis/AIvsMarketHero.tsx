@@ -90,6 +90,7 @@ interface AIvsMarketHeroProps {
   isAuthenticated: boolean;
   canSeeExactNumbers: boolean; // true only for PRO
   locale?: Locale;
+  sport?: string;
   // O/U analysis data (optional)
   overUnder?: { line: number; overOdds?: number; underOdds?: number } | null;
   expectedScores?: { home: number; away: number } | null;
@@ -103,6 +104,7 @@ export function AIvsMarketHero({
   isAuthenticated,
   canSeeExactNumbers,
   locale = 'en',
+  sport = '',
   overUnder,
   expectedScores,
 }: AIvsMarketHeroProps) {
@@ -292,6 +294,7 @@ export function AIvsMarketHero({
         overUnder={overUnder}
         expectedScores={expectedScores}
         locale={locale}
+        sport={sport}
       />
     </div>
   );
@@ -317,6 +320,7 @@ interface HeroContentProps {
   overUnder?: { line: number; overOdds?: number; underOdds?: number } | null;
   expectedScores?: { home: number; away: number } | null;
   locale?: Locale;
+  sport?: string;
 }
 
 function HeroContent({
@@ -335,6 +339,7 @@ function HeroContent({
   overUnder,
   expectedScores,
   locale = 'en',
+  sport = '',
 }: HeroContentProps) {
   // Use unified design system - emerald for ALL edges, intensity via opacity
   const edgeStyle = getEdgeStyle(edgeMagnitude, true);
@@ -471,7 +476,12 @@ function HeroContent({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5-3L16.5 18m0 0L12 13.5m4.5 4.5V6" />
                 </svg>
                 <span className="text-xs text-zinc-400 uppercase tracking-wider font-medium">
-                  {locale === 'sr' ? 'Ukupni Golovi' : 'Total Goals'}
+                  {(() => {
+                    const s = sport.toLowerCase();
+                    const isPoints = s.includes('nba') || s.includes('basketball') || s.includes('nfl') || s.includes('football') || s.includes('nhl') || s.includes('hockey');
+                    if (locale === 'sr') return isPoints ? 'Ukupni Poeni' : 'Ukupni Golovi';
+                    return isPoints ? 'Total Points' : 'Total Goals';
+                  })()}
                 </span>
               </div>
               {isSignificant && (
@@ -488,7 +498,7 @@ function HeroContent({
               <span className="text-zinc-600">vs</span>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-xs text-zinc-500">Line:</span>
-                <span className="text-sm font-medium text-zinc-300 tabular-nums">{line}</span>
+                <span className="text-sm font-medium text-zinc-300 tabular-nums">{Number.isInteger(line) ? line : line.toFixed(1)}</span>
               </div>
               <span className="text-zinc-600">→</span>
               <span className={`text-sm font-bold ${isSignificant ? 'text-emerald-400' : 'text-zinc-300'}`}>

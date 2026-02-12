@@ -50,3 +50,4 @@ Thumbs.db
 /src/generated/prisma
 
 .env*.local
+.env.local.vercel
