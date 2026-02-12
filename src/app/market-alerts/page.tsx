@@ -221,8 +221,7 @@ function EdgeStrengthBar({ percent, alertLevel, noBorder = false }: { percent: n
     <div className={`flex items-center justify-between gap-2 flex-1 min-w-0 ${noBorder ? '' : 'pt-2 border-t border-white/5'}`}>
       {/* Edge Strength */}
       <div className="flex items-center gap-1.5 min-w-0">
-        <span className="text-[10px] text-text-muted uppercase shrink-0">Strength</span>
-        <div className="flex gap-0.5 w-12 sm:w-[60px] shrink-0">
+        <div className="flex gap-0.5 w-10 sm:w-[60px] shrink-0">
           {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className={`h-1 flex-1 rounded-full ${i <= bars ? barColor : 'bg-text-muted/20'}`} />
           ))}
@@ -230,8 +229,7 @@ function EdgeStrengthBar({ percent, alertLevel, noBorder = false }: { percent: n
         <span className="text-[10px] text-emerald-400 truncate">{label}</span>
       </div>
       {/* Confidence */}
-      <div className="flex items-center gap-1.5 shrink-0">
-        <span className="text-[10px] text-text-muted uppercase hidden sm:inline">Conf</span>
+      <div className="flex items-center gap-1 shrink-0">
         <span className={`text-[10px] font-medium ${confidence.color}`}>{confidence.label}</span>
       </div>
     </div>
@@ -317,39 +315,36 @@ function EdgeMatchCard({ alert }: { alert: MarketAlert }) {
       </div>
       
       {/* Compact odds row - responsive for mobile */}
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs mb-2.5 bg-emerald-500/5 rounded px-2 py-1.5 overflow-hidden">
-        <div className="flex items-center gap-1.5">
-          <span className="text-text-muted">Odds</span>
-          <span className="font-mono text-text-secondary">
-            {edgeOutcome === 'home' ? alert.homeOdds.toFixed(2) : 
-             edgeOutcome === 'away' ? alert.awayOdds.toFixed(2) : 
-             alert.drawOdds?.toFixed(2)}
-          </span>
-          <span className="text-text-muted/50">→</span>
-          <span className="text-text-muted">Model</span>
-          <span className="font-mono text-emerald-400 font-medium">
-            {(edgeOutcome === 'home' ? alert.modelHomeProb : 
-             edgeOutcome === 'away' ? alert.modelAwayProb : 
-             alert.modelDrawProb)?.toFixed(1)}%
-          </span>
-        </div>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] mb-2.5 bg-emerald-500/5 rounded px-2 py-1.5 overflow-hidden">
+        <span className="text-text-muted">Odds</span>
+        <span className="font-mono text-text-secondary">
+          {edgeOutcome === 'home' ? alert.homeOdds.toFixed(2) : 
+           edgeOutcome === 'away' ? alert.awayOdds.toFixed(2) : 
+           alert.drawOdds?.toFixed(2)}
+        </span>
+        <span className="text-text-muted/50">→</span>
+        <span className="text-text-muted">Model</span>
+        <span className="font-mono text-emerald-400 font-medium">
+          {(edgeOutcome === 'home' ? alert.modelHomeProb : 
+           edgeOutcome === 'away' ? alert.modelAwayProb : 
+           alert.modelDrawProb)?.toFixed(1)}%
+        </span>
         {alert.drawOdds && (
-          <div className="flex items-center gap-1.5">
-            <span className="text-text-muted/30 hidden sm:inline">|</span>
+          <>
             <span className="text-text-muted">Draw</span>
             <span className="font-mono text-text-muted">{alert.drawOdds.toFixed(2)}</span>
-          </div>
+          </>
         )}
       </div>
       
-      {/* Inline strength indicator + View Analysis link */}
+      {/* Strength indicator + View Analysis link */}
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
         <EdgeStrengthBar percent={edgePercent} alertLevel={alert.alertLevel} noBorder />
         <Link 
           href={`/match/${alert.matchId}`}
-          className="text-[10px] text-violet hover:text-violet-light transition-colors flex items-center gap-1 shrink-0"
+          className="text-[10px] text-violet hover:text-violet-light transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap"
         >
-          Full Analysis
+          <span className="hidden sm:inline">Full </span>Analysis
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
