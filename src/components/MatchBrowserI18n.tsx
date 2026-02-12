@@ -176,14 +176,14 @@ export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatch
   // When sport changes, select first league of that sport (only if current league isn't valid)
   useEffect(() => {
     const sport = SPORTS.find(s => s.id === selectedSport);
-    if (sport && sport.leagues.length > 0 && !initialLeague) {
+    if (sport && sport.leagues.length > 0) {
       // Only reset if current league doesn't belong to the new sport
       const leagueBelongsToSport = sport.leagues.some(l => l.key === selectedLeague);
       if (!leagueBelongsToSport) {
         setSelectedLeague(sport.leagues[0].key);
       }
     }
-  }, [selectedSport, initialLeague, selectedLeague]);
+  }, [selectedSport, selectedLeague, SPORTS]); // Removed initialLeague dependency as it was blocking updates
 
   // Pre-fetch match counts for ALL leagues (for badges and trending)
   useEffect(() => {
