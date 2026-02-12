@@ -417,7 +417,7 @@ export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatch
             <button
               onClick={() => setViewMode('ai-picks')}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                viewMode handleSportChange
+                viewMode === 'ai-picks'
                   ? 'bg-accent text-bg-primary shadow-sm'
                   : 'text-text-muted hover:text-white'
               }`}
