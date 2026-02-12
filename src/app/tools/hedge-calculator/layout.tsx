@@ -5,7 +5,7 @@ export const metadata: Metadata = {
     description: 'Free hedge bet calculator for sports betting. Calculate how much to hedge on NFL, NBA, MLB bets to lock in guaranteed profit. Works with parlays and futures.',
     keywords: ['hedge calculator', 'hedge bet calculator', 'hedging calculator', 'betting hedge calculator', 'lock in profit calculator', 'parlay hedge calculator', 'futures hedge calculator', 'arbitrage calculator'],
     openGraph: {
-        title: 'Free Hedge Bet Calculator | SportBot AI',
+        title: 'Free Hedge Bet Calculator',
         description: 'Calculate the optimal hedge bet to lock in guaranteed profit on your open bets.',
         type: 'website',
         url: 'https://www.sportbotai.com/tools/hedge-calculator',

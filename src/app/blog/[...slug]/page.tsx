@@ -24,7 +24,7 @@ const AUTHOR = {
   name: 'Stefan Mitrovic',
   url: `${SITE_CONFIG.url}/about`,
   jobTitle: 'Sports Analyst & Editor',
-  photo: 'https://www.upwork.com/profile-portraits/c1QVpOOlRVMXCujp1syLSScOWIl0cbOsxFl4HtH9scBn6y1CaZPeWLI5v_eg78VPCd',
+  photo: '/images/stefan-mitrovic.png',
   sameAs: [
     'https://www.upwork.com/freelancers/~017b8c67c94029389f',
     'https://www.linkedin.com/company/automateed/',
@@ -87,7 +87,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
   if (!data || !('post' in data) || !data.post) {
     return {
-      title: 'Post Not Found | SportBot AI',
+      title: 'Post Not Found',
     };
   }
 
@@ -453,7 +453,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {/* Article Content - Custom Blog Styling with auto-linked team names */}
               <article
                 className="blog-content bg-white rounded-2xl shadow-lg p-8 md:p-12 border border-slate-200"
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                dangerouslySetInnerHTML={{ __html: post.content.replace(/<img[^>]*src=["']\[IMAGE:[^\]]*\]["'][^>]*\/?>/gi, '').replace(/\[IMAGE:[^\]]*\]/g, '') }}
                 suppressHydrationWarning
               />
 

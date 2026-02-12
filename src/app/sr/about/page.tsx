@@ -7,10 +7,10 @@ import Link from 'next/link';
 import { SITE_CONFIG } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'O Nama - Upoznajte Tim | SportBot AI',
+  title: 'O Nama - Upoznajte Tim',
   description: 'Saznajte više o SportBot AI i našem timu. Upoznajte Stefana Mitrovića, sportskog analitičara i urednika, i otkrijte kako kombinujemo AI tehnologiju sa stručnom sportskom analizom.',
   openGraph: {
-    title: 'O Nama | SportBot AI',
+    title: 'O Nama',
     description: 'Upoznajte tim iza SportBot AI - kombinujemo AI tehnologiju sa stručnom sportskom analizom.',
     url: `${SITE_CONFIG.url}/sr/about`,
   },
@@ -29,7 +29,7 @@ const TEAM = {
   stefan: {
     name: 'Stefan Mitrović',
     role: 'Sportski Analitičar i Urednik',
-    photo: 'https://www.upwork.com/profile-portraits/c1QVpOOlRVMXCujp1syLSScOWIl0cbOsxFl4HtH9scBn6y1CaZPeWLI5v_eg78VPCd',
+    photo: '/images/stefan-mitrovic.png',
     bio: 'Stefan je strastven ljubitelj sporta, pisac i analitičar sa talentom za kreiranje inovativnih aplikacija. Sa godinama iskustva u analizi sportskih podataka i trendova, donosi jedinstvenu kombinaciju tehničke ekspertize i sportskog znanja u SportBot AI. Njegov kreativan pristup sportskoj analitici pomaže u isporuci uvida koji su bitni.',
     skills: ['Sportska Analiza', 'Analitika Podataka', 'Strategija Sadržaja', 'Razvoj Aplikacija'],
     social: {

@@ -10,6 +10,12 @@ import { META } from '@/lib/seo';
 export const metadata: Metadata = {
   title: META.terms.title,
   description: META.terms.description,
+  openGraph: {
+    title: META.terms.title,
+    description: META.terms.description,
+    url: '/terms',
+    type: 'website',
+  },
   alternates: {
     canonical: '/terms',
     languages: {

@@ -5,7 +5,7 @@ export const metadata: Metadata = {
     description: 'Free odds converter for sports betting. Convert American odds to decimal, decimal to fractional, and see implied probability. NFL, NBA, MLB odds conversion chart included.',
     keywords: ['odds converter', 'betting odds calculator', 'american to decimal odds', 'decimal to american odds', 'fractional odds converter', 'implied probability calculator', 'sports betting odds calculator', 'odds conversion chart'],
     openGraph: {
-        title: 'Free Odds Converter - Betting Odds Calculator | SportBot AI',
+        title: 'Free Odds Converter - Betting Odds Calculator',
         description: 'Convert between American, Decimal, and Fractional betting odds instantly. See implied probability for any line.',
         type: 'website',
         url: 'https://www.sportbotai.com/tools/odds-converter',

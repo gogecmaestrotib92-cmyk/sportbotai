@@ -7,11 +7,11 @@ import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'AI NHL Predikcije i Kvote Danas | SportBot AI',
+    title: 'AI NHL Predikcije i Kvote Danas',
     description: 'Besplatne AI hokej predikcije za današnje NHL utakmice. AI tipovi sa analizom verovatnoće, puck linije i kvote. Data-driven NHL predikcije.',
     keywords: ['ai nhl predikcije', 'ai hokej predikcije', 'nhl ai tipovi', 'nhl kvote', 'nhl kladjenje', 'ai sportske predikcije'],
     openGraph: {
-        title: 'NHL Kvote Danas | SportBot AI',
+        title: 'NHL Kvote Danas',
         description: 'Današnje NHL kvote za klađenje sa AI analizom.',
         url: 'https://sportbotai.com/sr/nhl',
     },

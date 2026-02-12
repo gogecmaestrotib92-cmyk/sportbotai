@@ -20,7 +20,7 @@ export default function PricingTeaserI18n({ t, locale }: PricingTeaserI18nProps)
   const [isYearlyBilling, setIsYearlyBilling] = useState(false);
 
   const pricingHref = locale === 'sr' ? '/sr/pricing' : '/pricing';
-  const analyzerHref = locale === 'sr' ? '/sr/analyzer' : '/analyzer';
+  const analyzerHref = locale === 'sr' ? '/sr/matches' : '/matches';
 
   return (
     <section className="bg-bg section-container relative overflow-hidden">

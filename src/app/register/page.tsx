@@ -104,7 +104,7 @@ function RegisterForm() {
         // Registration succeeded but sign-in failed
         router.push('/login');
       } else {
-        router.push('/analyzer');
+        router.push('/matches');
         router.refresh();
       }
     } catch {
@@ -116,7 +116,7 @@ function RegisterForm() {
 
   const handleOAuthSignIn = (provider: string) => {
     signIn(provider, { 
-      callbackUrl: '/analyzer',
+      callbackUrl: '/matches',
       redirect: true 
     });
   };

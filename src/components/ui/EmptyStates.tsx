@@ -78,7 +78,7 @@ export function NoAnalysisHistory() {
       }
       title="No Analysis Yet"
       description="You haven't analyzed any matches yet. Start by analyzing your first match!"
-      action={{ label: 'Analyze a Match', href: '/analyzer' }}
+      action={{ label: 'Analyze a Match', href: '/matches' }}
     />
   );
 }
@@ -93,7 +93,7 @@ export function NoFavorites() {
       }
       title="No Favorites"
       description="Save your favorite teams to get quick access to their matches."
-      action={{ label: 'Browse Matches', href: '/analyzer' }}
+      action={{ label: 'Browse Matches', href: '/matches' }}
     />
   );
 }

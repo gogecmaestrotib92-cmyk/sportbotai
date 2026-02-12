@@ -9,7 +9,7 @@ import Image from 'next/image';
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/analyzer';
+  const callbackUrl = searchParams.get('callbackUrl') || '/matches';
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,7 +45,7 @@ function LoginForm() {
   const handleOAuthSignIn = (provider: string) => {
     // Use redirect: true and let NextAuth handle it via redirect callback
     signIn(provider, { 
-      callbackUrl: '/analyzer',
+      callbackUrl: '/matches',
       redirect: true 
     });
   };

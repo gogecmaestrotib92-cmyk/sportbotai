@@ -10,11 +10,11 @@ import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'AI Basketball Predictions & NBA Odds Today | SportBot AI',
+    title: 'AI Basketball Predictions & NBA Odds Today',
     description: 'Free AI basketball predictions for today\'s NBA games. Get AI-powered NBA picks, point spreads, moneylines, and totals with probability analysis. Data-driven NBA betting predictions you can trust.',
     keywords: ['ai basketball predictions', 'ai nba predictions', 'nba ai picks', 'nba odds', 'nba betting odds', 'nba lines', 'nba spreads', 'nba moneyline', 'basketball betting', 'ai sports predictions', 'nba predictions today', 'basketball odds today'],
     openGraph: {
-        title: 'AI Basketball Predictions & NBA Odds Today | SportBot AI',
+        title: 'AI Basketball Predictions & NBA Odds Today',
         description: 'Free AI basketball predictions for NBA games. AI-powered picks with probability analysis.',
         url: 'https://www.sportbotai.com/nba',
         type: 'website',

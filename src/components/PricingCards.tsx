@@ -190,7 +190,7 @@ export default function PricingCards() {
   // Handle free plan
   const handleFreePlan = () => {
     if (session) {
-      router.push('/analyzer');
+      router.push('/matches');
     } else {
       router.push('/register');
     }

@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {
-  title: 'Welcome to Your New Plan! | SportBot AI',
+  title: 'Welcome to Your New Plan!',
   description: 'Thank you for upgrading your SportBot AI subscription.',
 };
 

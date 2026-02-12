@@ -409,7 +409,7 @@ export default function PainQuantification({ locale = 'en' }: PainQuantification
 
               {/* CTA */}
               <Link
-                href={locale === 'sr' ? '/sr/analyzer' : '/analyzer'}
+                href={locale === 'sr' ? '/sr/matches' : '/matches'}
                 className="btn-primary block w-full py-2.5 text-center font-semibold text-xs mt-auto glow-accent-strong"
               >
                 {locale === 'sr' ? 'Probaj Besplatno' : 'Try It Free'}
@@ -691,7 +691,7 @@ export default function PainQuantification({ locale = 'en' }: PainQuantification
               {/* CTA */}
               <div className="mt-auto">
                 <Link
-                  href={locale === 'sr' ? '/sr/analyzer' : '/analyzer'}
+                  href={locale === 'sr' ? '/sr/matches' : '/matches'}
                   className="btn-primary block w-full py-3.5 text-center font-semibold text-base glow-accent-strong"
                 >
                   {t.cta}

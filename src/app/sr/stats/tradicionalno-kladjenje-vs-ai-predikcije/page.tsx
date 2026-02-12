@@ -11,7 +11,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Tradicionalno Klađenje vs AI Predikcije 2026: Statistika Tržišta | SportBot AI',
+  title: 'Tradicionalno Klađenje vs AI Predikcije 2026: Statistika Tržišta',
   description: 'Da li AI klađenje može nadmašiti tradicionalne metode? Uporedite ljudske predikcije sa machine learning modelima u sportskom prognoziranju. Tačnost, ROI i budućnost AI u sportskom klađenju.',
   keywords: 'AI klađenje, tradicionalno klađenje vs AI predikcije, ljudske predikcije, sportsko prognoziranje, machine learning modeli, strategije klađenja, AI u sportskom klađenju, sportska analitika, fudbalsko klađenje',
   openGraph: {

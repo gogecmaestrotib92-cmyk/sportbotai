@@ -9,8 +9,15 @@ import ContactForm from '@/components/ContactForm';
 import { SITE_CONFIG } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'Kontaktirajte Nas | SportBot AI',
+  title: 'Kontaktirajte Nas',
   description: 'Stupite u kontakt sa SportBot AI timom. Pitanja, povratne informacije ili poslovni upiti - rado ćemo vas čuti.',
+  openGraph: {
+    title: 'Kontaktirajte Nas',
+    description: 'Stupite u kontakt sa SportBot AI timom.',
+    url: '/sr/contact',
+    type: 'website',
+    locale: 'sr_RS',
+  },
   alternates: {
     canonical: `${SITE_CONFIG.url}/sr/contact`,
     languages: {

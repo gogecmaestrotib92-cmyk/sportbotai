@@ -7,7 +7,7 @@ import { SITE_CONFIG } from '@/lib/seo';
 // Revalidate every hour
 export const revalidate = 3600;
 
-const pageTitle = 'Featured Tools | Sports Analytics Reviews | SportBot AI';
+const pageTitle = 'Featured Tools | Sports Analytics Reviews';
 const pageDescription = 'Independently reviewed sports analytics tools and platforms. Each has been tested for accuracy, usability, and value by our team.';
 const pageUrl = `${SITE_CONFIG.url}/partners`;
 

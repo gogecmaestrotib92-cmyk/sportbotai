@@ -12,11 +12,11 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
 export const metadata: Metadata = {
-  title: 'Tržišni Alarmi | SportBot AI - Premium Analitika',
+  title: 'Tržišni Alarmi - Premium Analitika',
   description: 'Premium tržišni alarmi sa vrednosnim ivicama i steam pokretima. AI analiza sportskih kvota i otkrivanje vrednosti u realnom vremenu.',
   keywords: ['tržišni alarmi', 'vrednosne ivice', 'steam pokreti', 'sportske kvote', 'AI analiza', 'premium'],
   openGraph: {
-    title: 'Tržišni Alarmi | SportBot AI',
+    title: 'Tržišni Alarmi',
     description: 'Premium tržišni alarmi sa AI analizom sportskih kvota.',
     url: `${SITE_CONFIG.url}/sr/market-alerts`,
     siteName: SITE_CONFIG.name,
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Tržišni Alarmi | SportBot AI',
+    title: 'Tržišni Alarmi',
     description: 'Premium tržišni alarmi sa AI analizom sportskih kvota.',
     site: SITE_CONFIG.twitter,
   },

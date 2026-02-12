@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Free Betting Tools & Calculators | SportBot AI',
+    title: 'Free Betting Tools & Calculators',
     description: 'Free sports betting tools: odds converter, hedge calculator, parlay calculator, and more. Professional-grade betting calculators for serious bettors.',
 };
 

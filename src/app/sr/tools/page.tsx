@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Besplatni Kalkulatori za Klađenje | SportBot AI',
+    title: 'Besplatni Kalkulatori za Klađenje',
     description: 'Besplatni alati za sportsko klađenje: konvertor kvota, hedž kalkulator, parlay kalkulator i još. Profesionalni kalkulatori za klađenje.',
     alternates: {
         canonical: 'https://sportbotai.com/sr/tools',

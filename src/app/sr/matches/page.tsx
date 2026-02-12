@@ -45,7 +45,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: 'summary_large_image',
-      title: 'Pregledaj Mečeve | SportBot AI',
+      title: 'Pregledaj Mečeve',
       description: 'Pregledaj sve predstojeće sportske mečeve sa AI analizom.',
       site: SITE_CONFIG.twitter,
     },

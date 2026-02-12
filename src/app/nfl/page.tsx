@@ -9,11 +9,11 @@ import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'AI NFL Predictions & Football Odds Today | SportBot AI',
+    title: 'AI NFL Predictions & Football Odds Today',
     description: 'Free AI NFL predictions for this week\'s games. Get AI-powered football picks, point spreads, moneylines with probability analysis. Data-driven NFL betting predictions and Super Bowl futures.',
     keywords: ['ai nfl predictions', 'ai football predictions', 'nfl ai picks', 'nfl odds', 'nfl betting odds', 'nfl lines', 'nfl spreads', 'ai sports predictions', 'nfl predictions today', 'football betting', 'super bowl odds'],
     openGraph: {
-        title: 'AI NFL Predictions & Football Odds Today | SportBot AI',
+        title: 'AI NFL Predictions & Football Odds Today',
         description: 'Free AI NFL predictions with probability analysis. Data-driven football picks.',
         url: 'https://www.sportbotai.com/nfl',
         type: 'website',

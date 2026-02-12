@@ -8,8 +8,15 @@ import { Metadata } from 'next';
 import { SITE_CONFIG } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'Politika Privatnosti | SportBot AI',
+  title: 'Politika Privatnosti',
   description: 'Politika privatnosti za SportBot AI platformu. Saznajte kako prikupljamo, koristimo i štitimo vaše podatke.',
+  openGraph: {
+    title: 'Politika Privatnosti',
+    description: 'Politika privatnosti za SportBot AI. Saznajte kako prikupljamo i štitimo vaše podatke.',
+    url: '/sr/privacy',
+    type: 'website',
+    locale: 'sr_RS',
+  },
   alternates: {
     canonical: `${SITE_CONFIG.url}/sr/privacy`,
     languages: {

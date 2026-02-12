@@ -34,7 +34,7 @@ function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   // Define available commands
   const commands: CommandItem[] = [
     // Navigation
-    { id: 'analyzer', label: 'Analyze a Match', icon: '🔍', action: () => router.push('/analyzer'), shortcut: '⌘A', category: 'Navigate' },
+    { id: 'analyzer', label: 'Analyze a Match', icon: '🔍', action: () => router.push('/matches'), shortcut: '⌘A', category: 'Navigate' },
     { id: 'home', label: 'Go to Home', icon: '🏠', action: () => router.push('/'), category: 'Navigate' },
     { id: 'pricing', label: 'View Pricing', icon: '💰', action: () => router.push('/pricing'), category: 'Navigate' },
     { id: 'history', label: 'View History', icon: '📜', action: () => router.push('/history'), category: 'Navigate' },

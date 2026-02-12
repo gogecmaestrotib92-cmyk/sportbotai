@@ -21,7 +21,7 @@ const AUTHOR = {
   name: 'Stefan Mitrovic',
   url: `${SITE_CONFIG.url}/about`,
   jobTitle: 'Sports Analyst & Editor',
-  photo: 'https://www.upwork.com/profile-portraits/c1QVpOOlRVMXCujp1syLSScOWIl0cbOsxFl4HtH9scBn6y1CaZPeWLI5v_eg78VPCd',
+  photo: '/images/stefan-mitrovic.png',
   sameAs: [
     'https://www.upwork.com/freelancers/~017b8c67c94029389f',
     'https://www.linkedin.com/company/automateed/',
@@ -82,7 +82,7 @@ export async function generateMetadata({ params }: NewsArticlePageProps): Promis
 
   if (!data) {
     return {
-      title: 'Article Not Found | SportBot AI News',
+      title: 'Article Not Found',
     };
   }
 
@@ -121,7 +121,7 @@ export async function generateMetadata({ params }: NewsArticlePageProps): Promis
   };
 
   return {
-    title: post.metaTitle || `${displayTitle} | SportBot AI News`,
+    title: post.metaTitle || displayTitle,
     description: post.metaDescription || post.excerpt,
     keywords: post.tags.join(', '),
     authors: [{ name: AUTHOR.name, url: AUTHOR.url }],

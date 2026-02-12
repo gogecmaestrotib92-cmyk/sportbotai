@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   description: 'Četiraj sa AI o bilo kom sportu. Dobij inteligenciju u realnom vremenu, analizu mečeva i uvide. GPT-4 + Perplexity za najnovije sportske podatke.',
   keywords: ['AI sportski chat', 'sportska inteligencija', 'AI analiza', 'sportski podaci uživo', 'GPT sportovi'],
   openGraph: {
-    title: 'AI Sportski Desk | SportBot AI',
+    title: 'AI Sportski Desk',
     description: 'Četiraj sa AI o bilo kom sportu. Dobij inteligenciju u realnom vremenu.',
     url: `${SITE_CONFIG.url}/sr/ai-desk`,
     siteName: SITE_CONFIG.name,
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI Sportski Desk | SportBot AI',
+    title: 'AI Sportski Desk',
     description: 'Četiraj sa AI o bilo kom sportu. Dobij inteligenciju u realnom vremenu.',
     site: SITE_CONFIG.twitter,
   },

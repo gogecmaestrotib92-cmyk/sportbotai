@@ -7,10 +7,10 @@ import Link from 'next/link';
 import { SITE_CONFIG } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'About Us - Meet the Team | SportBot AI',
+  title: 'About Us - Meet the Team',
   description: 'Learn about SportBot AI and our team. Meet Stefan Mitrovic, sports analyst and editor, and discover how we combine AI technology with expert sports analysis.',
   openGraph: {
-    title: 'About Us | SportBot AI',
+    title: 'About Us',
     description: 'Meet the team behind SportBot AI - combining AI technology with expert sports analysis.',
     url: `${SITE_CONFIG.url}/about`,
   },
@@ -29,7 +29,7 @@ const TEAM = {
   stefan: {
     name: 'Stefan Mitrovic',
     role: 'Sports Analyst & Editor',
-    photo: 'https://www.upwork.com/profile-portraits/c1QVpOOlRVMXCujp1syLSScOWIl0cbOsxFl4HtH9scBn6y1CaZPeWLI5v_eg78VPCd',
+    photo: '/images/stefan-mitrovic.png',
     bio: 'Stefan is a passionate sports enthusiast, writer, and analyst with a knack for creating innovative applications. With years of experience analyzing sports data and trends, he brings a unique blend of technical expertise and sports knowledge to SportBot AI. His creative approach to sports analytics helps deliver insights that matter.',
     skills: ['Sports Analysis', 'Data Analytics', 'Content Strategy', 'App Development'],
     social: {

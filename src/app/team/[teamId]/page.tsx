@@ -20,7 +20,7 @@ import {
   ChevronRight,
   Loader2
 } from 'lucide-react';
-import { TeamProfileData } from '@/app/api/team/[teamId]/route';
+import { TeamProfileData } from '@/types';
 import FavoriteButton from '@/components/FavoriteButton';
 
 interface PageProps {

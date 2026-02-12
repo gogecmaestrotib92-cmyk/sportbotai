@@ -11,6 +11,12 @@ import { SITE_CONFIG } from '@/lib/seo';
 export const metadata: Metadata = {
   title: 'Contact Us',
   description: 'Get in touch with SportBot AI. Questions, feedback, or partnership inquiries - we\'d love to hear from you.',
+  openGraph: {
+    title: 'Contact Us',
+    description: 'Get in touch with SportBot AI. Questions, feedback, or partnership inquiries.',
+    url: '/contact',
+    type: 'website',
+  },
   alternates: {
     canonical: '/contact',
     languages: {

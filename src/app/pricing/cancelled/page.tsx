@@ -8,7 +8,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Checkout Cancelled | SportBot AI',
+  title: 'Checkout Cancelled',
   description: 'Your checkout was cancelled. No charges were made.',
 };
 

@@ -11,7 +11,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Traditional Betting vs AI Predictions 2026: Market Statistics & Comparison | SportBot AI',
+  title: 'Traditional Betting vs AI Predictions 2026: Market Statistics & Comparison',
   description: 'Can AI betting outperform traditional methods? Compare human predictions vs machine learning models in sports forecasting. Accuracy, ROI, and the future of AI in sports betting.',
   keywords: 'AI betting, traditional betting vs AI predictions, human predictions, sports forecasting, machine learning models, betting strategies, AI in sports betting, sports analytics, football betting, deep learning, prediction models',
   openGraph: {

@@ -9,11 +9,11 @@ import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'AI Hockey Predictions & NHL Odds Today | SportBot AI',
+    title: 'AI Hockey Predictions & NHL Odds Today',
     description: 'Free AI hockey predictions for today\'s NHL games. Get AI-powered NHL picks, puck lines, moneylines with probability analysis. Data-driven hockey betting predictions and Stanley Cup futures.',
     keywords: ['ai hockey predictions', 'ai nhl predictions', 'nhl ai picks', 'nhl odds', 'nhl betting odds', 'hockey odds', 'nhl puck line', 'ai sports predictions', 'nhl predictions today', 'stanley cup odds'],
     openGraph: {
-        title: 'AI Hockey Predictions & NHL Odds Today | SportBot AI',
+        title: 'AI Hockey Predictions & NHL Odds Today',
         description: 'Free AI hockey predictions with probability analysis. Data-driven NHL picks.',
         url: 'https://www.sportbotai.com/nhl',
         type: 'website',

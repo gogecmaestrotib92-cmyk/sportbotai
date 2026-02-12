@@ -9,11 +9,11 @@ import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'AI NBA Predikcije i Kvote Danas | SportBot AI',
+    title: 'AI NBA Predikcije i Kvote Danas',
     description: 'Besplatne AI košarkaške predikcije za današnje NBA utakmice. AI tipovi sa analizom verovatnoće, spredovi i kvote. Data-driven NBA predikcije.',
     keywords: ['ai nba predikcije', 'ai kosarka predikcije', 'nba ai tipovi', 'nba kvote', 'nba kladjenje', 'nba linije', 'ai sportske predikcije'],
     openGraph: {
-        title: 'NBA Kvote Danas - Linije za Klađenje | SportBot AI',
+        title: 'NBA Kvote Danas - Linije za Klađenje',
         description: 'Današnje NBA kvote za klađenje sa AI analizom.',
         url: 'https://sportbotai.com/sr/nba',
         type: 'website',

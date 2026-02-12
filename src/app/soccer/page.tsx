@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     description: 'AI-powered soccer predictions and live odds for Premier League, La Liga, Bundesliga, Champions League. Data-driven football tips with betting lines and probability analysis.',
     keywords: ['ai soccer predictions', 'ai picks soccer', 'soccer odds', 'football predictions', 'soccer tips', 'premier league odds', 'premier league predictions', 'champions league tips', 'la liga odds', 'bundesliga odds', 'football betting tips', 'soccer betting odds', 'ai football analysis', 'soccer match predictions'],
     openGraph: {
-        title: 'AI Soccer Predictions & Odds Today | SportBot AI',
+        title: 'AI Soccer Predictions & Odds Today',
         description: 'AI-powered soccer predictions and live betting odds. Football tips for Premier League, La Liga, Champions League.',
         url: 'https://www.sportbotai.com/soccer',
         type: 'website',

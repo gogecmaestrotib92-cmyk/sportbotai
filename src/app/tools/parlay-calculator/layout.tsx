@@ -5,7 +5,7 @@ export const metadata: Metadata = {
     description: 'Free parlay calculator for sports betting. Calculate your parlay payout for NFL, NBA, MLB & more. Enter odds, see total parlay odds & potential winnings instantly. Supports 2-15 legs.',
     keywords: ['parlay calculator', 'free parlay calculator', 'parlay odds calculator', 'parlay payout calculator', 'nfl parlay calculator', 'nba parlay calculator', 'accumulator calculator', 'multi bet calculator', 'same game parlay calculator', 'parlay betting calculator'],
     openGraph: {
-        title: 'Free Parlay Calculator - Sports Betting Odds & Payout | SportBot AI',
+        title: 'Free Parlay Calculator - Sports Betting Odds & Payout',
         description: 'Calculate parlay payouts for NFL, NBA, MLB & more. Add up to 15 legs and see total odds instantly.',
         type: 'website',
         url: 'https://www.sportbotai.com/tools/parlay-calculator',

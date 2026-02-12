@@ -8,8 +8,15 @@ import { Metadata } from 'next';
 import { SITE_CONFIG } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'Uslovi Korišćenja | SportBot AI',
+  title: 'Uslovi Korišćenja',
   description: 'Uslovi korišćenja za SportBot AI platformu. Pročitajte naše uslove pre korišćenja servisa.',
+  openGraph: {
+    title: 'Uslovi Korišćenja',
+    description: 'Uslovi korišćenja za SportBot AI platformu.',
+    url: '/sr/terms',
+    type: 'website',
+    locale: 'sr_RS',
+  },
   alternates: {
     canonical: `${SITE_CONFIG.url}/sr/terms`,
     languages: {

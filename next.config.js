@@ -150,6 +150,17 @@ const nextConfig = {
         destination: '/sr/register',
         permanent: true,
       },
+      // Old analyzer route -> matches (permanent redirect)
+      {
+        source: '/analyzer',
+        destination: '/matches',
+        permanent: true,
+      },
+      {
+        source: '/sr/analyzer',
+        destination: '/sr/matches',
+        permanent: true,
+      },
       // Non-www to www redirect
       {
         source: '/:path*',

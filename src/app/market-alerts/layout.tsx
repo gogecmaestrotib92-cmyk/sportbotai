@@ -8,7 +8,7 @@
 import { Metadata } from 'next';
 import { SITE_CONFIG } from '@/lib/seo';
 
-const pageTitle = 'Market Alerts | Real-Time Odds & Steam Moves | SportBot AI';
+const pageTitle = 'Market Alerts | Real-Time Odds & Steam Moves';
 const pageDescription = 'Track real-time odds movements, detect sharp money steam moves, and find value edges with AI-powered market alerts. Premium feature for serious bettors.';
 const pageUrl = `${SITE_CONFIG.url}/market-alerts`;
 

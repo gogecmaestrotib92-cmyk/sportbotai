@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     description: 'AI fudbalske prognoze i live kvote za Premier Ligu, La Ligu, Bundesligu, Ligu Šampiona. Tipovi zasnovani na podacima sa linijama za klađenje.',
     keywords: ['ai fudbalske prognoze', 'fudbal kvote', 'fudbal tipovi', 'prognoze fudbal', 'premier liga kvote', 'premier liga prognoze', 'la liga kvote', 'liga sampiona prognoze', 'fudbalske opklade', 'ai analiza fudbala'],
     openGraph: {
-        title: 'AI Fudbalske Prognoze i Kvote Danas | SportBot AI',
+        title: 'AI Fudbalske Prognoze i Kvote Danas',
         description: 'AI prognoze za fudbal i live kvote. Tipovi za Premier Ligu, La Ligu, Ligu Šampiona.',
         url: 'https://sportbotai.com/sr/soccer',
     },

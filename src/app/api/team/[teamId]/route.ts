@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { TeamProfileData } from '@/types';
 
 const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
 
@@ -51,69 +52,7 @@ async function apiRequest<T>(endpoint: string): Promise<T | null> {
   }
 }
 
-export interface TeamProfileData {
-  team: {
-    id: number;
-    name: string;
-    logo: string;
-    country: string;
-    founded: number | null;
-    venue: {
-      name: string;
-      city: string;
-      capacity: number;
-    } | null;
-  };
-  league: {
-    id: number;
-    name: string;
-    logo: string;
-    country: string;
-    season: number;
-  } | null;
-  standing: {
-    position: number;
-    points: number;
-    played: number;
-    wins: number;
-    draws: number;
-    losses: number;
-    goalsFor: number;
-    goalsAgainst: number;
-    goalDiff: number;
-    form: string;
-  } | null;
-  stats: {
-    form: string;
-    formArray: ('W' | 'D' | 'L')[];
-    goalsScored: number;
-    goalsConceded: number;
-    cleanSheets: number;
-    failedToScore: number;
-    avgGoalsScored: number;
-    avgGoalsConceded: number;
-    homeRecord: { played: number; wins: number; draws: number; losses: number };
-    awayRecord: { played: number; wins: number; draws: number; losses: number };
-    biggestWin: string | null;
-    biggestLoss: string | null;
-  } | null;
-  recentMatches: {
-    date: string;
-    opponent: string;
-    opponentLogo: string;
-    score: string;
-    result: 'W' | 'D' | 'L';
-    home: boolean;
-    competition: string;
-  }[];
-  upcomingMatches: {
-    date: string;
-    opponent: string;
-    opponentLogo: string;
-    home: boolean;
-    competition: string;
-  }[];
-}
+// TeamProfileData type is now in @/types/index.ts
 
 // Common team slug to API ID mappings
 const TEAM_SLUG_MAP: Record<string, number> = {

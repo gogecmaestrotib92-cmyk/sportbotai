@@ -23,7 +23,7 @@ const AUTHOR = {
   name: 'Stefan Mitrovic',
   url: 'https://www.sportbotai.com/about',
   jobTitle: 'Sports Analyst & Editor',
-  photo: 'https://www.upwork.com/profile-portraits/c1QVpOOlRVMXCujp1syLSScOWIl0cbOsxFl4HtH9scBn6y1CaZPeWLI5v_eg78VPCd',
+  photo: '/images/stefan-mitrovic.png',
   sameAs: [
     'https://www.upwork.com/freelancers/~017b8c67c94029389f',
     'https://www.linkedin.com/company/automateed/',

@@ -12,7 +12,7 @@ import { prisma } from '@/lib/prisma';
 import AccountDashboard from './AccountDashboard';
 
 export const metadata: Metadata = {
-  title: 'My Account | SportBot AI',
+  title: 'My Account',
   description: 'Manage your SportBot AI account, subscription, and preferences.',
 };
 

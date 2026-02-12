@@ -7,7 +7,7 @@ import { Metadata } from 'next';
 import MyTeamsDashboardSr from './MyTeamsDashboardSr';
 
 export const metadata: Metadata = {
-  title: 'Moji Timovi | SportBot AI',
+  title: 'Moji Timovi',
   description: 'Pratite vaše omiljene timove i vidite njihove predstojeće utakmice. Dobijte personalizovanu AI analizu za timove koje pratite.',
   robots: {
     index: false,

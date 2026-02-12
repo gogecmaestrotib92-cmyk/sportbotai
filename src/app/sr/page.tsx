@@ -28,7 +28,7 @@ const ResponsibleGamblingBlockI18n = dynamic(() => import('@/components/Responsi
 
 // Homepage metadata with canonical for Serbian
 export const metadata: Metadata = {
-  title: 'SportBot AI - Pronađi Gde Tržište Greši',
+  title: 'Pronađi Gde Tržište Greši',
   description: 'Pred-utakmična inteligencija sa AI analizom. Upoređujemo AI verovatnoće sa kvotama da otkrijemo edge. Fudbal, NBA, NFL, NHL i UFC.',
   alternates: {
     canonical: 'https://www.sportbotai.com/sr',

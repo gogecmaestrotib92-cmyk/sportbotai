@@ -11,7 +11,7 @@ import { prisma } from '@/lib/prisma';
 import AccountDashboardSr from './AccountDashboardSr';
 
 export const metadata: Metadata = {
-  title: 'Moj Nalog | SportBot AI',
+  title: 'Moj Nalog',
   description: 'Upravljajte svojim SportBot AI nalogom, pretplatom i podešavanjima.',
 };
 

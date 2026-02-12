@@ -48,9 +48,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
   
-  // Redirect to analyzer if accessing auth route while logged in
+  // Redirect to matches if accessing auth route while logged in
   if (isAuthRoute && isLoggedIn) {
-    const redirectResponse = NextResponse.redirect(new URL('/analyzer', request.url));
+    const redirectResponse = NextResponse.redirect(new URL('/matches', request.url));
     redirectResponse.headers.set('x-pathname', pathname);
     return redirectResponse;
   }

@@ -8,11 +8,11 @@ import { prisma } from '@/lib/prisma';
 import { SITE_CONFIG } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'Sports News - Latest Match Previews & Analysis | SportBot AI',
+  title: 'Sports News - Latest Match Previews & Analysis',
   description: 'Breaking sports news, match previews, and AI-powered analysis. Get the latest updates on NBA, NFL, Soccer, and more with real-time insights.',
   keywords: 'sports news, match previews, NBA news, NFL news, soccer news, sports analysis, breaking sports news',
   openGraph: {
-    title: 'Sports News - Latest Match Previews & Analysis | SportBot AI',
+    title: 'Sports News - Latest Match Previews & Analysis',
     description: 'Breaking sports news, match previews, and AI-powered analysis. Get the latest updates on NBA, NFL, Soccer, and more.',
     url: `${SITE_CONFIG.url}/news`,
     siteName: SITE_CONFIG.name,
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Sports News | SportBot AI',
+    title: 'Sports News',
     description: 'Breaking sports news and AI-powered match analysis.',
   },
   alternates: {

@@ -9,8 +9,15 @@ import { Metadata } from 'next';
 import { SITE_CONFIG } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'Odgovorno Klađenje | SportBot AI',
+  title: 'Odgovorno Klađenje',
   description: 'Klađenje treba da bude zabava, ne problem. Saznajte kako se kladiti odgovorno i prepoznajte znake problematičnog kockanja.',
+  openGraph: {
+    title: 'Odgovorno Klađenje',
+    description: 'Klađenje treba da bude zabava, ne problem. Saznajte kako se kladiti odgovorno.',
+    url: '/sr/responsible-gambling',
+    type: 'website',
+    locale: 'sr_RS',
+  },
   alternates: {
     canonical: '/sr/responsible-gambling',
     languages: {

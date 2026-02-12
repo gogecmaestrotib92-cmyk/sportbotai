@@ -11,6 +11,12 @@ import { META } from '@/lib/seo';
 export const metadata: Metadata = {
   title: META.responsibleGambling.title,
   description: META.responsibleGambling.description,
+  openGraph: {
+    title: META.responsibleGambling.title,
+    description: META.responsibleGambling.description,
+    url: '/responsible-gambling',
+    type: 'website',
+  },
   alternates: {
     canonical: '/responsible-gambling',
     languages: {

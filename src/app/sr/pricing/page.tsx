@@ -12,11 +12,11 @@ import { getTranslations } from '@/lib/i18n/translations';
 const t = getTranslations('sr');
 
 export const metadata: Metadata = {
-  title: 'Cene | SportBot AI - Jednostavne i Transparentne Cene',
+  title: 'Cene - Jednostavne i Transparentne Cene',
   description: 'Jednostavne cene bez skrivenih troškova. Počni besplatno, nadogradi kada budeš spreman. Pro i Premium planovi za ozbiljne analitičare.',
   keywords: ['sportbot cene', 'AI analiza cena', 'sportska analitika pretplata', 'pro plan', 'premium plan'],
   openGraph: {
-    title: 'Cene | SportBot AI',
+    title: 'Cene',
     description: 'Jednostavne cene bez skrivenih troškova. Počni besplatno.',
     url: `${SITE_CONFIG.url}/sr/pricing`,
     siteName: SITE_CONFIG.name,
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cene | SportBot AI',
+    title: 'Cene',
     description: 'Jednostavne cene bez skrivenih troškova. Počni besplatno.',
     site: SITE_CONFIG.twitter,
   },

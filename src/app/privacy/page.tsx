@@ -10,6 +10,12 @@ import { META } from '@/lib/seo';
 export const metadata: Metadata = {
   title: META.privacy.title,
   description: META.privacy.description,
+  openGraph: {
+    title: META.privacy.title,
+    description: META.privacy.description,
+    url: '/privacy',
+    type: 'website',
+  },
   alternates: {
     canonical: '/privacy',
     languages: {

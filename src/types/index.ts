@@ -647,3 +647,71 @@ export interface PricingPlan {
   highlighted?: boolean;
   buttonText: string;
 }
+
+// ============================================
+// TEAM PROFILE TYPES
+// ============================================
+
+export interface TeamProfileData {
+  team: {
+    id: number;
+    name: string;
+    logo: string;
+    country: string;
+    founded: number | null;
+    venue: {
+      name: string;
+      city: string;
+      capacity: number;
+    } | null;
+  };
+  league: {
+    id: number;
+    name: string;
+    logo: string;
+    country: string;
+    season: number;
+  } | null;
+  standing: {
+    position: number;
+    points: number;
+    played: number;
+    wins: number;
+    draws: number;
+    losses: number;
+    goalsFor: number;
+    goalsAgainst: number;
+    goalDiff: number;
+    form: string;
+  } | null;
+  stats: {
+    form: string;
+    formArray: ('W' | 'D' | 'L')[];
+    goalsScored: number;
+    goalsConceded: number;
+    cleanSheets: number;
+    failedToScore: number;
+    avgGoalsScored: number;
+    avgGoalsConceded: number;
+    homeRecord: { played: number; wins: number; draws: number; losses: number };
+    awayRecord: { played: number; wins: number; draws: number; losses: number };
+    biggestWin: string | null;
+    biggestLoss: string | null;
+  } | null;
+  recentMatches: {
+    date: string;
+    opponent: string;
+    opponentLogo: string;
+    score: string;
+    result: 'W' | 'D' | 'L';
+    home: boolean;
+    competition: string;
+  }[];
+  upcomingMatches: {
+    date: string;
+    opponent: string;
+    opponentLogo: string;
+    home: boolean;
+    competition: string;
+  }[];
+}

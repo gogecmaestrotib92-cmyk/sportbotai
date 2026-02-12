@@ -32,11 +32,11 @@ export default function MobileQuickActions() {
   
   // Adjust hrefs based on locale
   const aiDeskHref = isSerbian ? '/sr/ai-desk' : '/ai-desk';
-  const analyzerHref = isSerbian ? '/sr/analyzer' : '/analyzer';
+  const analyzerHref = isSerbian ? '/sr/matches' : '/matches';
   const matchesHref = isSerbian ? '/sr/matches' : '/matches';
   
   // Hide on certain pages where it's not needed
-  const hiddenPaths = ['/analyzer', '/ai-desk', '/login', '/register', '/admin', '/sr/analyzer', '/sr/ai-desk'];
+  const hiddenPaths = ['/matches', '/analyzer', '/ai-desk', '/login', '/register', '/admin', '/sr/matches', '/sr/analyzer', '/sr/ai-desk'];
   if (hiddenPaths.some(path => pathname.startsWith(path))) {
     return null;
   }

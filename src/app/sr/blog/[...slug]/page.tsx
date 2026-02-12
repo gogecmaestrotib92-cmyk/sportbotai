@@ -22,7 +22,7 @@ const AUTHOR = {
   name: 'Stefan Mitrovic',
   url: `${SITE_CONFIG.url}/about`,
   jobTitle: 'Sportski Analitičar & Urednik',
-  photo: 'https://www.upwork.com/profile-portraits/c1QVpOOlRVMXCujp1syLSScOWIl0cbOsxFl4HtH9scBn6y1CaZPeWLI5v_eg78VPCd',
+  photo: '/images/stefan-mitrovic.png',
   sameAs: [
     'https://www.upwork.com/freelancers/~017b8c67c94029389f',
     'https://www.linkedin.com/company/automateed/',
@@ -192,7 +192,15 @@ export default async function SerbianBlogPostPage({ params }: BlogPostPageProps)
   const hasSerbian = Boolean(post.contentSr || post.titleSr);
   
   // Use Serbian translations when available
-  const articleContent = post.contentSr || post.content;
+  // Sanitize: Strip any remaining [IMAGE:...] placeholders that weren't processed
+  const rawContent = post.contentSr || post.content;
+  const articleContent = rawContent.replace(
+    /<img[^>]*src=["']\[IMAGE:[^\]]*\]["'][^>]*\/?>/gi, 
+    ''
+  ).replace(
+    /\[IMAGE:[^\]]*\]/g,
+    ''
+  );
   const articleTitle = post.titleSr || post.title;
   const articleExcerpt = post.excerptSr || post.excerpt;
 

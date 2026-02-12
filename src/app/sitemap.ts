@@ -42,10 +42,16 @@ const STATIC_PAGES = [
   { path: '/responsible-gambling', priority: 0.5, changeFreq: 'monthly' as const },
   { path: '/terms', priority: 0.3, changeFreq: 'yearly' as const },
   { path: '/privacy', priority: 0.3, changeFreq: 'yearly' as const },
+
+  // About & Market Alerts (previously missing from sitemap)
+  { path: '/about', priority: 0.6, changeFreq: 'monthly' as const },
+  { path: '/market-alerts', priority: 0.75, changeFreq: 'daily' as const },
   // NOTE: /llms.txt and /llms-full.txt removed from sitemap - they are text files, not HTML pages
 ];
 
 // Serbian static pages
+// NOTE: /sr/analyzer (307→/sr/matches) and /sr/market-alerts (307→login) removed from sitemap
+// NOTE: /sr/login and /sr/register removed - they have canonical pointing to /sr (non-canonical)
 const SERBIAN_STATIC_PAGES = [
   { path: '/sr', priority: 0.9, changeFreq: 'daily' as const },
   { path: '/sr/matches', priority: 0.9, changeFreq: 'hourly' as const },
@@ -54,11 +60,14 @@ const SERBIAN_STATIC_PAGES = [
   { path: '/sr/picks', priority: 0.85, changeFreq: 'daily' as const },
   { path: '/sr/blog', priority: 0.8, changeFreq: 'daily' as const },
   { path: '/sr/pricing', priority: 0.75, changeFreq: 'monthly' as const },
-  { path: '/sr/analyzer', priority: 0.8, changeFreq: 'weekly' as const },
-  { path: '/sr/market-alerts', priority: 0.75, changeFreq: 'daily' as const },
+  { path: '/sr/about', priority: 0.6, changeFreq: 'monthly' as const },
   { path: '/sr/stats/tradicionalno-kladjenje-vs-ai-predikcije', priority: 0.8, changeFreq: 'monthly' as const },
   { path: '/sr/stats/us-sports-betting-statistics', priority: 0.85, changeFreq: 'monthly' as const },
   { path: '/sr/affiliate', priority: 0.7, changeFreq: 'monthly' as const },
+  { path: '/sr/responsible-gambling', priority: 0.4, changeFreq: 'monthly' as const },
+  { path: '/sr/terms', priority: 0.3, changeFreq: 'yearly' as const },
+  { path: '/sr/privacy', priority: 0.3, changeFreq: 'yearly' as const },
+  { path: '/sr/contact', priority: 0.5, changeFreq: 'monthly' as const },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
