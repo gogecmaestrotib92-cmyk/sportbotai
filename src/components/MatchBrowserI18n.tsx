@@ -159,6 +159,17 @@ export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatch
   const currentSport = SPORTS.find(s => s.id === selectedSport) || SPORTS[0];
   const currentLeague = currentSport.leagues.find(l => l.key === selectedLeague) || currentSport.leagues[0];
 
+  // Handler for sport change - updates league immediately if needed to prevent mismatch
+  const handleSportChange = (sportId: string) => {
+    setSelectedSport(sportId);
+    const sport = SPORTS.find(s => s.id === sportId);
+    // If the currently selected league doesn't belong to the new sport, 
+    // immediately switch to the first league of the new sport.
+    if (sport && !sport.leagues.some(l => l.key === selectedLeague)) {
+      setSelectedLeague(sport.leagues[0].key);
+    }
+  };
+
   // Set initial sport from league param
   useEffect(() => {
     if (initialLeague) {
@@ -172,18 +183,6 @@ export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatch
       }
     }
   }, [initialLeague]);
-
-  // When sport changes, select first league of that sport (only if current league isn't valid)
-  useEffect(() => {
-    const sport = SPORTS.find(s => s.id === selectedSport);
-    if (sport && sport.leagues.length > 0) {
-      // Only reset if current league doesn't belong to the new sport
-      const leagueBelongsToSport = sport.leagues.some(l => l.key === selectedLeague);
-      if (!leagueBelongsToSport) {
-        setSelectedLeague(sport.leagues[0].key);
-      }
-    }
-  }, [selectedSport, selectedLeague, SPORTS]); // Removed initialLeague dependency as it was blocking updates
 
   // Pre-fetch match counts for ALL leagues (for badges and trending)
   useEffect(() => {
@@ -418,7 +417,7 @@ export default function MatchBrowserI18n({ initialSport, initialLeague, maxMatch
             <button
               onClick={() => setViewMode('ai-picks')}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                viewMode === 'ai-picks'
+                viewMode handleSportChange
                   ? 'bg-accent text-bg-primary shadow-sm'
                   : 'text-text-muted hover:text-white'
               }`}
