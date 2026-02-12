@@ -90,12 +90,12 @@ interface TrendingSectionServerProps {
 export default function TrendingSectionServer({ maxMatches = 6, locale = 'en' }: TrendingSectionServerProps) {
   return (
     <section id="trending" className="relative py-12 sm:py-16 scroll-mt-20 overflow-hidden">
-      {/* Props.Cash style turf background */}
+      {/* Scoreboard/data background - distinct from hero */}
       <div className="absolute inset-0 bg-[#0a0a0b]">
-        {/* Turf texture - LAZY LOAD for better LCP (below fold) */}
+        {/* AI-generated scoreboard texture - LAZY LOAD (below fold) */}
         <div className="absolute inset-0 opacity-40">
           <Image
-            src="/images/turf-bg.webp"
+            src="/images/generated/trending-alt-a.webp"
             alt=""
             fill
             loading="lazy"
@@ -105,7 +105,7 @@ export default function TrendingSectionServer({ maxMatches = 6, locale = 'en' }:
           />
         </div>
         {/* Dark vignette overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(0,0,0,0.8)_80%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.3)_20%,rgba(0,0,0,0.85)_80%)]" />
         {/* Subtle accent glow */}
         <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-orange-500/15 rounded-full blur-[100px]" />
         <div className="absolute -bottom-20 -left-20 w-[250px] h-[250px] bg-accent/10 rounded-full blur-[80px]" />

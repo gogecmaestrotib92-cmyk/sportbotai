@@ -8,6 +8,7 @@
 import { Metadata } from 'next';
 import SportMatchGrid from '@/components/SportMatchGrid';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
     title: 'AI Basketball Predictions & NBA Odds Today',
@@ -18,6 +19,12 @@ export const metadata: Metadata = {
         description: 'Free AI basketball predictions for NBA games. AI-powered picks with probability analysis.',
         url: 'https://www.sportbotai.com/nba',
         type: 'website',
+        images: [{
+            url: 'https://www.sportbotai.com/images/generated/sport-nba.webp',
+            width: 1440,
+            height: 810,
+            alt: 'AI NBA Predictions - SportBot AI',
+        }],
     },
     alternates: {
         canonical: 'https://www.sportbotai.com/nba',
@@ -125,7 +132,19 @@ export default function NbaPage() {
                 <div className="absolute top-1/3 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
 
                 {/* Hero Section */}
-                <section className="relative border-b border-white/5">
+                <section className="relative border-b border-white/5 overflow-hidden">
+                    {/* AI-generated sport background */}
+                    <div className="absolute inset-0">
+                        <Image
+                            src="/images/generated/sport-nba.webp"
+                            alt=""
+                            fill
+                            className="object-cover opacity-40"
+                            sizes="100vw"
+                            priority
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-b from-bg/30 via-bg/60 to-bg" />
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 to-transparent" />
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 relative">
                         {/* Breadcrumb */}

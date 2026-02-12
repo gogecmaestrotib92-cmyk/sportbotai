@@ -204,7 +204,7 @@ export default async function RootLayout({
         {/* LCP Optimization: Preload hero background image */}
         <link
           rel="preload"
-          href="/images/turf-bg.webp"
+          href="/images/generated/hero-bg.webp"
           as="image"
           type="image/webp"
           fetchPriority="high"

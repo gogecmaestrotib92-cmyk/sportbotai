@@ -289,7 +289,7 @@ export default function MatchCardI18n({
           {tags.slice(0, 2).map((tag) => (
             <span 
               key={tag}
-              className="text-[10px] px-2 py-0.5 bg-white/5 text-gray-400 rounded-full"
+              className="text-[10px] px-2 py-0.5 bg-white/10 text-gray-300 rounded-full border border-white/10"
             >
               {tag}
             </span>

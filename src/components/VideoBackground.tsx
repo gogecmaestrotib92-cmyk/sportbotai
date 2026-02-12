@@ -1,7 +1,7 @@
 /**
  * Video Background Component
  * 
- * Now uses static turf texture for premium sports aesthetic (Props.Cash style).
+ * Uses AI-generated cinematic stadium image (Flux via Replicate).
  * Benefits:
  * - Faster LCP (no video to load)
  * - Consistent look across all devices
@@ -43,12 +43,12 @@ export default function VideoBackground({
       <div className="absolute inset-0 bg-[#0a0a0b]">
         {/* Turf texture image - Using Next.js Image for LCP optimization */}
         <Image
-          src="/images/turf-bg.webp"
+          src="/images/generated/hero-alt-c.webp"
           alt=""
           fill
           priority={isLCP}
           fetchPriority={isLCP ? "high" : "auto"}
-          quality={40}
+          quality={80}
           sizes="100vw"
           className="object-cover"
           placeholder="empty"
@@ -64,8 +64,7 @@ export default function VideoBackground({
 
       {/* Dark overlay for text readability */}
       <div
-        className="absolute inset-0 bg-bg-primary"
-        style={{ opacity: overlayOpacity }}
+        className="absolute inset-0 bg-bg-primary opacity-40 md:opacity-50"
       />
 
       {/* Gradient fade at bottom */}

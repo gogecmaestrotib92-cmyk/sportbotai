@@ -45,7 +45,7 @@ export default function Hero() {
             </h1>
 
             {/* Explainer - One line to clarify meaning */}
-            <p className="text-sm sm:text-base text-white/70 mb-4 sm:mb-6 max-w-lg mx-auto lg:mx-0">
+            <p className="text-sm sm:text-base text-white/90 mb-4 sm:mb-6 max-w-lg mx-auto lg:mx-0 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
               Our AI crunches injuries, form, H2H &amp; odds from 50+ sources—you get the edge, not guesses.
             </p>
 

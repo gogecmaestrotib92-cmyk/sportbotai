@@ -51,3 +51,4 @@ Thumbs.db
 
 .env*.local
 .env.local.vercel
+scripts/gen-hero-alts.py
