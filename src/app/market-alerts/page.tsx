@@ -617,10 +617,10 @@ function SteamLegend() {
 
 function PremiumGate() {
   return (
-    <div className="min-h-screen bg-bg relative overflow-hidden py-12">
+    <div className="min-h-screen bg-bg relative w-full overflow-hidden py-12">
       {/* Ambient Background Glows */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-[80vw] sm:w-[600px] h-[80vw] sm:h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute top-1/2 right-0 w-[60vw] sm:w-[500px] h-[60vw] sm:h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
       
       <div className="max-w-2xl mx-auto px-4 sm:px-6 relative">
         <div className="card-glass p-8 text-center">
@@ -668,9 +668,9 @@ function PremiumGate() {
 
 function LoadingState() {
   return (
-    <div className="min-h-screen bg-bg relative overflow-hidden py-12">
+    <div className="min-h-screen bg-bg relative w-full overflow-hidden py-12">
       {/* Ambient Background Glows */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-[80vw] sm:w-[600px] h-[80vw] sm:h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="animate-pulse space-y-6">
@@ -800,10 +800,10 @@ export default function MarketAlertsPage() {
   const remainingMatches = isSearching ? [] : allMatches.slice(isPremium ? 5 : 10);
 
   return (
-    <div className="min-h-screen bg-bg relative overflow-hidden py-8 sm:py-10">
+    <div className="min-h-screen bg-bg relative w-full overflow-hidden py-8 sm:py-10">
       {/* Ambient Background Glows */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-[80vw] sm:w-[600px] h-[80vw] sm:h-[600px] bg-violet/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute top-1/2 right-0 w-[60vw] sm:w-[500px] h-[60vw] sm:h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Upgrade Banner for non-premium users */}
