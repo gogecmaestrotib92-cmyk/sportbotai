@@ -626,25 +626,42 @@ export async function sendDailyTopMatchesEmail(
   const sortedMatches = [...matches].sort((a, b) => b.confidence - a.confidence).slice(0, 2);
   const freePick = sortedMatches[sortedMatches.length - 1]; // lowest confidence = free
   const proPick = sortedMatches.length > 1 ? sortedMatches[0] : null; // highest = locked
+  const totalAvailable = matches.length;
+  const lockedCount = Math.max(totalAvailable - 1, 0);
   
-  // --- Free pick row ---
+  // --- Free pick row with insight ---
   const freePickHtml = freePick ? `<tr>
-      <td style="padding:16px 0;border-bottom:1px solid #1e293b">
-        <div style="font-size:15px;font-weight:600;color:#f8fafc;letter-spacing:-0.3px">${freePick.homeTeam} v ${freePick.awayTeam}</div>
-        <div style="font-size:12px;color:#94a3b8;margin-top:3px">${freePick.league} · ${freePick.kickoff}</div>
-      </td>
-      <td style="padding:16px 0;border-bottom:1px solid #1e293b;text-align:right;white-space:nowrap">
-        <div style="font-size:14px;font-weight:600;color:#10B981">${freePick.prediction}</div>
-        <div style="font-size:12px;color:#94a3b8;margin-top:3px">${freePick.confidence}%${freePick.edge ? ` · ${freePick.edge}` : ''}</div>
+      <td style="padding:16px 0;border-bottom:1px solid #1e293b" colspan="2">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td>
+              <div style="font-size:15px;font-weight:600;color:#f8fafc;letter-spacing:-0.3px">${freePick.homeTeam} v ${freePick.awayTeam}</div>
+              <div style="font-size:12px;color:#94a3b8;margin-top:3px">${freePick.league} · ${freePick.kickoff}</div>
+            </td>
+            <td style="text-align:right;white-space:nowrap;vertical-align:top">
+              <div style="font-size:14px;font-weight:600;color:#10B981">${freePick.prediction}</div>
+              <div style="font-size:12px;color:#94a3b8;margin-top:3px">${freePick.confidence}%${freePick.edge ? ` · ${freePick.edge}` : ''}</div>
+            </td>
+          </tr>
+        </table>
+        ${freePick.headline ? `<div style="margin-top:10px;font-size:13px;color:#94a3b8;line-height:1.6;border-left:2px solid #1e293b;padding-left:12px">${freePick.headline}</div>` : ''}
       </td>
     </tr>` : '';
   
-  // --- Pro pick row (locked) ---
+  // --- Pro picks (locked) ---
   const proPickHtml = proPick ? `<tr>
     <td style="padding:16px 0" colspan="2">
-      <div style="background:#111827;border:1px solid #1e293b;border-radius:8px;padding:16px;text-align:center">
-        <div style="font-size:14px;color:#94a3b8;letter-spacing:-0.3px">${proPick.homeTeam} v ${proPick.awayTeam} <span style="color:#64748b">·</span> <span style="color:#475569">███ ███</span></div>
-        <div style="margin-top:8px"><a href="https://www.sportbotai.com/pricing" style="font-size:13px;color:#10B981;text-decoration:none;font-weight:500">Unlock with Pro →</a></div>
+      <div style="background:#111827;border:1px solid #1e293b;border-radius:8px;padding:16px">
+        <div style="text-align:center">
+          <div style="font-size:14px;color:#94a3b8;letter-spacing:-0.3px">${proPick.homeTeam} v ${proPick.awayTeam}</div>
+          <div style="font-size:12px;color:#475569;margin-top:4px">${proPick.league} · ${proPick.kickoff}</div>
+          <div style="margin-top:10px;font-size:13px;color:#475569">
+            <span style="color:#334155">██</span> <span style="color:#334155">██████</span> · <span style="color:#334155">██</span>% · <span style="color:#334155">+█.█%</span>
+          </div>
+          <div style="margin-top:4px;font-size:12px;color:#334155;line-height:1.5;border-left:2px solid #1e293b;padding-left:12px;text-align:left;margin-top:10px">
+            ████████ ██████ ███ ██████ ████ █████...
+          </div>
+        </div>
       </div>
     </td>
   </tr>` : '';
@@ -671,12 +688,12 @@ export async function sendDailyTopMatchesEmail(
   <!-- Greeting -->
   <tr><td style="padding:0 0 28px">
     <p style="margin:0;font-size:15px;color:#f1f5f9;line-height:1.7">Hey ${greeting},</p>
-    <p style="margin:12px 0 0;font-size:15px;color:#cbd5e1;line-height:1.7">Here's what stood out from today's matches.</p>
+    <p style="margin:12px 0 0;font-size:15px;color:#cbd5e1;line-height:1.7">Our AI scanned ${totalAvailable} matches this weekend. Here's where we found edge.</p>
   </td></tr>
 
   <!-- Divider label -->
   <tr><td style="padding:0 0 12px">
-    <div style="font-size:11px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:1.5px">Today's picks</div>
+    <div style="font-size:11px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:1.5px">Free preview · 1 of ${totalAvailable} picks</div>
   </td></tr>
 
   <!-- Picks table -->
@@ -695,9 +712,32 @@ export async function sendDailyTopMatchesEmail(
   <!-- Thin divider -->
   <tr><td style="padding:0"><div style="height:1px;background:#1e293b"></div></td></tr>
 
-  <!-- Pro nudge -->
-  <tr><td style="padding:24px 0;text-align:center">
-    <p style="margin:0;font-size:13px;color:#94a3b8">Want all picks + edge detection daily? <a href="https://www.sportbotai.com/pricing" style="color:#10B981;text-decoration:none;font-weight:500">Try Pro →</a></p>
+  <!-- Pro value block -->
+  <tr><td style="padding:28px 0">
+    <div style="background:#0c1425;border:1px solid #1e293b;border-radius:8px;padding:24px">
+      <div style="font-size:11px;font-weight:600;color:#10B981;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px">What Pro gets you</div>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding:6px 0;font-size:14px;color:#cbd5e1">All ${totalAvailable} picks unlocked</td>
+          <td style="padding:6px 0;text-align:right;font-size:14px;color:#475569">you see 1</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0;font-size:14px;color:#cbd5e1">Full edge analysis per match</td>
+          <td style="padding:6px 0;text-align:right;font-size:14px;color:#475569">hidden</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0;font-size:14px;color:#cbd5e1">AI reasoning + key factors</td>
+          <td style="padding:6px 0;text-align:right;font-size:14px;color:#475569">hidden</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0;font-size:14px;color:#cbd5e1">Daily alerts, not just weekends</td>
+          <td style="padding:6px 0;text-align:right;font-size:14px;color:#475569">weekends only</td>
+        </tr>
+      </table>
+      <div style="text-align:center;margin-top:20px">
+        <a href="https://www.sportbotai.com/pricing" style="display:inline-block;background:transparent;color:#10B981;padding:12px 32px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;border:1px solid #10B981;letter-spacing:-0.2px">Upgrade to Pro</a>
+      </div>
+    </div>
   </td></tr>
 
   <!-- Footer -->
@@ -852,16 +892,23 @@ export async function sendWeeklyEdgeReport(
   
   const subject = `The Edge Report · ${today}`;
   
-  // --- Pick rows (clean table) ---
+  // --- Pick rows (clean table with insights) ---
   const pickRowsHtml = data.picks.map((pick) => {
     return `<tr>
-      <td style="padding:16px 0;border-bottom:1px solid #1e293b">
-        <div style="font-size:15px;font-weight:600;color:#f8fafc;letter-spacing:-0.3px">${pick.homeTeam} v ${pick.awayTeam}</div>
-        <div style="font-size:12px;color:#94a3b8;margin-top:3px">${pick.league} · ${pick.kickoff}</div>
-      </td>
-      <td style="padding:16px 0;border-bottom:1px solid #1e293b;text-align:right;white-space:nowrap">
-        <div style="font-size:14px;font-weight:600;color:#10B981">${pick.prediction}</div>
-        <div style="font-size:12px;color:#94a3b8;margin-top:3px">${pick.confidence}% · ${pick.edge}</div>
+      <td style="padding:16px 0;border-bottom:1px solid #1e293b" colspan="2">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td>
+              <div style="font-size:15px;font-weight:600;color:#f8fafc;letter-spacing:-0.3px">${pick.homeTeam} v ${pick.awayTeam}</div>
+              <div style="font-size:12px;color:#94a3b8;margin-top:3px">${pick.league} · ${pick.kickoff}</div>
+            </td>
+            <td style="text-align:right;white-space:nowrap;vertical-align:top">
+              <div style="font-size:14px;font-weight:600;color:#10B981">${pick.prediction}</div>
+              <div style="font-size:12px;color:#94a3b8;margin-top:3px">${pick.confidence}% · ${pick.edge}</div>
+            </td>
+          </tr>
+        </table>
+        ${pick.insight ? `<div style="margin-top:10px;font-size:13px;color:#94a3b8;line-height:1.6;border-left:2px solid #1e293b;padding-left:12px">${pick.insight}</div>` : ''}
       </td>
     </tr>`;
   }).join('');
@@ -869,9 +916,17 @@ export async function sendWeeklyEdgeReport(
   // --- Pro Preview row (blurred/locked) ---
   const proRowHtml = data.proPick ? `<tr>
     <td style="padding:16px 0" colspan="2">
-      <div style="background:#111827;border:1px solid #1e293b;border-radius:8px;padding:16px;text-align:center">
-        <div style="font-size:14px;color:#94a3b8;letter-spacing:-0.3px">${data.proPick.homeTeam} v ${data.proPick.awayTeam} <span style="color:#64748b">·</span> <span style="color:#475569">███ ███</span></div>
-        <div style="margin-top:8px"><a href="https://www.sportbotai.com/pricing" style="font-size:13px;color:#10B981;text-decoration:none;font-weight:500">Unlock with Pro →</a></div>
+      <div style="background:#111827;border:1px solid #1e293b;border-radius:8px;padding:16px">
+        <div style="text-align:center">
+          <div style="font-size:14px;color:#94a3b8;letter-spacing:-0.3px">${data.proPick.homeTeam} v ${data.proPick.awayTeam}</div>
+          <div style="font-size:12px;color:#475569;margin-top:4px">${data.proPick.league}</div>
+          <div style="margin-top:10px;font-size:13px;color:#475569">
+            <span style="color:#334155">██</span> <span style="color:#334155">██████</span> · <span style="color:#334155">${data.proPick.confidence}</span>% · <span style="color:#334155">+█.█%</span>
+          </div>
+          <div style="border-left:2px solid #1e293b;padding-left:12px;text-align:left;margin-top:10px">
+            <span style="font-size:12px;color:#334155;line-height:1.5">████████ ██████ ███ ██████ ████ ████ ██████ ███...</span>
+          </div>
+        </div>
       </div>
     </td>
   </tr>` : '';
@@ -899,7 +954,7 @@ export async function sendWeeklyEdgeReport(
   <!-- Greeting -->
   <tr><td style="padding:0 0 28px">
     <p style="margin:0;font-size:15px;color:#f1f5f9;line-height:1.7">Hey ${greeting},</p>
-    <p style="margin:12px 0 0;font-size:15px;color:#cbd5e1;line-height:1.7">3 picks this week. Here's where we see value.</p>
+    <p style="margin:12px 0 0;font-size:15px;color:#cbd5e1;line-height:1.7">Our AI scanned odds from 8+ bookmakers across Europe's top leagues. These 3 picks had the clearest edge.</p>
   </td></tr>
 
   <!-- Track Record (minimal) -->
@@ -953,9 +1008,32 @@ export async function sendWeeklyEdgeReport(
   <!-- Thin divider -->
   <tr><td style="padding:0"><div style="height:1px;background:#1e293b"></div></td></tr>
 
-  <!-- Pro nudge (one line, subtle) -->
-  <tr><td style="padding:24px 0;text-align:center">
-    <p style="margin:0;font-size:13px;color:#94a3b8">Want all picks + edge detection daily? <a href="https://www.sportbotai.com/pricing" style="color:#10B981;text-decoration:none;font-weight:500">Try Pro →</a></p>
+  <!-- Pro value block -->
+  <tr><td style="padding:28px 0">
+    <div style="background:#0c1425;border:1px solid #1e293b;border-radius:8px;padding:24px">
+      <div style="font-size:11px;font-weight:600;color:#10B981;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px">You're seeing 3 picks. Pro sees everything.</div>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding:5px 0;font-size:13px;color:#cbd5e1">All picks across 12 leagues</td>
+          <td style="padding:5px 0;text-align:right;font-size:13px;color:#475569">you see 3</td>
+        </tr>
+        <tr>
+          <td style="padding:5px 0;font-size:13px;color:#cbd5e1">Full AI reasoning per match</td>
+          <td style="padding:5px 0;text-align:right;font-size:13px;color:#475569">preview only</td>
+        </tr>
+        <tr>
+          <td style="padding:5px 0;font-size:13px;color:#cbd5e1">Edge alerts 7 days a week</td>
+          <td style="padding:5px 0;text-align:right;font-size:13px;color:#475569">Tuesdays only</td>
+        </tr>
+        <tr>
+          <td style="padding:5px 0;font-size:13px;color:#cbd5e1">Live chat with SportBot AI</td>
+          <td style="padding:5px 0;text-align:right;font-size:13px;color:#475569">limited</td>
+        </tr>
+      </table>
+      <div style="text-align:center;margin-top:20px">
+        <a href="https://www.sportbotai.com/pricing" style="display:inline-block;background:transparent;color:#10B981;padding:12px 32px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;border:1px solid #10B981;letter-spacing:-0.2px">See Pro plans</a>
+      </div>
+    </div>
   </td></tr>
 
   <!-- Footer -->

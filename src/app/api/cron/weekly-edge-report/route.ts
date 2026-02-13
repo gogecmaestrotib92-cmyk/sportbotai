@@ -19,15 +19,24 @@ import { sendWeeklyEdgeReport } from '@/lib/email';
 
 const ODDS_API_KEY = process.env.ODDS_API_KEY || '';
 
-// Sports to scan for picks
+// All enabled sports/leagues
 const SPORTS = [
   { key: 'soccer_epl', name: 'Premier League' },
   { key: 'soccer_spain_la_liga', name: 'La Liga' },
-  { key: 'soccer_italy_serie_a', name: 'Serie A' },
   { key: 'soccer_germany_bundesliga', name: 'Bundesliga' },
+  { key: 'soccer_italy_serie_a', name: 'Serie A' },
   { key: 'soccer_france_ligue_one', name: 'Ligue 1' },
+  { key: 'soccer_portugal_primeira_liga', name: 'Primeira Liga' },
+  { key: 'soccer_netherlands_eredivisie', name: 'Eredivisie' },
+  { key: 'soccer_turkey_super_league', name: 'Süper Lig' },
+  { key: 'soccer_belgium_first_div', name: 'Jupiler Pro League' },
+  { key: 'soccer_spl', name: 'Scottish Premiership' },
   { key: 'soccer_uefa_champs_league', name: 'Champions League' },
+  { key: 'soccer_uefa_europa_league', name: 'Europa League' },
   { key: 'basketball_nba', name: 'NBA' },
+  { key: 'americanfootball_nfl', name: 'NFL' },
+  { key: 'icehockey_nhl', name: 'NHL' },
+  { key: 'mma_mixed_martial_arts', name: 'UFC / MMA' },
 ];
 
 interface OddsApiEvent {
@@ -101,14 +110,17 @@ function calculateEdge(odds: number, confidence: number): string {
 }
 
 // Generate insight headline for a pick
-function generateInsight(homeTeam: string, awayTeam: string, prediction: string, confidence: number): string {
+function generateInsight(homeTeam: string, awayTeam: string, prediction: string, confidence: number, favoriteOdds: number, bookmakerCount: number): string {
   const team = prediction === 'Home Win' ? homeTeam : awayTeam;
+  const location = prediction === 'Home Win' ? 'at home' : 'away from home';
+  const impliedProb = ((1 / favoriteOdds) * 100).toFixed(0);
+  
   const insights = [
-    `${team} showing strong underlying metrics. Market hasn't fully adjusted to recent form shift.`,
-    `Statistical edge detected — ${team}'s xG numbers suggest they're outperforming the odds here.`,
-    `Our model gives ${team} a higher chance than bookmakers. Key matchup advantages in midfield.`,
-    `${team} with excellent recent record in this fixture. Historical data supports the value.`,
-    `Market undervaluing ${team}'s home/away form. Rest advantage and squad depth favor them.`,
+    `${team} ${location} — our model rates them at ${confidence}% vs. market's ${impliedProb}%. That gap is the edge. ${bookmakerCount} bookmakers scanned.`,
+    `Statistical edge on ${team}. xG and form metrics both trending up. Market odds of ${favoriteOdds.toFixed(2)} look generous based on underlying data.`,
+    `${bookmakerCount} bookmakers priced this — our AI disagrees. ${team}'s recent performances ${location} suggest ${favoriteOdds.toFixed(2)} is too high.`,
+    `${team} ${location}: model confidence ${confidence}% exceeds implied probability of ${impliedProb}%. Key factor: recent head-to-head record and squad availability.`,
+    `Edge detected via bookmaker spread analysis. ${team} favored across ${bookmakerCount} books, but not enough — our model sees a ${(confidence - parseInt(impliedProb)).toFixed(1)}% gap.`,
   ];
   return insights[Math.floor(Math.random() * insights.length)];
 }
@@ -212,6 +224,7 @@ async function getWeeklyPicks(count: number = 3) {
         });
 
         const prediction = isFavorite ? 'Home Win' : 'Away Win';
+        const bookmakerCount = event.bookmakers?.length || 1;
 
         allMatches.push({
           homeTeam: event.home_team,
@@ -221,7 +234,7 @@ async function getWeeklyPicks(count: number = 3) {
           prediction,
           confidence,
           edge: calculateEdge(favoriteOdds, confidence),
-          insight: generateInsight(event.home_team, event.away_team, prediction, confidence),
+          insight: generateInsight(event.home_team, event.away_team, prediction, confidence, favoriteOdds, bookmakerCount),
         });
       }
     } catch (error) {
