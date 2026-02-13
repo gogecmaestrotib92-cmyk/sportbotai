@@ -30,6 +30,9 @@ import {
   PredictedScoreDisplay,
   BookmakerOddsTable,
   WhyThisEdgeExists,
+  StackedProbBar,
+  MomentumTimeline,
+  RiskGauge,
 } from '@/components/analysis';
 import { isBase64, parseMatchSlug, decodeBase64MatchId } from '@/lib/match-utils';
 import StandingsTable from '@/components/StandingsTable';
@@ -1446,6 +1449,90 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
                 } : undefined,
               }}
             />
+          </div>
+        )}
+
+        {/* VISUAL PROBABILITY BAR + FORM MOMENTUM — Premium visual section */}
+        {data.marketIntel && (
+          <div className="mt-4 sm:mt-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] p-5 sm:p-6 space-y-5">
+            {/* Stacked Win Probability Bar */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full bg-gradient-to-b from-blue-500 to-rose-500" />
+                <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">
+                  {locale === 'sr' ? 'Verovatnoća Pobede' : 'Win Probability'}
+                </h3>
+              </div>
+              <StackedProbBar
+                home={data.marketIntel.modelProbability.home}
+                draw={data.matchInfo.hasDraw ? (data.marketIntel.modelProbability.draw ?? null) : null}
+                away={data.marketIntel.modelProbability.away}
+                homeTeam={data.matchInfo.homeTeam}
+                awayTeam={data.matchInfo.awayTeam}
+                locked={!canSeeExactNumbers}
+                valueSide={
+                  canSeeExactNumbers ? (
+                    data.marketIntel.valueEdge.outcome === 'home' && data.marketIntel.valueEdge.strength !== 'none' ? 'home' :
+                    data.marketIntel.valueEdge.outcome === 'away' && data.marketIntel.valueEdge.strength !== 'none' ? 'away' :
+                    null
+                  ) : null
+                }
+              />
+            </div>
+
+            {/* Form Momentum Timelines — side by side */}
+            {data.viralStats?.form && (data.viralStats.form.home !== '-----' || data.viralStats.form.away !== '-----') && (
+              <div className="pt-4 border-t border-white/[0.04]">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-500 to-rose-500" />
+                  <h3 className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">
+                    {locale === 'sr' ? 'Momentum' : 'Form Momentum'}
+                  </h3>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <MomentumTimeline
+                    form={data.viralStats.form.home}
+                    teamName={data.matchInfo.homeTeam}
+                    trend={
+                      data.universalSignals?.display?.form?.home === 'strong' ? 'rising' :
+                      data.universalSignals?.display?.form?.home === 'weak' ? 'falling' :
+                      'stable'
+                    }
+                  />
+                  <MomentumTimeline
+                    form={data.viralStats.form.away}
+                    teamName={data.matchInfo.awayTeam}
+                    trend={
+                      data.universalSignals?.display?.form?.away === 'strong' ? 'rising' :
+                      data.universalSignals?.display?.form?.away === 'weak' ? 'falling' :
+                      'stable'
+                    }
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Quick Risk Indicator */}
+            {data.story?.confidence && (
+              <div className="pt-4 border-t border-white/[0.04] flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-500 via-amber-500 to-rose-500" />
+                  <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">
+                    {locale === 'sr' ? 'Rizik' : 'Risk Level'}
+                  </span>
+                </div>
+                <RiskGauge
+                  level={data.story.confidence === 'strong' ? 'low' : data.story.confidence === 'moderate' ? 'medium' : 'high'}
+                  size={56}
+                  label={data.story.confidence === 'strong'
+                    ? (locale === 'sr' ? 'Nizak' : 'Low')
+                    : data.story.confidence === 'moderate'
+                    ? (locale === 'sr' ? 'Srednji' : 'Medium')
+                    : (locale === 'sr' ? 'Visok' : 'High')
+                  }
+                />
+              </div>
+            )}
           </div>
         )}
 

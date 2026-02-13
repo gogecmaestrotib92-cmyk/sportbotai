@@ -297,8 +297,13 @@ export default function UniversalSignalsDisplay({
 }
 
 /**
- * Premium Availability Display
- * Side-by-side team columns with clean injury cards
+ * Premium Availability Display — Visual Redesign
+ * 
+ * Features:
+ * - SVG player silhouette icons with severity color coding
+ * - Animated squad impact bar (visual meter)
+ * - Clean card-per-player with position + injury type
+ * - Side-by-side team columns
  */
 function ExpandableAvailability({
   display,
@@ -326,34 +331,136 @@ function ExpandableAvailability({
   const awayVisible = showAll ? awayInjuries : awayInjuries.slice(0, maxVisible);
   const hasMore = homeInjuries.length > maxVisible || awayInjuries.length > maxVisible;
 
-  // Severity color mapping
-  const getSeverity = (reason: string): { dot: string; bg: string; text: string; label: string } => {
+  // Severity classification
+  const getSeverity = (reason: string): { 
+    color: string; 
+    bgColor: string; 
+    textColor: string; 
+    label: string;
+    icon: 'out' | 'suspended' | 'doubtful' | 'inactive';
+  } => {
     const r = (reason || '').toLowerCase();
-    if (r.includes('suspend')) return { dot: 'bg-red-500', bg: 'bg-red-500/8', text: 'text-red-400', label: locale === 'sr' ? 'Suspendovan' : 'Suspended' };
-    if (r.includes('doubtful') || r.includes('questionable')) return { dot: 'bg-amber-500', bg: 'bg-amber-500/8', text: 'text-amber-400', label: locale === 'sr' ? 'Neizvestan' : 'Doubtful' };
-    if (r.includes('probable') || r.includes('gtd') || r.includes('day-to-day')) return { dot: 'bg-yellow-500', bg: 'bg-yellow-500/8', text: 'text-yellow-400', label: locale === 'sr' ? 'Upitan' : 'Questionable' };
-    if (r.includes('inactive') || r.includes('rest')) return { dot: 'bg-zinc-500', bg: 'bg-zinc-500/8', text: 'text-zinc-400', label: locale === 'sr' ? 'Neaktivan' : 'Inactive' };
-    return { dot: 'bg-red-500', bg: 'bg-red-500/8', text: 'text-red-400', label: locale === 'sr' ? 'Ne igra' : 'Out' };
+    if (r.includes('suspend')) return { 
+      color: '#ef4444', bgColor: 'bg-red-500/8', textColor: 'text-red-400', 
+      label: locale === 'sr' ? 'Suspendovan' : 'Suspended', icon: 'suspended' 
+    };
+    if (r.includes('doubtful') || r.includes('questionable')) return { 
+      color: '#f59e0b', bgColor: 'bg-amber-500/8', textColor: 'text-amber-400', 
+      label: locale === 'sr' ? 'Neizvestan' : 'Doubtful', icon: 'doubtful' 
+    };
+    if (r.includes('probable') || r.includes('gtd') || r.includes('day-to-day')) return { 
+      color: '#eab308', bgColor: 'bg-yellow-500/8', textColor: 'text-yellow-400', 
+      label: locale === 'sr' ? 'Upitan' : 'Questionable', icon: 'doubtful' 
+    };
+    if (r.includes('inactive') || r.includes('rest')) return { 
+      color: '#71717a', bgColor: 'bg-zinc-500/8', textColor: 'text-zinc-400', 
+      label: locale === 'sr' ? 'Neaktivan' : 'Inactive', icon: 'inactive' 
+    };
+    return { 
+      color: '#ef4444', bgColor: 'bg-red-500/8', textColor: 'text-red-400', 
+      label: locale === 'sr' ? 'Ne igra' : 'Out', icon: 'out' 
+    };
   };
 
   const getInjuryDescription = (injury: { reason?: string; details?: string }) => {
     const reason = injury.reason || '';
-    // If reason has actual injury info (not just "injury"/"out"), show it
     if (reason && reason.length > 3 && !['injury', 'doubtful', 'suspension', 'out'].includes(reason.toLowerCase())) {
-      return reason.length > 30 ? reason.slice(0, 28) + '…' : reason;
+      return reason.length > 25 ? reason.slice(0, 23) + '…' : reason;
     }
-    return injury.details || '';
+    const details = injury.details || '';
+    return details.length > 25 ? details.slice(0, 23) + '…' : details;
   };
 
-  // Impact level bar color
-  const impactColor = display.availability.level === 'high' 
-    ? 'border-red-500/20' 
-    : display.availability.level === 'medium' 
-      ? 'border-amber-500/20' 
-      : 'border-white/[0.06]';
+  // Impact level for top-level visual
+  const impactLevel = display.availability.level;
+  const impactConfig = {
+    critical: { barWidth: '95%', color: '#ef4444', glow: 'rgba(239,68,68,0.4)', label: locale === 'sr' ? 'Kritičan Uticaj' : 'Critical Impact', border: 'border-red-500/20' },
+    high: { barWidth: '85%', color: '#ef4444', glow: 'rgba(239,68,68,0.4)', label: locale === 'sr' ? 'Visok Uticaj' : 'High Impact', border: 'border-red-500/15' },
+    medium: { barWidth: '50%', color: '#f59e0b', glow: 'rgba(245,158,11,0.3)', label: locale === 'sr' ? 'Umeren Uticaj' : 'Moderate Impact', border: 'border-amber-500/15' },
+    low: { barWidth: '20%', color: '#10b981', glow: 'rgba(16,185,129,0.3)', label: locale === 'sr' ? 'Nizak Uticaj' : 'Low Impact', border: 'border-emerald-500/15' },
+  };
+  const impact = impactConfig[impactLevel] || impactConfig.low;
+  const totalOut = homeInjuries.length + awayInjuries.length;
+
+  // SVG player silhouette with status indicator
+  const PlayerIcon = ({ severity }: { severity: ReturnType<typeof getSeverity> }) => (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" className="flex-shrink-0">
+      {/* Head */}
+      <circle cx="14" cy="8" r="4.5" fill={severity.color} fillOpacity={0.15} stroke={severity.color} strokeWidth="1" strokeOpacity={0.4} />
+      {/* Body */}
+      <path d="M7 24c0-4 3.134-7 7-7s7 3 7 7" fill={severity.color} fillOpacity={0.1} stroke={severity.color} strokeWidth="1" strokeOpacity={0.3} strokeLinecap="round" />
+      {/* Status dot */}
+      <circle cx="21" cy="5" r="3" fill={severity.color} />
+      {severity.icon === 'out' && (
+        <path d="M19.8 3.8l2.4 2.4m0-2.4l-2.4 2.4" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+      )}
+      {severity.icon === 'suspended' && (
+        <rect x="20" y="3.5" width="2" height="3" rx="0.5" fill="white" />
+      )}
+      {severity.icon === 'doubtful' && (
+        <text x="21" y="6.5" textAnchor="middle" fill="white" fontSize="5" fontWeight="bold">?</text>
+      )}
+    </svg>
+  );
+
+  // Single injury card — premium style
+  const InjuryCard = ({ injury, index }: { injury: { player: string; position?: string; reason?: string; details?: string }; index: number }) => {
+    const severity = getSeverity(injury.reason || '');
+    const desc = getInjuryDescription(injury);
+    const position = injury.position && injury.position !== 'Unknown' ? injury.position : null;
+
+    return (
+      <div
+        className={`flex items-center gap-2.5 p-2.5 rounded-xl ${severity.bgColor} border border-white/[0.04] transition-all duration-300`}
+        style={{ animationDelay: `${index * 60}ms` }}
+      >
+        <PlayerIcon severity={severity} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13px] font-semibold text-white truncate">{injury.player}</span>
+            {position && (
+              <span className="text-[9px] text-zinc-500 uppercase tracking-wider flex-shrink-0">{position}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className={`text-[10px] font-medium ${severity.textColor}`}>{severity.label}</span>
+            {desc && (
+              <>
+                <span className="text-zinc-700">·</span>
+                <span className="text-[10px] text-zinc-500 truncate">{desc}</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Blurred placeholder for free users
+  const BlurredCards = ({ count }: { count: number }) => (
+    <div className="relative">
+      <div className="blur-[6px] pointer-events-none select-none space-y-1.5">
+        {Array.from({ length: Math.min(count, 2) }).map((_, idx) => (
+          <div key={idx} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-red-500/8 border border-white/[0.04]">
+            <div className="w-7 h-7 rounded-full bg-red-500/20" />
+            <div className="flex-1">
+              <div className="h-3 w-20 bg-white/10 rounded" />
+              <div className="h-2 w-14 bg-white/5 rounded mt-1" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="px-2.5 py-1 rounded-full bg-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 backdrop-blur-sm">
+          <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+          PRO
+        </span>
+      </div>
+    </div>
+  );
 
   return (
-    <div className={`rounded-2xl bg-[#0a0a0b] border border-t-white/[0.12] ${impactColor} overflow-hidden`}>
+    <div className={`rounded-2xl bg-[#0a0a0b] border ${impact.border} border-t-white/[0.12] overflow-hidden`}>
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-3">
         <div className="flex items-center gap-3">
@@ -368,7 +475,7 @@ function ExpandableAvailability({
             </span>
             {hasInjuries && (
               <span className="text-[10px] text-zinc-600">
-                {homeInjuries.length + awayInjuries.length} {locale === 'sr' ? 'igrača van terena' : 'players unavailable'}
+                {totalOut} {locale === 'sr' ? 'igrača van terena' : 'players unavailable'}
               </span>
             )}
           </div>
@@ -379,6 +486,28 @@ function ExpandableAvailability({
 
       {hasInjuries ? (
         <>
+          {/* Squad Impact Meter */}
+          <div className="px-5 pb-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] text-zinc-600 uppercase tracking-wider">
+                {locale === 'sr' ? 'Uticaj na Tim' : 'Squad Impact'}
+              </span>
+              <span className="text-[10px] font-medium" style={{ color: impact.color }}>
+                {impact.label}
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-zinc-800/60 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-1000 ease-out"
+                style={{
+                  width: impact.barWidth,
+                  background: `linear-gradient(90deg, ${impact.color}66, ${impact.color})`,
+                  boxShadow: `0 0 8px ${impact.glow}`,
+                }}
+              />
+            </div>
+          </div>
+
           {/* Two-Column Team Split */}
           <div className="grid grid-cols-2 divide-x divide-white/[0.04]">
             {/* Home Team Column */}
@@ -386,58 +515,29 @@ function ExpandableAvailability({
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider truncate max-w-[70%]">{homeTeam}</span>
                 {homeInjuries.length > 0 && (
-                  <span className="text-[10px] tabular-nums font-bold text-red-400">
+                  <span className="text-[10px] tabular-nums font-bold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded-md">
                     {homeInjuries.length}
                   </span>
                 )}
               </div>
               {homeInjuries.length > 0 ? (
                 canSeeExactNumbers ? (
-                  <div className="space-y-1">
-                    {homeVisible.map((injury, idx) => {
-                      const severity = getSeverity(injury.reason || '');
-                      const desc = getInjuryDescription(injury);
-                      return (
-                        <div key={idx} className={`p-2 rounded-lg ${severity.bg} transition-colors`}>
-                          <div className="flex items-center gap-2">
-                            <span className={`w-1.5 h-1.5 rounded-full ${severity.dot} flex-shrink-0`} />
-                            <span className="text-[13px] font-medium text-white truncate flex-1">{injury.player}</span>
-                          </div>
-                          {desc && (
-                            <p className={`text-[10px] ${severity.text} mt-0.5 ml-3.5 leading-tight`}>
-                              {desc}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
+                  <div className="space-y-1.5">
+                    {homeVisible.map((injury, idx) => (
+                      <InjuryCard key={idx} injury={injury} index={idx} />
+                    ))}
                   </div>
                 ) : (
-                  <div className="relative">
-                    <div className="blur-[6px] pointer-events-none select-none space-y-1">
-                      {homeVisible.slice(0, 2).map((injury, idx) => {
-                        const severity = getSeverity(injury.reason || '');
-                        return (
-                          <div key={idx} className={`p-2 rounded-lg ${severity.bg}`}>
-                            <div className="flex items-center gap-2">
-                              <span className={`w-1.5 h-1.5 rounded-full ${severity.dot} flex-shrink-0`} />
-                              <span className="text-[13px] font-medium text-white">██████ ████</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
-                        PRO
-                      </span>
-                    </div>
-                  </div>
+                  <BlurredCards count={homeInjuries.length} />
                 )
               ) : (
-                <div className="py-3 text-center">
-                  <span className="text-[10px] text-zinc-600">{locale === 'sr' ? 'Svi dostupni' : 'Full squad'}</span>
+                <div className="py-4 text-center">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/10">
+                    <svg className="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-[10px] text-emerald-400/80">{locale === 'sr' ? 'Komplet' : 'Full squad'}</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -447,58 +547,29 @@ function ExpandableAvailability({
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider truncate max-w-[70%]">{awayTeam}</span>
                 {awayInjuries.length > 0 && (
-                  <span className="text-[10px] tabular-nums font-bold text-red-400">
+                  <span className="text-[10px] tabular-nums font-bold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded-md">
                     {awayInjuries.length}
                   </span>
                 )}
               </div>
               {awayInjuries.length > 0 ? (
                 canSeeExactNumbers ? (
-                  <div className="space-y-1">
-                    {awayVisible.map((injury, idx) => {
-                      const severity = getSeverity(injury.reason || '');
-                      const desc = getInjuryDescription(injury);
-                      return (
-                        <div key={idx} className={`p-2 rounded-lg ${severity.bg} transition-colors`}>
-                          <div className="flex items-center gap-2">
-                            <span className={`w-1.5 h-1.5 rounded-full ${severity.dot} flex-shrink-0`} />
-                            <span className="text-[13px] font-medium text-white truncate flex-1">{injury.player}</span>
-                          </div>
-                          {desc && (
-                            <p className={`text-[10px] ${severity.text} mt-0.5 ml-3.5 leading-tight`}>
-                              {desc}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
+                  <div className="space-y-1.5">
+                    {awayVisible.map((injury, idx) => (
+                      <InjuryCard key={idx} injury={injury} index={idx} />
+                    ))}
                   </div>
                 ) : (
-                  <div className="relative">
-                    <div className="blur-[6px] pointer-events-none select-none space-y-1">
-                      {awayVisible.slice(0, 2).map((injury, idx) => {
-                        const severity = getSeverity(injury.reason || '');
-                        return (
-                          <div key={idx} className={`p-2 rounded-lg ${severity.bg}`}>
-                            <div className="flex items-center gap-2">
-                              <span className={`w-1.5 h-1.5 rounded-full ${severity.dot} flex-shrink-0`} />
-                              <span className="text-[13px] font-medium text-white">██████ ████</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
-                        PRO
-                      </span>
-                    </div>
-                  </div>
+                  <BlurredCards count={awayInjuries.length} />
                 )
               ) : (
-                <div className="py-3 text-center">
-                  <span className="text-[10px] text-zinc-600">{locale === 'sr' ? 'Svi dostupni' : 'Full squad'}</span>
+                <div className="py-4 text-center">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/10">
+                    <svg className="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-[10px] text-emerald-400/80">{locale === 'sr' ? 'Komplet' : 'Full squad'}</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -519,7 +590,7 @@ function ExpandableAvailability({
                 </>
               ) : (
                 <>
-                  {locale === 'sr' ? 'Prikaži sve' : 'Show all'} ({homeInjuries.length + awayInjuries.length})
+                  {locale === 'sr' ? 'Prikaži sve' : 'Show all'} ({totalOut})
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>

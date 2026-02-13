@@ -287,28 +287,93 @@ export function TempoIndicator({ level }: TempoIndicatorProps) {
 }
 
 // ============================================
-// VERDICT BADGE - The main prediction display
+// VERDICT BADGE - Premium visual prediction display
 // ============================================
 
 interface VerdictBadgeProps {
   favored: string;
   confidence: 'high' | 'medium' | 'low';
-  clarityScore?: number; // Optional - no longer displayed
-  edgePercentage?: number; // e.g. 52 for 52%
-  canSeeExactNumbers?: boolean; // PRO only - show exact percentages
+  clarityScore?: number;
+  edgePercentage?: number;
+  canSeeExactNumbers?: boolean;
+}
+
+/** Animated SVG confidence arc */
+function ConfidenceArc({ confidence, size = 56 }: { confidence: 'high' | 'medium' | 'low'; size?: number }) {
+  const config = {
+    high: { angle: 150, color: '#10b981', glow: 'rgba(16,185,129,0.4)', label: 'HIGH' },
+    medium: { angle: 95, color: '#f59e0b', glow: 'rgba(245,158,11,0.3)', label: 'MED' },
+    low: { angle: 45, color: '#71717a', glow: 'rgba(113,113,122,0.2)', label: 'LOW' },
+  };
+  const c = config[confidence];
+  const strokeWidth = 4;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = Math.PI * radius; // semicircle
+  const arcLength = (c.angle / 180) * circumference;
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <svg width={size} height={size / 2 + 6} viewBox={`0 0 ${size} ${size / 2 + 6}`}>
+        {/* Background arc */}
+        <path
+          d={`M ${strokeWidth / 2} ${size / 2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth / 2} ${size / 2}`}
+          fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={strokeWidth} strokeLinecap="round"
+        />
+        {/* Confidence arc */}
+        <path
+          d={`M ${strokeWidth / 2} ${size / 2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth / 2} ${size / 2}`}
+          fill="none" stroke={c.color} strokeWidth={strokeWidth} strokeLinecap="round"
+          strokeDasharray={`${arcLength} ${circumference}`}
+          style={{ filter: `drop-shadow(0 0 6px ${c.glow})`, transition: 'stroke-dasharray 1s ease-out' }}
+        />
+        {/* Center dot */}
+        <circle cx={size / 2} cy={size / 2 - 2} r="2.5" fill={c.color} opacity="0.8" />
+      </svg>
+      <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: c.color }}>
+        {c.label}
+      </span>
+    </div>
+  );
+}
+
+/** Verdict icon SVG based on confidence */
+function VerdictIcon({ confidence }: { confidence: 'high' | 'medium' | 'low' }) {
+  if (confidence === 'high') {
+    // Bullseye / target
+    return (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
+        <circle cx="10" cy="10" r="4.5" stroke="currentColor" strokeWidth="1.5" opacity="0.6" />
+        <circle cx="10" cy="10" r="2" fill="currentColor" />
+      </svg>
+    );
+  }
+  if (confidence === 'medium') {
+    // Scale / balance
+    return (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M10 3v14M5 7l5-2 5 2M5 7l-1 4h4L5 7zM15 7l1 4h-4l3-4z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+      </svg>
+    );
+  }
+  // Low — question / uncertain
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.2" opacity="0.3" />
+      <path d="M8 8a2.5 2.5 0 0 1 4.5 1.5c0 1.5-2.5 2-2.5 2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" opacity="0.7" />
+      <circle cx="10" cy="14.5" r="0.8" fill="currentColor" opacity="0.7" />
+    </svg>
+  );
 }
 
 export function VerdictBadge({ favored, confidence, edgePercentage, canSeeExactNumbers = false }: VerdictBadgeProps) {
-  // RESTRAINED COLOR SYSTEM:
-  // - High confidence (edge >5%): subtle emerald accent
-  // - Medium/Low: neutral zinc - no color unless there's a clear edge
-  const colors = {
-    high: 'from-emerald-500/10 to-emerald-500/5 border-emerald-500/20',
-    medium: 'from-zinc-800/50 to-zinc-900/50 border-zinc-700/30',
-    low: 'from-zinc-800/50 to-zinc-900/50 border-zinc-700/30',
+  const accentConfig = {
+    high: { hex: '#10b981', gradient: 'from-emerald-500/10 to-emerald-500/[0.03]', border: 'border-emerald-500/15', barGlow: 'rgba(16,185,129,0.3)' },
+    medium: { hex: '#f59e0b', gradient: 'from-amber-500/[0.06] to-amber-500/[0.02]', border: 'border-amber-500/10', barGlow: 'rgba(245,158,11,0.2)' },
+    low: { hex: '#71717a', gradient: 'from-zinc-700/20 to-zinc-800/20', border: 'border-zinc-700/20', barGlow: 'rgba(113,113,122,0.15)' },
   };
+  const accent = accentConfig[confidence];
 
-  // PRO users see "Strong Signal", FREE users see "Directional Signal"
   const confidenceLabels = canSeeExactNumbers ? {
     high: 'Strong Signal',
     medium: 'Moderate Signal',
@@ -319,47 +384,92 @@ export function VerdictBadge({ favored, confidence, edgePercentage, canSeeExactN
     low: 'Slight Lean',
   };
 
-  // Accent color for the label: only emerald for high, neutral for rest
-  const labelColor = confidence === 'high' ? 'text-emerald-400' : 'text-zinc-500';
-
-  // For low confidence matches, show "Slight edge to X (52%)" instead of "No Clear Edge"
   const isNoEdge = !favored || favored === 'No Clear Edge' || favored === 'Nema Jasne Prednosti';
   const displayText = isNoEdge && confidence === 'low' 
     ? 'Too Close to Call'
     : confidence === 'low' && favored && !isNoEdge && edgePercentage
       ? `Slight edge to ${favored}`
       : isNoEdge ? (favored === 'Nema Jasne Prednosti' ? 'Preblizu da se Odredi' : 'No Clear Edge') : favored;
-  
-  // Show percentage ONLY for PRO users (canSeeExactNumbers)
+
   const showPercentage = canSeeExactNumbers && confidence === 'low' && favored && favored !== 'No Clear Edge' && edgePercentage;
 
+  // For edge strength mini-bar (PRO only)
+  const edgeBarWidth = edgePercentage ? Math.min(Math.abs(edgePercentage - 50) * 6, 100) : 0;
+
   return (
-    <div className={`
-      relative overflow-hidden rounded-2xl p-6 sm:p-8
-      bg-gradient-to-br ${colors[confidence]} border
-    `}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">
-            Analysis Points To
-          </p>
-          {/* PRIMARY VERDICT: Near-white, bold - this is the main takeaway */}
-          <p className="text-2xl sm:text-3xl font-bold text-white">
+    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${accent.gradient} ${accent.border} border`}>
+      {/* Left accent bar */}
+      <div
+        className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full"
+        style={{ background: `linear-gradient(180deg, ${accent.hex}, ${accent.hex}33)`, boxShadow: `0 0 8px ${accent.barGlow}` }}
+      />
+
+      <div className="flex items-center justify-between p-5 sm:p-6 pl-5 sm:pl-6">
+        {/* Left: Verdict content */}
+        <div className="flex-1 min-w-0 ml-2">
+          {/* Header with icon */}
+          <div className="flex items-center gap-2 mb-2.5">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: `${accent.hex}12`, border: `1px solid ${accent.hex}18` }}>
+              <span style={{ color: accent.hex }}><VerdictIcon confidence={confidence} /></span>
+            </div>
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+              Analysis Points To
+            </p>
+          </div>
+
+          {/* Main verdict */}
+          <p className="text-xl sm:text-2xl font-bold text-white leading-tight">
             {displayText}
+          </p>
+
+          {/* Sub-label: confidence + optional percentage */}
+          <div className="flex items-center gap-2.5 mt-2">
+            {/* Pulse dot */}
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: accent.hex }} />
+            <span className="text-xs font-medium" style={{ color: accent.hex }}>
+              {confidenceLabels[confidence]}
+            </span>
             {showPercentage && (
-              <span className="text-lg font-normal text-zinc-400 ml-3">
+              <span className="text-xs text-zinc-500 font-mono">
                 ({edgePercentage}%)
               </span>
             )}
-          </p>
+          </div>
+
+          {/* Confidence sub-text for low */}
           {confidence === 'low' && (
-            <p className="text-xs text-zinc-500 mt-1">
+            <p className="text-[11px] text-zinc-600 mt-1.5 ml-4">
               Data suggests a lean, but not enough to call confidently
             </p>
           )}
+
+          {/* Edge strength mini-bar (PRO only) */}
+          {canSeeExactNumbers && edgePercentage && edgePercentage !== 50 && (
+            <div className="mt-3 ml-4">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] text-zinc-600 uppercase tracking-wider">Edge</span>
+                <div className="flex-1 max-w-[120px] h-1.5 rounded-full bg-white/[0.04] overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-1000 ease-out"
+                    style={{
+                      width: `${edgeBarWidth}%`,
+                      background: `linear-gradient(90deg, ${accent.hex}44, ${accent.hex})`,
+                      boxShadow: `0 0 8px ${accent.barGlow}`,
+                    }}
+                  />
+                </div>
+                <span className="text-[9px] font-mono" style={{ color: accent.hex }}>
+                  {Math.abs(edgePercentage - 50).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          )}
         </div>
-        <div className={`text-right ${labelColor}`}>
-          <p className="text-sm font-medium">{confidenceLabels[confidence]}</p>
+
+        {/* Right: Confidence Arc */}
+        <div className="flex-shrink-0 ml-4">
+          <ConfidenceArc confidence={confidence} />
         </div>
       </div>
     </div>

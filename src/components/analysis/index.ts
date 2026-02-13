@@ -48,3 +48,10 @@ export type { BookmakerOddsEntry } from './BookmakerOddsTable';
 
 // Unified analysis block
 export { default as WhyThisEdgeExists } from './WhyThisEdgeExists';
+
+// Premium Visual Components (SVG-based)
+export {
+  RiskGauge,
+  StackedProbBar,
+  MomentumTimeline,
+} from './PremiumVisuals';
