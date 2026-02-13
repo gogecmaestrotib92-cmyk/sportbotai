@@ -29,14 +29,31 @@ export default function TrendingSection({ maxMatches = 6 }: TrendingSectionProps
       try {
         setIsLoading(true);
         
-        // Fetch matches from multiple sports
+        // All enabled sports/leagues from sportsConfig
         const sportsToFetch = [
+          // Football - Top 5 leagues
           'soccer_epl',
-          'soccer_spain_la_liga', 
+          'soccer_spain_la_liga',
+          'soccer_germany_bundesliga',
+          'soccer_italy_serie_a',
+          'soccer_france_ligue_one',
+          // Football - Other leagues
+          'soccer_portugal_primeira_liga',
+          'soccer_netherlands_eredivisie',
+          'soccer_turkey_super_league',
+          'soccer_belgium_first_div',
+          'soccer_spl',
+          // Football - European cups
           'soccer_uefa_champs_league',
+          'soccer_uefa_europa_league',
+          // Basketball
           'basketball_nba',
+          // American Football
           'americanfootball_nfl',
+          // Ice Hockey
           'icehockey_nhl',
+          // MMA
+          'mma_mixed_martial_arts',
         ];
         
         const allMatches: TrendingMatch[] = [];

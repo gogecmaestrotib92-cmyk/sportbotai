@@ -219,7 +219,7 @@ export function getTrendingMatches(
   // 1. Haven't started yet
   // 2. Are within the next 48 hours (analyzable)
   const now = Date.now();
-  const maxTime = now + (48 * 60 * 60 * 1000); // 48 hours from now
+  const maxTime = now + (72 * 60 * 60 * 1000); // 72 hours from now
   
   const upcomingMatches = matches.filter(m => {
     const matchTime = new Date(m.commenceTime).getTime();
