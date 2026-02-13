@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         gte: 2, // At least 2% edge
       },
       modelProbability: {
-        gte: 40, // At least 40% model confidence
+        gte: 25, // At least 25% - includes underdog/draw value picks
       },
     };
 

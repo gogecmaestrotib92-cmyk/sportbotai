@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
         },
         outcome: 'PENDING' as const,
         edgeValue: { gte: 2 },
-        modelProbability: { gte: 35 },
+        modelProbability: { gte: 25 },
         NOT: {
           fullResponse: { equals: Prisma.DbNull },
         },
