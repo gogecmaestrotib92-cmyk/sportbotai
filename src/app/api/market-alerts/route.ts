@@ -35,18 +35,18 @@ interface MarketAlert {
   homeTeam: string;
   awayTeam: string;
   matchDate: string;
-  
+
   // Current odds (consensus/best)
   homeOdds: number;
   awayOdds: number;
   drawOdds?: number;
-  
+
   // Movement from previous snapshot
   homeChange?: number;
   awayChange?: number;
   drawChange?: number;
   changeDirection: 'toward_home' | 'toward_away' | 'stable';
-  
+
   // Model edge calculation
   modelHomeProb: number;
   modelAwayProb: number;
@@ -59,13 +59,13 @@ interface MarketAlert {
     percent: number;
     label: string;
   };
-  
+
   // Alert flags
   hasSteamMove: boolean;
   hasValueEdge: boolean;
   alertLevel: 'HIGH' | 'MEDIUM' | 'LOW' | null;
   alertNote?: string;
-  
+
   // Blur flag for non-premium users (top 10 edges are blurred)
   isBlurred?: boolean;
   blurRank?: number; // 1-10 for blurred items
@@ -130,18 +130,18 @@ function generateMatchId(homeTeam: string, awayTeam: string, sportKey: string, m
  */
 function getConsensusOdds(event: OddsApiEvent): { home: number; away: number; draw?: number } | null {
   if (!event.bookmakers || event.bookmakers.length === 0) return null;
-  
+
   let homeTotal = 0;
   let awayTotal = 0;
   let drawTotal = 0;
   let homeCount = 0;
   let awayCount = 0;
   let drawCount = 0;
-  
+
   for (const bookmaker of event.bookmakers) {
     const h2hMarket = bookmaker.markets.find(m => m.key === 'h2h');
     if (!h2hMarket) continue;
-    
+
     for (const outcome of h2hMarket.outcomes) {
       const name = outcome.name.toLowerCase();
       if (name === event.home_team.toLowerCase() || name.includes('home')) {
@@ -156,9 +156,9 @@ function getConsensusOdds(event: OddsApiEvent): { home: number; away: number; dr
       }
     }
   }
-  
+
   if (homeCount === 0 || awayCount === 0) return null;
-  
+
   return {
     home: Math.round((homeTotal / homeCount) * 100) / 100,
     away: Math.round((awayTotal / awayCount) * 100) / 100,
@@ -208,7 +208,7 @@ function calculateOddsChange(current: number, previous: number | null): number |
  * No more fake "watching for movement" based on odds patterns
  */
 function detectSteamMove(
-  homeChange: number | undefined, 
+  homeChange: number | undefined,
   awayChange: number | undefined,
   homeOdds: number,
   awayOdds: number,
@@ -217,31 +217,31 @@ function detectSteamMove(
   dbSteamNote?: string    // From OddsSnapshot.alertNote (if steam)
 ): { hasSteam: boolean; direction: string; note: string } {
   const STEAM_THRESHOLD = 2.5; // 2.5% change is significant
-  
+
   // PRIORITY 1: Use pre-computed steam move from DB (most reliable)
   // This is calculated by pre-analyze cron which tracks actual line movement
   if (dbSteamMove && dbSteamNote) {
-    const direction = dbSteamNote.includes('Home') ? 'toward_home' : 
-                      dbSteamNote.includes('Away') ? 'toward_away' : 
-                      dbSteamNote.includes('Draw') ? 'toward_draw' : 'stable';
+    const direction = dbSteamNote.includes('Home') ? 'toward_home' :
+      dbSteamNote.includes('Away') ? 'toward_away' :
+        dbSteamNote.includes('Draw') ? 'toward_draw' : 'stable';
     return {
       hasSteam: true,
       direction,
       note: dbSteamNote,
     };
   }
-  
+
   // PRIORITY 2: If we have actual change data from current session
   if (homeChange !== undefined && Math.abs(homeChange) >= STEAM_THRESHOLD) {
     return {
       hasSteam: true,
       direction: homeChange < 0 ? 'toward_home' : 'toward_away',
-      note: homeChange < 0 
+      note: homeChange < 0
         ? `Sharp money on Home (${Math.abs(homeChange).toFixed(1)}% drop)`
         : `Line drifting from Home (+${homeChange.toFixed(1)}%)`,
     };
   }
-  
+
   if (awayChange !== undefined && Math.abs(awayChange) >= STEAM_THRESHOLD) {
     return {
       hasSteam: true,
@@ -251,7 +251,7 @@ function detectSteamMove(
         : `Line drifting from Away (+${awayChange.toFixed(1)}%)`,
     };
   }
-  
+
   // NO FAKE STEAM: If no real data, return no steam
   // Previously we had heuristics like "Heavy favorite - watching for movement"
   // but that's misleading - it's not a real steam move
@@ -277,14 +277,14 @@ interface ProcessedEvent {
 async function batchGetCachedAnalyses(cacheKeys: string[]): Promise<Map<string, unknown>> {
   const results = new Map<string, unknown>();
   if (cacheKeys.length === 0) return results;
-  
+
   // Parallel fetch all cache keys (Redis handles this efficiently)
   const promises = cacheKeys.map(async key => {
     const data = await cacheGet(key);
     if (data) results.set(key, data);
   });
   await Promise.all(promises);
-  
+
   return results;
 }
 
@@ -294,11 +294,11 @@ async function batchGetCachedAnalyses(cacheKeys: string[]): Promise<Map<string, 
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
     // Check authentication
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
       return NextResponse.json({
         success: false,
@@ -306,18 +306,18 @@ export async function GET(request: NextRequest) {
         isPremium: false,
       } as MarketAlertsResponse, { status: 401 });
     }
-    
+
     // Check premium status - PREMIUM tier only (not PRO)
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: { plan: true },
     });
-    
+
     const isPremium = user?.plan === 'PREMIUM';
-    
+
     // For non-premium users, we'll return partial data with blurred top 10
     // This creates FOMO and shows value without giving away the best picks
-    
+
     // Check if Odds API is configured
     if (!theOddsClient.isConfigured()) {
       return NextResponse.json({
@@ -326,13 +326,13 @@ export async function GET(request: NextRequest) {
         isPremium: true,
       } as MarketAlertsResponse, { status: 500 });
     }
-    
+
     // ============================================
     // STEP 1: PARALLEL FETCH ALL SPORTS ODDS
     // ============================================
     console.log(`[Market Alerts] Fetching ${ALERT_SPORTS.length} sports in parallel...`);
-    
-    const oddsPromises = ALERT_SPORTS.map(sport => 
+
+    const oddsPromises = ALERT_SPORTS.map(sport =>
       theOddsClient.getOddsForSport(sport.key, {
         regions: ['eu', 'us'],
         markets: ['h2h'],
@@ -342,10 +342,10 @@ export async function GET(request: NextRequest) {
           return { sport, response: { data: [] } };
         })
     );
-    
+
     const oddsResults = await Promise.all(oddsPromises);
     console.log(`[Market Alerts] Odds fetched in ${Date.now() - startTime}ms`);
-    
+
     // ============================================
     // STEP 2: COLLECT ALL EVENTS & BUILD LOOKUP KEYS
     // ============================================
@@ -353,25 +353,25 @@ export async function GET(request: NextRequest) {
     const cutoff = new Date(now.getTime() + 48 * 60 * 60 * 1000);
     const processedEvents: ProcessedEvent[] = [];
     let totalMatches = 0;
-    
+
     for (const { sport, response } of oddsResults) {
       if (!response.data || response.data.length === 0) continue;
-      
+
       const upcomingEvents = response.data.filter(event => {
         const matchDate = new Date(event.commence_time);
         return matchDate >= now && matchDate <= cutoff;
       });
-      
+
       totalMatches += upcomingEvents.length;
-      
+
       for (const event of upcomingEvents) {
         const consensus = getConsensusOdds(event);
         if (!consensus) continue;
-        
+
         const matchRef = `${event.home_team} vs ${event.away_team}`;
         const matchDate = new Date(event.commence_time).toISOString().split('T')[0];
         const cacheKey = CACHE_KEYS.matchPreview(event.home_team, event.away_team, sport.key, matchDate);
-        
+
         processedEvents.push({
           event,
           sport,
@@ -382,9 +382,9 @@ export async function GET(request: NextRequest) {
         });
       }
     }
-    
+
     console.log(`[Market Alerts] Processing ${processedEvents.length} events from ${totalMatches} total`);
-    
+
     // ============================================
     // STEP 3: BATCH FETCH ALL PREVIOUS SNAPSHOTS
     // ============================================
@@ -393,7 +393,7 @@ export async function GET(request: NextRequest) {
       sport: e.sport.key,
       bookmaker: 'consensus' as const,
     }));
-    
+
     // Use findMany with OR for batch lookup (much faster than individual queries)
     const existingSnapshots = await prisma.oddsSnapshot.findMany({
       where: {
@@ -404,23 +404,23 @@ export async function GET(request: NextRequest) {
         })),
       },
     });
-    
+
     // Build lookup map for O(1) access
     const snapshotMap = new Map<string, typeof existingSnapshots[0]>();
     for (const snap of existingSnapshots) {
       snapshotMap.set(`${snap.matchRef}|${snap.sport}|${snap.bookmaker}`, snap);
     }
-    
+
     console.log(`[Market Alerts] Snapshots loaded in ${Date.now() - startTime}ms`);
-    
+
     // ============================================
     // STEP 4: BATCH FETCH ALL CACHED AI ANALYSES
     // ============================================
     const cacheKeys = processedEvents.map(e => e.cacheKey);
     const cachedAnalyses = await batchGetCachedAnalyses(cacheKeys);
-    
+
     console.log(`[Market Alerts] Cache loaded: ${cachedAnalyses.size}/${cacheKeys.length} hits in ${Date.now() - startTime}ms`);
-    
+
     // ============================================
     // STEP 5: PROCESS ALL EVENTS (CPU-bound, no I/O)
     // ============================================
@@ -452,31 +452,31 @@ export async function GET(request: NextRequest) {
       alertLevel: string | null;
       alertNote?: string;
     }> = [];
-    
+
     for (const processed of processedEvents) {
       const { event, sport, consensus, matchRef, cacheKey } = processed;
-      
+
       // Get previous snapshot from map (O(1))
       const prevSnapshot = snapshotMap.get(`${matchRef}|${sport.key}|consensus`);
-      
+
       // Calculate changes
       const homeChange = calculateOddsChange(consensus.home, prevSnapshot?.homeOdds ?? null);
       const awayChange = calculateOddsChange(consensus.away, prevSnapshot?.awayOdds ?? null);
-      const drawChange = consensus.draw && prevSnapshot?.drawOdds 
+      const drawChange = consensus.draw && prevSnapshot?.drawOdds
         ? calculateOddsChange(consensus.draw, prevSnapshot.drawOdds)
         : undefined;
-      
+
       // Detect steam moves - use REAL data from DB or calculated changes
       const steam = detectSteamMove(
-        homeChange, 
-        awayChange, 
-        consensus.home, 
-        consensus.away, 
+        homeChange,
+        awayChange,
+        consensus.home,
+        consensus.away,
         !!prevSnapshot,
         prevSnapshot?.hasSteamMove ?? false,  // DB-computed steam move
         prevSnapshot?.hasSteamMove ? (prevSnapshot?.alertNote ?? undefined) : undefined  // Steam note
       );
-      
+
       // Get cached AI analysis (O(1) from map) - FALLBACK source
       const cachedAnalysis = cachedAnalyses.get(cacheKey) as {
         marketIntel?: {
@@ -484,7 +484,7 @@ export async function GET(request: NextRequest) {
           valueEdge?: { outcome: string; edgePercent: number; label: string; strength: string };
         };
       } | undefined;
-      
+
       // Calculate edges
       let modelHomeProb: number;
       let modelAwayProb: number;
@@ -494,23 +494,33 @@ export async function GET(request: NextRequest) {
       let drawEdge: number | undefined;
       let valueEdgeLabel: string | undefined;
       let usingPipelineProbs = false; // Track if we're using proper Poisson/Elo probabilities
-      
-      // PRIORITY 1: Use OddsSnapshot model probabilities (populated by pre-analyze cron with Poisson/Elo)
-      // BUT recalculate edge with CURRENT live odds to match what /api/analyze shows
-      // This ensures Market Alerts edge matches the Full Analysis edge
-      if (prevSnapshot?.modelHomeProb && prevSnapshot?.modelAwayProb && 
-          prevSnapshot.modelHomeProb > 0 && prevSnapshot.modelAwayProb > 0) {
+
+      // PRIORITY 0: Use PRE-COMPUTED edges from OddsSnapshot (calculated by cron at same time as model probs)
+      // This avoids drift from odds changes since cron ran — edges are consistent with stored model probs
+      if (prevSnapshot?.homeEdge != null && prevSnapshot?.awayEdge != null &&
+        prevSnapshot.modelHomeProb && prevSnapshot.modelAwayProb &&
+        prevSnapshot.modelHomeProb > 0) {
+        modelHomeProb = prevSnapshot.modelHomeProb;
+        modelAwayProb = prevSnapshot.modelAwayProb;
+        modelDrawProb = prevSnapshot.modelDrawProb ?? undefined;
+        homeEdge = prevSnapshot.homeEdge;
+        awayEdge = prevSnapshot.awayEdge;
+        drawEdge = prevSnapshot.drawEdge ?? undefined;
+        usingPipelineProbs = true;
+        valueEdgeLabel = prevSnapshot.alertNote ?? undefined;
+      }
+      // PRIORITY 1: OddsSnapshot has model probs but no pre-computed edges (legacy data)
+      // Recalculate edge from model probs + current odds (less accurate due to time drift)
+      else if (prevSnapshot?.modelHomeProb && prevSnapshot?.modelAwayProb &&
+        prevSnapshot.modelHomeProb > 0 && prevSnapshot.modelAwayProb > 0) {
         modelHomeProb = prevSnapshot.modelHomeProb;
         modelAwayProb = prevSnapshot.modelAwayProb;
         modelDrawProb = prevSnapshot.modelDrawProb ?? undefined;
         usingPipelineProbs = true;
-        
-        // IMPORTANT: Use removeVig to match analyzeMarket() in value-detection.ts
-        // Only pass draw odds for sports with real draws (soccer)
-        // For NHL/NBA/NFL, draw odds are "tie at regulation" which we don't model
+
         const drawForVig = sport.hasDraw ? consensus.draw : undefined;
         const noVigProbs = removeVig(consensus.home, consensus.away, drawForVig);
-        
+
         homeEdge = modelHomeProb - noVigProbs.home;
         awayEdge = modelAwayProb - noVigProbs.away;
         drawEdge = modelDrawProb && noVigProbs.draw ? modelDrawProb - noVigProbs.draw : undefined;
@@ -523,11 +533,11 @@ export async function GET(request: NextRequest) {
         modelAwayProb = aiProbs.away;
         modelDrawProb = aiProbs.draw;
         usingPipelineProbs = true;
-        
+
         // Use removeVig - only pass draw for sports with real draws
         const drawForVig = sport.hasDraw ? consensus.draw : undefined;
         const noVigProbs = removeVig(consensus.home, consensus.away, drawForVig);
-        
+
         homeEdge = modelHomeProb - noVigProbs.home;
         awayEdge = modelAwayProb - noVigProbs.away;
         drawEdge = modelDrawProb && noVigProbs.draw ? modelDrawProb - noVigProbs.draw : undefined;
@@ -545,17 +555,17 @@ export async function GET(request: NextRequest) {
           },
           orderBy: { kickoff: 'asc' },
         });
-        
+
         if (predictionFallback?.homeWin && predictionFallback?.awayWin) {
           // Found pipeline data in Prediction table
           modelHomeProb = predictionFallback.homeWin;
           modelAwayProb = predictionFallback.awayWin;
           modelDrawProb = predictionFallback.draw ?? undefined;
           usingPipelineProbs = true;
-          
+
           const drawForVig = sport.hasDraw ? consensus.draw : undefined;
           const noVigProbs = removeVig(consensus.home, consensus.away, drawForVig);
-          
+
           homeEdge = modelHomeProb - noVigProbs.home;
           awayEdge = modelAwayProb - noVigProbs.away;
           drawEdge = modelDrawProb && noVigProbs.draw ? modelDrawProb - noVigProbs.draw : undefined;
@@ -566,18 +576,18 @@ export async function GET(request: NextRequest) {
           console.warn(`[Market-Alerts] No pipeline data for ${matchRef} — showing market-implied (no edge)`);
           const drawForVig = sport.hasDraw ? consensus.draw : undefined;
           const noVigProbs = removeVig(consensus.home, consensus.away, drawForVig);
-          
+
           modelHomeProb = noVigProbs.home;
           modelAwayProb = noVigProbs.away;
           modelDrawProb = noVigProbs.draw;
-          
+
           // Edges are ~0 since model = market (honest representation)
           homeEdge = 0;
           awayEdge = 0;
           drawEdge = sport.hasDraw ? 0 : undefined;
         }
       }
-      
+
       // Determine best edge
       const edges: Array<{ outcome: 'home' | 'away' | 'draw'; percent: number }> = [
         { outcome: 'home', percent: homeEdge },
@@ -586,16 +596,16 @@ export async function GET(request: NextRequest) {
       if (drawEdge !== undefined) {
         edges.push({ outcome: 'draw', percent: drawEdge });
       }
-      
-      const bestEdge = edges.reduce((best, curr) => 
+
+      const bestEdge = edges.reduce((best, curr) =>
         curr.percent > best.percent ? curr : best
-      , edges[0]);
-      
+        , edges[0]);
+
       const hasValueEdge = bestEdge.percent >= 5; // 5%+ edge
-      const alertLevel = bestEdge.percent >= 10 ? 'HIGH' : 
-                        bestEdge.percent >= 5 ? 'MEDIUM' : 
-                        steam.hasSteam ? 'LOW' : null;
-      
+      const alertLevel = bestEdge.percent >= 10 ? 'HIGH' :
+        bestEdge.percent >= 5 ? 'MEDIUM' :
+          steam.hasSteam ? 'LOW' : null;
+
       const alert: MarketAlert = {
         id: event.id,
         matchRef,
@@ -606,16 +616,16 @@ export async function GET(request: NextRequest) {
         awayTeam: event.away_team,
         matchDate: event.commence_time,
         matchId: generateMatchId(event.home_team, event.away_team, sport.key, event.commence_time),
-        
+
         homeOdds: consensus.home,
         awayOdds: consensus.away,
         drawOdds: consensus.draw,
-        
+
         homeChange,
         awayChange,
         drawChange,
         changeDirection: steam.direction as 'toward_home' | 'toward_away' | 'stable',
-        
+
         modelHomeProb,
         modelAwayProb,
         modelDrawProb,
@@ -627,15 +637,15 @@ export async function GET(request: NextRequest) {
           percent: Math.round(bestEdge.percent * 10) / 10,
           label: valueEdgeLabel || `${bestEdge.outcome.charAt(0).toUpperCase() + bestEdge.outcome.slice(1)} +${bestEdge.percent.toFixed(1)}%`,
         },
-        
+
         hasSteamMove: steam.hasSteam,
         hasValueEdge,
         alertLevel,
         alertNote: steam.note || (hasValueEdge ? `Model sees ${bestEdge.percent.toFixed(1)}% edge on ${bestEdge.outcome}` : undefined),
       };
-      
+
       allAlerts.push(alert);
-      
+
       // Collect data for batch upsert
       upsertData.push({
         matchRef,
@@ -665,9 +675,9 @@ export async function GET(request: NextRequest) {
         alertNote: valueEdgeLabel || alert.alertNote,
       });
     }
-    
+
     console.log(`[Market Alerts] Processing complete in ${Date.now() - startTime}ms`);
-    
+
     // ============================================
     // STEP 6: BATCH UPSERT SNAPSHOTS (background, don't await)
     // ============================================
@@ -676,7 +686,7 @@ export async function GET(request: NextRequest) {
       try {
         // Use transaction for batch upserts
         await prisma.$transaction(
-          upsertData.map(data => 
+          upsertData.map(data =>
             prisma.oddsSnapshot.upsert({
               where: {
                 matchRef_sport_bookmaker: {
@@ -737,11 +747,11 @@ export async function GET(request: NextRequest) {
         console.error('[Market Alerts] Batch upsert error:', err);
       }
     })();
-    
+
     // Sort ALL alerts by edge (highest to lowest)
     const allEdgesSorted = [...allAlerts]
       .sort((a, b) => b.bestEdge.percent - a.bestEdge.percent);
-    
+
     // Steam moves - sorted by steam score
     // Calculate a "steam score" for each match to rank them
     const steamMoves = [...allAlerts]
@@ -749,17 +759,17 @@ export async function GET(request: NextRequest) {
         // Calculate steam score based on actual changes OR market patterns
         let steamScore = 0;
         let steamNote = a.alertNote || '';
-        
+
         // Actual odds changes are highest priority
         const homeChg = a.homeChange || 0;
         const awayChg = a.awayChange || 0;
         const maxChange = Math.max(Math.abs(homeChg), Math.abs(awayChg));
         steamScore += maxChange * 10; // Weight actual changes heavily
-        
+
         // Generate note based on changes
         if (maxChange >= 2.5) {
           if (Math.abs(homeChg) > Math.abs(awayChg)) {
-            steamNote = homeChg < 0 
+            steamNote = homeChg < 0
               ? `Sharp money on ${a.homeTeam} (${Math.abs(homeChg).toFixed(1)}% drop)`
               : `Line drifting from ${a.homeTeam} (+${homeChg.toFixed(1)}%)`;
           } else {
@@ -777,7 +787,7 @@ export async function GET(request: NextRequest) {
             steamScore += 1.5;
             steamNote = steamNote || `Close matchup - potential sharp action`;
           }
-          
+
           // Heavy favorites often see late steam
           if (a.homeOdds < 1.40) {
             steamScore += 2;
@@ -787,19 +797,19 @@ export async function GET(request: NextRequest) {
             steamNote = steamNote || `Heavy away favorite @ ${a.awayOdds.toFixed(2)} - monitoring for drift`;
           }
         }
-        
+
         return { ...a, steamScore, alertNote: steamNote || 'Tracking line movement' };
       })
       .sort((a, b) => b.steamScore - a.steamScore);
-    
+
     const totalTime = Date.now() - startTime;
     console.log(`[Market Alerts] Response ready in ${totalTime}ms`);
-    
+
     // For non-premium users: blur top 10 edges and top 5 steam moves
     // Show enough to create FOMO but hide the actual edge values
     let responseEdges = allEdgesSorted;
     let responseSteam = steamMoves;
-    
+
     if (!isPremium) {
       // Blur top 10 edges - hide the actual edge % but show teams
       responseEdges = allEdgesSorted.map((alert, index) => {
@@ -825,7 +835,7 @@ export async function GET(request: NextRequest) {
         }
         return { ...alert, isBlurred: false };
       });
-      
+
       // Blur top 5 steam moves
       responseSteam = steamMoves.map((alert, index) => {
         if (index < 5) {
@@ -842,7 +852,7 @@ export async function GET(request: NextRequest) {
         return { ...alert, isBlurred: false };
       });
     }
-    
+
     return NextResponse.json({
       success: true,
       data: {
@@ -859,7 +869,7 @@ export async function GET(request: NextRequest) {
       },
       isPremium,
     } as MarketAlertsResponse);
-    
+
   } catch (error) {
     console.error('[Market Alerts] Error:', error);
     return NextResponse.json({
