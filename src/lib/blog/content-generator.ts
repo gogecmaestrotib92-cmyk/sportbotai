@@ -99,19 +99,27 @@ Recent News: ${JSON.stringify(research.recentNews)}
 
 - SEO-optimized title (include keyword naturally, NOT forced)
 - Meta description (150-160 chars, compelling hook)
-- 6-8 sections with clear H2 headings that address user questions
-- Each section: 2-4 subheadings (H3)
-- Each subheading: 2-3 key points that become full paragraphs
-- Target 2000-2500 words total
+- 8-12 sections with clear H2 headings that address user questions
+- Each section: 3-5 subheadings (H3)
+- Each subheading: 3-5 key points that become DETAILED paragraphs
+- Target 3500-5000 words total (LONG-FORM EVERGREEN content)
 - Include a "Responsible Gambling" section before conclusion
 - Strong conclusion that summarizes key takeaways
 
+CRITICAL — DEPTH OVER BREADTH:
+- Every section must include SPECIFIC data points, real examples, or concrete numbers
+- Do NOT write generic advice like "timing is important" — explain WHY with evidence
+- Use real player names, real match examples, real statistics to illustrate points
+- Each H3 should answer a specific question a reader would actually ask
+- Plan for at least ONE data table per article (comparison, stats breakdown, etc.)
+
 SECTION FLOW:
-1. Introduction with hook and TL;DR
-2-5. Core content sections answering user questions
-6. Practical tips/how-to section
-7. Responsible Gambling
-8. Conclusion with actionable takeaways
+1. Introduction with hook, TL;DR, and "what you'll learn" promise
+2-6. Core content sections with REAL DATA and SPECIFIC EXAMPLES
+7. Practical step-by-step guide/how-to
+8. Common mistakes to avoid (with real scenarios)
+9. Responsible Gambling
+10. Conclusion with actionable takeaways
 
 ═══════════════════════════════════════════════════════════════
 🔑 SEO KEYWORD TARGETS (from NeuronWriter)
@@ -137,7 +145,7 @@ Return JSON:
 }`;
 
   const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4.1',
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.7,
     response_format: { type: 'json_object' },
@@ -283,12 +291,19 @@ AI writing has predictable patterns. Break them:
 📖 CONTENT STRUCTURE
 ═══════════════════════════════════════════════════════════════
 
-- Under each H2 heading, write 2-3 substantial paragraphs BEFORE any H3
-- Under each H3, write 2-4 paragraphs (not just one!)
-- Each paragraph: 3-5 sentences with varied length
-- Total article: 2000-2500 words minimum
+- Under each H2 heading, write 3-5 substantial paragraphs BEFORE any H3
+- Under each H3, write 3-5 paragraphs (NOT just one or two!)
+- Each paragraph: 4-6 sentences with varied length
+- Total article: 3500-5000 words minimum (THIS IS LONG-FORM CONTENT)
 - Use clear transitions between sections
 - Include a TL;DR or key takeaway in the intro
+
+CRITICAL — WHAT MAKES CONTENT RANK:
+- SPECIFIC over generic: "Connor Bedard averaged 1.2 points/game in his first 30 games" beats "top players perform well"
+- EXAMPLES over theory: Show a real scenario, then explain the principle
+- DATA TABLES: Include at least 2 HTML tables with real/realistic statistics
+- ACTIONABLE: Every section should end with something the reader can DO
+- UNIQUE ANGLE: Don't write what 100 other blogs already say — what's OUR perspective based on AI analysis?
 
 ═══════════════════════════════════════════════════════════════
 🖼️ INLINE IMAGES (MANDATORY)
@@ -404,10 +419,10 @@ Return JSON:
 }`;
 
   const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4.1',
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.75,
-    max_tokens: 6000,
+    max_tokens: 10000,
     response_format: { type: 'json_object' },
   });
 
@@ -429,7 +444,7 @@ Return JSON:
 // Generate a catchy excerpt if needed
 export async function generateExcerpt(title: string, content: string): Promise<string> {
   const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4.1-mini',
     messages: [{
       role: 'user',
       content: `Write a compelling 2-sentence excerpt for this blog post that will encourage clicks. 
@@ -451,7 +466,7 @@ export function estimateGenerationCost(
   outlineTokens: number, 
   contentTokens: number
 ): number {
-  // GPT-4o-mini pricing: $0.15/1M input, $0.60/1M output (approx)
+  // GPT-4.1 pricing: $2/1M input, $8/1M output (approx)
   const inputCost = (researchTokens + outlineTokens * 0.5 + contentTokens * 0.3) * 0.00000015;
   const outputCost = (outlineTokens * 0.5 + contentTokens * 0.7) * 0.0000006;
   

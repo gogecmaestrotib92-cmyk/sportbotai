@@ -146,7 +146,7 @@ export async function generateBlogPost(config: BlogGenerationConfig): Promise<Bl
         status: 'PUBLISHED', // Auto-publish
         publishedAt: new Date(),
         keywordId: keywordRecord.id,
-        aiModel: 'gpt-4.1-nano + gpt-4o-mini + perplexity-sonar + flux-schnell',
+        aiModel: 'gpt-4.1 + gpt-4.1-mini + perplexity-sonar + flux-schnell',
         generationCost: totalCost,
       },
     });

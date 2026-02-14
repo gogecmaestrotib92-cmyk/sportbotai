@@ -30,8 +30,8 @@ function getOpenAI(): OpenAI {
   return openaiClient;
 }
 
-// Use gpt-4.1-nano for faster and cheaper generation
-const AI_MODEL = 'gpt-4.1-nano';
+// Use gpt-4.1 for higher quality match preview content
+const AI_MODEL = 'gpt-4.1';
 
 // ============================================
 // TYPES

@@ -25,7 +25,7 @@ async function generateImagePrompt(
   const context = imageDescription || `blog header for article about ${keyword}`;
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4.1-nano',
+    model: 'gpt-4.1-mini',
     messages: [{
       role: 'system',
       content: `You are an expert at creating prompts for AI image generation. Create visually striking, modern prompts for Flux image model.
