@@ -540,12 +540,19 @@ function BulletCard({ bullet, pipelineEdgePercent }: { bullet: ParsedBullet; pip
         </p>
 
         {/* Visual data extraction — only if data was parseable */}
-        <div className="ml-8">
-          {edgePercent !== null && <EdgeStrengthBar percent={edgePercent} />}
-          {formRatings !== null && <FormComparisonBars ratings={formRatings} text={bullet.text} />}
-          {h2hRecord !== null && <H2HDominanceArc record={h2hRecord} />}
-          {pointGap !== null && <MarketGapIndicator gap={pointGap} />}
-        </div>
+        {/* When pipeline says no meaningful edge (<3%), suppress visual bars
+            that would contradict the pipeline (e.g., "10-point gap" from stale AI text) */}
+        {(() => {
+          const pipelineSaysNoEdge = pipelineEdgePercent != null && Math.abs(pipelineEdgePercent) < 3;
+          return (
+            <div className="ml-8">
+              {edgePercent !== null && !pipelineSaysNoEdge && <EdgeStrengthBar percent={edgePercent} />}
+              {formRatings !== null && <FormComparisonBars ratings={formRatings} text={bullet.text} />}
+              {h2hRecord !== null && <H2HDominanceArc record={h2hRecord} />}
+              {pointGap !== null && !pipelineSaysNoEdge && <MarketGapIndicator gap={pointGap} />}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
