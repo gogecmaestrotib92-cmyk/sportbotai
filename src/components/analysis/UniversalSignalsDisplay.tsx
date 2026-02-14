@@ -142,8 +142,9 @@ export default function UniversalSignalsDisplay({
     }
 
     // Map pipeline strength to confidence
+    // 'slight' (3-6%) is still a valid edge → 'medium', not 'low'
     effectiveConfidence = pipeStrength === 'strong' ? 'high'
-      : pipeStrength === 'moderate' ? 'medium'
+      : (pipeStrength === 'moderate' || pipeStrength === 'slight') ? 'medium'
         : 'low';
   } else {
     // Fallback to heuristic signals

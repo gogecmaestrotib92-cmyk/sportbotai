@@ -99,11 +99,12 @@ function EdgeStrengthBar({ percent }: { percent: number }) {
     return () => clearTimeout(timer);
   }, [percent]);
 
-  // Color based on edge size
-  const isStrong = percent >= 3;
-  const isMedium = percent >= 1.5;
-  const color = isStrong ? '#10b981' : isMedium ? '#34d399' : '#6ee7b7';
-  const glowColor = isStrong ? 'rgba(16,185,129,0.4)' : 'rgba(52,211,153,0.2)';
+  // Color based on edge size — aligned with pipeline detectValue() thresholds
+  const isStrong = percent >= 10;
+  const isMedium = percent >= 6;
+  const isSlight = percent >= 3;
+  const color = isStrong ? '#10b981' : isMedium ? '#34d399' : isSlight ? '#6ee7b7' : '#71717a';
+  const glowColor = isStrong ? 'rgba(16,185,129,0.4)' : isMedium ? 'rgba(52,211,153,0.3)' : 'rgba(52,211,153,0.15)';
 
   return (
     <div className="mt-2.5 mb-1">
@@ -143,7 +144,7 @@ function EdgeStrengthBar({ percent }: { percent: number }) {
           backgroundColor: `${color}11`,
           borderColor: `${color}22`,
         }}>
-          {isStrong ? 'Strong Edge' : isMedium ? 'Moderate Edge' : 'Thin Edge'}
+          {isStrong ? 'Strong Edge' : isMedium ? 'Moderate Edge' : isSlight ? 'Slight Edge' : 'Thin Edge'}
         </span>
       </div>
     </div>
