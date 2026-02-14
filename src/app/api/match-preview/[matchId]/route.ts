@@ -267,7 +267,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // In that case, skip the "too far away" and "live" checks - we'll get real time from DB
     // ==========================================
     const hasRealKickoffTime = matchInfo.kickoff && !matchInfo.kickoff.endsWith('T00:00:00Z');
-    
+
     if (hasRealKickoffTime && matchInfo.kickoff) {
       const kickoffDate = new Date(matchInfo.kickoff);
       const now = new Date();
@@ -318,7 +318,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
               { matchName: { contains: awayWord, mode: 'insensitive' } },
             ],
             // Allow past matches (already started)
-            kickoff: { 
+            kickoff: {
               gte: new Date(Date.now() - 6 * 60 * 60 * 1000), // Started within last 6 hours
             },
             NOT: { fullResponse: { equals: Prisma.DbNull } },
@@ -392,11 +392,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     try {
       const preAnalyzedStart = Date.now();
       console.log(`[Match-Preview] ⚡ Checking for pre-analyzed data: ${matchInfo.homeTeam} vs ${matchInfo.awayTeam}`);
-      
+
       // Build search terms from team names (first word is most reliable)
       const homeWord = matchInfo.homeTeam.split(/\s+/)[0];
       const awayWord = matchInfo.awayTeam.split(/\s+/)[0];
-      
+
       const preAnalyzed = await prisma.prediction.findFirst({
         where: {
           AND: [
@@ -408,11 +408,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         },
         orderBy: { kickoff: 'asc' },
       });
-      
+
       if (preAnalyzed?.fullResponse) {
         const fullData = preAnalyzed.fullResponse as any;
         console.log(`[Match-Preview] ⚡ INSTANT PATH: Found pre-analyzed data for ${preAnalyzed.matchName} in ${Date.now() - preAnalyzedStart}ms`);
-        
+
         // Build complete response from pre-analyzed data
         const response = {
           // Core match info
@@ -432,9 +432,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           responseTime: Date.now() - startTime,
           generatedAt: preAnalyzed.createdAt?.toISOString() || new Date().toISOString(),
         };
-        
+
         console.log(`[Match-Preview] ⚡ Returning pre-analyzed response in ${Date.now() - startTime}ms`);
-        
+
         return NextResponse.json(response, {
           headers: {
             'Cache-Control': 'public, max-age=300', // Cache for 5 min
@@ -1496,7 +1496,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
     }
 
-    console.log(`[Match-Preview] Final stats for model - Home: ${homeStats.goalsScored}/${homeStats.played} (${(homeStats.goalsScored/Math.max(1,homeStats.played)).toFixed(1)}/game), Away: ${awayStats.goalsScored}/${awayStats.played} (${(awayStats.goalsScored/Math.max(1,awayStats.played)).toFixed(1)}/game)`);
+    console.log(`[Match-Preview] Final stats for model - Home: ${homeStats.goalsScored}/${homeStats.played} (${(homeStats.goalsScored / Math.max(1, homeStats.played)).toFixed(1)}/game), Away: ${awayStats.goalsScored}/${awayStats.played} (${(awayStats.goalsScored / Math.max(1, awayStats.played)).toFixed(1)}/game)`);
 
     // H2H summary
     const h2h = {
@@ -1836,11 +1836,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // This ensures match-preview uses the SAME Poisson/Elo model as pre-analyze cron
     // Consistent probability calculations across ALL entry points
     let pipelineProbabilities: { home: number; away: number; draw?: number | null } | undefined;
-    
+
     if (oddsForEdge) {
       try {
         const sportConfig = getSportConfig(matchInfo.sport);
-        
+
         // Format odds for pipeline using CONSENSUS odds (consistent with market-alerts)
         const pipelineOdds = [{
           bookmaker: 'consensus',
@@ -1881,19 +1881,75 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             draws: h2h.draws,
           } : undefined,
           odds: pipelineOdds,
+          // Situational factors — MUST match pre-analyze cron for consistent probabilities
+          situational: (() => {
+            const isFatigueSport = matchInfo.sport.includes('basketball') || matchInfo.sport.includes('hockey') || matchInfo.sport.includes('football');
+            const matchTime = matchInfo.kickoff ? new Date(matchInfo.kickoff).getTime() : Date.now();
+            const oneDayMs = 24 * 60 * 60 * 1000;
+
+            const getRestDays = (formData: any[] | null): number => {
+              if (!formData || formData.length === 0) return 3;
+              const lastGameDate = formData
+                .map((g: any) => new Date(g.date).getTime())
+                .filter((d: number) => d < matchTime)
+                .sort((a: number, b: number) => b - a)[0];
+              if (!lastGameDate) return 3;
+              return Math.floor((matchTime - lastGameDate) / oneDayMs);
+            };
+
+            const homeRestDays = getRestDays(enrichedData?.homeForm);
+            const awayRestDays = getRestDays(enrichedData?.awayForm);
+
+            const countInjuries = (injList: any[]) => {
+              let outCount = 0;
+              let doubtfulCount = 0;
+              for (const inj of injList || []) {
+                const reason = (inj.reason || inj.status || '').toLowerCase();
+                if (reason.includes('out') || reason.includes('injury') && !reason.includes('questionable') && !reason.includes('doubtful') && !reason.includes('probable')) {
+                  outCount++;
+                } else if (reason.includes('doubtful') || reason.includes('questionable') || reason.includes('gtd')) {
+                  doubtfulCount++;
+                }
+              }
+              return { outCount, doubtfulCount };
+            };
+
+            const homeInjuryCounts = countInjuries(injuries?.home || []);
+            const awayInjuryCounts = countInjuries(injuries?.away || []);
+
+            return {
+              homeRestDays: isFatigueSport ? homeRestDays : 3,
+              awayRestDays: isFatigueSport ? awayRestDays : 3,
+              isHomeBackToBack: isFatigueSport ? homeRestDays <= 1 : false,
+              isAwayBackToBack: isFatigueSport ? awayRestDays <= 1 : false,
+              homeGamesLast7Days: isFatigueSport ? (enrichedData?.homeForm || []).filter((g: any) => {
+                const gameTime = new Date(g.date).getTime();
+                return gameTime > (matchTime - 7 * oneDayMs) && gameTime < matchTime;
+              }).length : 0,
+              awayGamesLast7Days: isFatigueSport ? (enrichedData?.awayForm || []).filter((g: any) => {
+                const gameTime = new Date(g.date).getTime();
+                return gameTime > (matchTime - 7 * oneDayMs) && gameTime < matchTime;
+              }).length : 0,
+              homeInjuriesOut: homeInjuryCounts.outCount,
+              awayInjuriesOut: awayInjuryCounts.outCount,
+              homeInjuriesDoubtful: homeInjuryCounts.doubtfulCount,
+              awayInjuriesDoubtful: awayInjuryCounts.doubtfulCount,
+            };
+          })(),
           config: { logPredictions: false, minEdgeToShow: 0.02 },
         };
 
         const pipelineResult = await runAccuracyPipeline(pipelineInput);
-        
+
         // Extract calibrated probabilities - SAME as pre-analyze
         pipelineProbabilities = {
           home: pipelineResult.details.calibratedProbabilities.home,
           away: pipelineResult.details.calibratedProbabilities.away,
           draw: pipelineResult.details.calibratedProbabilities.draw || null,
         };
-        
+
         console.log(`[Match-Preview] Pipeline: H:${(pipelineProbabilities.home * 100).toFixed(1)}% A:${(pipelineProbabilities.away * 100).toFixed(1)}%${pipelineProbabilities.draw ? ` D:${(pipelineProbabilities.draw * 100).toFixed(1)}%` : ''} (method: ${pipelineResult.details.rawProbabilities.method})`);
+        console.log(`[Match-Preview] Pipeline edge: ${pipelineResult.details.edge.primaryEdge.outcome} ${(pipelineResult.details.edge.primaryEdge.value * 100).toFixed(1)}% (quality: ${pipelineResult.details.edge.primaryEdge.quality})`);
       } catch (pipelineError) {
         console.error('[Match-Preview] Pipeline calculation failed:', pipelineError);
         // Will fall back to heuristic model in analyzeMarket
@@ -2020,7 +2076,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       expectedScores: (() => {
         const base = aiAnalysis.expectedScores;
         const sportLower = matchInfo.sport.toLowerCase();
-        
+
         const isNHL = sportLower.includes('hockey') || sportLower.includes('nhl');
         const isNBA = sportLower.includes('basketball') || sportLower.includes('nba');
         const isNFL = sportLower.includes('football') || sportLower.includes('nfl');
@@ -2033,40 +2089,40 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           nfl: { home: 23, away: 21, total: 44 },       // NFL 2024: ~44 pts/game
           soccer: { home: 1.4, away: 1.1, total: 2.5 }, // Soccer varies by league
         };
-        
+
         const getSportKey = () => {
           if (isNHL) return 'nhl';
           if (isNBA) return 'nba';
           if (isNFL) return 'nfl';
           return 'soccer';
         };
-        
+
         const avg = leagueAverages[getSportKey()];
-        
+
         // For US sports: if base scores are 0, missing, or unrealistic, use league average + odds adjustment
-        if ((isNHL || isNBA || isNFL) && (!base || base.home === 0 || base.away === 0 || 
-            (isNHL && (base.home + base.away) < 2) ||
-            (isNBA && (base.home + base.away) < 150) ||
-            (isNFL && (base.home + base.away) < 20))) {
-          
+        if ((isNHL || isNBA || isNFL) && (!base || base.home === 0 || base.away === 0 ||
+          (isNHL && (base.home + base.away) < 2) ||
+          (isNBA && (base.home + base.away) < 150) ||
+          (isNFL && (base.home + base.away) < 20))) {
+
           // If we have odds, adjust the average based on favorite
           let homeScore = avg.home;
           let awayScore = avg.away;
-          
+
           if (odds?.homeOdds && odds?.awayOdds) {
             const homeProb = 1 / odds.homeOdds;
             const awayProb = 1 / odds.awayOdds;
             const total = homeProb + awayProb;
             const normHomeProb = homeProb / total;
-            
+
             // Adjust scores based on win probability (favorite scores more)
             // NHL: ±0.3 goals swing, NBA: ±5 pts swing, NFL: ±3 pts swing
             const swingAmount = isNHL ? 0.3 : isNBA ? 5 : 3;
             const homeAdj = (normHomeProb - 0.5) * swingAmount * 2;
-            
+
             homeScore = Math.round((avg.home + homeAdj) * 10) / 10;
             awayScore = Math.round((avg.away - homeAdj) * 10) / 10;
-            
+
             // Ensure realistic bounds
             if (isNHL) {
               homeScore = Math.max(2.5, Math.min(4.0, homeScore));
@@ -2079,7 +2135,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
               awayScore = Math.max(14, Math.min(27, awayScore));
             }
           }
-          
+
           console.log(`[Match-Preview] US sport (${getSportKey()}) using league average + odds adjustment: ${homeScore}:${awayScore}`);
           return { home: homeScore, away: awayScore };
         }
@@ -2177,10 +2233,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             const { computeEdges } = await import('@/lib/accuracy-core/prob-validation');
             const edgeResult = computeEdges(
               { home: modelProb.home, away: modelProb.away, draw: modelProb.draw ?? null },
-              { 
-                home: marketIntel.impliedProbability?.home || 0, 
-                away: marketIntel.impliedProbability?.away || 0, 
-                draw: marketIntel.impliedProbability?.draw ?? null 
+              {
+                home: marketIntel.impliedProbability?.home || 0,
+                away: marketIntel.impliedProbability?.away || 0,
+                draw: marketIntel.impliedProbability?.draw ?? null
               }
             );
             const homeEdge = edgeResult.homeEdge;
@@ -2400,7 +2456,7 @@ function getSportConfig(sport: string) {
   const hockeyConfig = { hasDraw: false, scoringUnit: 'goals', matchTerm: 'game', analystType: 'hockey analyst' };
   const basketballConfig = { hasDraw: false, scoringUnit: 'points', matchTerm: 'game', analystType: 'basketball analyst' };
   const nflConfig = { hasDraw: false, scoringUnit: 'points', matchTerm: 'game', analystType: 'NFL analyst' };
-  
+
   const configs: Record<string, { hasDraw: boolean; scoringUnit: string; matchTerm: string; analystType: string }> = {
     'soccer': { hasDraw: true, scoringUnit: 'goals', matchTerm: 'match', analystType: 'football analyst' },
     'basketball': basketballConfig,
@@ -2422,12 +2478,12 @@ function getSportConfig(sport: string) {
   // Normalize sport key - check for partial matches
   const sportLower = sport.toLowerCase();
   if (configs[sportLower]) return configs[sportLower];
-  
+
   // Fallback checks for partial matches
   if (sportLower.includes('hockey') || sportLower.includes('nhl')) return hockeyConfig;
   if (sportLower.includes('basket') || sportLower.includes('nba')) return basketballConfig;
   if (sportLower.includes('football') || sportLower.includes('nfl')) return nflConfig;
-  
+
   return configs['soccer'];
 }
 
@@ -2505,8 +2561,8 @@ function parseMatchId(matchId: string) {
     const league = normalizeLeagueName(parts[2].replace(/-/g, ' '));
     // Validate that parts[3] is a valid timestamp number before using it
     const timestamp = parts[3] ? parseInt(parts[3]) : NaN;
-    const kickoff = !isNaN(timestamp) && timestamp > 0 
-      ? new Date(timestamp).toISOString() 
+    const kickoff = !isNaN(timestamp) && timestamp > 0
+      ? new Date(timestamp).toISOString()
       : new Date().toISOString();
     return {
       homeTeam: parts[0].replace(/-/g, ' '),
@@ -2810,7 +2866,7 @@ async function generateAIAnalysis(data: {
 
   // SportBot AIXBT-style System Prompt with data requirements
   const pipelineDigest = formatPipelineDigest(universalSignals, data.homeTeam, data.awayTeam);
-  
+
   const systemPrompt = `${ANALYSIS_PERSONALITY}
 
 === PIPELINE COMPUTED VALUES (cite these exact numbers) ===
