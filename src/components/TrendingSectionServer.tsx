@@ -13,15 +13,26 @@ import TrendingGrid from './TrendingGrid';
 import { MatchData } from '@/types';
 
 // Fetch trending matches on server with caching
-// PERF: Reduced from 6 to 3 sports for faster server response
 async function fetchTrendingMatches(maxMatches: number = 6): Promise<TrendingMatch[]> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.sportbotai.com';
 
-  // Only fetch top 3 most popular leagues to reduce server-side latency
+  // All supported leagues — events endpoint is FREE (no quota)
   const sportsToFetch = [
+    // Soccer — Top 5 leagues + European cups
     'soccer_epl',
+    'soccer_spain_la_liga',
+    'soccer_germany_bundesliga',
+    'soccer_italy_serie_a',
+    'soccer_france_ligue_one',
+    'soccer_uefa_champs_league',
+    'soccer_uefa_europa_league',
+    'soccer_portugal_primeira_liga',
+    'soccer_netherlands_eredivisie',
+    'soccer_turkey_super_league',
+    // US Sports
     'basketball_nba',
     'americanfootball_nfl',
+    'icehockey_nhl',
   ];
 
   const allMatches: TrendingMatch[] = [];
