@@ -538,6 +538,37 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           }
         }
 
+        // Recalculate marketIntel for consistency (edge values may be stale)
+        if (cachedPreview.probabilities && cachedPreview.odds && cachedPreview.universalSignals) {
+          try {
+            const cachedOdds: OddsData = {
+              homeOdds: cachedPreview.odds.homeOdds,
+              awayOdds: cachedPreview.odds.awayOdds,
+              drawOdds: cachedPreview.odds.drawOdds,
+              bookmaker: cachedPreview.odds.bookmaker || 'consensus',
+            };
+            const sportCfg = getSportConfig(cachedPreview.matchInfo?.sport || matchInfo.sport);
+            const leagueKey = (cachedPreview.matchInfo?.league || matchInfo.league || '').toLowerCase().replace(/\s+/g, '_');
+            const cp = {
+              home: cachedPreview.probabilities.home > 1 ? cachedPreview.probabilities.home / 100 : cachedPreview.probabilities.home,
+              away: cachedPreview.probabilities.away > 1 ? cachedPreview.probabilities.away / 100 : cachedPreview.probabilities.away,
+              draw: cachedPreview.probabilities.draw != null
+                ? (cachedPreview.probabilities.draw > 1 ? cachedPreview.probabilities.draw / 100 : cachedPreview.probabilities.draw)
+                : null,
+            };
+            cachedPreview.marketIntel = analyzeMarket(
+              cachedPreview.universalSignals,
+              cachedOdds,
+              sportCfg.hasDraw,
+              undefined,
+              leagueKey,
+              cp
+            );
+          } catch (e) {
+            // Keep original cached marketIntel
+          }
+        }
+
         return NextResponse.json({
           ...cachedPreview,
           creditUsed: false,
@@ -916,6 +947,45 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           }
 
           // Transform old story format (verdict/narrative/confidence number → favored/narrative/snapshot/riskFactors)
+          // BUT FIRST: Recalculate marketIntel for cached responses to ensure edge consistency
+          // ============================================
+          // RECALCULATE marketIntel FOR CACHED RESPONSES
+          // Ensures edge values are consistent with Market Alerts
+          // (fixes stale edge from cron cache)
+          // ============================================
+          if (responseData.probabilities && responseData.odds && responseData.universalSignals) {
+            try {
+              const cachedOdds: OddsData = {
+                homeOdds: responseData.odds.homeOdds,
+                awayOdds: responseData.odds.awayOdds,
+                drawOdds: responseData.odds.drawOdds,
+                bookmaker: responseData.odds.bookmaker || 'consensus',
+              };
+              const leagueKey = (responseData.matchInfo?.league || matchInfo.league || '').toLowerCase().replace(/\s+/g, '_');
+              // Convert cached probabilities to decimal format for pipeline input
+              const cachedProbs = {
+                home: responseData.probabilities.home > 1 ? responseData.probabilities.home / 100 : responseData.probabilities.home,
+                away: responseData.probabilities.away > 1 ? responseData.probabilities.away / 100 : responseData.probabilities.away,
+                draw: responseData.probabilities.draw != null
+                  ? (responseData.probabilities.draw > 1 ? responseData.probabilities.draw / 100 : responseData.probabilities.draw)
+                  : null,
+              };
+              const freshMarketIntel = analyzeMarket(
+                responseData.universalSignals,
+                cachedOdds,
+                sportConfig.hasDraw,
+                undefined,
+                leagueKey,
+                cachedProbs
+              );
+              responseData.marketIntel = freshMarketIntel;
+              console.log(`[Match-Preview] Recalculated marketIntel for cached response: edge=${freshMarketIntel.valueEdge?.edgePercent || 0}% (${freshMarketIntel.valueEdge?.label || 'no edge'})`);
+            } catch (recalcError) {
+              console.error(`[Match-Preview] Failed to recalculate marketIntel for cache:`, recalcError);
+            }
+          }
+
+
           if (responseData.story && !responseData.story.favored && (responseData.story.verdict || typeof responseData.story.confidence === 'number')) {
             console.log(`[Match-Preview] Transforming old story format to new format`);
             const oldStory = responseData.story;
