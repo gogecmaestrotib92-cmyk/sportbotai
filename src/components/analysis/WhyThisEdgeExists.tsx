@@ -99,12 +99,11 @@ function EdgeStrengthBar({ percent }: { percent: number }) {
     return () => clearTimeout(timer);
   }, [percent]);
 
-  // Color based on edge size — aligned with pipeline detectValue() thresholds
-  const isStrong = percent >= 10;
-  const isMedium = percent >= 6;
-  const isSlight = percent >= 3;
-  const color = isStrong ? '#10b981' : isMedium ? '#34d399' : isSlight ? '#6ee7b7' : '#71717a';
-  const glowColor = isStrong ? 'rgba(16,185,129,0.4)' : isMedium ? 'rgba(52,211,153,0.3)' : 'rgba(52,211,153,0.15)';
+  // Color based on edge size
+  const isStrong = percent >= 3;
+  const isMedium = percent >= 1.5;
+  const color = isStrong ? '#10b981' : isMedium ? '#34d399' : '#6ee7b7';
+  const glowColor = isStrong ? 'rgba(16,185,129,0.4)' : 'rgba(52,211,153,0.2)';
 
   return (
     <div className="mt-2.5 mb-1">
@@ -144,7 +143,7 @@ function EdgeStrengthBar({ percent }: { percent: number }) {
           backgroundColor: `${color}11`,
           borderColor: `${color}22`,
         }}>
-          {isStrong ? 'Strong Edge' : isMedium ? 'Moderate Edge' : isSlight ? 'Slight Edge' : 'Thin Edge'}
+          {isStrong ? 'Strong Edge' : isMedium ? 'Moderate Edge' : 'Thin Edge'}
         </span>
       </div>
     </div>
@@ -392,8 +391,59 @@ function PatternChartIcon() {
 
 // ─── Types ──────────────────────────────────────────────────
 
+interface EdgeFactors {
+  formContribution: number;
+  winRateContribution: number;
+  goalDiffContribution: number;
+  h2hContribution: number;
+  homeAdvContribution: number;
+  dominant: string;
+}
+
+interface PipelineSignals {
+  display: {
+    form: {
+      home: string;
+      away: string;
+      homeRating: number;
+      awayRating: number;
+      trend: string;
+      label: string;
+    };
+    edge: {
+      direction: 'home' | 'away' | 'even';
+      percentage: number;
+      label: string;
+      factors?: EdgeFactors;
+    };
+    tempo: {
+      level: string;
+      label: string;
+      avgGoals: number;
+    };
+    efficiency: {
+      winner: string;
+      aspect: string | null;
+      label: string;
+      homeOffense: number;
+      awayOffense: number;
+      homeDefense: number;
+      awayDefense: number;
+    };
+    availability: {
+      level: string;
+      note: string | null;
+      label: string;
+      homeInjuries?: Array<{ player: string; position?: string; reason?: string }>;
+      awayInjuries?: Array<{ player: string; position?: string; reason?: string }>;
+    };
+  };
+  confidence: string;
+  clarity_score: number;
+}
+
 interface WhyThisEdgeExistsProps {
-  /** 4 snapshot bullets from AI: THE EDGE, MARKET MISS, THE PATTERN, THE RISK */
+  /** 4 snapshot bullets from AI (fallback if no pipeline signals) */
   snapshot: string[];
   /** Game flow narrative — how the match unfolds */
   gameFlow?: string;
@@ -403,8 +453,245 @@ interface WhyThisEdgeExistsProps {
   canSeeExactNumbers: boolean;
   /** Locale for i18n */
   locale?: 'en' | 'sr';
-  /** Pipeline-calculated edge percent (overrides regex-parsed narrative values) */
-  pipelineEdgePercent?: number | null;
+  /** Pipeline signals for deterministic bullet generation */
+  universalSignals?: PipelineSignals;
+  /** Team names for AIXBT copy */
+  homeTeam?: string;
+  awayTeam?: string;
+}
+
+// ─── Deterministic AIXBT Bullet Generator ───────────────────
+// Generates sharp, data-backed bullets from pipeline signals.
+// No AI hallucination — every number comes from the computed pipeline.
+
+function generatePipelineBullets(
+  signals: PipelineSignals,
+  homeTeam: string,
+  awayTeam: string,
+  locale: 'en' | 'sr'
+): string[] {
+  const { display } = signals;
+  const factors = display.edge.factors;
+  const edgePct = display.edge.percentage;
+  const edgeDir = display.edge.direction;
+  const favoredTeam = edgeDir === 'home' ? homeTeam : edgeDir === 'away' ? awayTeam : null;
+  const underdog = edgeDir === 'home' ? awayTeam : edgeDir === 'away' ? homeTeam : null;
+  const homeRating = display.form.homeRating;
+  const awayRating = display.form.awayRating;
+  const formGap = Math.abs(homeRating - awayRating);
+  const betterFormTeam = homeRating > awayRating ? homeTeam : awayTeam;
+
+  const bullets: string[] = [];
+
+  // ── BULLET 1: THE EDGE — Primary driver with edge % ──
+  if (favoredTeam && edgePct > 0 && factors) {
+    // Sort factors by absolute contribution to find the top 2 drivers
+    const sortedFactors = [
+      { name: 'form', val: Math.abs(factors.formContribution), raw: factors.formContribution },
+      { name: 'winRate', val: Math.abs(factors.winRateContribution), raw: factors.winRateContribution },
+      { name: 'goalDiff', val: Math.abs(factors.goalDiffContribution), raw: factors.goalDiffContribution },
+      { name: 'h2h', val: Math.abs(factors.h2hContribution), raw: factors.h2hContribution },
+      { name: 'homeAdv', val: Math.abs(factors.homeAdvContribution), raw: factors.homeAdvContribution },
+    ].sort((a, b) => b.val - a.val);
+
+    const top = sortedFactors[0];
+    const second = sortedFactors[1];
+
+    const driverText = locale === 'sr'
+      ? getDriverTextSr(top.name, display, homeTeam, awayTeam, formGap, betterFormTeam)
+      : getDriverTextEn(top.name, display, homeTeam, awayTeam, formGap, betterFormTeam);
+
+    const secondDriverText = second.val > 1
+      ? (locale === 'sr'
+          ? getSecondDriverSr(second.name)
+          : getSecondDriverEn(second.name))
+      : '';
+
+    bullets.push(
+      `THE EDGE: ${favoredTeam} +${edgePct}%. ${driverText}${secondDriverText}`
+    );
+  } else {
+    // Even edge
+    bullets.push(
+      locale === 'sr'
+        ? `THE EDGE: Ravnomerno. Forma ${homeRating}/100 vs ${awayRating}/100. Pipeline ne vidi jasnu prednost.`
+        : `THE EDGE: Even. Form ${homeRating}/100 vs ${awayRating}/100. Pipeline sees no clear lean.`
+    );
+  }
+
+  // ── BULLET 2: MARKET MISS — Efficiency or form data the market undervalues ──
+  const { efficiency } = display;
+  if (efficiency.homeOffense > 0 || efficiency.awayOffense > 0) {
+    const betterAttack = efficiency.homeOffense > efficiency.awayOffense ? homeTeam : awayTeam;
+    const betterDefense = efficiency.homeDefense < efficiency.awayDefense ? homeTeam : awayTeam;
+    const offDiff = Math.abs(efficiency.homeOffense - efficiency.awayOffense);
+    const defDiff = Math.abs(efficiency.homeDefense - efficiency.awayDefense);
+
+    if (formGap >= 10 && favoredTeam) {
+      bullets.push(
+        locale === 'sr'
+          ? `MARKET MISS: ${betterFormTeam} forma ${Math.max(homeRating, awayRating)}/100 vs ${Math.min(homeRating, awayRating)}/100. ${formGap}-poeni razlike koje tržište potcenjuje.`
+          : `MARKET MISS: ${betterFormTeam} form at ${Math.max(homeRating, awayRating)}/100 vs ${Math.min(homeRating, awayRating)}/100. ${formGap}-point form gap the market is underpricing.`
+      );
+    } else if (offDiff > 0.3) {
+      bullets.push(
+        locale === 'sr'
+          ? `MARKET MISS: ${betterAttack} postiže ${Math.max(efficiency.homeOffense, efficiency.awayOffense).toFixed(1)}/meč vs ${Math.min(efficiency.homeOffense, efficiency.awayOffense).toFixed(1)}. Napadačka razlika od ${offDiff.toFixed(1)} po utakmici.`
+          : `MARKET MISS: ${betterAttack} scoring ${Math.max(efficiency.homeOffense, efficiency.awayOffense).toFixed(1)}/game vs ${Math.min(efficiency.homeOffense, efficiency.awayOffense).toFixed(1)}. ${offDiff.toFixed(1)} offensive gap per game.`
+      );
+    } else if (defDiff > 0.3) {
+      bullets.push(
+        locale === 'sr'
+          ? `MARKET MISS: ${betterDefense} prima ${Math.min(efficiency.homeDefense, efficiency.awayDefense).toFixed(1)}/meč vs ${Math.max(efficiency.homeDefense, efficiency.awayDefense).toFixed(1)}. Defanzivna razlika favorizuje ${betterDefense}.`
+          : `MARKET MISS: ${betterDefense} conceding ${Math.min(efficiency.homeDefense, efficiency.awayDefense).toFixed(1)}/game vs ${Math.max(efficiency.homeDefense, efficiency.awayDefense).toFixed(1)}. Defensive split favors ${betterDefense}.`
+      );
+    } else {
+      bullets.push(
+        locale === 'sr'
+          ? `MARKET MISS: Efikasnost ujednačena — napad ${efficiency.homeOffense.toFixed(1)} vs ${efficiency.awayOffense.toFixed(1)}, odbrana ${efficiency.homeDefense.toFixed(1)} vs ${efficiency.awayDefense.toFixed(1)}. Margine su tanke.`
+          : `MARKET MISS: Efficiency balanced — offense ${efficiency.homeOffense.toFixed(1)} vs ${efficiency.awayOffense.toFixed(1)}, defense ${efficiency.homeDefense.toFixed(1)} vs ${efficiency.awayDefense.toFixed(1)}. Margins are thin.`
+      );
+    }
+  }
+
+  // ── BULLET 3: THE PATTERN — Tempo + scoring context ──
+  const { tempo } = display;
+  const tempoLabel = tempo.level === 'high' 
+    ? (locale === 'sr' ? 'Brz' : 'High-scoring')
+    : tempo.level === 'low' 
+      ? (locale === 'sr' ? 'Spor' : 'Low-scoring')
+      : (locale === 'sr' ? 'Srednji' : 'Average');
+
+  if (tempo.avgGoals > 0) {
+    // Build a scoring pattern narrative
+    const totalOffense = efficiency.homeOffense + efficiency.awayOffense;
+    const totalDefense = efficiency.homeDefense + efficiency.awayDefense;
+
+    if (tempo.level === 'high') {
+      bullets.push(
+        locale === 'sr'
+          ? `THE PATTERN: ${tempoLabel} tempo — ${tempo.avgGoals.toFixed(1)} golova po utakmici prosečno. Oba tima daju ${totalOffense.toFixed(1)} kombinovano. Očekujte otvorenu igru.`
+          : `THE PATTERN: ${tempoLabel} tempo — ${tempo.avgGoals.toFixed(1)} avg per game. Combined scoring rate ${totalOffense.toFixed(1)}/game. Expect an open contest.`
+      );
+    } else if (tempo.level === 'low') {
+      bullets.push(
+        locale === 'sr'
+          ? `THE PATTERN: ${tempoLabel} tempo — ${tempo.avgGoals.toFixed(1)} golova prosečno. Odbrane primaju ${totalDefense.toFixed(1)} kombinovano. Kontrolisana igra.`
+          : `THE PATTERN: ${tempoLabel} tempo — ${tempo.avgGoals.toFixed(1)} avg per game. Defenses conceding ${totalDefense.toFixed(1)} combined. Controlled affair.`
+      );
+    } else {
+      bullets.push(
+        locale === 'sr'
+          ? `THE PATTERN: ${tempoLabel} tempo — ${tempo.avgGoals.toFixed(1)} golova prosečno. Napad ${totalOffense.toFixed(1)} vs odbrana ${totalDefense.toFixed(1)} po meču.`
+          : `THE PATTERN: ${tempoLabel} tempo — ${tempo.avgGoals.toFixed(1)} avg per game. Offense ${totalOffense.toFixed(1)} vs defense ${totalDefense.toFixed(1)} per match.`
+      );
+    }
+  }
+
+  // ── BULLET 4: THE RISK — Biggest uncertainty ──
+  const { availability } = display;
+  const clarityScore = signals.clarity_score;
+
+  if (availability.level === 'high' || availability.level === 'critical') {
+    const totalInjuries = (availability.homeInjuries?.length || 0) + (availability.awayInjuries?.length || 0);
+    bullets.push(
+      locale === 'sr'
+        ? `THE RISK: Dostupnost na ${availability.level === 'critical' ? 'kritičnom' : 'visokom'} nivou — ${totalInjuries} odsutnih igrača. Ovo može promeniti smer prednosti.`
+        : `THE RISK: Availability at ${availability.level} — ${totalInjuries} absences flagged. This could flip the form advantage.`
+    );
+  } else if (clarityScore < 55) {
+    bullets.push(
+      locale === 'sr'
+        ? `THE RISK: Pouzdanost podataka ${clarityScore}%. Manji uzorak ili nedostatak podataka. Prilagodite veličinu uloga.`
+        : `THE RISK: Data clarity at ${clarityScore}%. Limited sample or data gaps. Size your position accordingly.`
+    );
+  } else if (formGap < 10 && edgePct < 3) {
+    bullets.push(
+      locale === 'sr'
+        ? `THE RISK: Tanka prednost — samo ${edgePct}% sa razlikom forme od ${formGap} poena. Margine su male, ovo može da se prevrne u oba smera.`
+        : `THE RISK: Thin edge — ${edgePct}% with ${formGap}-point form gap. Margins are razor-thin. This one could swing either way.`
+    );
+  } else {
+    bullets.push(
+      locale === 'sr'
+        ? `THE RISK: Standardna pouzdanost (${clarityScore}% jasnoća). Nemamo veliki upozoravajući signal, ali reversion-to-mean je uvek u igri.`
+        : `THE RISK: Standard confidence (${clarityScore}% clarity). No major red flag, but mean reversion is always in play.`
+    );
+  }
+
+  return bullets;
+}
+
+// ── Helper: Driver text for THE EDGE bullet ──
+
+function getDriverTextEn(
+  factor: string,
+  display: PipelineSignals['display'],
+  homeTeam: string,
+  awayTeam: string,
+  formGap: number,
+  betterFormTeam: string
+): string {
+  switch (factor) {
+    case 'form':
+      return `Form gap is ${formGap} points (${display.form.homeRating}/100 vs ${display.form.awayRating}/100). The trend is the signal.`;
+    case 'winRate':
+      return `Win rate differential is the driver. ${betterFormTeam} converting at a higher clip.`;
+    case 'goalDiff':
+      return `Scoring differential leads. ${display.efficiency.homeOffense.toFixed(1)} vs ${display.efficiency.awayOffense.toFixed(1)} per game. The numbers don't lie.`;
+    case 'h2h':
+      return `Head-to-head record is the backbone. Historical dominance carries weight.`;
+    case 'homeAdv':
+      return `Home advantage is the tilt. ${homeTeam} at home is a different proposition.`;
+    default:
+      return `Multiple factors align. Form ${display.form.homeRating}/100 vs ${display.form.awayRating}/100.`;
+  }
+}
+
+function getDriverTextSr(
+  factor: string,
+  display: PipelineSignals['display'],
+  homeTeam: string,
+  awayTeam: string,
+  formGap: number,
+  betterFormTeam: string
+): string {
+  switch (factor) {
+    case 'form':
+      return `Razlika u formi ${formGap} poena (${display.form.homeRating}/100 vs ${display.form.awayRating}/100). Trend je signal.`;
+    case 'winRate':
+      return `Razlika u procentu pobeda je ključna. ${betterFormTeam} pobeđuje češće.`;
+    case 'goalDiff':
+      return `Gol razlika vodi. ${display.efficiency.homeOffense.toFixed(1)} vs ${display.efficiency.awayOffense.toFixed(1)} po meču. Brojevi ne lažu.`;
+    case 'h2h':
+      return `Međusobni rezultat je osnova. Istorijska dominacija ima težinu.`;
+    case 'homeAdv':
+      return `Domaći teren je prevaga. ${homeTeam} kod kuće je drugačiji tim.`;
+    default:
+      return `Više faktora se poklapa. Forma ${display.form.homeRating}/100 vs ${display.form.awayRating}/100.`;
+  }
+}
+
+function getSecondDriverEn(factor: string): string {
+  switch (factor) {
+    case 'form': return ' Form trend backs it up.';
+    case 'winRate': return ' Win rate confirms.';
+    case 'goalDiff': return ' Goal differential adds weight.';
+    case 'h2h': return ' H2H history agrees.';
+    case 'homeAdv': return ' Home advantage compounds.';
+    default: return '';
+  }
+}
+
+function getSecondDriverSr(factor: string): string {
+  switch (factor) {
+    case 'form': return ' Trend forme to potvrđuje.';
+    case 'winRate': return ' Procenat pobeda potvrđuje.';
+    case 'goalDiff': return ' Gol razlika dodaje težinu.';
+    case 'h2h': return ' Međusobni skor se slaže.';
+    case 'homeAdv': return ' Domaći teren pojačava.';
+    default: return '';
+  }
 }
 
 // ─── Bullet Parsing ─────────────────────────────────────────
@@ -471,21 +758,17 @@ function parseBullet(raw: string, index: number, locale: 'en' | 'sr'): ParsedBul
 
 // ─── Bullet Card with SVG visuals ───────────────────────────
 
-function BulletCard({ bullet, pipelineEdgePercent }: { bullet: ParsedBullet; pipelineEdgePercent?: number | null }) {
+function BulletCard({ bullet }: { bullet: ParsedBullet }) {
   // Parse data from text for visual components
-  const regexEdgePercent = bullet.type === 'edge' ? extractEdgePercent(bullet.text) : null;
-  // Pipeline edge overrides regex-parsed value for consistency
-  const edgePercent = bullet.type === 'edge' && pipelineEdgePercent != null
-    ? pipelineEdgePercent
-    : regexEdgePercent;
+  const edgePercent = bullet.type === 'edge' ? extractEdgePercent(bullet.text) : null;
   const formRatings = bullet.type === 'edge' ? extractFormRatings(bullet.text) : null;
   const h2hRecord = bullet.type === 'pattern' ? extractH2HRecord(bullet.text) : null;
   const pointGap = bullet.type === 'market-miss' ? extractPointGap(bullet.text) : null;
 
   const IconComponent = bullet.type === 'edge' ? EdgeBoltIcon
     : bullet.type === 'market-miss' ? MarketTargetIcon
-      : bullet.type === 'pattern' ? PatternChartIcon
-        : null;
+    : bullet.type === 'pattern' ? PatternChartIcon
+    : null;
 
   return (
     <div
@@ -541,19 +824,12 @@ function BulletCard({ bullet, pipelineEdgePercent }: { bullet: ParsedBullet; pip
         </p>
 
         {/* Visual data extraction — only if data was parseable */}
-        {/* When pipeline says no meaningful edge (<3%), suppress visual bars
-            that would contradict the pipeline (e.g., "10-point gap" from stale AI text) */}
-        {(() => {
-          const pipelineSaysNoEdge = pipelineEdgePercent != null && Math.abs(pipelineEdgePercent) < 3;
-          return (
-            <div className="ml-8">
-              {edgePercent !== null && !pipelineSaysNoEdge && <EdgeStrengthBar percent={edgePercent} />}
-              {formRatings !== null && <FormComparisonBars ratings={formRatings} text={bullet.text} />}
-              {h2hRecord !== null && <H2HDominanceArc record={h2hRecord} />}
-              {pointGap !== null && !pipelineSaysNoEdge && <MarketGapIndicator gap={pointGap} />}
-            </div>
-          );
-        })()}
+        <div className="ml-8">
+          {edgePercent !== null && <EdgeStrengthBar percent={edgePercent} />}
+          {formRatings !== null && <FormComparisonBars ratings={formRatings} text={bullet.text} />}
+          {h2hRecord !== null && <H2HDominanceArc record={h2hRecord} />}
+          {pointGap !== null && <MarketGapIndicator gap={pointGap} />}
+        </div>
       </div>
     </div>
   );
@@ -567,21 +843,24 @@ export default function WhyThisEdgeExists({
   riskFactors = [],
   canSeeExactNumbers,
   locale = 'en',
-  pipelineEdgePercent,
+  universalSignals,
+  homeTeam,
+  awayTeam,
 }: WhyThisEdgeExistsProps) {
   const t = translations[locale];
   const [expanded, setExpanded] = useState(false);
 
-  if (!snapshot || snapshot.length === 0) return null;
+  // Prefer deterministic pipeline bullets over AI snapshot
+  const pipelineBullets = (universalSignals?.display?.edge && homeTeam && awayTeam)
+    ? generatePipelineBullets(universalSignals, homeTeam, awayTeam, locale)
+    : null;
 
-  const bullets = snapshot.map((s, i) => parseBullet(s, i, locale));
-  // When pipeline data is available, filter out 'edge' and 'market-miss' bullets
-  // because their AI-generated text can contain factual errors about odds direction.
-  // The AI vs Market section already shows this info accurately from pipeline data.
-  const hasPipeline = pipelineEdgePercent != null;
-  const thesisBullets = bullets.filter(b =>
-    b.type !== 'risk' && (!hasPipeline || (b.type !== 'edge' && b.type !== 'market-miss'))
-  );
+  const effectiveSnapshot = pipelineBullets || snapshot;
+
+  if (!effectiveSnapshot || effectiveSnapshot.length === 0) return null;
+
+  const bullets = effectiveSnapshot.map((s, i) => parseBullet(s, i, locale));
+  const thesisBullets = bullets.filter(b => b.type !== 'risk');
   const riskBullet = bullets.find(b => b.type === 'risk');
 
   const allRisks: string[] = [];
@@ -658,7 +937,7 @@ export default function WhyThisEdgeExists({
         {/* Thesis Bullets — Premium Cards with SVG visuals */}
         <div className="space-y-2.5">
           {thesisBullets.map((bullet, i) => (
-            <BulletCard key={i} bullet={bullet} pipelineEdgePercent={pipelineEdgePercent} />
+            <BulletCard key={i} bullet={bullet} />
           ))}
         </div>
       </div>
