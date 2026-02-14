@@ -575,7 +575,13 @@ export default function WhyThisEdgeExists({
   if (!snapshot || snapshot.length === 0) return null;
 
   const bullets = snapshot.map((s, i) => parseBullet(s, i, locale));
-  const thesisBullets = bullets.filter(b => b.type !== 'risk');
+  // When pipeline data is available, filter out 'edge' and 'market-miss' bullets
+  // because their AI-generated text can contain factual errors about odds direction.
+  // The AI vs Market section already shows this info accurately from pipeline data.
+  const hasPipeline = pipelineEdgePercent != null;
+  const thesisBullets = bullets.filter(b =>
+    b.type !== 'risk' && (!hasPipeline || (b.type !== 'edge' && b.type !== 'market-miss'))
+  );
   const riskBullet = bullets.find(b => b.type === 'risk');
 
   const allRisks: string[] = [];
