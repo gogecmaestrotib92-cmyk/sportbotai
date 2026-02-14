@@ -12,6 +12,7 @@ import { useState } from 'react';
 import PremiumIcon from '@/components/ui/PremiumIcon';
 import { UniversalSignals } from '@/lib/universal-signals';
 import { InfoTooltip } from '@/components/ui/Tooltip';
+import type { MarketIntel } from '@/lib/value-detection';
 import {
   FormDots,
   EdgeBar,
@@ -87,6 +88,7 @@ interface UniversalSignalsDisplayProps {
   awayForm?: string;
   locale?: 'en' | 'sr';
   canSeeExactNumbers?: boolean; // If false, hide percentages in VerdictBadge and EdgeBar
+  marketIntel?: MarketIntel | null; // Pipeline-calculated edge (single source of truth)
 }
 
 export default function UniversalSignalsDisplay({
@@ -97,9 +99,10 @@ export default function UniversalSignalsDisplay({
   awayForm = '-----',
   locale = 'en',
   canSeeExactNumbers = true, // Default to true for backwards compatibility
+  marketIntel,
 }: UniversalSignalsDisplayProps) {
   const t = signalTranslations[locale];
-  
+
   // Guard against undefined signals or display
   if (!signals || !signals.display) {
     return (
@@ -108,36 +111,65 @@ export default function UniversalSignalsDisplay({
       </div>
     );
   }
-  
+
   const { display, confidence, clarity_score } = signals;
-  
-  // Determine the favored side with null check
-  // For close matches ("even"), still determine which side has slight edge from percentage
-  const edgeDirection = display.edge?.direction;
-  const edgePercentage = display.edge?.percentage || 50;
-  
-  // Even for "even" matches, show which side has slight lean if percentage exists
+
+  // ═══════════════════════════════════════════════════════════
+  // PIPELINE OVERRIDE: Use marketIntel as single source of truth
+  // Fall back to heuristic signals only when marketIntel is not available
+  // ═══════════════════════════════════════════════════════════
+  const hasPipelineEdge = marketIntel && marketIntel.valueEdge;
+
+  let edgePercentage: number;
   let favoredSide: string | null;
-  if (edgeDirection === 'home') {
-    favoredSide = homeTeam;
-  } else if (edgeDirection === 'away') {
-    favoredSide = awayTeam;
-  } else if (edgePercentage > 50) {
-    // "even" but has slight home lean
-    favoredSide = homeTeam;
-  } else if (edgePercentage < 50) {
-    // "even" but has slight away lean
-    favoredSide = awayTeam;
+  let effectiveConfidence: 'high' | 'medium' | 'low';
+
+  if (hasPipelineEdge) {
+    // Pipeline edge: convert edgePercent to 0-100 scale (50 = neutral)
+    const pipeEdge = marketIntel.valueEdge.edgePercent;
+    const pipeOutcome = marketIntel.valueEdge.outcome;
+    const pipeStrength = marketIntel.valueEdge.strength;
+
+    if (pipeOutcome === 'home' && pipeStrength !== 'none') {
+      edgePercentage = 50 + Math.abs(pipeEdge);
+      favoredSide = homeTeam;
+    } else if (pipeOutcome === 'away' && pipeStrength !== 'none') {
+      edgePercentage = 50 - Math.abs(pipeEdge);
+      favoredSide = awayTeam;
+    } else {
+      edgePercentage = 50;
+      favoredSide = null;
+    }
+
+    // Map pipeline strength to confidence
+    effectiveConfidence = pipeStrength === 'strong' ? 'high'
+      : pipeStrength === 'moderate' ? 'medium'
+        : 'low';
   } else {
-    favoredSide = null;
+    // Fallback to heuristic signals
+    const heuristicDirection = display.edge?.direction;
+    edgePercentage = display.edge?.percentage || 50;
+    effectiveConfidence = confidence;
+
+    if (heuristicDirection === 'home') {
+      favoredSide = homeTeam;
+    } else if (heuristicDirection === 'away') {
+      favoredSide = awayTeam;
+    } else if (edgePercentage > 50) {
+      favoredSide = homeTeam;
+    } else if (edgePercentage < 50) {
+      favoredSide = awayTeam;
+    } else {
+      favoredSide = null;
+    }
   }
 
   return (
     <div className="space-y-4">
       {/* Main Verdict Card with Confidence Ring */}
-      <VerdictBadge 
+      <VerdictBadge
         favored={favoredSide || (locale === 'sr' ? 'Nema Jasne Prednosti' : 'No Clear Edge')}
-        confidence={confidence}
+        confidence={effectiveConfidence}
         clarityScore={clarity_score}
         edgePercentage={canSeeExactNumbers ? edgePercentage : undefined}
         canSeeExactNumbers={canSeeExactNumbers}
@@ -145,10 +177,10 @@ export default function UniversalSignalsDisplay({
 
       {/* Visual Signals Grid */}
       <div className="grid grid-cols-1 gap-3">
-        
+
         {/* Form - Visual dots + rating bars */}
-        <SignalCard 
-          icon={<PremiumIcon name="chart" size="lg" className="text-white" />} 
+        <SignalCard
+          icon={<PremiumIcon name="chart" size="lg" className="text-white" />}
           label={t.form}
           tooltip={t.formTooltip}
           rightContent={
@@ -198,8 +230,8 @@ export default function UniversalSignalsDisplay({
         <SignalCard icon={<PremiumIcon name="bolt" size="lg" className="text-white" />} label={t.strengthEdge} tooltip={t.edgeTooltip}>
           <div className="mt-3">
             <EdgeBar
-              direction={display.edge?.direction || 'even'}
-              percentage={display.edge?.percentage || 50}
+              direction={edgePercentage > 50 ? 'home' : edgePercentage < 50 ? 'away' : 'even'}
+              percentage={edgePercentage}
               homeTeam={homeTeam}
               awayTeam={awayTeam}
               canSeeExactNumbers={canSeeExactNumbers}
@@ -325,40 +357,40 @@ function ExpandableAvailability({
   const homeInjuries = display.availability.homeInjuries || [];
   const awayInjuries = display.availability.awayInjuries || [];
   const hasInjuries = homeInjuries.length > 0 || awayInjuries.length > 0;
-  
+
   const maxVisible = 3;
   const homeVisible = showAll ? homeInjuries : homeInjuries.slice(0, maxVisible);
   const awayVisible = showAll ? awayInjuries : awayInjuries.slice(0, maxVisible);
   const hasMore = homeInjuries.length > maxVisible || awayInjuries.length > maxVisible;
 
   // Severity classification
-  const getSeverity = (reason: string): { 
-    color: string; 
-    bgColor: string; 
-    textColor: string; 
+  const getSeverity = (reason: string): {
+    color: string;
+    bgColor: string;
+    textColor: string;
     label: string;
     icon: 'out' | 'suspended' | 'doubtful' | 'inactive';
   } => {
     const r = (reason || '').toLowerCase();
-    if (r.includes('suspend')) return { 
-      color: '#ef4444', bgColor: 'bg-red-500/8', textColor: 'text-red-400', 
-      label: locale === 'sr' ? 'Suspendovan' : 'Suspended', icon: 'suspended' 
+    if (r.includes('suspend')) return {
+      color: '#ef4444', bgColor: 'bg-red-500/8', textColor: 'text-red-400',
+      label: locale === 'sr' ? 'Suspendovan' : 'Suspended', icon: 'suspended'
     };
-    if (r.includes('doubtful') || r.includes('questionable')) return { 
-      color: '#f59e0b', bgColor: 'bg-amber-500/8', textColor: 'text-amber-400', 
-      label: locale === 'sr' ? 'Neizvestan' : 'Doubtful', icon: 'doubtful' 
+    if (r.includes('doubtful') || r.includes('questionable')) return {
+      color: '#f59e0b', bgColor: 'bg-amber-500/8', textColor: 'text-amber-400',
+      label: locale === 'sr' ? 'Neizvestan' : 'Doubtful', icon: 'doubtful'
     };
-    if (r.includes('probable') || r.includes('gtd') || r.includes('day-to-day')) return { 
-      color: '#eab308', bgColor: 'bg-yellow-500/8', textColor: 'text-yellow-400', 
-      label: locale === 'sr' ? 'Upitan' : 'Questionable', icon: 'doubtful' 
+    if (r.includes('probable') || r.includes('gtd') || r.includes('day-to-day')) return {
+      color: '#eab308', bgColor: 'bg-yellow-500/8', textColor: 'text-yellow-400',
+      label: locale === 'sr' ? 'Upitan' : 'Questionable', icon: 'doubtful'
     };
-    if (r.includes('inactive') || r.includes('rest')) return { 
-      color: '#71717a', bgColor: 'bg-zinc-500/8', textColor: 'text-zinc-400', 
-      label: locale === 'sr' ? 'Neaktivan' : 'Inactive', icon: 'inactive' 
+    if (r.includes('inactive') || r.includes('rest')) return {
+      color: '#71717a', bgColor: 'bg-zinc-500/8', textColor: 'text-zinc-400',
+      label: locale === 'sr' ? 'Neaktivan' : 'Inactive', icon: 'inactive'
     };
-    return { 
-      color: '#ef4444', bgColor: 'bg-red-500/8', textColor: 'text-red-400', 
-      label: locale === 'sr' ? 'Ne igra' : 'Out', icon: 'out' 
+    return {
+      color: '#ef4444', bgColor: 'bg-red-500/8', textColor: 'text-red-400',
+      label: locale === 'sr' ? 'Ne igra' : 'Out', icon: 'out'
     };
   };
 
@@ -618,15 +650,15 @@ function ExpandableAvailability({
 /**
  * Signal Card wrapper component
  */
-function SignalCard({ 
-  icon, 
-  label, 
+function SignalCard({
+  icon,
+  label,
   children,
   rightContent,
   tooltip,
-}: { 
-  icon: React.ReactNode; 
-  label: string; 
+}: {
+  icon: React.ReactNode;
+  label: string;
   children: React.ReactNode;
   rightContent?: React.ReactNode;
   tooltip?: string;
@@ -655,7 +687,7 @@ function FormRatingBar({ team, rating }: { team: string; rating: number }) {
     <div className="flex items-center gap-3">
       <span className="text-[10px] text-zinc-500 w-20 truncate">{team}</span>
       <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-        <div 
+        <div
           className={`h-full rounded-full ${barColor} transition-all duration-500`}
           style={{ width: `${Math.min(100, Math.max(0, rating))}%` }}
         />
@@ -672,38 +704,38 @@ function FormRatingBar({ team, rating }: { team: string; rating: number }) {
 export function SignalPills({ signals, locale = 'en' }: { signals: UniversalSignals; locale?: 'en' | 'sr' }) {
   const t = signalTranslations[locale];
   const { display, confidence } = signals;
-  
+
   // Handle undefined display or edge
   const edgeDirection = display?.edge?.direction || 'even';
   const tempoLevel = display?.tempo?.level || 'medium';
   const edgePercentage = display?.edge?.percentage || 50;
-  
+
   // Only show color if there's a meaningful edge (>5% from neutral)
   const hasSignificantEdge = Math.abs(edgePercentage - 50) > 5;
-  
+
   // Convert clarity score to user-friendly label
   const getDataQualityLabel = (score: number): { label: string; color: 'emerald' | 'amber' | 'zinc' } => {
     if (score >= 75) return { label: t.rich, color: 'zinc' }; // Even good data = neutral
     if (score >= 50) return { label: t.standard, color: 'zinc' };
     return { label: t.limited, color: 'zinc' }; // Neutral for all
   };
-  
+
   const dataQuality = getDataQualityLabel(signals.clarity_score);
-  
+
   return (
     <div className="flex flex-wrap gap-2">
-      <Pill 
-        label={t.edge} 
+      <Pill
+        label={t.edge}
         value={signals.strength_edge}
         color={hasSignificantEdge ? 'emerald' : 'zinc'}
       />
-      <Pill 
-        label={t.tempo} 
+      <Pill
+        label={t.tempo}
         value={signals.tempo}
         color="zinc" // Tempo is neutral - no color needed
       />
-      <Pill 
-        label={t.data} 
+      <Pill
+        label={t.data}
         value={dataQuality.label}
         color={dataQuality.color}
       />
@@ -711,13 +743,13 @@ export function SignalPills({ signals, locale = 'en' }: { signals: UniversalSign
   );
 }
 
-function Pill({ 
-  label, 
-  value, 
+function Pill({
+  label,
+  value,
   color = 'zinc',
-}: { 
-  label: string; 
-  value: string; 
+}: {
+  label: string;
+  value: string;
   color?: 'emerald' | 'amber' | 'violet' | 'zinc';
 }) {
   const colors = {

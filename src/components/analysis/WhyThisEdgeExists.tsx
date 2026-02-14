@@ -402,6 +402,8 @@ interface WhyThisEdgeExistsProps {
   canSeeExactNumbers: boolean;
   /** Locale for i18n */
   locale?: 'en' | 'sr';
+  /** Pipeline-calculated edge percent (overrides regex-parsed narrative values) */
+  pipelineEdgePercent?: number | null;
 }
 
 // ─── Bullet Parsing ─────────────────────────────────────────
@@ -468,17 +470,21 @@ function parseBullet(raw: string, index: number, locale: 'en' | 'sr'): ParsedBul
 
 // ─── Bullet Card with SVG visuals ───────────────────────────
 
-function BulletCard({ bullet }: { bullet: ParsedBullet }) {
+function BulletCard({ bullet, pipelineEdgePercent }: { bullet: ParsedBullet; pipelineEdgePercent?: number | null }) {
   // Parse data from text for visual components
-  const edgePercent = bullet.type === 'edge' ? extractEdgePercent(bullet.text) : null;
+  const regexEdgePercent = bullet.type === 'edge' ? extractEdgePercent(bullet.text) : null;
+  // Pipeline edge overrides regex-parsed value for consistency
+  const edgePercent = bullet.type === 'edge' && pipelineEdgePercent != null
+    ? pipelineEdgePercent
+    : regexEdgePercent;
   const formRatings = bullet.type === 'edge' ? extractFormRatings(bullet.text) : null;
   const h2hRecord = bullet.type === 'pattern' ? extractH2HRecord(bullet.text) : null;
   const pointGap = bullet.type === 'market-miss' ? extractPointGap(bullet.text) : null;
 
   const IconComponent = bullet.type === 'edge' ? EdgeBoltIcon
     : bullet.type === 'market-miss' ? MarketTargetIcon
-    : bullet.type === 'pattern' ? PatternChartIcon
-    : null;
+      : bullet.type === 'pattern' ? PatternChartIcon
+        : null;
 
   return (
     <div
@@ -553,6 +559,7 @@ export default function WhyThisEdgeExists({
   riskFactors = [],
   canSeeExactNumbers,
   locale = 'en',
+  pipelineEdgePercent,
 }: WhyThisEdgeExistsProps) {
   const t = translations[locale];
   const [expanded, setExpanded] = useState(false);
@@ -637,7 +644,7 @@ export default function WhyThisEdgeExists({
         {/* Thesis Bullets — Premium Cards with SVG visuals */}
         <div className="space-y-2.5">
           {thesisBullets.map((bullet, i) => (
-            <BulletCard key={i} bullet={bullet} />
+            <BulletCard key={i} bullet={bullet} pipelineEdgePercent={pipelineEdgePercent} />
           ))}
         </div>
       </div>

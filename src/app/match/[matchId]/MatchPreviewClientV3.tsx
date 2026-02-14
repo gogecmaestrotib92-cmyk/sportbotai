@@ -1473,8 +1473,8 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
                 valueSide={
                   canSeeExactNumbers ? (
                     data.marketIntel.valueEdge.outcome === 'home' && data.marketIntel.valueEdge.strength !== 'none' ? 'home' :
-                    data.marketIntel.valueEdge.outcome === 'away' && data.marketIntel.valueEdge.strength !== 'none' ? 'away' :
-                    null
+                      data.marketIntel.valueEdge.outcome === 'away' && data.marketIntel.valueEdge.strength !== 'none' ? 'away' :
+                        null
                   ) : null
                 }
               />
@@ -1495,8 +1495,8 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
                     teamName={data.matchInfo.homeTeam}
                     trend={
                       data.universalSignals?.display?.form?.home === 'strong' ? 'rising' :
-                      data.universalSignals?.display?.form?.home === 'weak' ? 'falling' :
-                      'stable'
+                        data.universalSignals?.display?.form?.home === 'weak' ? 'falling' :
+                          'stable'
                     }
                   />
                   <MomentumTimeline
@@ -1504,8 +1504,8 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
                     teamName={data.matchInfo.awayTeam}
                     trend={
                       data.universalSignals?.display?.form?.away === 'strong' ? 'rising' :
-                      data.universalSignals?.display?.form?.away === 'weak' ? 'falling' :
-                      'stable'
+                        data.universalSignals?.display?.form?.away === 'weak' ? 'falling' :
+                          'stable'
                     }
                   />
                 </div>
@@ -1527,8 +1527,8 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
                   label={data.story.confidence === 'strong'
                     ? (locale === 'sr' ? 'Nizak' : 'Low')
                     : data.story.confidence === 'moderate'
-                    ? (locale === 'sr' ? 'Srednji' : 'Medium')
-                    : (locale === 'sr' ? 'Visok' : 'High')
+                      ? (locale === 'sr' ? 'Srednji' : 'Medium')
+                      : (locale === 'sr' ? 'Visok' : 'High')
                   }
                 />
               </div>
@@ -1562,6 +1562,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
                 awayForm={data.viralStats?.form?.away || '-----'}
                 locale={locale}
                 canSeeExactNumbers={canSeeExactNumbers}
+                marketIntel={data.marketIntel}
               />
             </div>
           )}
@@ -1646,6 +1647,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
             riskFactors={riskFactors}
             canSeeExactNumbers={canSeeExactNumbers}
             locale={locale}
+            pipelineEdgePercent={data.marketIntel?.valueEdge?.edgePercent}
           />
         )}
 
@@ -1713,7 +1715,7 @@ export default function MatchPreviewClient({ matchId, locale = 'en', initialData
           const firstSentence = fullText.split(/(?<=[.!?])\s+/)[0];
           const isTruncated = !canSeeExactNumbers && fullText.length > firstSentence.length;
           const displayText = isTruncated ? firstSentence : fullText;
-          
+
           return (
             <div className="mt-6 p-5 rounded-2xl bg-[#0a0a0b] border border-white/[0.06] relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-violet-500/50 via-violet-500/20 to-transparent" />
