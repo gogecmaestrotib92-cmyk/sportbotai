@@ -155,7 +155,11 @@ export async function getEnrichedMatchDataV2(
   }
   
   try {
-    console.log(`[Bridge] Calling dataLayer.getEnrichedMatchData with league: ${league || 'auto-detect'}...`);
+    // Use the original sport key (e.g., "soccer_spain_la_liga") as league hint
+    // This is more reliable than sport_title (e.g., "La Liga - Spain") from The Odds API
+    // because sportKey values are already mapped in LEAGUE_MAPPINGS
+    const leagueHint = league || sport;
+    console.log(`[Bridge] Calling dataLayer.getEnrichedMatchData with league: ${leagueHint} (original league: ${league || 'none'}, sport: ${sport})...`);
     const result = await dataLayer.getEnrichedMatchData(
       normalizedSport,
       homeTeam,
@@ -167,7 +171,7 @@ export async function getEnrichedMatchDataV2(
         includeInjuries: false, // Not used in old format
         recentGamesLimit: 5,
         h2hLimit: 10,
-        league, // Pass league to help resolve teams in less popular leagues
+        league: leagueHint, // Pass sportKey or league to directly resolve league ID
       }
     );
     

@@ -34,70 +34,142 @@ import { resolveTeamName, getSearchVariations } from '../team-resolver';
 
 // Popular league mappings
 const LEAGUE_MAPPINGS: Record<string, number> = {
+  // Premier League
   'premier league': LEAGUE_IDS.PREMIER_LEAGUE,
   'epl': LEAGUE_IDS.PREMIER_LEAGUE,
   'english premier league': LEAGUE_IDS.PREMIER_LEAGUE,
   'soccer_epl': LEAGUE_IDS.PREMIER_LEAGUE,
+
+  // La Liga
   'la liga': LEAGUE_IDS.LA_LIGA,
   'laliga': LEAGUE_IDS.LA_LIGA,
   'spanish league': LEAGUE_IDS.LA_LIGA,
   'soccer_spain_la_liga': LEAGUE_IDS.LA_LIGA,
   'spain_la_liga': LEAGUE_IDS.LA_LIGA,
+  'la liga - spain': LEAGUE_IDS.LA_LIGA,
+
+  // La Liga 2
   'la liga 2': LEAGUE_IDS.LA_LIGA_2,
   'segunda': LEAGUE_IDS.LA_LIGA_2,
   'segunda division': LEAGUE_IDS.LA_LIGA_2,
   'soccer_spain_segunda_division': LEAGUE_IDS.LA_LIGA_2,
+  'segunda división - spain': LEAGUE_IDS.LA_LIGA_2,
+
+  // Bundesliga
   'bundesliga': LEAGUE_IDS.BUNDESLIGA,
   'german league': LEAGUE_IDS.BUNDESLIGA,
   'soccer_germany_bundesliga': LEAGUE_IDS.BUNDESLIGA,
   'germany_bundesliga': LEAGUE_IDS.BUNDESLIGA,
+  'bundesliga - germany': LEAGUE_IDS.BUNDESLIGA,
+
+  // Serie A
   'serie a': LEAGUE_IDS.SERIE_A,
   'italian league': LEAGUE_IDS.SERIE_A,
   'soccer_italy_serie_a': LEAGUE_IDS.SERIE_A,
   'italy_serie_a': LEAGUE_IDS.SERIE_A,
+  'serie a - italy': LEAGUE_IDS.SERIE_A,
+
+  // Ligue 1
   'ligue 1': LEAGUE_IDS.LIGUE_1,
   'french league': LEAGUE_IDS.LIGUE_1,
   'soccer_france_ligue_one': LEAGUE_IDS.LIGUE_1,
   'france_ligue_one': LEAGUE_IDS.LIGUE_1,
+  'ligue 1 - france': LEAGUE_IDS.LIGUE_1,
+
+  // MLS
   'mls': LEAGUE_IDS.MLS,
   'major league soccer': LEAGUE_IDS.MLS,
+  'mls - usa': LEAGUE_IDS.MLS,
+  'soccer_usa_mls': LEAGUE_IDS.MLS,
+
+  // Champions League
   'champions league': LEAGUE_IDS.CHAMPIONS_LEAGUE,
   'ucl': LEAGUE_IDS.CHAMPIONS_LEAGUE,
   'soccer_uefa_champs_league': LEAGUE_IDS.CHAMPIONS_LEAGUE,
   'uefa_champs_league': LEAGUE_IDS.CHAMPIONS_LEAGUE,
-  // New leagues
+  'uefa champions league': LEAGUE_IDS.CHAMPIONS_LEAGUE,
+  'uefa champions league - europe': LEAGUE_IDS.CHAMPIONS_LEAGUE,
+
+  // Eredivisie
   'eredivisie': LEAGUE_IDS.EREDIVISIE,
   'dutch league': LEAGUE_IDS.EREDIVISIE,
   'netherlands': LEAGUE_IDS.EREDIVISIE,
   'soccer_netherlands_eredivisie': LEAGUE_IDS.EREDIVISIE,
   'netherlands_eredivisie': LEAGUE_IDS.EREDIVISIE,
+  'eredivisie - netherlands': LEAGUE_IDS.EREDIVISIE,
+
+  // Primeira Liga
   'primeira liga': LEAGUE_IDS.PRIMEIRA_LIGA,
   'portuguese league': LEAGUE_IDS.PRIMEIRA_LIGA,
   'liga portugal': LEAGUE_IDS.PRIMEIRA_LIGA,
   'soccer_portugal_primeira_liga': LEAGUE_IDS.PRIMEIRA_LIGA,
   'portugal_primeira_liga': LEAGUE_IDS.PRIMEIRA_LIGA,
+  'primeira liga - portugal': LEAGUE_IDS.PRIMEIRA_LIGA,
+
+  // Jupiler Pro League
   'jupiler pro league': LEAGUE_IDS.JUPILER_PRO_LEAGUE,
   'belgian league': LEAGUE_IDS.JUPILER_PRO_LEAGUE,
   'belgium first div': LEAGUE_IDS.JUPILER_PRO_LEAGUE,
   'soccer_belgium_first_div': LEAGUE_IDS.JUPILER_PRO_LEAGUE,
   'belgium_first_div': LEAGUE_IDS.JUPILER_PRO_LEAGUE,
+  'first div a - belgium': LEAGUE_IDS.JUPILER_PRO_LEAGUE,
+  'jupiler pro league - belgium': LEAGUE_IDS.JUPILER_PRO_LEAGUE,
+
+  // Süper Lig
   'super lig': LEAGUE_IDS.SUPER_LIG,
+  'süper lig': LEAGUE_IDS.SUPER_LIG,
   'turkish league': LEAGUE_IDS.SUPER_LIG,
   'turkey super league': LEAGUE_IDS.SUPER_LIG,
   'soccer_turkey_super_league': LEAGUE_IDS.SUPER_LIG,
   'turkey_super_league': LEAGUE_IDS.SUPER_LIG,
+  'süper lig - turkey': LEAGUE_IDS.SUPER_LIG,
+  'super lig - turkey': LEAGUE_IDS.SUPER_LIG,
+
+  // Scottish Premiership
   'scottish premiership': LEAGUE_IDS.SCOTTISH_PREMIERSHIP,
   'scottish league': LEAGUE_IDS.SCOTTISH_PREMIERSHIP,
   'spfl': LEAGUE_IDS.SCOTTISH_PREMIERSHIP,
   'soccer_spl': LEAGUE_IDS.SCOTTISH_PREMIERSHIP,
   'spl': LEAGUE_IDS.SCOTTISH_PREMIERSHIP,
+  'premiership - scotland': LEAGUE_IDS.SCOTTISH_PREMIERSHIP,
+
+  // Europa League
   'europa league': LEAGUE_IDS.EUROPA_LEAGUE,
   'uel': LEAGUE_IDS.EUROPA_LEAGUE,
   'soccer_uefa_europa_league': LEAGUE_IDS.EUROPA_LEAGUE,
   'uefa_europa_league': LEAGUE_IDS.EUROPA_LEAGUE,
+  'uefa europa league': LEAGUE_IDS.EUROPA_LEAGUE,
+  'uefa europa league - europe': LEAGUE_IDS.EUROPA_LEAGUE,
+
+  // Europa Conference League
   'europa conference league': LEAGUE_IDS.EUROPA_CONFERENCE_LEAGUE,
   'uecl': LEAGUE_IDS.EUROPA_CONFERENCE_LEAGUE,
   'soccer_uefa_europa_conference_league': LEAGUE_IDS.EUROPA_CONFERENCE_LEAGUE,
+  'conference league': LEAGUE_IDS.EUROPA_CONFERENCE_LEAGUE,
+  'uefa europa conference league': LEAGUE_IDS.EUROPA_CONFERENCE_LEAGUE,
+  'uefa europa conference league - europe': LEAGUE_IDS.EUROPA_CONFERENCE_LEAGUE,
+
+  // Championship (England 2nd tier)
+  'championship': LEAGUE_IDS.CHAMPIONSHIP,
+  'efl championship': LEAGUE_IDS.CHAMPIONSHIP,
+  'championship - england': LEAGUE_IDS.CHAMPIONSHIP,
+  'soccer_epl_championship': LEAGUE_IDS.CHAMPIONSHIP,
+
+  // Bundesliga 2
+  'bundesliga 2': LEAGUE_IDS.BUNDESLIGA_2,
+  '2. bundesliga': LEAGUE_IDS.BUNDESLIGA_2,
+  'bundesliga 2 - germany': LEAGUE_IDS.BUNDESLIGA_2,
+  'soccer_germany_bundesliga2': LEAGUE_IDS.BUNDESLIGA_2,
+
+  // Serie B
+  'serie b': LEAGUE_IDS.SERIE_B,
+  'serie b - italy': LEAGUE_IDS.SERIE_B,
+  'soccer_italy_serie_b': LEAGUE_IDS.SERIE_B,
+
+  // Ligue 2
+  'ligue 2': LEAGUE_IDS.LIGUE_2,
+  'ligue 2 - france': LEAGUE_IDS.LIGUE_2,
+  'soccer_france_ligue_two': LEAGUE_IDS.LIGUE_2,
   'uefa_europa_conference_league': LEAGUE_IDS.EUROPA_CONFERENCE_LEAGUE,
 };
 
@@ -138,11 +210,29 @@ export class SoccerAdapter extends BaseSportAdapter {
   
   /**
    * Resolve league name to ID
+   * Handles various formats: "La Liga", "La Liga - Spain", "soccer_spain_la_liga"
    */
   private resolveLeagueId(league?: string): number | undefined {
     if (!league) return undefined;
     const lower = league.toLowerCase().trim();
-    return LEAGUE_MAPPINGS[lower];
+    
+    // Direct lookup
+    const direct = LEAGUE_MAPPINGS[lower];
+    if (direct) return direct;
+    
+    // Try stripping country suffix: "La Liga - Spain" → "La Liga"
+    const dashIndex = lower.lastIndexOf(' - ');
+    if (dashIndex > 0) {
+      const withoutCountry = lower.substring(0, dashIndex).trim();
+      const stripped = LEAGUE_MAPPINGS[withoutCountry];
+      if (stripped) {
+        console.log(`[Soccer] League resolved via suffix strip: "${league}" → "${withoutCountry}"`);
+        return stripped;
+      }
+    }
+    
+    console.log(`[Soccer] ⚠️ Could not resolve league: "${league}"`);
+    return undefined;
   }
   
   /**
@@ -245,8 +335,8 @@ export class SoccerAdapter extends BaseSportAdapter {
         }
         
         // Only try first league variation if we found nothing - avoid too many API calls
-        // Increased to 10 to cover Belgian, Turkish, and other leagues
-        if (!leagueId && leaguesToTry.indexOf(tryLeague) >= 10) {
+        // With proper league resolution, this rarely triggers (only manual queries without league)
+        if (!leagueId && leaguesToTry.indexOf(tryLeague) >= 15) {
           console.log(`[Soccer] Stopping league search after checking ${leaguesToTry.indexOf(tryLeague) + 1} leagues`);
           break;
         }

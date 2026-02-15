@@ -1031,15 +1031,15 @@ export class DataLayer {
 
     // Stats - only fetch if team was found
     if (opts.includeStats && homeFound) {
-      console.log(`[DataLayer] Fetching home stats for teamId: ${home.externalId}`);
-      promises.push(this.getTeamStats({ teamId: home.externalId, sport }));
+      console.log(`[DataLayer] Fetching home stats for teamId: ${home.externalId}, league: ${opts.league || 'default'}`);
+      promises.push(this.getTeamStats({ teamId: home.externalId, sport, league: opts.league }));
     } else {
       console.log(`[DataLayer] SKIPPING home stats fetch (homeFound=${homeFound}, includeStats=${opts.includeStats})`);
       promises.push(Promise.resolve(null));
     }
     if (opts.includeStats && awayFound) {
-      console.log(`[DataLayer] Fetching away stats for teamId: ${away.externalId}`);
-      promises.push(this.getTeamStats({ teamId: away.externalId, sport }));
+      console.log(`[DataLayer] Fetching away stats for teamId: ${away.externalId}, league: ${opts.league || 'default'}`);
+      promises.push(this.getTeamStats({ teamId: away.externalId, sport, league: opts.league }));
     } else {
       console.log(`[DataLayer] SKIPPING away stats fetch (awayFound=${awayFound}, includeStats=${opts.includeStats})`);
       promises.push(Promise.resolve(null));

@@ -174,7 +174,7 @@ export default function USBettingStatisticsPageSr() {
   };
 
   const SortIcon = ({ column }: { column: SortKey }) => {
-    if (sortKey !== column) return <span className="text-gray-500 ml-1">↕</span>;
+    if (sortKey !== column) return <span className="text-gray-400 ml-1">↕</span>;
     return <span className="text-emerald-400 ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
   };
 
@@ -212,7 +212,7 @@ export default function USBettingStatisticsPageSr() {
             Sveobuhvatni podaci o prometu, prihodima, hold stopama i poreznim prihodima na svim legalnim tržištima sportskog klađenja u SAD.
           </p>
           
-          <p className="text-sm text-gray-500 mb-8">
+          <p className="text-sm text-gray-400 mb-8">
             Poslednje ažuriranje: {LAST_UPDATED} • Izvori: <a href="https://www.legalsportsreport.com/sports-betting/revenue/" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">LSR</a>, <a href="https://www.americangaming.org/" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">AGA</a>, <a href="https://sportshandle.com/betting-revenue/" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">Sportshandle</a>
           </p>
 
@@ -257,7 +257,7 @@ export default function USBettingStatisticsPageSr() {
           <div className="bg-gray-800 rounded-lg p-4 font-mono text-sm text-gray-300">
             U novembru 2025, promet sportskog klađenja u SAD iznosio je <span className="text-emerald-400">$16,83 mlrd</span>, a prihod <span className="text-emerald-400">$1,92 mlrd</span>, sa prosečnom hold stopom od <span className="text-emerald-400">11,4%</span> (AGA). Industrija je generisala preko <span className="text-emerald-400">$50 mlrd</span> ukupnog prihoda na više od <span className="text-emerald-400">$600 mlrd</span> prometa od legalizacije 2018.
           </div>
-          <p className="text-xs text-gray-500 mt-2">Izvor: <a href="https://www.americangaming.org/research/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">American Gaming Association</a>, <a href="https://www.legalsportsreport.com/sports-betting/revenue/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">LegalSportsReport</a></p>
+          <p className="text-xs text-gray-400 mt-2">Izvor: <a href="https://www.americangaming.org/research/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">American Gaming Association</a>, <a href="https://www.legalsportsreport.com/sports-betting/revenue/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">LegalSportsReport</a></p>
         </div>
 
         {/* CHARTS SECTION */}
@@ -624,37 +624,37 @@ export default function USBettingStatisticsPageSr() {
             <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
               <div className="text-sm text-gray-400 mb-1">Najveća godina (prihod)</div>
               <div className="text-2xl font-bold text-emerald-400">2024: $13,71 mlrd</div>
-              <div className="text-sm text-gray-500 mt-1">~$150 mlrd prometa, 9,3% hold</div>
+              <div className="text-sm text-gray-400 mt-1">~$150 mlrd prometa, 9,3% hold</div>
             </div>
             
             <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
               <div className="text-sm text-gray-400 mb-1">Najveći kvartal</div>
               <div className="text-2xl font-bold text-emerald-400">Q4 2024: $3,66 mlrd</div>
-              <div className="text-sm text-gray-500 mt-1">NFL + NBA sezona</div>
+              <div className="text-sm text-gray-400 mt-1">NFL + NBA sezona</div>
             </div>
             
             <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
               <div className="text-sm text-gray-400 mb-1">Najveći mesec</div>
               <div className="text-2xl font-bold text-emerald-400">Nov 2025: $1,92 mlrd</div>
-              <div className="text-sm text-gray-500 mt-1">$16,83 mlrd prometa, 11,4% hold</div>
+              <div className="text-sm text-gray-400 mt-1">$16,83 mlrd prometa, 11,4% hold</div>
             </div>
             
             <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
               <div className="text-sm text-gray-400 mb-1">Najveća država (ukupno)</div>
               <div className="text-2xl font-bold text-emerald-400">NY: $84,88 mlrd prometa</div>
-              <div className="text-sm text-gray-500 mt-1">$7,71 mlrd prihoda od jan 2022</div>
+              <div className="text-sm text-gray-400 mt-1">$7,71 mlrd prihoda od jan 2022</div>
             </div>
             
             <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
               <div className="text-sm text-gray-400 mb-1">Najviši porezni prihod</div>
               <div className="text-2xl font-bold text-emerald-400">NY: $3,93 mlrd+</div>
-              <div className="text-sm text-gray-500 mt-1">51% porezna stopa na GGR</div>
+              <div className="text-sm text-gray-400 mt-1">51% porezna stopa na GGR</div>
             </div>
             
             <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
               <div className="text-sm text-gray-400 mb-1">Najviša hold stopa (mesečno)</div>
               <div className="text-2xl font-bold text-emerald-400">Nov 2024: 11,5%</div>
-              <div className="text-sm text-gray-500 mt-1">Povoljni NFL ishodi za kladionice</div>
+              <div className="text-sm text-gray-400 mt-1">Povoljni NFL ishodi za kladionice</div>
             </div>
           </div>
         </div>
@@ -703,7 +703,7 @@ export default function USBettingStatisticsPageSr() {
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-gray-500 mt-2">Izvor: <a href="https://www.americangaming.org/research/commercial-gaming-revenue-tracker/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">AGA Commercial Gaming Revenue Tracker</a>, <a href="https://www.espn.com/chalk/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">ESPN</a></p>
+          <p className="text-xs text-gray-400 mt-2">Izvor: <a href="https://www.americangaming.org/research/commercial-gaming-revenue-tracker/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">AGA Commercial Gaming Revenue Tracker</a>, <a href="https://www.espn.com/chalk/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">ESPN</a></p>
         </div>
 
         {/* Tax Rate Breakdown */}
@@ -745,7 +745,7 @@ export default function USBettingStatisticsPageSr() {
               </ul>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-4">Izvor: <a href="https://www.ncsl.org/financial-services/seven-years-of-sports-betting-did-states-get-it-right" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">NCSL</a>, izveštaji državnih komisija za igre na sreću</p>
+          <p className="text-xs text-gray-400 mt-4">Izvor: <a href="https://www.ncsl.org/financial-services/seven-years-of-sports-betting-did-states-get-it-right" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">NCSL</a>, izveštaji državnih komisija za igre na sreću</p>
         </div>
 
         {/* Cite This Page Section */}
@@ -824,7 +824,7 @@ export default function USBettingStatisticsPageSr() {
             
             {/* Badge Preview */}
             <div className="mb-4 p-3 bg-gray-800/50 rounded-lg inline-block">
-              <p className="text-xs text-gray-500 mb-2">Pregled:</p>
+              <p className="text-xs text-gray-400 mb-2">Pregled:</p>
               <span className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                 Data by SportBot AI
@@ -853,8 +853,8 @@ export default function USBettingStatisticsPageSr() {
               </button>
             </div>
             
-            <p className="text-gray-500 text-xs mt-4">Zalepite ovaj HTML na svoju web stranicu da prikažete badge sa linkom nazad.</p>
-            <p className="text-gray-500 text-xs mt-1">Kontaktirajte nas na <a href="mailto:contact@sportbotai.com" className="text-emerald-400 hover:underline">contact@sportbotai.com</a> za saradnju.</p>
+            <p className="text-gray-400 text-xs mt-4">Zalepite ovaj HTML na svoju web stranicu da prikažete badge sa linkom nazad.</p>
+            <p className="text-gray-400 text-xs mt-1">Kontaktirajte nas na <a href="mailto:contact@sportbotai.com" className="text-emerald-400 hover:underline">contact@sportbotai.com</a> za saradnju.</p>
           </div>
         </div>
 
@@ -872,7 +872,7 @@ export default function USBettingStatisticsPageSr() {
             </Link>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs uppercase tracking-wider text-gray-500">Napisao</span>
+                <span className="text-xs uppercase tracking-wider text-gray-400">Napisao</span>
               </div>
               <Link href="/sr/about" className="text-xl font-bold text-white hover:text-emerald-400 transition-colors">
                 {AUTHOR.name}

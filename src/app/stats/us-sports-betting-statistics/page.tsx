@@ -188,7 +188,7 @@ export default function USBettingStatisticsPage() {
   };
 
   const SortIcon = ({ column }: { column: SortKey }) => {
-    if (sortKey !== column) return <span className="text-gray-500 ml-1">↕</span>;
+    if (sortKey !== column) return <span className="text-gray-400 ml-1">↕</span>;
     return <span className="text-emerald-400 ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
   };
 
@@ -237,7 +237,7 @@ export default function USBettingStatisticsPage() {
               The definitive revenue tracker with comprehensive data on handle, gaming revenue, tax revenue, and market trends across all legal US states.
             </p>
             
-            <p className="text-sm text-gray-500 mb-10">
+            <p className="text-sm text-gray-400 mb-10">
               Last updated: {LAST_UPDATED} • Sources: <a href="https://www.legalsportsreport.com/sports-betting/revenue/" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">LSR</a>, <a href="https://www.americangaming.org/" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">AGA</a>, <a href="https://sportshandle.com/betting-revenue/" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">Sportshandle</a>
             </p>
 
@@ -302,7 +302,7 @@ export default function USBettingStatisticsPage() {
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 font-mono text-sm text-gray-300 leading-relaxed border border-gray-700/50">
               In November 2025, US sports betting handle was <span className="text-emerald-400 font-semibold">$16.83B</span> and revenue was <span className="text-emerald-400 font-semibold">$1.92B</span>, with an average hold rate of <span className="text-emerald-400 font-semibold">11.4%</span> (AGA). The industry has generated over <span className="text-emerald-400 font-semibold">$50B</span> in total revenue on nearly <span className="text-emerald-400 font-semibold">$580B</span> in handle since legalization began in 2018.
             </div>
-            <p className="text-xs text-gray-500 mt-3 flex items-center gap-2">
+            <p className="text-xs text-gray-400 mt-3 flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
               Source: <a href="https://www.americangaming.org/research/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">American Gaming Association</a>, <a href="https://www.legalsportsreport.com/sports-betting/revenue/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">LegalSportsReport</a>
             </p>
@@ -787,7 +787,7 @@ export default function USBettingStatisticsPage() {
                 Biggest Year (Revenue)
               </div>
               <div className="text-2xl md:text-3xl font-bold text-white mb-1">2024: <span className="text-emerald-400">$13.71B</span></div>
-              <div className="text-sm text-gray-500">~$150B handle, 9.3% hold</div>
+              <div className="text-sm text-gray-400">~$150B handle, 9.3% hold</div>
             </div>
             
             <div className="group bg-gradient-to-br from-gray-900 to-gray-900/50 rounded-2xl p-6 border border-gray-800 hover:border-yellow-500/30 transition-all duration-300">
@@ -796,7 +796,7 @@ export default function USBettingStatisticsPage() {
                 Biggest Quarter
               </div>
               <div className="text-2xl md:text-3xl font-bold text-white mb-1">Q4 2024: <span className="text-emerald-400">$3.66B</span></div>
-              <div className="text-sm text-gray-500">NFL + NBA season overlap</div>
+              <div className="text-sm text-gray-400">NFL + NBA season overlap</div>
             </div>
             
             <div className="group bg-gradient-to-br from-gray-900 to-gray-900/50 rounded-2xl p-6 border border-gray-800 hover:border-yellow-500/30 transition-all duration-300">
@@ -805,7 +805,7 @@ export default function USBettingStatisticsPage() {
                 Biggest Month
               </div>
               <div className="text-2xl md:text-3xl font-bold text-white mb-1">Nov 2025: <span className="text-emerald-400">$1.92B</span></div>
-              <div className="text-sm text-gray-500">$16.83B handle, 11.4% hold</div>
+              <div className="text-sm text-gray-400">$16.83B handle, 11.4% hold</div>
             </div>
             
             <div className="group bg-gradient-to-br from-gray-900 to-gray-900/50 rounded-2xl p-6 border border-gray-800 hover:border-yellow-500/30 transition-all duration-300">
@@ -814,7 +814,7 @@ export default function USBettingStatisticsPage() {
                 Biggest State (All-Time)
               </div>
               <div className="text-2xl md:text-3xl font-bold text-white mb-1">NY: <span className="text-emerald-400">$84.88B</span></div>
-              <div className="text-sm text-gray-500">$7.71B revenue since Jan 2022</div>
+              <div className="text-sm text-gray-400">$7.71B revenue since Jan 2022</div>
             </div>
             
             <div className="group bg-gradient-to-br from-gray-900 to-gray-900/50 rounded-2xl p-6 border border-gray-800 hover:border-yellow-500/30 transition-all duration-300">
@@ -823,7 +823,7 @@ export default function USBettingStatisticsPage() {
                 Highest State Tax Revenue
               </div>
               <div className="text-2xl md:text-3xl font-bold text-white mb-1">NY: <span className="text-emerald-400">$3.93B+</span></div>
-              <div className="text-sm text-gray-500">51% tax rate on GGR</div>
+              <div className="text-sm text-gray-400">51% tax rate on GGR</div>
             </div>
             
             <div className="group bg-gradient-to-br from-gray-900 to-gray-900/50 rounded-2xl p-6 border border-gray-800 hover:border-yellow-500/30 transition-all duration-300">
@@ -832,7 +832,7 @@ export default function USBettingStatisticsPage() {
                 Highest Hold Rate (Monthly)
               </div>
               <div className="text-2xl md:text-3xl font-bold text-white mb-1">Nov 2024: <span className="text-emerald-400">11.5%</span></div>
-              <div className="text-sm text-gray-500">Favorable NFL outcomes for books</div>
+              <div className="text-sm text-gray-400">Favorable NFL outcomes for books</div>
             </div>
           </div>
         </div>
@@ -883,7 +883,7 @@ export default function USBettingStatisticsPage() {
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-gray-500 mt-3">Source: <a href="https://www.americangaming.org/research/commercial-gaming-revenue-tracker/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">AGA Commercial Gaming Revenue Tracker</a>, <a href="https://www.espn.com/chalk/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">ESPN</a></p>
+          <p className="text-xs text-gray-400 mt-3">Source: <a href="https://www.americangaming.org/research/commercial-gaming-revenue-tracker/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">AGA Commercial Gaming Revenue Tracker</a>, <a href="https://www.espn.com/chalk/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">ESPN</a></p>
         </div>
 
         {/* Tax Rate Breakdown - Redesigned */}
@@ -979,7 +979,7 @@ export default function USBettingStatisticsPage() {
               </ul>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-4">Source: <a href="https://www.ncsl.org/financial-services/seven-years-of-sports-betting-did-states-get-it-right" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">NCSL "Seven Years of Sports Betting: Did States Get It Right?"</a>, state gaming commission reports</p>
+          <p className="text-xs text-gray-400 mt-4">Source: <a href="https://www.ncsl.org/financial-services/seven-years-of-sports-betting-did-states-get-it-right" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">NCSL "Seven Years of Sports Betting: Did States Get It Right?"</a>, state gaming commission reports</p>
         </div>
 
         {/* Monthly Data Table - Redesigned */}
@@ -1015,7 +1015,7 @@ export default function USBettingStatisticsPage() {
               </table>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-3">Source: <a href="https://www.americangaming.org/research/commercial-gaming-revenue-tracker/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">AGA Commercial Gaming Revenue Tracker</a></p>
+          <p className="text-xs text-gray-400 mt-3">Source: <a href="https://www.americangaming.org/research/commercial-gaming-revenue-tracker/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">AGA Commercial Gaming Revenue Tracker</a></p>
         </div>
 
         {/* Illegal Market Size Section - Redesigned */}
@@ -1047,7 +1047,7 @@ export default function USBettingStatisticsPage() {
                 </p>
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-4">Source: <a href="https://www.americangaming.org/resources/sizing-the-illegal-and-unregulated-gaming-markets-in-the-u-s/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">AGA Sizing the Illegal Gaming Market Report</a></p>
+            <p className="text-xs text-gray-400 mt-4">Source: <a href="https://www.americangaming.org/resources/sizing-the-illegal-and-unregulated-gaming-markets-in-the-u-s/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 underline">AGA Sizing the Illegal Gaming Market Report</a></p>
           </div>
         </div>
 
@@ -1116,7 +1116,7 @@ export default function USBettingStatisticsPage() {
                 <span className="font-semibold text-white ml-2">Hold rate</span> = revenue ÷ handle (sportsbook margin)
               </p>
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-400">
               Data is updated monthly, typically within 2-3 weeks after state gaming commissions release official figures.
             </p>
           </div>
@@ -1353,7 +1353,7 @@ export default function USBettingStatisticsPage() {
             
             {/* Badge Preview */}
             <div className="mb-4 p-4 bg-gray-800/50 rounded-xl inline-block">
-              <p className="text-xs text-gray-500 mb-2">Preview:</p>
+              <p className="text-xs text-gray-400 mb-2">Preview:</p>
               <span className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                 Data by SportBot AI
@@ -1382,8 +1382,8 @@ export default function USBettingStatisticsPage() {
               </button>
             </div>
             
-            <p className="text-gray-500 text-sm mt-6">Paste this HTML on your website to display the badge with a link back to this page.</p>
-            <p className="text-gray-500 text-sm mt-2">Contact us at <a href="mailto:contact@sportbotai.com" className="text-emerald-400 hover:underline">contact@sportbotai.com</a> for collaboration opportunities.</p>
+            <p className="text-gray-400 text-sm mt-6">Paste this HTML on your website to display the badge with a link back to this page.</p>
+            <p className="text-gray-400 text-sm mt-2">Contact us at <a href="mailto:contact@sportbotai.com" className="text-emerald-400 hover:underline">contact@sportbotai.com</a> for collaboration opportunities.</p>
           </div>
         </div>
 
@@ -1401,7 +1401,7 @@ export default function USBettingStatisticsPage() {
             </Link>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs uppercase tracking-wider text-gray-500">Written by</span>
+                <span className="text-xs uppercase tracking-wider text-gray-400">Written by</span>
               </div>
               <Link href="/about" className="text-xl font-bold text-white hover:text-emerald-400 transition-colors">
                 {AUTHOR.name}
