@@ -490,9 +490,11 @@ export default function HeroProductMockup() {
               {/* Home team — Celtics */}
               <div className="flex flex-col items-center gap-1.5">
                 <img
-                  src="/images/logos/nba/bos.png"
+                  src="/images/logos/nba/bos.webp"
                   alt="Boston Celtics"
                   className="w-12 h-12 object-contain"
+                  width={48}
+                  height={48}
                   draggable={false}
                 />
                 <span className="text-[13px] font-bold text-white tracking-wide">BOS</span>
@@ -502,9 +504,11 @@ export default function HeroProductMockup() {
               {/* Center info */}
               <div className="flex flex-col items-center gap-1">
                 <img
-                  src="/images/logos/nba/nba.png"
+                  src="/images/logos/nba/nba.webp"
                   alt="NBA"
                   className="w-8 h-8 object-contain"
+                  width={32}
+                  height={32}
                   draggable={false}
                 />
                 <span className="text-[14px] font-bold text-white/70">7:30 PM</span>
@@ -514,9 +518,11 @@ export default function HeroProductMockup() {
               {/* Away team — Lakers */}
               <div className="flex flex-col items-center gap-1.5">
                 <img
-                  src="/images/logos/nba/lal.png"
+                  src="/images/logos/nba/lal.webp"
                   alt="LA Lakers"
                   className="w-12 h-12 object-contain"
+                  width={48}
+                  height={48}
                   draggable={false}
                 />
                 <span className="text-[13px] font-bold text-white tracking-wide">LAL</span>

@@ -196,20 +196,14 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="//a.espncdn.com" />
         <link rel="dns-prefetch" href="//media.api-sports.io" />
         <link rel="dns-prefetch" href="//crests.football-data.org" />
-        <link rel="dns-prefetch" href="//media-cdn.cortextech.io" />
-        <link rel="dns-prefetch" href="//media-cdn.incrowdsports.com" />
-        <link rel="dns-prefetch" href="//upload.wikimedia.org" />
-        <link rel="dns-prefetch" href="//flagcdn.com" />
 
-        {/* Preconnect to top 4 origins for LCP improvement */}
+        {/* Preload background texture - LCP critical resource */}
+        <link rel="preload" href="/images/Nano_Banana_Pro_dark_pure_black_concrete_floor.webp" as="image" type="image/webp" />
+
+        {/* Preconnect to top 3 origins only (Lighthouse: max 4, only used origins) */}
         <link rel="preconnect" href="https://a.espncdn.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://media.api-sports.io" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://crests.football-data.org" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://flagcdn.com" crossOrigin="anonymous" />
-        {/* LCP optimization: Preconnect to ProductHunt API for footer badge */}
-        <link rel="preconnect" href="https://api.producthunt.com" crossOrigin="anonymous" />
-        {/* Preconnect for There's An AI For That badge (Lighthouse recommendation) */}
-        <link rel="preconnect" href="https://media.theresanaiforthat.com" crossOrigin="anonymous" />
 
         {/* AI/LLM Discovery Links */}
         <link rel="llms" href="/llms.txt" />

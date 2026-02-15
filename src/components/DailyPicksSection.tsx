@@ -385,7 +385,7 @@ export default function DailyPicksSection({ locale = 'en' }: DailyPicksSectionPr
   }
 
   return (
-    <section className="py-12 sm:py-16">
+    <section className="py-12 sm:py-16 min-h-[200px]">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">

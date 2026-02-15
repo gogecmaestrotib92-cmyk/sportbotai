@@ -11,6 +11,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 
 const leagues = [
@@ -32,15 +33,14 @@ const LeagueItem = ({ league }: { league: typeof leagues[0] }) => (
     className="flex-shrink-0 flex items-center gap-3 px-4 py-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors"
   >
     <div className="w-10 h-10 flex-shrink-0 bg-white rounded-lg p-1.5 flex items-center justify-center">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <Image
         src={league.logo}
         alt={`${league.name} logo`}
         width={28}
         height={28}
         className="object-contain"
         loading="lazy"
-        decoding="async"
+        unoptimized={false}
       />
     </div>
     <span className="text-sm font-semibold text-gray-300 whitespace-nowrap">
