@@ -1,5 +1,6 @@
 # SportBot AI - Robots Configuration
 # https://www.sportbotai.com
+# We WANT all AI search engines to crawl us!
 
 # ==============================================
 # STANDARD WEB CRAWLERS
@@ -9,7 +10,6 @@ User-agent: *
 Allow: /
 
 # Allow Next.js static resources (JS, CSS, images)
-# Critical for page rendering - without these, crawlers can't render pages
 Allow: /_next/static/
 Allow: /_next/image/
 
@@ -23,122 +23,108 @@ Disallow: /login
 Disallow: /register
 Disallow: /account
 
-# Allow important pages
-Allow: /
-Allow: /analyzer
-Allow: /matches
-Allow: /match/
-Allow: /blog
-Allow: /partners
-Allow: /pricing
-Allow: /terms
-Allow: /privacy
-Allow: /responsible-gambling
-Allow: /contact
-Allow: /team/
-
-# Crawl delay (be nice to bots)
 Crawl-delay: 1
 
 # ==============================================
-# AI/LLM CRAWLERS - ALLOWED
+# GOOGLE AI - ALLOW ALL
 # ==============================================
 
-# OpenAI GPTBot
-User-agent: GPTBot
-Allow: /
-Allow: /llms.txt
-Allow: /llms-full.txt
-Allow: /blog
-Disallow: /api/
-Disallow: /admin/
-Disallow: /account
-Crawl-delay: 2
-
-# Google Bard / Gemini
 User-agent: Google-Extended
 Allow: /
-Allow: /llms.txt
-Allow: /llms-full.txt
-Allow: /blog
-Disallow: /api/
-Disallow: /admin/
-Disallow: /account
-Crawl-delay: 2
 
-# Anthropic Claude
+User-agent: Googlebot
+Allow: /
+
+# ==============================================
+# OPENAI - ALLOW ALL
+# ==============================================
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# ==============================================
+# ANTHROPIC CLAUDE - ALLOW ALL
+# ==============================================
+
 User-agent: anthropic-ai
 Allow: /
-Allow: /llms.txt
-Allow: /llms-full.txt
-Allow: /blog
-Disallow: /api/
-Disallow: /admin/
-Disallow: /account
-Crawl-delay: 2
 
 User-agent: Claude-Web
 Allow: /
-Allow: /llms.txt
-Allow: /llms-full.txt
-Allow: /blog
-Disallow: /api/
-Disallow: /admin/
-Disallow: /account
-Crawl-delay: 2
 
-# Perplexity AI
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+# ==============================================
+# PERPLEXITY - ALLOW ALL
+# ==============================================
+
 User-agent: PerplexityBot
 Allow: /
-Allow: /llms.txt
-Allow: /llms-full.txt
-Allow: /blog
-Disallow: /api/
-Disallow: /admin/
-Disallow: /account
-Crawl-delay: 2
+
+User-agent: Perplexity-User
+Allow: /
+
+# ==============================================
+# META AI - ALLOW ALL
+# ==============================================
+
+User-agent: FacebookBot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+# ==============================================
+# MICROSOFT / BING AI - ALLOW ALL
+# ==============================================
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: bingbot
+Allow: /
+
+# ==============================================
+# OTHER AI CRAWLERS - ALLOW ALL
+# ==============================================
 
 # Cohere
 User-agent: cohere-ai
 Allow: /
-Allow: /llms.txt
-Allow: /llms-full.txt
-Allow: /blog
-Disallow: /api/
-Disallow: /admin/
-Disallow: /account
-Crawl-delay: 2
 
-# Meta AI
-User-agent: FacebookBot
-Allow: /
-Allow: /llms.txt
-Allow: /llms-full.txt
-Disallow: /api/
-Disallow: /admin/
-Disallow: /account
-
-User-agent: meta-externalagent
-Allow: /
-Allow: /llms.txt
-Allow: /llms-full.txt
-Disallow: /api/
-Disallow: /admin/
-Disallow: /account
-
-# Microsoft/Bing AI (Copilot)
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 1
-
-# You.com AI
+# You.com
 User-agent: YouBot
 Allow: /
-Allow: /llms.txt
-Allow: /llms-full.txt
-Disallow: /api/
-Disallow: /admin/
-Disallow: /account
+
+# Apple AI / Siri
+User-agent: Applebot
+Allow: /
+User-agent: Applebot-Extended
+Allow: /
+
+# Common Crawl (used by many AI)
+User-agent: CCBot
+Allow: /
+
+# Brave Search AI
+User-agent: Bytespider
+Allow: /
 
 # ==============================================
 # SITEMAP & LLM FILES
