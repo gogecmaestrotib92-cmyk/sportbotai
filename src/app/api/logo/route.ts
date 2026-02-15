@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
       
       if (outputFormat === 'webp') {
         processedImage = await sharpInstance
-          .webp({ quality: 85, effort: 4 })
+          .webp({ quality: 75, effort: 6 })
           .toBuffer();
       } else {
         processedImage = await sharpInstance

@@ -126,6 +126,16 @@ Allow: /
 User-agent: Bytespider
 Allow: /
 
+# DuckDuckGo
+User-agent: DuckDuckBot
+Allow: /
+
+# Internet Archive
+User-agent: archive.org_bot
+Allow: /
+User-agent: ia_archiver
+Allow: /
+
 # ==============================================
 # SITEMAP & LLM FILES
 # ==============================================

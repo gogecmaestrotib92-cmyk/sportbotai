@@ -14,11 +14,11 @@
     "postinstall": "prisma generate"
   },
   "browserslist": [
-    "Chrome >= 87",
-    "Firefox >= 78",
-    "Safari >= 14",
-    "Edge >= 88",
-    "Opera >= 73",
+    "Chrome >= 105",
+    "Firefox >= 104",
+    "Safari >= 15.4",
+    "Edge >= 105",
+    "Opera >= 91",
     "not dead",
     "not IE 11"
   ],

@@ -192,18 +192,19 @@ export default async function RootLayout({
         {/* NOTE: GTM, GA, Clarity, and Ahrefs moved to body for better LCP */}
         {/* They load via next/script with afterInteractive/lazyOnload strategies */}
 
-        {/* DNS Prefetch & Preconnect for Logo CDNs - faster image loading */}
+        {/* DNS Prefetch for external CDNs - lightweight hints for all pages */}
         <link rel="dns-prefetch" href="//a.espncdn.com" />
         <link rel="dns-prefetch" href="//media.api-sports.io" />
         <link rel="dns-prefetch" href="//crests.football-data.org" />
+        <link rel="dns-prefetch" href="//api.producthunt.com" />
+        <link rel="dns-prefetch" href="//media.theresanaiforthat.com" />
 
         {/* Preload background texture - LCP critical resource */}
         <link rel="preload" href="/images/Nano_Banana_Pro_dark_pure_black_concrete_floor.webp" as="image" type="image/webp" />
 
-        {/* Preconnect to top 3 origins only (Lighthouse: max 4, only used origins) */}
-        <link rel="preconnect" href="https://a.espncdn.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://media.api-sports.io" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://crests.football-data.org" crossOrigin="anonymous" />
+        {/* NOTE: Preconnect removed from global layout - causes "unused preconnect" 
+             warnings on pages that don't use these origins (e.g. /matches).
+             League logos go through Next.js Image optimizer (/_next/image) anyway. */}
 
         {/* AI/LLM Discovery Links */}
         <link rel="llms" href="/llms.txt" />
