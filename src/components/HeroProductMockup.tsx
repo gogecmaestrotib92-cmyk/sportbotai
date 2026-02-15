@@ -490,7 +490,7 @@ export default function HeroProductMockup() {
               {/* Home team — Celtics */}
               <div className="flex flex-col items-center gap-1.5">
                 <img
-                  src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png"
+                  src="/images/logos/nba/bos.png"
                   alt="Boston Celtics"
                   className="w-12 h-12 object-contain"
                   draggable={false}
@@ -502,7 +502,7 @@ export default function HeroProductMockup() {
               {/* Center info */}
               <div className="flex flex-col items-center gap-1">
                 <img
-                  src="https://a.espncdn.com/i/teamlogos/leagues/500/nba.png"
+                  src="/images/logos/nba/nba.png"
                   alt="NBA"
                   className="w-8 h-8 object-contain"
                   draggable={false}
@@ -514,7 +514,7 @@ export default function HeroProductMockup() {
               {/* Away team — Lakers */}
               <div className="flex flex-col items-center gap-1.5">
                 <img
-                  src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png"
+                  src="/images/logos/nba/lal.png"
                   alt="LA Lakers"
                   className="w-12 h-12 object-contain"
                   draggable={false}
