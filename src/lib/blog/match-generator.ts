@@ -30,8 +30,8 @@ function getOpenAI(): OpenAI {
   return openaiClient;
 }
 
-// Use gpt-4.1 for higher quality match preview content
-const AI_MODEL = 'gpt-4.1';
+// Use gpt-4.1-mini for quality + speed balance (gpt-4.1 causes Vercel 300s timeout)
+const AI_MODEL = 'gpt-4.1-mini';
 
 // ============================================
 // TYPES
