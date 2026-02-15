@@ -186,7 +186,7 @@ export function ConfidenceRing({ score, confidence, size = 80 }: ConfidenceRingP
   
   // RESTRAINED COLORS: Only high confidence gets accent color
   const colors = {
-    high: { stroke: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', text: 'text-emerald-400' },
+    high: { stroke: '#2AF6A0', bg: 'rgba(42,246,160, 0.1)', text: 'text-emerald-400' },
     medium: { stroke: '#71717a', bg: 'rgba(113, 113, 122, 0.1)', text: 'text-zinc-400' },
     low: { stroke: '#52525b', bg: 'rgba(82, 82, 91, 0.1)', text: 'text-zinc-500' },
   };
@@ -301,7 +301,7 @@ interface VerdictBadgeProps {
 /** Animated SVG confidence arc */
 function ConfidenceArc({ confidence, size = 56 }: { confidence: 'high' | 'medium' | 'low'; size?: number }) {
   const config = {
-    high: { angle: 150, color: '#10b981', glow: 'rgba(16,185,129,0.4)', label: 'HIGH' },
+    high: { angle: 150, color: '#2AF6A0', glow: 'rgba(42,246,160,0.4)', label: 'HIGH' },
     medium: { angle: 95, color: '#f59e0b', glow: 'rgba(245,158,11,0.3)', label: 'MED' },
     low: { angle: 45, color: '#71717a', glow: 'rgba(113,113,122,0.2)', label: 'LOW' },
   };
@@ -368,7 +368,7 @@ function VerdictIcon({ confidence }: { confidence: 'high' | 'medium' | 'low' }) 
 
 export function VerdictBadge({ favored, confidence, edgePercentage, canSeeExactNumbers = false }: VerdictBadgeProps) {
   const accentConfig = {
-    high: { hex: '#10b981', gradient: 'from-emerald-500/10 to-emerald-500/[0.03]', border: 'border-emerald-500/15', barGlow: 'rgba(16,185,129,0.3)' },
+    high: { hex: '#2AF6A0', gradient: 'from-emerald-500/10 to-emerald-500/[0.03]', border: 'border-emerald-500/15', barGlow: 'rgba(42,246,160,0.3)' },
     medium: { hex: '#f59e0b', gradient: 'from-amber-500/[0.06] to-amber-500/[0.02]', border: 'border-amber-500/10', barGlow: 'rgba(245,158,11,0.2)' },
     low: { hex: '#71717a', gradient: 'from-zinc-700/20 to-zinc-800/20', border: 'border-zinc-700/20', barGlow: 'rgba(113,113,122,0.15)' },
   };

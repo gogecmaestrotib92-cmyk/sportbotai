@@ -1029,9 +1029,9 @@ Return JSON:
   // Add CTA box after conversion
   const ctaBox = `
 <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 12px; padding: 24px; margin: 32px 0; text-align: center; border: 1px solid #334155;">
-  <p style="color: #10b981; font-size: 18px; font-weight: 600; margin: 0 0 8px 0;">🔗 Ready to Try ${toolName}?</p>
+  <p style="color: #2AF6A0; font-size: 18px; font-weight: 600; margin: 0 0 8px 0;">🔗 Ready to Try ${toolName}?</p>
   <p style="color: #94a3b8; font-size: 14px; margin: 0 0 16px 0;">Visit their website to learn more and get started.</p>
-  <a href="${toolUrl}" target="_blank" rel="noopener" style="display: inline-block; background: #10b981; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">Visit ${toolName} →</a>
+  <a href="${toolUrl}" target="_blank" rel="noopener" style="display: inline-block; background: #2AF6A0; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">Visit ${toolName} →</a>
 </div>`;
   
   // Insert CTA before the Verdict section

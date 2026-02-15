@@ -540,7 +540,7 @@ function ProbabilityCard({ label, modelProb, marketProb, t, isBestValue = false 
 
   // Bar colors — industry standard: Blue = market benchmark, Green = value, Red = overpriced, Amber = fair
   const marketColor = '#3b82f6'; // blue-500 — market/bookmaker benchmark
-  const modelColor = hasEdge ? '#10b981' : isOverpriced ? '#ef4444' : '#f59e0b'; // emerald / red / amber
+  const modelColor = hasEdge ? '#2AF6A0' : isOverpriced ? '#ef4444' : '#f59e0b'; // emerald / red / amber
 
   // Recharts data — two separate bars side by side
   const chartData = [{ market: marketProb, model: modelProb }];
@@ -570,7 +570,7 @@ function ProbabilityCard({ label, modelProb, marketProb, t, isBestValue = false 
   
   // Card styling - best value gets emerald glow
   const cardClass = isBestValue && hasEdge
-    ? `bg-[#0a0a0b] border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.2),0_0_60px_rgba(16,185,129,0.1)] ring-1 ring-emerald-500/20`
+    ? `bg-[#0a0a0b] border-emerald-500/40 shadow-[0_0_30px_rgba(42,246,160,0.2),0_0_60px_rgba(42,246,160,0.1)] ring-1 ring-emerald-500/20`
     : 'bg-[#0a0a0b] border-white/[0.04] opacity-[0.65]';
   
   return (

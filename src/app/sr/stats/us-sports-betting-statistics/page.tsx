@@ -81,7 +81,7 @@ const annualData = [
 
 // Chart data for popular sports betting
 const popularSportsData = [
-  { sport: 'NFL', percentage: 40, color: '#10b981' },
+  { sport: 'NFL', percentage: 40, color: '#2AF6A0' },
   { sport: 'NBA', percentage: 18, color: '#3b82f6' },
   { sport: 'Koledž FB', percentage: 12, color: '#f59e0b' },
   { sport: 'MLB', percentage: 10, color: '#ef4444' },
@@ -92,7 +92,7 @@ const popularSportsData = [
 
 // Chart data for mobile vs retail
 const mobileVsRetailData = [
-  { name: 'Mobilno', value: 87, color: '#10b981' },
+  { name: 'Mobilno', value: 87, color: '#2AF6A0' },
   { name: 'Fizičke kladionice', value: 13, color: '#6b7280' },
 ];
 
@@ -277,7 +277,7 @@ export default function USBettingStatisticsPageSr() {
                     labelStyle={{ color: '#fff' }}
                     formatter={(value, name) => [`$${value}B`, name === 'handle' ? 'Promet' : 'Prihod']}
                   />
-                  <Bar dataKey="handle" fill="#10b981" radius={[4, 4, 0, 0]} name="Promet" />
+                  <Bar dataKey="handle" fill="#2AF6A0" radius={[4, 4, 0, 0]} name="Promet" />
                   <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Prihod" />
                 </BarChart>
               </ResponsiveContainer>
@@ -310,7 +310,7 @@ export default function USBettingStatisticsPageSr() {
                     labelStyle={{ color: '#fff' }}
                     formatter={(value) => [`$${value}B`, 'Ukupni promet']}
                   />
-                  <Bar dataKey="handle" fill="#10b981" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="handle" fill="#2AF6A0" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -384,8 +384,8 @@ export default function USBettingStatisticsPageSr() {
                 <AreaChart data={[...monthlyNationalData].reverse()} margin={{ top: 20, right: 10, left: -10, bottom: 5 }}>
                   <defs>
                     <linearGradient id="colorHandleSr" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#2AF6A0" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#2AF6A0" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="colorRevenueSr" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
@@ -400,7 +400,7 @@ export default function USBettingStatisticsPageSr() {
                     labelStyle={{ color: '#fff' }}
                     formatter={(value, name) => [`$${value}B`, name === 'handle' ? 'Promet' : 'Prihod']}
                   />
-                  <Area type="monotone" dataKey="handle" stroke="#10b981" fillOpacity={1} fill="url(#colorHandleSr)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="handle" stroke="#2AF6A0" fillOpacity={1} fill="url(#colorHandleSr)" strokeWidth={2} />
                   <Area type="monotone" dataKey="revenue" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorRevenueSr)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>

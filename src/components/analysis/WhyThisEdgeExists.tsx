@@ -102,8 +102,8 @@ function EdgeStrengthBar({ percent }: { percent: number }) {
   // Color based on edge size
   const isStrong = percent >= 3;
   const isMedium = percent >= 1.5;
-  const color = isStrong ? '#10b981' : isMedium ? '#34d399' : '#6ee7b7';
-  const glowColor = isStrong ? 'rgba(16,185,129,0.4)' : 'rgba(52,211,153,0.2)';
+  const color = isStrong ? '#2AF6A0' : isMedium ? '#34d399' : '#6ee7b7';
+  const glowColor = isStrong ? 'rgba(42,246,160,0.4)' : 'rgba(52,211,153,0.2)';
 
   return (
     <div className="mt-2.5 mb-1">
@@ -718,7 +718,7 @@ function parseBullet(raw: string, index: number, locale: 'en' | 'sr'): ParsedBul
   if (lower.includes('the edge:') || lower.includes('prednost:') || index === 0) {
     return {
       type: 'edge', label: t.edgeLabel, text: stripLabel(raw),
-      color: 'text-emerald-400', textColor: 'text-emerald-400', accentHex: '#10b981',
+      color: 'text-emerald-400', textColor: 'text-emerald-400', accentHex: '#2AF6A0',
       bgColor: 'bg-emerald-500/[0.06]', borderColor: 'border-emerald-500/20',
       iconName: 'bolt',
     };

@@ -9,7 +9,7 @@
 
 import Link from 'next/link';
 import { LiveStatsCounter } from './SocialProof';
-import LiveIntelCard from './LiveIntelCard';
+import HeroProductMockup from './HeroProductMockup';
 import VideoBackground from './VideoBackground';
 
 export default function Hero() {
@@ -41,7 +41,7 @@ export default function Hero() {
             <h1 className="text-3xl xs:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.05] tracking-tight mb-2 sm:mb-3 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
               Find Where
               <br className="hidden xs:block" />
-              <span className="text-gradient-accent drop-shadow-[0_0_30px_rgba(16,185,129,0.4)]">The Market Is Wrong</span>
+              <span className="text-gradient-accent drop-shadow-[0_0_30px_rgba(42,246,160,0.4)]">The Market Is Wrong</span>
             </h1>
 
             {/* Explainer - One line to clarify meaning */}
@@ -75,9 +75,9 @@ export default function Hero() {
 
           </div>
 
-          {/* Right Side - Live Intel Card */}
-          <div className="relative lg:pl-8">
-            <LiveIntelCard />
+          {/* Right Side - Product Mockup */}
+          <div className="relative flex justify-center">
+            <HeroProductMockup />
           </div>
         </div>
       </div>

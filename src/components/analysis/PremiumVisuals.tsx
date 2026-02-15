@@ -8,7 +8,7 @@
  * DESIGN PHILOSOPHY:
  * - Apple Health / Linear / Stripe aesthetic
  * - Dark mode native (#0a0a0b background)
- * - Emerald (#10b981) for positive, Rose (#ef4444) for negative
+ * - Emerald (#2AF6A0) for positive, Rose (#ef4444) for negative
  * - Animations are subtle, purposeful, not decorative
  * - Every visual tells a story at a glance
  * 
@@ -41,7 +41,7 @@ interface RiskGaugeProps {
 
 export function RiskGauge({ level, size = 48, showLabel = true, label }: RiskGaugeProps) {
   const configs = {
-    low: { color: '#10b981', angle: 30, label: 'Low Risk', glowColor: 'rgba(16, 185, 129, 0.3)' },
+    low: { color: '#2AF6A0', angle: 30, label: 'Low Risk', glowColor: 'rgba(42,246,160, 0.3)' },
     medium: { color: '#f59e0b', angle: 90, label: 'Medium', glowColor: 'rgba(245, 158, 11, 0.3)' },
     high: { color: '#ef4444', angle: 150, label: 'High Risk', glowColor: 'rgba(239, 68, 68, 0.3)' },
   };
@@ -69,7 +69,7 @@ export function RiskGauge({ level, size = 48, showLabel = true, label }: RiskGau
         {/* Background semi-circle with gradient: green → yellow → red */}
         <defs>
           <linearGradient id="risk-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+            <stop offset="0%" stopColor="#2AF6A0" stopOpacity="0.3" />
             <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.3" />
             <stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
           </linearGradient>

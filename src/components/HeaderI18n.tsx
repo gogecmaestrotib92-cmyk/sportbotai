@@ -62,7 +62,7 @@ function NavLink({
         {children}
         {/* Premium glowing underline indicator - only under text */}
         {isActive && (
-          <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-accent rounded-full shadow-[0_0_8px_2px_rgba(16,185,129,0.4)]" />
+          <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-accent rounded-full shadow-[0_0_8px_2px_rgba(42,246,160,0.4)]" />
         )}
       </span>
       {badge}
@@ -97,7 +97,7 @@ function MobileNavLink({
     <Link
       href={href}
       className={`flex items-center gap-3 font-medium px-4 py-3.5 rounded-btn transition-all duration-300 active:scale-[0.98] ${showAccent
-        ? 'text-accent bg-accent/10 border-l-2 border-accent shadow-[inset_0_0_20px_rgba(16,185,129,0.1)]'
+        ? 'text-accent bg-accent/10 border-l-2 border-accent shadow-[inset_0_0_20px_rgba(42,246,160,0.1)]'
         : 'text-text-secondary hover:text-text-primary hover:bg-bg-hover'
         } ${className}`}
       onClick={onClick}

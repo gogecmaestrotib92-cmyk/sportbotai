@@ -9,7 +9,7 @@
 
 import Link from 'next/link';
 import { LiveStatsCounter } from './SocialProof';
-import LiveIntelCard from './LiveIntelCard';
+import HeroProductMockup from './HeroProductMockup';
 import VideoBackground from './VideoBackground';
 
 export default function HeroVariantB() {
@@ -94,9 +94,9 @@ export default function HeroVariantB() {
             </div>
           </div>
 
-          {/* Right Side - Live Intel Card */}
-          <div className="relative lg:pl-8">
-            <LiveIntelCard />
+          {/* Right Side - Product Mockup */}
+          <div className="relative flex justify-center">
+            <HeroProductMockup />
           </div>
         </div>
       </div>

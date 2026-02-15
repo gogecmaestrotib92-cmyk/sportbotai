@@ -23,11 +23,11 @@ export async function GET(request: NextRequest) {
 
     // Value edge colors
     const hasValue = bestValue && bestValue !== 'NONE'
-    const valueColor = hasValue ? '#10b981' : '#6b7280'
+    const valueColor = hasValue ? '#2AF6A0' : '#6b7280'
     
     // Risk colors
     const riskColors: Record<string, { bg: string; text: string }> = {
-      LOW: { bg: 'rgba(16, 185, 129, 0.25)', text: '#10b981' },
+      LOW: { bg: 'rgba(42,246,160, 0.25)', text: '#2AF6A0' },
       MEDIUM: { bg: 'rgba(245, 158, 11, 0.25)', text: '#f59e0b' },
       HIGH: { bg: 'rgba(239, 68, 68, 0.25)', text: '#ef4444' }
     }
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
                 style={{
                   width: '40px',
                   height: '40px',
-                  backgroundColor: '#10b981',
+                  backgroundColor: '#2AF6A0',
                   borderRadius: '10px',
                   display: 'flex',
                   alignItems: 'center',
@@ -109,8 +109,8 @@ export async function GET(request: NextRequest) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  backgroundColor: 'rgba(42,246,160, 0.2)',
+                  border: '1px solid rgba(42,246,160, 0.3)',
                   padding: '10px 20px',
                   borderRadius: '30px',
                 }}
@@ -120,10 +120,10 @@ export async function GET(request: NextRequest) {
                     width: '10px',
                     height: '10px',
                     borderRadius: '50%',
-                    backgroundColor: '#10b981',
+                    backgroundColor: '#2AF6A0',
                   }}
                 />
-                <span style={{ color: '#10b981', fontSize: '18px', fontWeight: '600' }}>
+                <span style={{ color: '#2AF6A0', fontSize: '18px', fontWeight: '600' }}>
                   {edgePercent ? `+${edgePercent}% Value on ${bestValue}` : `Value: ${bestValue}`}
                 </span>
               </div>
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
                     <span style={{ color: '#6b7280', fontSize: '14px' }}>
                       Market: {marketHome || Math.round(100 - confidence)}%
                     </span>
-                    <span style={{ color: modelHome > marketHome ? '#10b981' : 'white', fontSize: '16px', fontWeight: '600' }}>
+                    <span style={{ color: modelHome > marketHome ? '#2AF6A0' : 'white', fontSize: '16px', fontWeight: '600' }}>
                       Model: {modelHome || confidence}%
                     </span>
                   </div>
@@ -170,7 +170,7 @@ export async function GET(request: NextRequest) {
                     style={{
                       width: `${modelHome || confidence}%`,
                       height: '100%',
-                      backgroundColor: modelHome > marketHome ? '#10b981' : '#3b82f6',
+                      backgroundColor: modelHome > marketHome ? '#2AF6A0' : '#3b82f6',
                       borderRadius: '4px',
                     }}
                   />
@@ -185,7 +185,7 @@ export async function GET(request: NextRequest) {
                     <span style={{ color: '#6b7280', fontSize: '14px' }}>
                       Market: {marketAway || Math.round(100 - confidence - 10)}%
                     </span>
-                    <span style={{ color: modelAway > marketAway ? '#10b981' : 'white', fontSize: '16px', fontWeight: '600' }}>
+                    <span style={{ color: modelAway > marketAway ? '#2AF6A0' : 'white', fontSize: '16px', fontWeight: '600' }}>
                       Model: {modelAway || (100 - confidence - 10)}%
                     </span>
                   </div>
@@ -195,7 +195,7 @@ export async function GET(request: NextRequest) {
                     style={{
                       width: `${modelAway || (100 - confidence - 10)}%`,
                       height: '100%',
-                      backgroundColor: modelAway > marketAway ? '#10b981' : '#3b82f6',
+                      backgroundColor: modelAway > marketAway ? '#2AF6A0' : '#3b82f6',
                       borderRadius: '4px',
                     }}
                   />

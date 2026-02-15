@@ -306,7 +306,7 @@ export default function BookmakerOddsTable({
               onClick={() => handleMarketChange(tab.key)}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
                 activeMarket === tab.key
-                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-400/30 shadow-[0_0_12px_rgba(16,185,129,0.1)]'
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-400/30 shadow-[0_0_12px_rgba(42,246,160,0.1)]'
                   : 'bg-zinc-800/50 text-zinc-500 border border-zinc-700/30 hover:text-zinc-400 hover:border-zinc-600/40'
               }`}
             >

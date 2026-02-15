@@ -1599,7 +1599,7 @@ button:focus-visible {
 /* Blog blockquotes */
 .blog-content blockquote {
   @apply border-l-4 border-emerald-600 pl-6 py-4 pr-4 my-8 italic text-slate-900 rounded-r-lg;
-  background-color: rgba(16, 185, 129, 0.08);
+  background-color: rgba(42,246,160, 0.08);
 }
 
 .blog-content blockquote p {
@@ -1740,8 +1740,8 @@ button:focus-visible {
 }
 
 /* Keep HOME green and AWAY red accents */
-.blog-content .match-info-box p[style*="color: #10b981"] {
-  color: #10b981 !important;
+.blog-content .match-info-box p[style*="color: #2AF6A0"] {
+  color: #2AF6A0 !important;
 }
 .blog-content .match-info-box p[style*="color: #ef4444"] {
   color: #ef4444 !important;
@@ -1769,21 +1769,21 @@ button:focus-visible {
 }
 
 /* Keep green and red colors */
-.blog-content p[style*="color: #10b981"] {
-  color: #10b981 !important;
+.blog-content p[style*="color: #2AF6A0"] {
+  color: #2AF6A0 !important;
 }
 .blog-content p[style*="color: #ef4444"] {
   color: #ef4444 !important;
 }
-.blog-content h4[style*="color: #10b981"] {
-  color: #10b981 !important;
+.blog-content h4[style*="color: #2AF6A0"] {
+  color: #2AF6A0 !important;
 }
 .blog-content h4[style*="color: #ef4444"] {
   color: #ef4444 !important;
 }
 
 /* Key players boxes */
-.blog-content div[style*="border-left: 4px solid #10b981"],
+.blog-content div[style*="border-left: 4px solid #2AF6A0"],
 .blog-content div[style*="border-left: 4px solid #ef4444"] {
   background: #000000 !important;
   border-radius: 12px !important;
@@ -1843,7 +1843,7 @@ button:focus-visible {
 .blog-content div[style*="background: linear-gradient(135deg, #064e3b"] {
   background: #000000 !important;
   border-radius: 12px !important;
-  border: 1px solid #10b981 !important;
+  border: 1px solid #2AF6A0 !important;
 }
 
 /* Match info box container - generated inline, need !important overrides */
@@ -1900,7 +1900,7 @@ button:focus-visible {
   }
   
   /* Key Players boxes - full width clean design */
-  .blog-content div[style*="border-left: 4px solid #10b981"],
+  .blog-content div[style*="border-left: 4px solid #2AF6A0"],
   .blog-content div[style*="border-left: 4px solid #ef4444"] {
     width: 100% !important;
     padding: 16px !important;

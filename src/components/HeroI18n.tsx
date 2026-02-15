@@ -9,7 +9,7 @@
 
 import Link from 'next/link';
 import { LiveStatsCounterI18n } from './SocialProofI18n';
-import LiveIntelCardI18n from './LiveIntelCardI18n';
+import HeroProductMockup from './HeroProductMockup';
 import VideoBackground from './VideoBackground';
 import { TranslationsType, Locale } from '@/lib/i18n';
 
@@ -106,9 +106,9 @@ export default function HeroI18n({ t, locale }: HeroI18nProps) {
             </div>
           </div>
 
-          {/* Right Side - Live Intel Card */}
-          <div className="relative lg:pl-8">
-            <LiveIntelCardI18n locale={locale} />
+          {/* Right Side - Product Mockup */}
+          <div className="relative flex justify-center">
+            <HeroProductMockup locale={locale} />
           </div>
         </div>
       </div>

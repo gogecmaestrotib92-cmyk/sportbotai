@@ -160,11 +160,11 @@ async function generateSVGFeaturedImage(
 
   // Category-specific styling
   const categoryStyles: Record<string, { icon: string; accent1: string; accent2: string }> = {
-    "Betting Fundamentals": { icon: "📊", accent1: "#10b981", accent2: "#059669" },
+    "Betting Fundamentals": { icon: "📊", accent1: "#2AF6A0", accent2: "#059669" },
     "Sports Analysis": { icon: "⚽", accent1: "#3b82f6", accent2: "#1d4ed8" },
     "Statistics & Data": { icon: "📈", accent1: "#8b5cf6", accent2: "#6d28d9" },
     "Risk Management": { icon: "🛡️", accent1: "#f59e0b", accent2: "#d97706" },
-    "Market Insights": { icon: "💰", accent1: "#10b981", accent2: "#059669" },
+    "Market Insights": { icon: "💰", accent1: "#2AF6A0", accent2: "#059669" },
     "Educational Guides": { icon: "📚", accent1: "#06b6d4", accent2: "#0891b2" },
   };
 

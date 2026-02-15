@@ -115,7 +115,7 @@ const annualData = [
 
 // Chart data for popular sports betting
 const popularSportsData = [
-  { sport: 'NFL', percentage: 40, color: '#10b981' },
+  { sport: 'NFL', percentage: 40, color: '#2AF6A0' },
   { sport: 'NBA', percentage: 18, color: '#3b82f6' },
   { sport: 'College FB', percentage: 12, color: '#f59e0b' },
   { sport: 'MLB', percentage: 10, color: '#ef4444' },
@@ -126,7 +126,7 @@ const popularSportsData = [
 
 // Chart data for mobile vs retail
 const mobileVsRetailData = [
-  { name: 'Mobile', value: 87, color: '#10b981' },
+  { name: 'Mobile', value: 87, color: '#2AF6A0' },
   { name: 'Retail', value: 13, color: '#6b7280' },
 ];
 
@@ -360,7 +360,7 @@ export default function USBettingStatisticsPage() {
                     labelStyle={{ color: '#fff' }}
                     formatter={(value, name) => [`$${value}B`, name === 'handle' ? 'Handle' : 'Revenue']}
                   />
-                  <Bar dataKey="handle" fill="#10b981" radius={[4, 4, 0, 0]} name="Handle" />
+                  <Bar dataKey="handle" fill="#2AF6A0" radius={[4, 4, 0, 0]} name="Handle" />
                   <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Revenue" />
                 </BarChart>
               </ResponsiveContainer>
@@ -407,7 +407,7 @@ export default function USBettingStatisticsPage() {
                     labelStyle={{ color: '#fff' }}
                     formatter={(value) => [`$${value}B`, 'Total Handle']}
                   />
-                  <Bar dataKey="handle" fill="#10b981" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="handle" fill="#2AF6A0" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -496,7 +496,7 @@ export default function USBettingStatisticsPage() {
                     contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
                     formatter={(value) => [`${value}%`, 'Share']}
                   />
-                  <Bar dataKey="percentage" fill="#10b981" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="percentage" fill="#2AF6A0" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -547,7 +547,7 @@ export default function USBettingStatisticsPage() {
                     contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
                     formatter={(value) => [`$${value}B`, 'Handle']}
                   />
-                  <Area type="monotone" dataKey="handle" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
+                  <Area type="monotone" dataKey="handle" stroke="#2AF6A0" fill="#2AF6A0" fillOpacity={0.3} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

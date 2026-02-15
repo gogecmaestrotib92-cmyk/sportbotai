@@ -180,8 +180,8 @@ function OUComparisonBar({
     const isNeutral = diff < 0.3; // No meaningful difference
 
     // Colors based on direction (neutral when values are ~equal)
-    const indicatorColor = isNeutral ? '#71717a' : isOver ? '#10b981' : '#ef4444';
-    const indicatorGlow = isNeutral ? 'none' : `0 0 8px ${isOver ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)'}`;
+    const indicatorColor = isNeutral ? '#71717a' : isOver ? '#2AF6A0' : '#ef4444';
+    const indicatorGlow = isNeutral ? 'none' : `0 0 8px ${isOver ? 'rgba(42,246,160,0.5)' : 'rgba(239,68,68,0.5)'}`;
 
     return (
         <div className="relative h-10 rounded-full bg-white/[0.03] border border-white/[0.06] overflow-hidden">
@@ -193,7 +193,7 @@ function OUComparisonBar({
                         left: `${Math.min(modelPos, marketPos)}%`,
                         width: animated ? `${Math.abs(modelPos - marketPos)}%` : '0%',
                         background: isOver
-                            ? 'linear-gradient(90deg, rgba(16,185,129,0.15), rgba(16,185,129,0.3))'
+                            ? 'linear-gradient(90deg, rgba(42,246,160,0.15), rgba(42,246,160,0.3))'
                             : 'linear-gradient(90deg, rgba(239,68,68,0.3), rgba(239,68,68,0.15))',
                     }}
                 />
@@ -230,7 +230,7 @@ function OUComparisonBar({
                     style={{
                         left: `${(modelPos + marketPos) / 2}%`,
                         transform: 'translate(-50%, -50%)',
-                        color: isOver ? '#10b981' : '#ef4444',
+                        color: isOver ? '#2AF6A0' : '#ef4444',
                         opacity: animated ? 1 : 0,
                     }}
                 >

@@ -106,17 +106,17 @@ export default function HomePage() {
       {/* Hero section */}
       <Hero />
 
-      {/* Pain Quantification - "2 hours vs 60 seconds" */}
-      <PainQuantification locale="en" />
-
-      {/* League logos - infinite scroll */}
+      {/* League logos - instant trust signal */}
       <LeagueScroll />
 
-      {/* Daily Picks - AI value picks with edge */}
+      {/* Daily Picks - AI value picks with edge (show value immediately) */}
       <DailyPicksSection locale="en" />
 
-      {/* Trending matches - server-rendered for fast LCP */}
+      {/* Trending matches - engagement hook */}
       <TrendingSectionServer maxMatches={6} />
+
+      {/* Pain Quantification - "2 hours vs 60 seconds" (now they're interested, show the pain) */}
+      <PainQuantification locale="en" />
 
       {/* Testimonials - video social proof */}
       <VideoTestimonialsCarousel />

@@ -87,9 +87,6 @@ export default function SerbianHomePage() {
       <HeroI18n t={t} locale="sr" />
 
       {/* Pain Quantification - "2+ sata vs 60 sekundi" */}
-      <PainQuantification locale="sr" />
-
-      {/* League logos - infinite scroll */}
       <LeagueScroll />
 
       {/* Daily Picks - AI value picks with edge */}
@@ -97,6 +94,9 @@ export default function SerbianHomePage() {
 
       {/* Trending matches - server-rendered for fast LCP */}
       <TrendingSectionServer maxMatches={6} locale="sr" />
+
+      {/* Pain Quantification - "2 hours vs 60 seconds" */}
+      <PainQuantification locale="sr" />
 
       {/* Moments carousel - marketing situations */}
       <VideoTestimonialsCarousel locale="sr" />

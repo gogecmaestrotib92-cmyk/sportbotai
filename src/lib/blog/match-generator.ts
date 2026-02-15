@@ -221,7 +221,7 @@ async function generateMatchFeaturedImage(
     const homeLogoElement = homeLogoData
       ? `<image x="200" y="260" width="150" height="150" href="${homeLogoData}" preserveAspectRatio="xMidYMid meet"/>`
       : `<circle cx="275" cy="335" r="60" fill="#334155"/>
-         <text x="275" y="350" text-anchor="middle" fill="#10b981" font-family="Arial, sans-serif" font-size="36" font-weight="700">${escapeXml(match.homeTeam.substring(0, 2).toUpperCase())}</text>`;
+         <text x="275" y="350" text-anchor="middle" fill="#2AF6A0" font-family="Arial, sans-serif" font-size="36" font-weight="700">${escapeXml(match.homeTeam.substring(0, 2).toUpperCase())}</text>`;
 
     const awayLogoElement = awayLogoData
       ? `<image x="850" y="260" width="150" height="150" href="${awayLogoData}" preserveAspectRatio="xMidYMid meet"/>`
@@ -241,7 +241,7 @@ async function generateMatchFeaturedImage(
       <stop offset="100%" style="stop-color:#0f172a"/>
     </linearGradient>
     <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#10b981"/>
+      <stop offset="0%" style="stop-color:#2AF6A0"/>
       <stop offset="100%" style="stop-color:#059669"/>
     </linearGradient>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
@@ -257,8 +257,8 @@ async function generateMatchFeaturedImage(
   
   <!-- Subtle pattern -->
   <g opacity="0.05">
-    <circle cx="100" cy="100" r="200" fill="#10b981"/>
-    <circle cx="1100" cy="530" r="200" fill="#10b981"/>
+    <circle cx="100" cy="100" r="200" fill="#2AF6A0"/>
+    <circle cx="1100" cy="530" r="200" fill="#2AF6A0"/>
   </g>
   
   <!-- Accent line at bottom -->
@@ -270,7 +270,7 @@ async function generateMatchFeaturedImage(
   
   <!-- Home Team Section -->
   <rect x="50" y="170" width="450" height="300" rx="16" fill="#1e293b" filter="url(#shadow)"/>
-  <rect x="50" y="170" width="450" height="50" rx="16" fill="#10b981"/>
+  <rect x="50" y="170" width="450" height="50" rx="16" fill="#2AF6A0"/>
   <rect x="50" y="204" width="450" height="16" fill="#1e293b"/>
   <text x="275" y="203" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="18" font-weight="600">HOME</text>
   
@@ -301,7 +301,7 @@ async function generateMatchFeaturedImage(
   <text x="600" y="530" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="20" font-weight="500">${escapeXml(dateStr)}</text>
   
   <!-- SportBot AI Branding -->
-  <text x="600" y="575" text-anchor="middle" fill="#10b981" font-family="Arial, sans-serif" font-size="20" font-weight="600">SportBot AI</text>
+  <text x="600" y="575" text-anchor="middle" fill="#2AF6A0" font-family="Arial, sans-serif" font-size="20" font-weight="600">SportBot AI</text>
   <text x="600" y="598" text-anchor="middle" fill="#64748b" font-family="Arial, sans-serif" font-size="12">AI-Powered Match Preview &amp; Prediction</text>
 </svg>`;
 
@@ -939,7 +939,7 @@ ${analysis.marketInsights.map(m => `• ${m}`).join('\n')}
   <thead>
     <tr style="background: #334155;">
       <th style="padding: 12px; text-align: left; color: #fff;">Team</th>
-      <th style="padding: 12px; text-align: center; color: #10b981;">W</th>
+      <th style="padding: 12px; text-align: center; color: #2AF6A0;">W</th>
       <th style="padding: 12px; text-align: center; color: #fbbf24;">D</th>
       <th style="padding: 12px; text-align: center; color: #ef4444;">L</th>
       <th style="padding: 12px; text-align: left; color: #fff;">Form</th>
@@ -948,17 +948,17 @@ ${analysis.marketInsights.map(m => `• ${m}`).join('\n')}
   <tbody>
     <tr style="border-bottom: 1px solid #334155;">
       <td style="padding: 12px; color: #fff;">${match.homeTeam}</td>
-      <td style="padding: 12px; text-align: center; color: #10b981;">[WINS]</td>
+      <td style="padding: 12px; text-align: center; color: #2AF6A0;">[WINS]</td>
       <td style="padding: 12px; text-align: center; color: #fbbf24;">[DRAWS]</td>
       <td style="padding: 12px; text-align: center; color: #ef4444;">[LOSSES]</td>
-      <td style="padding: 12px;"><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span><span style="color: #fbbf24;">●</span><span style="color: #ef4444;">●</span><span style="color: #10b981;">●</span></td>
+      <td style="padding: 12px;"><span style="color: #2AF6A0;">●</span><span style="color: #2AF6A0;">●</span><span style="color: #fbbf24;">●</span><span style="color: #ef4444;">●</span><span style="color: #2AF6A0;">●</span></td>
     </tr>
     <tr>
       <td style="padding: 12px; color: #fff;">${match.awayTeam}</td>
-      <td style="padding: 12px; text-align: center; color: #10b981;">[WINS]</td>
+      <td style="padding: 12px; text-align: center; color: #2AF6A0;">[WINS]</td>
       <td style="padding: 12px; text-align: center; color: #fbbf24;">[DRAWS]</td>
       <td style="padding: 12px; text-align: center; color: #ef4444;">[LOSSES]</td>
-      <td style="padding: 12px;"><span style="color: #10b981;">●</span><span style="color: #ef4444;">●</span><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span><span style="color: #fbbf24;">●</span></td>
+      <td style="padding: 12px;"><span style="color: #2AF6A0;">●</span><span style="color: #ef4444;">●</span><span style="color: #2AF6A0;">●</span><span style="color: #2AF6A0;">●</span><span style="color: #fbbf24;">●</span></td>
     </tr>
   </tbody>
 </table>` : `
@@ -966,7 +966,7 @@ ${analysis.marketInsights.map(m => `• ${m}`).join('\n')}
   <thead>
     <tr style="background: #334155;">
       <th style="padding: 12px; text-align: left; color: #fff;">Team</th>
-      <th style="padding: 12px; text-align: center; color: #10b981;">W</th>
+      <th style="padding: 12px; text-align: center; color: #2AF6A0;">W</th>
       <th style="padding: 12px; text-align: center; color: #ef4444;">L</th>
       <th style="padding: 12px; text-align: left; color: #fff;">Form</th>
     </tr>
@@ -974,15 +974,15 @@ ${analysis.marketInsights.map(m => `• ${m}`).join('\n')}
   <tbody>
     <tr style="border-bottom: 1px solid #334155;">
       <td style="padding: 12px; color: #fff;">${match.homeTeam}</td>
-      <td style="padding: 12px; text-align: center; color: #10b981;">[WINS]</td>
+      <td style="padding: 12px; text-align: center; color: #2AF6A0;">[WINS]</td>
       <td style="padding: 12px; text-align: center; color: #ef4444;">[LOSSES]</td>
-      <td style="padding: 12px;"><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span><span style="color: #ef4444;">●</span><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span></td>
+      <td style="padding: 12px;"><span style="color: #2AF6A0;">●</span><span style="color: #2AF6A0;">●</span><span style="color: #ef4444;">●</span><span style="color: #2AF6A0;">●</span><span style="color: #2AF6A0;">●</span></td>
     </tr>
     <tr>
       <td style="padding: 12px; color: #fff;">${match.awayTeam}</td>
-      <td style="padding: 12px; text-align: center; color: #10b981;">[WINS]</td>
+      <td style="padding: 12px; text-align: center; color: #2AF6A0;">[WINS]</td>
       <td style="padding: 12px; text-align: center; color: #ef4444;">[LOSSES]</td>
-      <td style="padding: 12px;"><span style="color: #10b981;">●</span><span style="color: #ef4444;">●</span><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span><span style="color: #10b981;">●</span></td>
+      <td style="padding: 12px;"><span style="color: #2AF6A0;">●</span><span style="color: #ef4444;">●</span><span style="color: #2AF6A0;">●</span><span style="color: #2AF6A0;">●</span><span style="color: #2AF6A0;">●</span></td>
     </tr>
   </tbody>
 </table>`;
@@ -991,8 +991,8 @@ ${analysis.marketInsights.map(m => `• ${m}`).join('\n')}
   const h2hBoxTemplate = hasDraws ? `
 <div style="background: #1e293b; border-radius: 8px; padding: 20px; margin: 20px 0;">
   <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center;">
-    <div style="background: #10b981/20; padding: 16px; border-radius: 8px;">
-      <p style="font-size: 32px; font-weight: bold; color: #10b981;">[HOME_WINS]</p>
+    <div style="background: #2AF6A0/20; padding: 16px; border-radius: 8px;">
+      <p style="font-size: 32px; font-weight: bold; color: #2AF6A0;">[HOME_WINS]</p>
       <p style="color: #94a3b8; font-size: 14px;">${match.homeTeam} Wins</p>
     </div>
     <div style="background: #64748b/20; padding: 16px; border-radius: 8px;">
@@ -1007,8 +1007,8 @@ ${analysis.marketInsights.map(m => `• ${m}`).join('\n')}
 </div>` : `
 <div style="background: #1e293b; border-radius: 8px; padding: 20px; margin: 20px 0;">
   <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; text-align: center;">
-    <div style="background: #10b981/20; padding: 16px; border-radius: 8px;">
-      <p style="font-size: 32px; font-weight: bold; color: #10b981;">[HOME_WINS]</p>
+    <div style="background: #2AF6A0/20; padding: 16px; border-radius: 8px;">
+      <p style="font-size: 32px; font-weight: bold; color: #2AF6A0;">[HOME_WINS]</p>
       <p style="color: #94a3b8; font-size: 14px;">${match.homeTeam} Wins</p>
     </div>
     <div style="background: #ef4444/20; padding: 16px; border-radius: 8px;">
@@ -1020,10 +1020,10 @@ ${analysis.marketInsights.map(m => `• ${m}`).join('\n')}
 
   // Prediction box template - no Draw for NBA/NFL
   const predictionBoxTemplate = hasDraws ? `
-<div style="background: linear-gradient(135deg, #10b981/10 0%, #0f172a 100%); border: 2px solid #10b981/30; border-radius: 12px; padding: 24px; margin: 24px 0;">
+<div style="background: linear-gradient(135deg, #2AF6A0/10 0%, #0f172a 100%); border: 2px solid #2AF6A0/30; border-radius: 12px; padding: 24px; margin: 24px 0;">
   <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
-    <h3 style="color: #10b981; font-size: 18px; font-weight: bold; margin: 0;">SportBot AI Prediction</h3>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2AF6A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+    <h3 style="color: #2AF6A0; font-size: 18px; font-weight: bold; margin: 0;">SportBot AI Prediction</h3>
   </div>
   <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center; margin-bottom: 16px;">
     <div style="background: #1e293b; padding: 16px; border-radius: 8px; overflow: hidden;">
@@ -1041,10 +1041,10 @@ ${analysis.marketInsights.map(m => `• ${m}`).join('\n')}
   </div>
   <p style="color: #94a3b8; font-size: 14px; text-align: center;">Based on historical data, current form, and AI analysis. For educational purposes only.</p>
 </div>` : `
-<div style="background: linear-gradient(135deg, #10b981/10 0%, #0f172a 100%); border: 2px solid #10b981/30; border-radius: 12px; padding: 24px; margin: 24px 0;">
+<div style="background: linear-gradient(135deg, #2AF6A0/10 0%, #0f172a 100%); border: 2px solid #2AF6A0/30; border-radius: 12px; padding: 24px; margin: 24px 0;">
   <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
-    <h3 style="color: #10b981; font-size: 18px; font-weight: bold; margin: 0;">SportBot AI Prediction</h3>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2AF6A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+    <h3 style="color: #2AF6A0; font-size: 18px; font-weight: bold; margin: 0;">SportBot AI Prediction</h3>
   </div>
   <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; text-align: center; margin-bottom: 16px;">
     <div style="background: #1e293b; padding: 16px; border-radius: 8px; overflow: hidden;">
@@ -1106,7 +1106,7 @@ ${research.rosterContext}
   <div class="match-teams" style="display: flex; flex-direction: row; justify-content: space-around; align-items: center; text-align: center; gap: 16px; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 120px;">
       <p style="font-size: 22px; font-weight: bold; color: #fff; margin: 0;">${match.homeTeam}</p>
-      <p style="color: #10b981; font-size: 14px; margin: 4px 0 0 0;">HOME</p>
+      <p style="color: #2AF6A0; font-size: 14px; margin: 4px 0 0 0;">HOME</p>
     </div>
     <div style="font-size: 24px; color: #64748b; font-weight: 300;">VS</div>
     <div style="flex: 1; min-width: 120px;">
@@ -1134,8 +1134,8 @@ ${predictionBoxTemplate}
 
 5. KEY PLAYERS BOXES (in key players section):
 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 20px 0;">
-  <div style="background: #1e293b; border-radius: 8px; padding: 16px; border-left: 4px solid #10b981;">
-    <h4 style="color: #10b981; margin: 0 0 12px 0;">${match.homeTeam} Key Players</h4>
+  <div style="background: #1e293b; border-radius: 8px; padding: 16px; border-left: 4px solid #2AF6A0;">
+    <h4 style="color: #2AF6A0; margin: 0 0 12px 0;">${match.homeTeam} Key Players</h4>
     <ul style="list-style: none; padding: 0; margin: 0;">
       <li style="color: #fff; padding: 8px 0; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> [Player 1] - [Position/Role]</li>
       <li style="color: #fff; padding: 8px 0; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> [Player 2] - [Position/Role]</li>
@@ -1153,10 +1153,10 @@ ${predictionBoxTemplate}
 </div>
 
 6. CTA BOX - INLINE (use after Form Analysis section):
-<div style="background: linear-gradient(135deg, #10b981/20 0%, #0ea5e9/20 100%); border: 1px solid #10b981/50; border-radius: 12px; padding: 20px; margin: 24px 0; text-align: center;">
-  <p style="color: #10b981; font-size: 16px; font-weight: 600; margin: 0 0 8px 0; display: flex; align-items: center; justify-content: center; gap: 8px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg> Want Real-Time AI Analysis?</p>
+<div style="background: linear-gradient(135deg, #2AF6A0/20 0%, #0ea5e9/20 100%); border: 1px solid #2AF6A0/50; border-radius: 12px; padding: 20px; margin: 24px 0; text-align: center;">
+  <p style="color: #2AF6A0; font-size: 16px; font-weight: 600; margin: 0 0 8px 0; display: flex; align-items: center; justify-content: center; gap: 8px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg> Want Real-Time AI Analysis?</p>
   <p style="color: #94a3b8; font-size: 14px; margin: 0 0 16px 0;">Get live probability updates, injury alerts, and deeper insights with SportBot AI</p>
-  <a href="/register" style="display: inline-block; background: #10b981; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Get Started Free →</a>
+  <a href="/register" style="display: inline-block; background: #2AF6A0; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Get Started Free →</a>
 </div>
 
 7. CTA BOX - AFTER H2H SECTION:
@@ -1172,23 +1172,23 @@ ${predictionBoxTemplate}
 8. CTA BOX - AFTER TACTICAL ANALYSIS:
 <div style="background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%); border-radius: 12px; padding: 24px; margin: 24px 0; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 200px;">
-    <p style="color: #fff; font-size: 18px; font-weight: 600; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg> Get Match-Specific Insights</p>
+    <p style="color: #fff; font-size: 18px; font-weight: 600; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2AF6A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg> Get Match-Specific Insights</p>
     <p style="color: #fff; font-size: 14px; margin: 0;">Ask our AI any question about any match - lineups, injuries, or tactical matchups.</p>
   </div>
-  <a href="/register" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%); color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; white-space: nowrap;">Try SportBot AI Free →</a>
+  <a href="/register" style="display: inline-block; background: linear-gradient(135deg, #2AF6A0 0%, #0ea5e9 100%); color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; white-space: nowrap;">Try SportBot AI Free →</a>
 </div>
 
 9. CTA BOX - MINI (sprinkle 1-2 throughout):
-<p style="background: #10b981/10; border-radius: 8px; padding: 12px 16px; margin: 16px 0; font-size: 14px; color: #94a3b8;">
-  💡 <strong style="color: #10b981;">Pro tip:</strong> <a href="/matches" style="color: #10b981; text-decoration: none;">Browse all matches</a> with real-time probability updates as kickoff approaches.
+<p style="background: #2AF6A0/10; border-radius: 8px; padding: 12px 16px; margin: 16px 0; font-size: 14px; color: #94a3b8;">
+  💡 <strong style="color: #2AF6A0;">Pro tip:</strong> <a href="/matches" style="color: #2AF6A0; text-decoration: none;">Browse all matches</a> with real-time probability updates as kickoff approaches.
 </p>
 
 10. CTA BOX - END OF ARTICLE:
-<div style="background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%); border-radius: 16px; padding: 32px; margin: 32px 0; text-align: center;">
+<div style="background: linear-gradient(135deg, #2AF6A0 0%, #0ea5e9 100%); border-radius: 16px; padding: 32px; margin: 32px 0; text-align: center;">
   <h3 style="color: #fff; font-size: 24px; font-weight: bold; margin: 0 0 12px 0;">Ready for Deeper Analysis?</h3>
   <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin: 0 0 20px 0; max-width: 500px; margin-left: auto; margin-right: auto;">Join thousands of sports fans using AI-powered insights to understand matches better.</p>
   <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-    <a href="/register" style="display: inline-block; background: #fff; color: #10b981; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">Start Free Trial</a>
+    <a href="/register" style="display: inline-block; background: #fff; color: #2AF6A0; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">Start Free Trial</a>
     <a href="/pricing#pro" style="display: inline-block; background: transparent; color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; border: 2px solid #fff;">View Plans</a>
   </div>
 </div>
@@ -1204,7 +1204,7 @@ ${predictionBoxTemplate}
   </p>
   <ul style="list-style: none; padding: 0; margin: 0;">
     <li style="color: #fff; padding: 10px 0; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 12px;">
-      <span style="background: #10b981/20; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #10b981;">Step 1</span>
+      <span style="background: #2AF6A0/20; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #2AF6A0;">Step 1</span>
       <span>Historical form analysis (last 5-10 matches, weighted by recency)</span>
     </li>
     <li style="color: #fff; padding: 10px 0; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 12px;">
@@ -1241,7 +1241,7 @@ ${predictionBoxTemplate}
   <h3 style="color: #fff; font-size: 16px; font-weight: bold; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"></path><path d="M13 19l6-6"></path><path d="M16 16l4 4"></path><path d="M19 21l2-2"></path><path d="M14.5 6.5L21 3v3L9.5 17.5"></path><path d="M5 14l4 4"></path><path d="M7 17l-3 3"></path></svg> Key Tactical Matchups</h3>
   <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
     <div style="background: #0f172a; padding: 16px; border-radius: 8px;">
-      <p style="color: #10b981; font-size: 12px; margin: 0 0 4px 0;">Advantage: ${match.homeTeam}</p>
+      <p style="color: #2AF6A0; font-size: 12px; margin: 0 0 4px 0;">Advantage: ${match.homeTeam}</p>
       <p style="color: #fff; font-size: 14px; margin: 0;">[Describe one tactical advantage]</p>
     </div>
     <div style="background: #0f172a; padding: 16px; border-radius: 8px;">
@@ -1491,7 +1491,7 @@ function stripPromotionalContent(content: string): string {
 
   // Remove prediction boxes - specifically the ones with "🎯" emoji and prediction content
   result = result.replace(
-    /<div[^>]*style="[^"]*#10b981[^"]*"[^>]*>\s*<div[^>]*>\s*<span[^>]*>🎯<\/span>[\s\S]*?<\/div>\s*<\/div>/gi,
+    /<div[^>]*style="[^"]*#2AF6A0[^"]*"[^>]*>\s*<div[^>]*>\s*<span[^>]*>🎯<\/span>[\s\S]*?<\/div>\s*<\/div>/gi,
     ''
   );
 
@@ -1639,7 +1639,7 @@ function transformToNewsContent(
   <p style="color: #94a3b8; font-size: 15px; margin: 0 0 20px 0; max-width: 400px; margin-left: auto; margin-right: auto;">
     Follow all ${league} matches with live updates and expert analysis.
   </p>
-  <a href="/matches" style="display: inline-block; background: #10b981; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
+  <a href="/matches" style="display: inline-block; background: #2AF6A0; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
     View All Matches →
   </a>
 </div>`;
