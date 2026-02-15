@@ -177,7 +177,27 @@ body {
   @apply text-white antialiased;
   font-family: 'Inter', 'SF Pro Display', 'Helvetica', 'Arial', sans-serif;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-  background: #000 url('/images/Nano_Banana_Pro_dark_pure_black_concrete_floor.png') center/cover fixed;
+  background-color: #000;
+}
+
+/* Concrete texture background - fixed pseudo-element for parallax on all devices */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: url('/images/Nano_Banana_Pro_dark_pure_black_concrete_floor.png') center/cover no-repeat;
+}
+
+/* Mobile: tile the texture instead of cover (prevents zoom) */
+@media (max-width: 768px) {
+  body::before {
+    background-size: 600px auto;
+    background-repeat: repeat;
+  }
 }
 
 /* Typography Scale */
