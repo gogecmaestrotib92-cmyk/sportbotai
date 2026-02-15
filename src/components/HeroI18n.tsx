@@ -108,7 +108,7 @@ export default function HeroI18n({ t, locale }: HeroI18nProps) {
 
           {/* Right Side - Product Mockup */}
           <div className="relative flex justify-center">
-            <HeroProductMockup locale={locale} />
+            <HeroProductMockup />
           </div>
         </div>
       </div>
