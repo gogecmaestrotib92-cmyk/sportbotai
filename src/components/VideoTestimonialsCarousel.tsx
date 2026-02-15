@@ -305,14 +305,14 @@ export default function VideoTestimonialsCarousel({ locale = 'en' }: { locale?: 
   };
 
   return (
-    <section className="py-10 sm:py-12 lg:py-16 bg-bg-primary overflow-hidden">
+    <section className="py-10 sm:py-12 lg:py-16 overflow-hidden">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8 px-4">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1.5 sm:mb-2">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white mb-1.5 sm:mb-2 uppercase tracking-wide">
             {t.title}
           </h2>
-          <p className="text-white/50 text-xs sm:text-sm">
+          <p className="text-gray-300 font-medium text-sm sm:text-base">
             {t.subtitle}
           </p>
         </div>

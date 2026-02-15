@@ -174,9 +174,10 @@ body {
 }
 
 body {
-  @apply bg-primary-900 text-white antialiased;
+  @apply text-white antialiased;
   font-family: 'Inter', 'SF Pro Display', 'Helvetica', 'Arial', sans-serif;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  background: #000 url('/images/Nano_Banana_Pro_dark_pure_black_concrete_floor.png') center/cover fixed;
 }
 
 /* Typography Scale */
@@ -554,9 +555,7 @@ button:focus-visible {
   
   /* Glassmorphism Card */
   .card-glass {
-    background: rgba(18, 18, 18, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: #000;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-card);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -564,9 +563,7 @@ button:focus-visible {
   
   /* Glassmorphism Card - Elevated */
   .card-glass-elevated {
-    background: rgba(26, 26, 26, 0.8);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: #000;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-card);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);

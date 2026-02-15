@@ -87,14 +87,14 @@ export default function ValueBettingExplainer({ locale = 'en' }: ValueBettingExp
     const t = translations[locale];
 
     return (
-        <section className="py-16 sm:py-20 bg-gradient-to-b from-bg-primary via-bg-primary to-[#0a0f0a]">
+        <section className="py-16 sm:py-20">
             <div className="max-w-5xl mx-auto px-4 sm:px-6">
                 {/* Header */}
                 <div className="text-center mb-12">
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3">
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-3 uppercase tracking-wide">
                         {t.title}
                     </h2>
-                    <p className="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto">
+                    <p className="text-base sm:text-lg text-gray-300 font-medium max-w-2xl mx-auto">
                         {t.subtitle}
                     </p>
                 </div>
@@ -109,7 +109,7 @@ export default function ValueBettingExplainer({ locale = 'en' }: ValueBettingExp
                     {t.sources.map((source, index) => (
                         <div
                             key={index}
-                            className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-accent/30 transition-colors"
+                            className="p-5 rounded-2xl bg-black border border-white/[0.06] hover:border-accent/30 transition-colors"
                         >
                             <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
                                 <PremiumIcon name={source.icon} size="lg" className="text-accent" />
@@ -121,7 +121,7 @@ export default function ValueBettingExplainer({ locale = 'en' }: ValueBettingExp
                 </div>
 
                 {/* How We Work */}
-                <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-accent/5 to-transparent border border-accent/20">
+                <div className="p-6 sm:p-8 rounded-2xl bg-black border border-accent/20">
                     <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
                             <PremiumIcon name="brain" size="lg" className="text-accent" />
@@ -133,7 +133,7 @@ export default function ValueBettingExplainer({ locale = 'en' }: ValueBettingExp
                     </p>
 
                     {/* Formula box */}
-                    <div className="inline-flex flex-col items-start gap-2 px-5 py-4 rounded-xl bg-black/30 border border-white/10">
+                    <div className="inline-flex flex-col items-start gap-2 px-5 py-4 rounded-xl bg-black border border-white/10">
                         <code className="text-accent font-mono text-sm sm:text-base font-semibold">
                             {t.formula}
                         </code>

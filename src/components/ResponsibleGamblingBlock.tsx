@@ -8,7 +8,7 @@ import Link from 'next/link';
 
 export default function ResponsibleGamblingBlock() {
   return (
-    <section className="bg-bg-card section-container-sm">
+    <section className="section-container-sm">
       <div className="max-w-4xl mx-auto">
         <div className="bg-bg-elevated rounded-card p-8 md:p-10 border border-divider shadow-card">
           <div className="flex flex-col md:flex-row md:items-center gap-6">

@@ -10,19 +10,10 @@
 import Link from 'next/link';
 import { LiveStatsCounter } from './SocialProof';
 import HeroProductMockup from './HeroProductMockup';
-import VideoBackground from './VideoBackground';
 
 export default function Hero() {
   return (
-    <section className="relative bg-bg-primary overflow-hidden min-h-[600px] lg:min-h-[700px]">
-      {/* Video Background (desktop) / Static Image (mobile) */}
-      <VideoBackground
-        videoSrc="/videos/hero-bg.mp4"
-        overlayOpacity={0.35}
-        disableOnMobile={true}
-      />
-
-      {/* Decorative accent removed - turf texture provides the background */}
+    <section className="relative overflow-hidden min-h-[600px] lg:min-h-[700px]">
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">

@@ -37,14 +37,14 @@ export default function HowItWorksVideo({ locale = 'en' }: HowItWorksVideoProps)
     const thumbnailUrl = '/SportBot_YouTube_Thumbnail.png';
 
     return (
-        <section className="py-16 sm:py-20 bg-bg-primary">
+        <section className="py-16 sm:py-20">
             <div className="max-w-4xl mx-auto px-4 sm:px-6">
                 {/* Header */}
                 <div className="text-center mb-8 sm:mb-10">
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3">
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-3 uppercase tracking-wide">
                         {t.title}
                     </h2>
-                    <p className="text-sm sm:text-base text-gray-400 max-w-xl mx-auto">
+                    <p className="text-base sm:text-lg text-gray-300 font-medium max-w-xl mx-auto">
                         {t.subtitle}
                     </p>
                 </div>

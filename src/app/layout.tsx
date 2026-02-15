@@ -183,7 +183,7 @@ export default async function RootLayout({
         {/* Critical inline CSS - fallback for slow networks/JS failures */}
         <style dangerouslySetInnerHTML={{
           __html: `
-          html,body{background:#0D0D12;color:#fff;font-family:system-ui,-apple-system,sans-serif;max-width:100vw;overflow-x:hidden}
+          html,body{color:#fff;font-family:system-ui,-apple-system,sans-serif;max-width:100vw;overflow-x:hidden}
           body{margin:0;min-height:100vh}
           a{color:#8B5CF6}
           .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
@@ -200,16 +200,7 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="//media-cdn.incrowdsports.com" />
         <link rel="dns-prefetch" href="//upload.wikimedia.org" />
         <link rel="dns-prefetch" href="//flagcdn.com" />
-        
-        {/* LCP Optimization: Preload hero background image */}
-        <link
-          rel="preload"
-          href="/images/generated/hero-bg.webp"
-          as="image"
-          type="image/webp"
-          fetchPriority="high"
-        />
-        
+
         {/* Preconnect to top 4 origins for LCP improvement */}
         <link rel="preconnect" href="https://a.espncdn.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://media.api-sports.io" crossOrigin="anonymous" />

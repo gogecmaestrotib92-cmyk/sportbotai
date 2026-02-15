@@ -73,7 +73,7 @@ export default function FooterI18n({ locale: localeProp }: FooterI18nProps) {
   const localePath = locale === 'sr' ? '/sr' : '';
 
   return (
-    <footer className="bg-bg text-text-secondary" suppressHydrationWarning>
+    <footer className="bg-black text-text-secondary" suppressHydrationWarning>
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">

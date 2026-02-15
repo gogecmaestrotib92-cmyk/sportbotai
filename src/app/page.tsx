@@ -134,7 +134,7 @@ export default function HomePage() {
       <FAQ />
 
       {/* Trust badges */}
-      <div className="py-8 bg-bg-primary">
+      <div className="py-8">
         <TrustBadges className="max-w-4xl mx-auto px-4" />
       </div>
 

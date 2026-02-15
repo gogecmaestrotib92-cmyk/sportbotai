@@ -68,7 +68,7 @@ export default function LeagueScroll() {
   }, []);
 
   return (
-    <section ref={containerRef} className="py-8 bg-bg-primary border-y border-white/5 overflow-hidden">
+    <section ref={containerRef} className="py-8 border-y border-white/5 overflow-hidden bg-black">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes league-scroll {
           0% { transform: translate3d(0, 0, 0); }

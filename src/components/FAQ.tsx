@@ -142,7 +142,7 @@ export default function FAQ({
   );
 
   return (
-    <section className="py-16 sm:py-24 bg-bg-primary relative overflow-hidden">
+    <section className="py-16 sm:py-24 relative overflow-hidden">
       {/* Subtle ambient glow */}
       <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-accent/5 rounded-full blur-[100px] pointer-events-none" aria-hidden="true" />
       
@@ -152,7 +152,7 @@ export default function FAQ({
           <span className="text-accent text-xs font-semibold uppercase tracking-wider mb-2 block">
             {label}
           </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-white tracking-wide uppercase">
             {title}
           </h2>
         </div>

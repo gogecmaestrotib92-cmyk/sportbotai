@@ -195,7 +195,7 @@ export default function PainQuantification({ locale = 'en' }: PainQuantification
     `}</style>
     <section
       ref={sectionRef}
-      className="py-10 sm:py-16 lg:py-24 bg-bg-primary relative overflow-hidden"
+      className="py-10 sm:py-16 lg:py-24 relative overflow-hidden"
     >
       {/* Ambient background glows */}
       <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-red-500/[0.04] rounded-full blur-[150px] pointer-events-none" aria-hidden="true" />
@@ -209,11 +209,11 @@ export default function PainQuantification({ locale = 'en' }: PainQuantification
             <PremiumIcon name="clock" size="sm" className="text-accent hidden sm:block" />
             {t.badge}
           </p>
-          <h2 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-white mb-2 sm:mb-4 tracking-tight">
+          <h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-white mb-2 sm:mb-4 tracking-wide uppercase">
             {t.headline}{' '}
             <span className="text-gradient-accent">{t.headlineAccent}</span>
           </h2>
-          <p className="hidden sm:block text-sm sm:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed">
+          <p className="hidden sm:block text-base sm:text-lg text-gray-300 font-medium max-w-2xl mx-auto leading-relaxed">
             {t.subtitle}
           </p>
         </div>

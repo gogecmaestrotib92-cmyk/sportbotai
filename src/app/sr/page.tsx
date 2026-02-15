@@ -114,7 +114,7 @@ export default function SerbianHomePage() {
       <FAQI18n t={t} />
 
       {/* Trust badges */}
-      <div className="py-8 bg-bg-primary">
+      <div className="py-8">
         <TrustBadgesI18n className="max-w-4xl mx-auto px-4" t={t} />
       </div>
 

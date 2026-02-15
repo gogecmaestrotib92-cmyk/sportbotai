@@ -251,7 +251,7 @@ function PickCard({ pick, isPro }: { pick: Pick; isPro: boolean }) {
       {/* CTA Footer */}
       <Link 
         href={`/match/${generateMatchSlug(pick.homeTeam, pick.awayTeam, pick.sport, pick.kickoff)}`}
-        className="flex items-center justify-center gap-2 w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-3 rounded-none transition-colors text-sm tracking-wide"
+        className="flex items-center justify-center gap-2 w-full bg-black hover:bg-zinc-900 text-white font-medium py-3 rounded-none transition-colors text-sm tracking-wide"
       >
         View Full Analysis
         <ArrowRight className="w-4 h-4" />
@@ -385,12 +385,12 @@ export default function DailyPicksSection({ locale = 'en' }: DailyPicksSectionPr
   }
 
   return (
-    <section className="py-12 sm:py-16 bg-[#0a0a0b]">
+    <section className="py-12 sm:py-16">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+            <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3 uppercase tracking-wide">
               <svg className="w-7 h-7 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/>
                 <circle cx="12" cy="12" r="6"/>
@@ -398,7 +398,7 @@ export default function DailyPicksSection({ locale = 'en' }: DailyPicksSectionPr
               </svg>
               {t.title}
             </h2>
-            <p className="text-gray-400 mt-1">{t.subtitle}</p>
+            <p className="text-gray-300 font-medium text-base sm:text-lg mt-1">{t.subtitle}</p>
           </div>
           
           <Link 

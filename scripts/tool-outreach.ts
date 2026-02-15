@@ -30,10 +30,10 @@ const prisma = new PrismaClient();
 // ============================================
 const TOOLS: ToolConfig[] = [
   {
-    name: 'Smart Sports Trader',
-    url: 'https://smartsportstrader.com/',
-    email: 'smartsportstrader@gmail.com',
-    description: 'Smart Sports Trader is a sports betting blog run by Ryan, who has documented his "Making A Million" challenge since April 2017, earning over £200,000 in verified profits. The site offers comprehensive guides on matched betting, value betting, Betfair trading, arbitrage, and sports betting strategies. Top-rated reviews include OddsMonkey (10/10), Profit Maximiser (10/10), Smart Betting Club (9.5/10), and WinnerOdds (9/10). Categories cover football betting, horse racing, greyhound betting, casino offers, and betting tipster reviews. Known for transparent monthly profit/loss tracking and honest reviews of betting systems and tipsters.',
+    name: 'TopBetPredict',
+    url: 'https://topbetpredict.com/',
+    email: 'topbetpredict.com@gmail.com',
+    description: 'TopBetPredict is a comprehensive football predictions and stats platform offering daily match predictions, H2H statistics, match facts, and live scores across 30+ countries and 50+ leagues worldwide. Key features include: (1) Daily predictions with 1x2, double chance, and combo bets for every match, (2) H2H Stats section showing head-to-head records with detailed match statistics like goals, shots on goal, offsides, corners, and clean sheets, (3) Match Facts page highlighting team streaks (BTTS, over/under, winning/undefeated), (4) LiveScore integration, (5) Coverage of major leagues (Premier League, La Liga, Serie A, Bundesliga, Ligue 1) plus lower divisions and emerging leagues. The site also provides betting guides and educational resources covering topics from beginner betting terminology to advanced strategies. Built on WordPress with the Football Leagues by AnWP Pro plugin.',
   },
 ];
 

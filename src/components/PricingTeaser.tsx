@@ -82,16 +82,16 @@ export default function PricingTeaser() {
   const toggleBilling = () => setIsYearlyBilling(!isYearlyBilling);
 
   return (
-    <section className="bg-bg section-container relative overflow-hidden">
+    <section className="section-container relative overflow-hidden">
       {/* Ambient glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
       
       <div className="text-center mb-8 relative">
         <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Pricing</p>
-        <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">
+        <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-wide uppercase">
           Smarter analysis <span className="text-gradient-accent">for less than a coffee</span>
         </h2>
-        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-300 font-medium max-w-2xl mx-auto">
           One bad decision costs more than a year of Pro. Start free, upgrade when you see the edge.
         </p>
       </div>
